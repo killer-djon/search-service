@@ -1,0 +1,4 @@
+rp_search_user:
+    resource: routing/searchUser.yml
+    prefix:   /api
+    type: rest

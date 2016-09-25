@@ -1,0 +1,17 @@
+parameters:
+    locale: ru
+    secret: c10433b11dc4ad101034379ec10c8b451bb
+    mongodb.host: localhost
+    mongodb.port: 27146
+    mailer_transport: mail
+    mailer_host: 127.0.0.1
+    mailer_user: do-not-reply@russianplace.com
+    mailer_password: null
+    mailer_port: 25
+    mailer_security: null
+
+    mongodb.main_storage.database: rp_main
+    mongodb.token_storage.database: rp_token
+    
+    redis.host: localhost
+    redis.port: 6379

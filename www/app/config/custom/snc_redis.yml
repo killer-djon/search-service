@@ -1,0 +1,25 @@
+snc_redis:
+    clients:
+        default:
+            type: predis
+            alias: default
+            dsn: "redis://%redis.host%:%redis.port%"
+            logging: "%kernel.debug%"
+        monolog:
+            type: predis
+            alias: cache
+            dsn: "redis://%redis.host%:%redis.port%"
+            logging: false
+            options:
+                connection_persistent: true
+        session:
+            type: predis
+            alias: session
+            dsn: "redis://%redis.host%:%redis.port%"
+            logging: "%kernel.debug%"
+    session:
+        client: session
+        prefix: rp_
+    monolog:
+        client: cache
+        key: monolog

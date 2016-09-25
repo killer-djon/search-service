@@ -1,0 +1,47 @@
+fos_rest:
+    versioning: 
+        enabled: false
+        resolvers:
+            query:
+                enabled: true
+                parameter_name: (version|v)
+            custom_header:
+                enabled: true
+                header_name: X-Accept-Version
+    zone:
+        - { path: ^/api/* }
+    view:
+        view_response_listener: true
+        formats:
+            jsonp: false
+            json: true
+            xml: true
+            rss: true
+            html: true
+            plist: true
+        templating_formats:
+            html: true
+        force_redirects:
+            json: true
+        mime_types:
+            json: ['application/json', 'application/x-json', 'application/vnd.example-com.foo+json']
+            rss: ['application/rss+xml']
+            html: ['text/html']
+            xml: ['text/xml', 'application/atom+xml']
+            plist: ['application/x-plist']
+        failed_validation: HTTP_BAD_REQUEST
+        jsonp_handler:
+            callback_param: ~
+
+    body_listener: true
+    param_fetcher_listener: force
+    allowed_methods_listener: true
+    exception:
+        codes:
+            'Symfony\Component\Routing\Exception\ResourceNotFoundException': 404
+            'Doctrine\ORM\OptimisticLockException': HTTP_CONFLICT
+        messages:
+            'Symfony\Component\Routing\Exception\ResourceNotFoundException': true
+    service:
+        view_handler: rp_user.view_handler
+    cache_dir:            '%kernel.cache_dir%/fos_rest'

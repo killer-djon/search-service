@@ -1,0 +1,38 @@
+# необходимо указать версию vagrant окружения
+VAGRANTFILE_API_VERSION = "2"
+
+# тут обязательно указываем название создаваемые машины под сервис
+# поскольку это болванка сервиса то и название будет default
+# когда на основе болванки мы начинаем создавать некий сервис
+# желательно писать название сервиса,
+# допустим под сервис поиска название было бы "search"
+VAGRANT_MACHINE_NAME = "search"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "centos/7"
+  config.ssh.insert_key = false
+
+  config.vm.hostname = VAGRANT_MACHINE_NAME
+
+  config.vm.define VAGRANT_MACHINE_NAME, primary: true do |default|
+
+      default.vm.provider :virtualbox do |vb|
+          vb.gui = false
+          vb.customize ["modifyvm", :id, "--memory", "1024"]
+      end
+
+      # Networking options
+      # default.vm.network :private_network, ip: "192.168.10.2"
+      default.vm.network :forwarded_port, guest: 80, host: 8080
+  end
+
+  config.vm.synced_folder "../vagrant/", "/home/vagrant/sync", disabled: true
+
+  config.vm.synced_folder "../www/", "/home/vagrant/www"
+  config.vm.synced_folder "../vagrant/", "/home/vagrant/vagrant"
+
+  config.vm.provision :shell, path: "./install.sh"
+  config.vm.provision :shell, path: "./nginx_utils.sh"
+  config.vm.provision :shell, path: "./php_utils.sh"
+  config.vm.provision :shell, path: "./mongodb_utils.sh"
+end

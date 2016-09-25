@@ -1,0 +1,25 @@
+
+# Doctrine Configuration
+doctrine_mongodb:
+    connections:
+        domain:
+            server: "mongodb://%mongodb.host%:%mongodb.port%"
+            options:
+                connect: true
+        reporting:
+            server: "mongodb://%mongodb.host%:%mongodb.port%"
+            options:
+                connect: true
+
+    document_managers:
+        domain:
+            connection: domain
+            database: "%mongodb.main_storage.database%"
+            auto_mapping: false
+        reporting:
+            connection: reporting
+            database: "%mongodb.main_storage.database%"
+            auto_mapping: false
+    default_document_manager: reporting
+    default_connection: reporting
+    default_database: "%mongodb.main_storage.database%"

@@ -19,3 +19,6 @@
 .vagrant/
 .bash*
 .DS_Store
+/www/web/config.php
+/www/bin/symfony_requirements
+/www/var/SymfonyRequirements.php

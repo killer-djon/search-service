@@ -26,13 +26,17 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
       default.vm.network :forwarded_port, guest: 80, host: 8080
   end
 
-  config.vm.synced_folder "../vagrant/", "/home/vagrant/sync", disabled: true
-
-  config.vm.synced_folder "../www/", "/home/vagrant/www"
   config.vm.synced_folder "../vagrant/", "/home/vagrant/vagrant"
+  config.vm.synced_folder "../www/", "/home/vagrant/www"
+  config.vm.synced_folder "../www/vendor/", "/home/vagrant/www/vendor", disabled: true
 
-  config.vm.provision :shell, path: "./install.sh"
-  config.vm.provision :shell, path: "./nginx_utils.sh"
-  config.vm.provision :shell, path: "./php_utils.sh"
-  config.vm.provision :shell, path: "./mongodb_utils.sh"
+
+  config.vm.provision "main install", type: "shell", path: "install.sh"
+  config.vm.provision "nginx install", type: "shell", path: "services/nginx.sh"
+  config.vm.provision "mongodb install", type: "shell", path: "services/mongodb.sh"
+  config.vm.provision "php71 install", type: "shell", path: "services/php.sh"
+  config.vm.provision "elasticsearch install", type: "shell", path: "services/elasticsearch.sh"
+  config.vm.provision "copymover install", type: "shell", path: "services/copymover.sh"
+  config.vm.provision "runner services", type: "shell", path: "services/runner.sh"
+
 end

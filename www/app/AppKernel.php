@@ -21,6 +21,7 @@ class AppKernel extends Kernel
             new JMS\SerializerBundle\JMSSerializerBundle(),
             new Doctrine\Bundle\MongoDBBundle\DoctrineMongoDBBundle(),
             new Snc\RedisBundle\SncRedisBundle(),
+            new FOS\ElasticaBundle\FOSElasticaBundle(),
 
             // security bundles
             new JMS\AopBundle\JMSAopBundle(),

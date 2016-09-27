@@ -27,14 +27,14 @@ cp -f /home/vagrant/vagrant/conf/fastcgi_params /etc/nginx/
 usermod -Gnginx -gnginx -a vagrant
 chown -hR vagrant:nginx /home/vagrant/www
 
-# copying and moveng for php71
-sudo mv /usr/lib/systemd/system/php71-php-fpm.service /usr/lib/systemd/system/php-fpm.service
-sudo cp -rf /home/vagrant/vagrant/conf/php-fpm.conf /etc/opt/remi/php71/
-sudo cp -rf /home/vagrant/vagrant/conf/php-fpm.d/* /etc/opt/remi/php71/php-fpm.d/
-sudo cp -rf /home/vagrant/vagrant/conf/php.ini /etc/opt/remi/php71/
+# copying and moveng for php70
+sudo ln -s /usr/lib/systemd/system/php70-php-fpm.service /usr/lib/systemd/system/php-fpm.service
+sudo cp -rf /home/vagrant/vagrant/conf/php-fpm.conf /etc/opt/remi/php70/
+sudo cp -rf /home/vagrant/vagrant/conf/php-fpm.d/* /etc/opt/remi/php70/php-fpm.d/
+sudo cp -rf /home/vagrant/vagrant/conf/php.ini /etc/opt/remi/php70/
 systemctl enable php-fpm.service
 
 cd /home/vagrant
-curl -sS https://getcomposer.org/installer | php71
+curl -sS https://getcomposer.org/installer | php70
 mv composer.phar /usr/local/bin/composer
 rm -f /home/vagrant/composer.phar

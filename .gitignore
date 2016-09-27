@@ -22,3 +22,4 @@
 /www/web/config.php
 /www/bin/symfony_requirements
 /www/var/SymfonyRequirements.php
+/composer.lock

@@ -4,23 +4,23 @@ parameters:
 services:
     # handler для передаче клиенту формата x-plist
     # данный формат используется только в IOS
-    rp_user.plist_handler:
+    rp_common.plist_handler:
         class: '%common.core.namespace%\Serializer\View\PlistViewHandler'
 
     # handler для передаче клиенту формата rss ленты
-    rp_user.rss_handler:
+    rp_common.rss_handler:
         class: '%common.core.namespace%\Serializer\View\RssViewHandler'
 
     # данный handler обрабатывает ответ клиенту в формате plist
     # данный формат в прилоежнии не используется но учитывается и работает
-    rp_user.view_handler:
+    rp_common.view_handler:
         parent: fos_rest.view_handler.default
         calls:
-            - ['registerHandler', ['plist', ["@rp_user.plist_handler", 'createResponse']]]
-            - ['registerHandler', ['rss', ["@rp_user.rss_handler", 'createResponse']]]
+            - ['registerHandler', ['plist', ["@rp_common.plist_handler", 'createResponse']]]
+            - ['registerHandler', ['rss', ["@rp_common.rss_handler", 'createResponse']]]
     
-    # main bundles services        
-    rp_main.model_loader:
+    # common bundles services
+    rp_common.model_loader:
         class: '%common.core.namespace%\Loader\JSONModelLoader'
         arguments:
           - "@validator"

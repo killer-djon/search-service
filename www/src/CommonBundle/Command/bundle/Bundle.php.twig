@@ -1,0 +1,24 @@
+<?php
+
+namespace {{ namespace }};
+
+{% block use_statements %}
+use Symfony\Component\HttpKernel\Bundle\Bundle;
+use Symfony\Component\DependencyInjection\ContainerBuilder;
+use Common\Core\DependencyInjection\Compiler\CustomConfigCompilerPass;
+{% endblock use_statements %}
+
+{% block class_definition %}
+class {{ bundle }} extends Bundle
+{% endblock class_definition %}
+{
+{% block class_body %}
+    /**
+     * @inheritdoc
+     */
+    public function build(ContainerBuilder $container)
+    {
+        parent::build($container);
+    }
+{% endblock class_body %}
+}

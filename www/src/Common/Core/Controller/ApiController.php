@@ -247,16 +247,11 @@ abstract class ApiController extends FOSRestController
     }
     
     /**
-     * @return \GH\Comon\Core\Loader\JSONModelLoader
+     * @return \Common\Core\Loader\JSONModelLoader
      */
     protected function getModelLoaderService()
     {
-        return $this->get('rp_main.model_loader');
-    }
-    
-    protected function getTranslator()
-    {
-	    return $this->get('translator');
+        return $this->get('rp_common.model_loader');
     }
 
 }

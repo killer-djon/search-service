@@ -23,10 +23,8 @@ class AppKernel extends Kernel
             new Snc\RedisBundle\SncRedisBundle(),
             new FOS\ElasticaBundle\FOSElasticaBundle(),
 
-            // security bundles
-            new JMS\AopBundle\JMSAopBundle(),
-    	    new JMS\DiExtraBundle\JMSDiExtraBundle($this),
-            new RP\SearchBundle\RPSearchBundle(),
+            // personal Bundles,
+            new CommonBundle\CommonBundle(),
         ];
 
         if (in_array($this->getEnvironment(), ['dev', 'test'], true)) {

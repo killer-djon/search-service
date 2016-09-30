@@ -1,6 +1,6 @@
 fos_rest:
     versioning: 
-        enabled: false
+        enabled: true
         resolvers:
             query:
                 enabled: true
@@ -42,6 +42,6 @@ fos_rest:
             'Doctrine\ORM\OptimisticLockException': HTTP_CONFLICT
         messages:
             'Symfony\Component\Routing\Exception\ResourceNotFoundException': true
-    service:
-        view_handler: rp_user.view_handler
     cache_dir:            '%kernel.cache_dir%/fos_rest'
+    service:
+        view_handler: rp_common.view_handler

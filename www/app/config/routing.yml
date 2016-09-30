@@ -1,4 +1,0 @@
-rp_search:
-    resource: "@RPSearchBundle/Resources/config/routing.yml"
-
-

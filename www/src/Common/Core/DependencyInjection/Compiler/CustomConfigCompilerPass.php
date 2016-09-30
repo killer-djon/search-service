@@ -19,6 +19,12 @@ class CustomConfigCompilerPass implements CompilerPassInterface
 	 * @var string $path Путь к бандлу откуда отсчитываем путь к конфигам
 	 */
 	private $_path;
+
+    /**
+     * @access private
+     * @var string $extensionName Имя расширения бандла
+     */
+    private $extensionName;
 	
 	/**
 	 * Путь до компилера конфигурации
@@ -26,10 +32,12 @@ class CustomConfigCompilerPass implements CompilerPassInterface
 	 * как: new CustomConfigCompilerPass(путь к бандлу)
 	 *
 	 * @param string $path Путь к бандлу откуда отсчитываем путь к конфигам
+     * @param string $extensionKeyName Обязательно имя расширения (бандла) для custom конфигов
 	 */
-	public function __construct($path = null)
+	public function __construct($path = null, $extensionKeyName)
 	{
 		$this->_path = $path;
+        $this->extensionName = $extensionKeyName;
 	}
 	
 	
@@ -71,14 +79,14 @@ class CustomConfigCompilerPass implements CompilerPassInterface
             if(!$configFile->isDot() && $configFile->isFile() && $configFile->getExtension() == 'yml')
             {
                 $config = Yaml::parse(file_get_contents( $configFile->getPathname() ));
-                $extensionName = key($config['gh_user']);
+                $extensionName = key($config[$this->extensionName]);
 
                 if(!empty($extensionName))
                 {
                     $extension = $container->getExtension($extensionName);
 
                     $extensionConfig = $container->getExtensionConfig($extension->getAlias());
-                    $resultConfig = array_replace_recursive(current($extensionConfig), $config['gh_user'][$extensionName]);
+                    $resultConfig = array_replace_recursive(current($extensionConfig), $config[$this->extensionName][$extensionName]);
 
                     $extension->load([$resultConfig], $container);
                 }

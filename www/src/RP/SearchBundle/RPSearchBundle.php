@@ -1,25 +1,19 @@
 <?php
 
-namespace {{ namespace }};
+namespace RP\SearchBundle;
 
-{% block use_statements %}
 use Symfony\Component\HttpKernel\Bundle\Bundle;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Common\Core\DependencyInjection\Compiler\CustomConfigCompilerPass;
-{% endblock use_statements %}
 
-{% block class_definition %}
-class {{ bundle }} extends Bundle
-{% endblock class_definition %}
+class RPSearchBundle extends Bundle
 {
-{% block class_body %}
     /**
      * @inheritdoc
      */
     public function build(ContainerBuilder $container)
     {
         parent::build($container);
-        $container->addCompilerPass(new CustomConfigCompilerPass(__DIR__, '{{ extension_alias }}'));
+        $container->addCompilerPass(new CustomConfigCompilerPass(__DIR__, 'rp_search'));
     }
-{% endblock class_body %}
 }

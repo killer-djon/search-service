@@ -1,0 +1,3 @@
+rp_search_homepage:
+    path:     /
+    defaults: { _controller: RPSearchBundle:Default:index }

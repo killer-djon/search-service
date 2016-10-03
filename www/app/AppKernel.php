@@ -25,6 +25,7 @@ class AppKernel extends Kernel
 
             // personal Bundles,
             new CommonBundle\CommonBundle(),
+            new RP\SearchBundle\RPSearchBundle(),
         ];
 
         if (in_array($this->getEnvironment(), ['dev', 'test'], true)) {

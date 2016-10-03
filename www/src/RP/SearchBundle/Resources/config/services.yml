@@ -1,0 +1,4 @@
+services:
+#    rp_search.example:
+#        class: RP\SearchBundle\Example
+#        arguments: ["@service_id", "plain_value", %parameter%]

@@ -15,7 +15,7 @@ use Sensio\Bundle\GeneratorBundle\Manipulator\RoutingManipulator;
 use Symfony\Bundle\FrameworkBundle\Command\ContainerAwareCommand;
 use Sensio\Bundle\GeneratorBundle\Command\GenerateBundleCommand;
 
-class GenerateUserCommand extends GenerateBundleCommand
+class GenerateCommonBundleCommand extends GenerateBundleCommand
 {
     /**
      * @see Command
@@ -37,6 +37,28 @@ class GenerateUserCommand extends GenerateBundleCommand
      */
     protected function execute(InputInterface $input, OutputInterface $output)
     {
+        /** Полная генерация бандла и все что необходимо */
+        parent::execute($input, $output);
 
+        /** Далее custom генерация содержимого файла класса бандла */
+        /** @var  Bundle $bundle */
+        $bundle = $this->createBundleObject($input);
+
+        /** @var  string Target direcotry of the generated bundle */
+        $dir = $bundle->getTargetDirectory();
+
+        /** @var BundleGenerator $generator */
+        $generator = new CommonRender($this->getContainer()->get('filesystem'));
+
+        /** @var  array $parameters */
+        $parameters = array(
+            'namespace' => $bundle->getNamespace(),
+            'bundle' => $bundle->getName(),
+            'format' => $bundle->getConfigurationFormat(),
+            'bundle_basename' => $bundle->getBasename(),
+            'extension_alias' => $bundle->getExtensionAlias(),
+        );
+
+        $generator->renderBodyBundle('bundle/Bundle.php.twig', $dir.'/'.$bundle->getName().'.php', $parameters);
     }
 }

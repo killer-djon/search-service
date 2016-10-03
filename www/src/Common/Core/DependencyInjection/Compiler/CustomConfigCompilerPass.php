@@ -34,7 +34,7 @@ class CustomConfigCompilerPass implements CompilerPassInterface
 	 * @param string $path Путь к бандлу откуда отсчитываем путь к конфигам
      * @param string $extensionKeyName Обязательно имя расширения (бандла) для custom конфигов
 	 */
-	public function __construct($path = null, $extensionKeyName)
+	public function __construct($path, $extensionKeyName)
 	{
 		$this->_path = $path;
         $this->extensionName = $extensionKeyName;

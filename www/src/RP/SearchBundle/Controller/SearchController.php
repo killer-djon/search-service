@@ -36,9 +36,6 @@ class SearchController extends ApiController
             $searchService = $this->getSearchService();
             $mustQuery = $showlQuery = $mustNotQuery = $filterQuery = [];
 
-            $mustQuery = [
-                $searchService->getQueryCondition()->getFieldQuery('id', '3590')
-            ];
 
             $filterQuery[] = $searchService->getFilterCondition()->getExistsFilter('name');
             $filterQuery[] = $searchService->getFilterCondition()->getTermsFilter('visible', ['all']);
@@ -47,11 +44,8 @@ class SearchController extends ApiController
             $result = $searchService->searchDocuments('place', $searchQuery, [
                 'filters' => $filterQuery,
                 'sortings' => [
-                    'name' => [
-                        'order' => 'asc'
-                    ],
                     'id' => [
-                        'order' => 'desc'
+                        'order' => 'asc'
                     ]
                 ]
             ]);

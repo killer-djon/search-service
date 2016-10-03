@@ -47,7 +47,6 @@ class SearchEngine implements SearchEngineInterface
      */
     protected $_transformer;
 
-
     /**
      * При создании сервиса необходимо установить все сопутствующие объекты
      *
@@ -118,7 +117,6 @@ class SearchEngine implements SearchEngineInterface
 
     }
 
-
     /**
      * Индексный поиск в еластике
      * т.е. поиск на основе индекса fos_elastica.index.%s.%s
@@ -131,12 +129,9 @@ class SearchEngine implements SearchEngineInterface
      */
     public function searchDocuments($context, $query, $options = [])
     {
-        $this->_transformer = $this->container->get('fos_elastica.elastica_to_model_transformer.collection.'.$this->_elasticaIndex->getName());
-
         $elasticType = $this->_getElasticType($context);
 
-        if(!empty($options))
-        {
+        if (!empty($options)) {
             extract($options);
         }
 
@@ -151,7 +146,7 @@ class SearchEngine implements SearchEngineInterface
         // Сформировать объект запроса
         $elasticQuery = new \Elastica\Query($query);
 
-        if ( isset($sortings) && sizeof($sortings) > 0 ) {
+        if (isset($sortings) && sizeof($sortings) > 0) {
             $elasticQuery->setSort($sortings);
         }
 
@@ -160,8 +155,7 @@ class SearchEngine implements SearchEngineInterface
             $limit = RequestConstant::DEFAULT_SEARCH_LIMIT;
         }
 
-        if(!isset($skip))
-        {
+        if (!isset($skip)) {
             $skip = RequestConstant::DEFAULT_SEARCH_SKIP;
         }
 
@@ -175,22 +169,23 @@ class SearchEngine implements SearchEngineInterface
         $elasticQuery->setMinScore($minScore);
 
         $searchResults = $elasticType->search($elasticQuery);
+
         return $this->transformResult($searchResults->getResults());
     }
 
-
     /**
+     * Преобразование полученного результат из еластика
+     * получаем набор данных \Elastica\Result
+     * который тупо переводим в массив для вывода результата
      *
+     * @param \Elastica\Result[] $resultSets
+     * @return array $data Набор данных для вывода в результат
      */
     public function transformResult(array $resultSets)
     {
-        $result = [];
-        foreach($resultSets as $item)
-        {
-            $result[] = $item->getData();
-        }
-
-        return $result;
+        return array_map(function ($item) {
+            return $item->getData();
+        }, $resultSets);
     }
 
     /**

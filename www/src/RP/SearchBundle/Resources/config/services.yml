@@ -1,4 +1,23 @@
 services:
-#    rp_search.example:
-#        class: RP\SearchBundle\Example
-#        arguments: ["@service_id", "plain_value", %parameter%]
+    # Сервис поискового движка
+    rp_search.search.engine:
+        class: Common\Core\Facade\Search\QueryFactory\SearchEngine
+        arguments:
+            - "@fos_elastica.index"
+            - "@rp_search.search.query_factory"
+            - "@rp_search.search.query_condition"
+            - "@rp_search.search.query_filter"
+        calls:
+            - [ setContainer, [ "@service_container" ] ]
+
+    # сервис поиского движка
+    rp_search.search.query_factory:
+        class: Common\Core\Facade\Search\QueryFactory\QueryFactory
+
+    # сервис формирования условий поиска
+    rp_search.search.query_condition:
+        class: Common\Core\Facade\Search\QueryCondition\ConditionFactory
+
+    # сервис создания фильтра для поиска
+    rp_search.search.query_filter:
+        class: Common\Core\Facade\Search\QueryFilter\FilterFactory

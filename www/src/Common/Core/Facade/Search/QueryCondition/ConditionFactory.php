@@ -50,8 +50,8 @@ class ConditionFactory implements ConditionFactoryInterface
         return new \Elastica\Query\Prefix([
             $fieldName => [
                 'value' => $value,
-                'boost' => $boost
-            ]
+                'boost' => $boost,
+            ],
         ]);
     }
 
@@ -64,14 +64,28 @@ class ConditionFactory implements ConditionFactoryInterface
      * @param float|null $boost
      * @return \Elastica\Query\Bool
      */
-    public function getBoolQuery(array $must, array $should, array $mustNot, $boost = null)
+    public function getBoolQuery(array $musts, array $shoulds, array $mustNots, $boost = null)
     {
-        $boolQuery = new \Elastica\Query\Bool();
-        $boolQuery->addMust($must);
-        $boolQuery->addShould($should);
-        $boolQuery->addMustNot($mustNot);
-        if(!is_null($boost))
-        {
+        $boolQuery = new \Elastica\Query\BoolQuery();
+        if (!empty($musts)) {
+            foreach ($musts as $must) {
+                $boolQuery->addMust($must);
+            }
+        }
+
+        if (!empty($shoulds)) {
+            foreach ($shoulds as $should) {
+                $boolQuery->addShould($should);
+            }
+        }
+
+        if (!empty($mustNots)) {
+            foreach ($mustNots as $mustNot) {
+                $boolQuery->addMustNot($mustNot);
+            }
+        }
+
+        if (!is_null($boost)) {
             $boolQuery->setBoost($boost);
         }
 
@@ -88,7 +102,7 @@ class ConditionFactory implements ConditionFactoryInterface
      * @param string $langScript
      * @return \Elastica\Query\FunctionScore
      */
-    public function getCustomScoreQuery(AbstractQuery $query, $script, AbstractFilter $filter = null, array $params = array(), $lang = \Elastica\Script::LANG_GROOVY)
+    public function getCustomScoreQuery(AbstractQuery $query, $script, AbstractFilter $filter = null, array $params = [], $lang = \Elastica\Script::LANG_GROOVY)
     {
         $customScore = new \Elastica\Query\FunctionScore();
         $customScore->setQuery($query);
@@ -109,7 +123,7 @@ class ConditionFactory implements ConditionFactoryInterface
     public function getTermQuery($fieldName, $value)
     {
         return new \Elastica\Query\Term([
-            $fieldName => $value
+            $fieldName => $value,
         ]);
     }
 
@@ -135,7 +149,6 @@ class ConditionFactory implements ConditionFactoryInterface
     {
         return new \Elastica\Query\Ids(null, $ids);
     }
-
 
     /**
      * Условаие запроса по совпадению поля (в зависимости от анализатора конкретного поля).

@@ -80,7 +80,7 @@ interface FilterFactoryInterface
      * @param array $point Точка местоположения
      * @return \Elastica\Filter\AbstractFilter
      */
-    public function getGeoDistanceFilter($fieldName, array $point, $distance)
+    public function getGeoDistanceFilter($fieldName, array $point, $distance);
 
     /**
      * Возвращает фильтр по промежутку расстояний (например: от 200км до 400км)

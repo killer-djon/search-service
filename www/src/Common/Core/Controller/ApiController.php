@@ -133,7 +133,10 @@ abstract class ApiController extends FOSRestController
      */
     protected function _handlerHtmlFormat($data, $statusCode = null)
     {
-        return $this->render($this->_template, [self::RESULT => $data]);
+        $response = $this->render($this->_template, [self::RESULT => $data]);
+        $response->setStatusCode($statusCode);
+
+        return $response;
     }
 
     /**
@@ -158,6 +161,7 @@ abstract class ApiController extends FOSRestController
             $view->setStatusCode($statusCode === null ? Response::HTTP_INTERNAL_SERVER_ERROR : $statusCode);
         }
 
+        $view->setStatusCode($statusCode);
         return $this->handleView($view->setData($xmlWrapper));
     }
 
@@ -170,16 +174,18 @@ abstract class ApiController extends FOSRestController
      */
     protected function _handleViewWithError($errorMessage, $errorCode = Response::HTTP_INTERNAL_SERVER_ERROR)
     {
-	    
 	    if( $errorMessage instanceof \Exception )
 	    {
+	        $generatedErrorCode = ( $errorMessage->getCode() == 0 ? $errorCode : $errorMessage->getCode() );
 		    return $this->_handleViewWithData(
-			    $this->buildError($errorMessage->getMessage(), $errorMessage->getCode())
+			    $this->buildError($errorMessage->getMessage(), $generatedErrorCode),
+                $generatedErrorCode
 		    );
 	    }
 	    
 	    return $this->_handleViewWithData(
-        	$this->buildError($errorMessage, $errorCode)
+        	$this->buildError($errorMessage, $errorCode),
+            $errorCode
         );
     }
     
@@ -254,4 +260,13 @@ abstract class ApiController extends FOSRestController
         return $this->get('rp_common.model_loader');
     }
 
+    /**
+     * Получаем сервис поиска
+     *
+     * @return \Common\Core\Facade\Search\QueryFactory\SearchEngineInterface
+     */
+    protected function getSearchService()
+    {
+        return $this->get('rp_search.search.engine');
+    }
 }

@@ -3,7 +3,7 @@
 export alias ll='ls -lah --group-directories-first'
 
 sudo yum -y update
-sudo yum install -y gcc make autoconf gnutils net-tools
+sudo yum install -y gcc make autoconf gnutils net-tools node npm
 sudo yum install -y nano mc wget bzip2 kernel-devel-`uname -r`
 sudo yum install -y python-software-properties build-essential git-core subversion curl
 

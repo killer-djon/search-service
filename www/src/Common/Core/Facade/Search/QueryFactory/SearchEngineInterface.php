@@ -10,53 +10,48 @@ use Elastica\Exception\ElasticsearchException;
 
 interface SearchEngineInterface
 {
+
     /**
      * Метод осуществляет поиск в еластике
      * при помощи сервиса fos_elastica.finder.%s.%s
      *
+     * @param string Search type
      * @param mixed $query Can be a string, an array or an \Elastica\Query object
-     * @param int $limit How many results to get
      * @param array $options
      * @throws ElasticsearchException
      * @return array results
      */
-    public function finderSearch($query, $limit = null, $options = []);
-
-    /**
-     * Метод осуществляет гибридный поиск в еластике
-     * при помощи сервиса fos_elastica.finder.%s.%s
-     *
-     * @param mixed $query Can be a string, an array or an \Elastica\Query object
-     * @param int $limit How many results to get
-     * @param array $options
-     * @throws ElasticsearchException
-     * @return array results
-     */
-    public function finderSearchHybrid($query, $limit = null, $options = []);
+    public function findDocuments($context, $query, $options = []);
 
     /**
      * Индексный поиск в еластике
      * т.е. поиск на основе индекса fos_elastica.index.%s.%s
      *
+     * @param string Search type
+     * @param mixed $query Can be a string, an array or an \Elastica\Query object
+     * @param array $options
      * @throws ElasticsearchException
+     * @return array results
      */
-    public function indexSearch($query = '', $options = null);
-
-    /**
-     * Индексный гибридный поиск в еластике
-     * т.е. поиск на основе индекса fos_elastica.index.%s.%s
-     *
-     * @throws ElasticsearchException
-     */
-    public function indexSearchHybrid($query = '', $options = null);
+    public function searchDocuments($context, $query, $options = []);
 
     /**
      *
      */
-    public function transformResult();
+    public function transformResult(array $resultSets);
 
     /**
-     *
+     * @return \Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface
      */
-    public function transformHybridResult();
+    public function getQueryCondition();
+
+    /**
+     * @return \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface
+     */
+    public function getFilterCondition();
+
+    /**
+     * @return \Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface
+     */
+    public function getQueryFactory();
 }

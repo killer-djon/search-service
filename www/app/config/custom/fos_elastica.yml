@@ -1,0 +1,11 @@
+# Elastica Configuration
+fos_elastica:
+    clients:
+        default: { host: %elasticsearch.host%, port: %elasticsearch.port% }
+    serializer:
+        serializer: jms_serializer
+    default_manager: mongodb
+    indexes:
+        rp:
+            client: default
+            finder: ~

@@ -4,7 +4,7 @@ namespace RP\SearchBundle\Services\Mapping;
 abstract class PeopleSearchMapping
 {
     /** Контекст поиска */
-    const CONTEXT = 'user';
+    const CONTEXT = 'people';
 
     /** Поле имени пользователя */
     const NAME_FIELD = 'name';

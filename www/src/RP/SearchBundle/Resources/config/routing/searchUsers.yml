@@ -1,7 +1,10 @@
-RPSearchBundle_search_users:
-    path: /v{_version}/{_format}/users
+# Routing который формирует запрос для поиска пользователя
+# по имени/фамилии пользователя (начало/середина имени/фамилии)
+# пример запроса /api/search/v1/json/users
+RPSearchBundle_search_users_byname:
+    path: /v{_version}/{_format}/usersname
     defaults:
-        _controller: RPSearchBundle:Search:searchUsers
+        _controller: RPSearchBundle:Search:searchUsersByName
         _version: 1
         _format: json
         template: "RPSearchBundle:Search:searchusers.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)

@@ -1,5 +1,4 @@
-# Routing который формирует запрос для поиска пользователя
-# пример запроса /api/search/v1/json/users
+
 rp_search_users:
     resource: routing/searchUsers.yml
     prefix:   /api/search

@@ -13,37 +13,57 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class SearchController extends ApiController
 {
+
+    const USERNAME_SEARCH_PARAM = 'username';
+
     /**
-     * Запрос для поиска пользователя
+     * Поиск пользователей по имени/фамилии
+     * искомая строка содержиться либо в начале либо в середине
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
+     * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function searchUsersAction(Request $request)
+    public function searchUsersByNameAction(Request $request)
     {
         /** @var Текст запроса */
-        $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
-        $skip = $request->get(RequestConstant::SEARCH_SKIP_PARAM, RequestConstant::DEFAULT_SEARCH_SKIP);
-        $count = $request->get(RequestConstant::SEARCH_LIMIT_PARAM, RequestConstant::DEFAULT_SEARCH_LIMIT);
+        $searchUserName = $request->get(self::USERNAME_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
 
-        if (is_null($searchText)) {
+        /** @var ID пользователя */
+        $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
+
+        if (is_null($userId)) {
             return $this->_handleViewWithError(
                 new BadRequestHttpException(
-                    'You must set searchText param to request',
+                    'Не указан userId пользователя',
                     null,
                     Response::HTTP_BAD_REQUEST
                 )
             );
         }
 
-        try
-        {
+        $skip = $request->get(RequestConstant::SEARCH_SKIP_PARAM, RequestConstant::DEFAULT_SEARCH_SKIP);
+        $count = $request->get(RequestConstant::SEARCH_LIMIT_PARAM, RequestConstant::DEFAULT_SEARCH_LIMIT);
+
+        if (is_null($searchUserName)) {
+            return $this->_handleViewWithError(
+                new BadRequestHttpException(
+                    'Не указана поисковая строка username',
+                    null,
+                    Response::HTTP_BAD_REQUEST
+                )
+            );
+        }
+
+        try {
             $peopleSearchService = $this->getPeopleSearchService();
-            $resultPeople = $peopleSearchService->searchPeopleByFilter($skip, $count);
+            $resultPeople = $peopleSearchService->searchPeopleByUserName($userId, $searchUserName, $skip, $count);
 
             return $this->_handleViewWithData([
-                'people' => $resultPeople
+                'info' => $resultPeople['hits'],
+                'people' => $resultPeople['result'],
             ]);
 
-        }catch(ElasticsearchException $e)
-        {
+        } catch (ElasticsearchException $e) {
             return $this->_handleViewWithError(
                 new ElasticsearchException($e->getMessage(), $e->getCode())
             );

@@ -6,6 +6,6 @@ fos_elastica:
         serializer: jms_serializer
     default_manager: mongodb
     indexes:
-        rp:
+        russianplace:
             client: default
             finder: ~

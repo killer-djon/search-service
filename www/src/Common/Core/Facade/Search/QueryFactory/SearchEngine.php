@@ -15,6 +15,11 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class SearchEngine implements SearchEngineInterface
 {
+
+    private $_totalResults;
+
+    private $_totalHits;
+
     /**
      * Контейнер ядра для получения сервисов
      *
@@ -123,7 +128,7 @@ class SearchEngine implements SearchEngineInterface
             $elasticType = $this->_getElasticType($context);
             $searchResults = $elasticType->search($elasticQuery);
 
-            return $this->transformResult($searchResults->getResults());
+            return $this->transformResult($searchResults);
         } catch (ElasticsearchException $e) {
             throw new ElasticsearchException($e);
         }
@@ -134,14 +139,20 @@ class SearchEngine implements SearchEngineInterface
      * получаем набор данных \Elastica\Result
      * который тупо переводим в массив для вывода результата
      *
-     * @param \Elastica\Result[] $resultSets
+     * @param \Elastica\Result $resultSets
      * @return array $data Набор данных для вывода в результат
      */
-    public function transformResult(array $resultSets)
+    public function transformResult(\Elastica\ResultSet $resultSets)
     {
-        return array_map(function ($item) {
+        $_totalResults = array_map(function ($item) {
             return $item->getData();
-        }, $resultSets);
+        }, $resultSets->getResults());
+
+        $_totalHits = $resultSets->getTotalHits();
+        return [
+            'result' => $_totalResults,
+            'hits' => $_totalHits
+        ];
     }
 
     /**

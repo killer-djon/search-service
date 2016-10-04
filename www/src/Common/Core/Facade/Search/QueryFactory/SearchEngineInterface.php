@@ -35,9 +35,14 @@ interface SearchEngineInterface
     public function searchDocuments($context, \Elastica\Query $elasticQuery);
 
     /**
+     * Преобразование полученного результат из еластика
+     * получаем набор данных \Elastica\Result
+     * который тупо переводим в массив для вывода результата
      *
+     * @param \Elastica\Result $resultSets
+     * @return array $data Набор данных для вывода в результат
      */
-    public function transformResult(array $resultSets);
+    public function transformResult(\Elastica\ResultSet $resultSets);
 
     /**
      * @return \Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface

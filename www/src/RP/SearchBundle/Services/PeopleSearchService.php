@@ -9,22 +9,31 @@ use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 
 class PeopleSearchService extends AbstractSearchService
 {
-    public function searchPeopleByFilter($skip = 0, $count = null)
-    {
-        $this->setConditionQueryMust([
-            $this->_queryConditionFactory->getFieldQuery(PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, '3590'),
-            $this->_queryConditionFactory->getTermsQuery(PeopleSearchMapping::LOCATION_VISIBILITY_FIELD, [
-                Visible::ALL,
-                Visible::FRIEND,
-            ]),
-        ]);
 
+    /**
+     * Метод осуществляет поиск в еластике
+     * по имени/фамилии пользьвателя
+     *
+     * @param string $userId ID пользователя который посылает запрос
+     * @param string $username Часть искомой строки поиска
+     * @param int $skip Кол-во пропускаемых позиций поискового результата
+     * @param int $count Какое кол-во выводим
+     *
+     * @return array Массив с найденными результатами
+     */
+    public function searchPeopleByUserName($userId, $username, $skip = 0, $count = null)
+    {
+        $this->setConditionQueryShould([
+            $this->_queryConditionFactory->getFuzzyQuery(PeopleSearchMapping::NAME_PREFIX_FIELD, $username),
+            $this->_queryConditionFactory->getFuzzyQuery(PeopleSearchMapping::SURNAME_PREFIX_FIELD, $username),
+            /*$this->_queryConditionFactory->getMatchQuery(PeopleSearchMapping::NAME_FIELD, $username),
+            $this->_queryConditionFactory->getMatchQuery(PeopleSearchMapping::NAME_TRANSLIT_FIELD, $username),
+            $this->_queryConditionFactory->getMatchQuery(PeopleSearchMapping::SURNAME_FIELD, $username),
+            $this->_queryConditionFactory->getMatchQuery(PeopleSearchMapping::SURNAME_TRANSLIT_FIELD, $username)*/
+
+        ]);
         $this->setFilterQuery([
-            $this->_queryFilterFactory->getNotFilter(
-                $this->_queryFilterFactory->getTermFilter([
-                    PeopleSearchMapping::USER_REMOVED_FIELD => true,
-                ])
-            ),
+            $this->_queryFilterFactory->getTermsFilter(PeopleSearchMapping::FRIEND_LIST_FIELD, [$userId])
         ]);
 
         /** Получаем сформированный объект запроса */
@@ -32,4 +41,5 @@ class PeopleSearchService extends AbstractSearchService
 
         return $this->searchDocuments(PeopleSearchMapping::CONTEXT, $queryResult);
     }
+
 }

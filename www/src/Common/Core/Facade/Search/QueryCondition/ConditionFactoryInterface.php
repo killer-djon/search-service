@@ -21,15 +21,23 @@ interface ConditionFactoryInterface
     public function getMatchAllQuery();
 
     /**
+     * Условие запроса поиска всех документов
+     *
+     * @param string $fieldName
+     * @param string $value
+     * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html
+     * @return \Elastica\Query\Match
+     */
+    public function getMatchQuery($fieldName, $value);
+
+    /**
      * Условие запроса поиска по похожести текста
      *
-     * @abstract
+     * @param string $fieldName
      * @param string $textToSearch
-     * @param array $fields
-     * @param null $minSimilarity
-     * @return mixed
+     * @return \Elastica\Query\Fuzzy
      */
-    public function getFuzzyLikeThisQuery($textToSearch, array $fields, $minSimilarity = null);
+    public function getFuzzyQuery($fieldName, $textToSearch);
 
     /**
      * Условие префиксного запроса
@@ -62,7 +70,7 @@ interface ConditionFactoryInterface
      * @param string $langScript
      * @return \Elastica\Query\FunctionScore
      */
-    public function getCustomScoreQuery(AbstractQuery $query, $script, AbstractFilter $filter = null, array $params = array(), $lang = \Elastica\Script::LANG_GROOVY);
+    public function getCustomScoreQuery(AbstractQuery $query, $script, AbstractFilter $filter = null, array $params = [], $lang = \Elastica\Script::LANG_GROOVY);
 
     /**
      * Условие точного совпадения запроса по заданному терму
@@ -89,7 +97,6 @@ interface ConditionFactoryInterface
      * @return mixed
      */
     public function getIdsQuery(array $ids);
-
 
     /**
      * Условаие запроса по совпадению поля (в зависимости от анализатора конкретного поля).

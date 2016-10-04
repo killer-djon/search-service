@@ -18,19 +18,19 @@ use Common\Core\Serializer\XMLWrapper;
  */
 abstract class ApiController extends FOSRestController
 {
-	/**
+    /**
      * Атрибут текст ошибки
      *
      * @const string TEXT
      */
-	const TEXT = 'text';
-	
-	/**
+    const TEXT = 'text';
+
+    /**
      * Атрибут транслита текста ошибки
      *
      * @const string TEXT_TRANSLIT
      */
-	const TEXT_TRANSLIT = 'text_translate';
+    const TEXT_TRANSLIT = 'text_translate';
 
     /**
      * Атрибут в котором возвращается ответ клиенту
@@ -45,7 +45,7 @@ abstract class ApiController extends FOSRestController
      * @const string ERROR
      */
     const ERROR = 'error';
-    
+
     /**
      * Параметр кода ответа
      *
@@ -152,16 +152,17 @@ abstract class ApiController extends FOSRestController
         $view = $this->view();
         $xmlWrapper = new XMLWrapper();
         $isError = is_array($data) && array_key_exists(self::ERROR, $data);
-        
+
         if (!$isError) {
             $xmlWrapper->data = [self::RESULT => $data];
         } else {
-	        
+
             $xmlWrapper->data = $data;
             $view->setStatusCode($statusCode === null ? Response::HTTP_INTERNAL_SERVER_ERROR : $statusCode);
         }
 
         $view->setStatusCode($statusCode);
+
         return $this->handleView($view->setData($xmlWrapper));
     }
 
@@ -174,21 +175,21 @@ abstract class ApiController extends FOSRestController
      */
     protected function _handleViewWithError($errorMessage, $errorCode = Response::HTTP_INTERNAL_SERVER_ERROR)
     {
-	    if( $errorMessage instanceof \Exception )
-	    {
-	        $generatedErrorCode = ( $errorMessage->getCode() == 0 ? $errorCode : $errorMessage->getCode() );
-		    return $this->_handleViewWithData(
-			    $this->buildError($errorMessage->getMessage(), $generatedErrorCode),
+        if ($errorMessage instanceof \Exception) {
+            $generatedErrorCode = ($errorMessage->getCode() == 0 ? $errorCode : $errorMessage->getCode());
+
+            return $this->_handleViewWithData(
+                $this->buildError($errorMessage->getMessage(), $generatedErrorCode),
                 $generatedErrorCode
-		    );
-	    }
-	    
-	    return $this->_handleViewWithData(
-        	$this->buildError($errorMessage, $errorCode),
+            );
+        }
+
+        return $this->_handleViewWithData(
+            $this->buildError($errorMessage, $errorCode),
             $errorCode
         );
     }
-    
+
     /**
      * Заполняет и проверяет модель из реквеста.
      * Возвращает либо null, в лучае отсутсвия ошибок, либо строку ошибки для отправки на клиент.
@@ -199,59 +200,130 @@ abstract class ApiController extends FOSRestController
      */
     public function loadAndValidateModel($formModel, Request $request = null)
     {
-	    if( is_null($request) )
-	    {
-		    $request = $this->getRequest();
-	    }
-	    
-	    $loader = $this->getModelLoaderService();
+        if (is_null($request)) {
+            $request = $this->getRequest();
+        }
+
+        $loader = $this->getModelLoaderService();
 
         return $loader->loadAndValidateModel($formModel, $request);
     }
-    
+
     /**
-	 * Генерируем ответ ошибки
-	 * 
-	 * @param mixed $message Массив текстов ответов ошибки или текст ошибки
-	 * @param int $code Код ошибки
-	 *
-	 * @return array Массив с ошибкой
+     * Генерируем ответ ошибки
+     *
+     * @param mixed $message Массив текстов ответов ошибки или текст ошибки
+     * @param int $code Код ошибки
+     * @return array Массив с ошибкой
      */
     private function buildError($message, $code = -1)
     {
-	    return array(
-            self::ERROR => array(
+        return [
+            self::ERROR => [
                 self::TEXT          => (is_array($message) ? $message : [$message]),
-                self::TEXT_TRANSLIT => (is_array($message) ? 
-                	array_map(function($msg){ return $this->_translit($msg); }, $message) : 
-                	[$message]
+                self::TEXT_TRANSLIT => (is_array($message) ?
+                    array_map(function ($msg) {
+                        return $this->_translit($msg);
+                    }, $message) :
+                    [$this->_translit($message)]
                 ),
-                self::ERROR_CODE          => $code
-            )
-        );
+                self::ERROR_CODE    => $code,
+            ],
+        ];
     }
-    
-    /**
-	 * Транслитерация текст
-	 *
-	 * @param string $str Текст который нужно конвертировать
-     */
-    private static function _translit($str)
-    {
-        $translit = array(
-            '0'=>"0",'1'=>"1",'2'=>"2",'3'=>"3",'4'=>"4",'5'=>"5",'6'=>"6",'7'=>"7",'8'=>"8",'9'=>"9",
-            'а'=>"a",'б'=>"b",'в'=>"v",'г'=>"g",'д'=>"d",'е'=>"e",'ё'=>"yo",'ж'=>"zh",'з'=>"z",'и'=>"i",'й'=>"y",
-            'к'=>"k",'л'=>"l",'м'=>"m",'н'=>"n",'о'=>"o",'п'=>"p",'р'=>"r",'с'=>"s",'т'=>"t",'у'=>"u",'ф'=>"f",
-            'х'=>"h",'ц'=>"c",'ч'=>"ch",'ш'=>"sh",'щ'=>"xh",'ь'=>"",'ы'=>"y",'ъ'=>"",'э'=>"e",'ю'=>"yu",'я'=>"ya",
-            'А'=>"A",'Б'=>"B",'В'=>"V",'Г'=>"G",'Д'=>"D",'Е'=>"E",'Ё'=>"YO",'Ж'=>"ZH",'З'=>"Z",'И'=>"I",'Й'=>"Y",
-            'К'=>"K",'Л'=>"L",'М'=>"M",'Н'=>"N",'О'=>"O",'П'=>"P",'Р'=>"R",'С'=>"S",'Т'=>"T",'У'=>"U",'Ф'=>"F",
-            'Ч'=>"H",'Ц'=>"C",'Ч'=>"CH",'Ш'=>"SH",'Щ'=>"XH",'Ь'=>"",'Ы'=>"Y",'Ъ'=>"",'Э'=>"E",'Ю'=>"YU",'Я'=>"YA"
-        );
 
-		$res = strtr($str, $translit);
+    /**
+     * Транслитерация текст
+     *
+     * @param string $str Текст который нужно конвертировать
+     */
+    private function _translit($str)
+    {
+
+        $translit = [
+            '0' => "0",
+            '1' => "1",
+            '2' => "2",
+            '3' => "3",
+            '4' => "4",
+            '5' => "5",
+            '6' => "6",
+            '7' => "7",
+            '8' => "8",
+            '9' => "9",
+            'а' => "a",
+            'б' => "b",
+            'в' => "v",
+            'г' => "g",
+            'д' => "d",
+            'е' => "e",
+            'ё' => "yo",
+            'ж' => "zh",
+            'з' => "z",
+            'и' => "i",
+            'й' => "y",
+            'к' => "k",
+            'л' => "l",
+            'м' => "m",
+            'н' => "n",
+            'о' => "o",
+            'п' => "p",
+            'р' => "r",
+            'с' => "s",
+            'т' => "t",
+            'у' => "u",
+            'ф' => "f",
+            'х' => "h",
+            'ц' => "c",
+            'ч' => "ch",
+            'ш' => "sh",
+            'щ' => "xh",
+            'ь' => "",
+            'ы' => "y",
+            'ъ' => "",
+            'э' => "e",
+            'ю' => "yu",
+            'я' => "ya",
+            'А' => "A",
+            'Б' => "B",
+            'В' => "V",
+            'Г' => "G",
+            'Д' => "D",
+            'Е' => "E",
+            'Ё' => "YO",
+            'Ж' => "ZH",
+            'З' => "Z",
+            'И' => "I",
+            'Й' => "Y",
+            'К' => "K",
+            'Л' => "L",
+            'М' => "M",
+            'Н' => "N",
+            'О' => "O",
+            'П' => "P",
+            'Р' => "R",
+            'С' => "S",
+            'Т' => "T",
+            'У' => "U",
+            'Ф' => "F",
+            'Ч' => "H",
+            'Ц' => "C",
+            'Ч' => "CH",
+            'Ш' => "SH",
+            'Щ' => "XH",
+            'Ь' => "",
+            'Ы' => "Y",
+            'Ъ' => "",
+            'Э' => "E",
+            'Ю' => "YU",
+            'Я' => "YA",
+        ];
+
+        $res = strtr($str, $translit);
+
         return $res;
     }
-    
+
     /**
      * @return \Common\Core\Loader\JSONModelLoader
      */

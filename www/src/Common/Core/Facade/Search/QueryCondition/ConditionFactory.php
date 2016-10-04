@@ -21,19 +21,29 @@ class ConditionFactory implements ConditionFactoryInterface
     }
 
     /**
+     * Условие запроса поиска всех документов
+     *
+     * @param string $fieldName
+     * @param string $value
+     * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html
+     * @return \Elastica\Query\Match
+     */
+    public function getMatchQuery($fieldName, $value)
+    {
+        return new \Elastica\Query\Match($fieldName, $value);
+    }
+
+    /**
      * Условие запроса поиска по похожести текста
      *
+     * @param string $fieldName
      * @param string $textToSearch
-     * @param array $fields
-     * @param null|float $minSimilarity
-     * @return \Elastica\Query\FuzzyLikeThisCondition
+     * @return \Elastica\Query\Fuzzy
      */
-    public function getFuzzyLikeThisQuery($textToSearch, array $fields, $minSimilarity = self::MIN_SIMILARITY)
+    public function getFuzzyQuery($fieldName, $textToSearch)
     {
-        $fuzzyLike = new \Elastica\Query\FuzzyLikeThis();
-        $fuzzyLike->addFields($fields);
-        $fuzzyLike->setLikeText($textToSearch);
-        $fuzzyLike->setMinSimilarity($minSimilarity);
+        $fuzzyLike = new \Elastica\Query\Fuzzy();
+        $fuzzyLike->setField($fieldName, $textToSearch);
 
         return $fuzzyLike;
     }

@@ -13,6 +13,14 @@ class RequestConstant
 
     /**
      * Параметр поисковой строки
+     * id пользователя
+     *
+     * @conts string USER_ID_PARAM
+     */
+    const USER_ID_PARAM = 'userId';
+
+    /**
+     * Параметр поисковой строки
      * кол-во пропускаемых записей поиска
      *
      * @conts string SEARCH_SKIP_PARAM

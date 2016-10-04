@@ -23,19 +23,19 @@ class SearchEngine implements SearchEngineInterface
     private $container;
 
     /**
-     * @var \Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface Класс формирующий объект запроса
+     * @var \Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface
      */
-    protected $_queryFactory;
+    public $_queryFactory;
 
     /**
      * @var \Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface Объект формирования условий запроса
      */
-    protected $_queryCondition;
+    public $_queryConditionFactory;
 
     /**
      * @var \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface Оъект добавляющий фильтры к запросу
      */
-    protected $_filterFactory;
+    public $_queryFilterFactory;
 
     /**
      * @var \FOS\ElasticaBundle\Elastica\Index $elasticaIndex
@@ -62,10 +62,9 @@ class SearchEngine implements SearchEngineInterface
         FilterFactoryInterface $filterFactory
     ) {
         $this->_elasticaIndex = $elasticaIndex;
+        $this->_queryConditionFactory = $queryCondition;
+        $this->_queryFilterFactory = $filterFactory;
         $this->_queryFactory = $queryFactory;
-        $this->_queryCondition = $queryCondition;
-        $this->_filterFactory = $filterFactory;
-
     }
 
     /**
@@ -73,7 +72,7 @@ class SearchEngine implements SearchEngineInterface
      */
     public function getQueryCondition()
     {
-        return $this->_queryCondition;
+        return $this->_queryConditionFactory;
     }
 
     /**
@@ -81,15 +80,7 @@ class SearchEngine implements SearchEngineInterface
      */
     public function getFilterCondition()
     {
-        return $this->_filterFactory;
-    }
-
-    /**
-     * @return \Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface
-     */
-    public function getQueryFactory()
-    {
-        return $this->_queryFactory;
+        return $this->_queryFilterFactory;
     }
 
     /**
@@ -122,55 +113,20 @@ class SearchEngine implements SearchEngineInterface
      * т.е. поиск на основе индекса fos_elastica.index.%s.%s
      *
      * @param string Search type
-     * @param mixed $query Can be a string, an array or an \Elastica\Query object
-     * @param array $options
+     * @param \Elastica\Query $elasticQuery An \Elastica\Query object
      * @throws ElasticsearchException
      * @return array results
      */
-    public function searchDocuments($context, $query, $options = [])
+    public function searchDocuments($context, \Elastica\Query $elasticQuery)
     {
-        $elasticType = $this->_getElasticType($context);
+        try {
+            $elasticType = $this->_getElasticType($context);
+            $searchResults = $elasticType->search($elasticQuery);
 
-        if (!empty($options)) {
-            extract($options);
+            return $this->transformResult($searchResults->getResults());
+        } catch (ElasticsearchException $e) {
+            throw new ElasticsearchException($e);
         }
-
-        // Применить набор фильтров
-        if (isset($filters) && sizeof($filters) > 0) {
-            //$queryFilter = new \Elastica\Filter\BoolAnd();
-            $queryFilter = $this->_filterFactory->getBoolAndFilter($filters);
-            // Применить к запросу набор фильтров
-            $query = new \Elastica\Query\Filtered($query, $queryFilter);
-        }
-
-        // Сформировать объект запроса
-        $elasticQuery = new \Elastica\Query($query);
-
-        if (isset($sortings) && sizeof($sortings) > 0) {
-            $elasticQuery->setSort($sortings);
-        }
-
-        // Установить ограничения на количество записей
-        if (!isset($limit)) {
-            $limit = RequestConstant::DEFAULT_SEARCH_LIMIT;
-        }
-
-        if (!isset($skip)) {
-            $skip = RequestConstant::DEFAULT_SEARCH_SKIP;
-        }
-
-        if (!isset($minScore)) {
-            $minScore = RequestConstant::DEFAULT_SEARCH_MIN_SCORE;
-
-        }
-
-        $elasticQuery->setFrom((int)$skip);
-        $elasticQuery->setSize($limit);
-        $elasticQuery->setMinScore($minScore);
-
-        $searchResults = $elasticType->search($elasticQuery);
-
-        return $this->transformResult($searchResults->getResults());
     }
 
     /**
@@ -195,7 +151,7 @@ class SearchEngine implements SearchEngineInterface
      * @return \Elastica\Type
      * @throws \InvalidArgumentException
      */
-    private function _getElasticType($context)
+    protected function _getElasticType($context)
     {
         if (!is_string($context) || empty($context)) {
             throw new \InvalidArgumentException('_getElasticType: Invalid argument'); // TODO: Сообщение

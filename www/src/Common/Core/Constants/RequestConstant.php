@@ -12,6 +12,22 @@ class RequestConstant
     const SEARCH_TEXT_PARAM = 'searchText';
 
     /**
+     * Параметр поисковой строки
+     * кол-во пропускаемых записей поиска
+     *
+     * @conts string SEARCH_SKIP_PARAM
+     */
+    const SEARCH_SKIP_PARAM = 'skip';
+
+    /**
+     * Параметр поисковой строки
+     * кол-во искомых записей
+     *
+     * @conts string SEARCH_LIMIT_PARAM
+     */
+    const SEARCH_LIMIT_PARAM = 'count';
+
+    /**
      * В случае пустого параметра запроса (коорый необходим или который ожидаем)
      * выставляем нулевое значение
      *
@@ -24,7 +40,7 @@ class RequestConstant
      *
      * @const int DEFAULT_SEARCH_LIMIT
      */
-    const DEFAULT_SEARCH_LIMIT = NULL;
+    const DEFAULT_SEARCH_LIMIT = 1000;
 
     /**
      * Кол-во пропускаем позиций при поиске с лимотом
@@ -32,6 +48,7 @@ class RequestConstant
      * @const int DEFAULT_SEARCH_SKIP
      */
     const DEFAULT_SEARCH_SKIP = 0;
+
 
     /**
      * Скор по умолчанию (вес поиска)

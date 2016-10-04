@@ -48,7 +48,7 @@ interface ConditionFactoryInterface
      * @param array $must
      * @param array $should
      * @param array $mustNot
-     * @return mixed
+     * @return \Elastica\Query\BoolQuery
      */
     public function getBoolQuery(array $must, array $should, array $mustNot);
 

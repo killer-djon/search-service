@@ -20,6 +20,8 @@ class SearchController extends ApiController
     {
         /** @var Текст запроса */
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+        $skip = $request->get(RequestConstant::SEARCH_SKIP_PARAM, RequestConstant::DEFAULT_SEARCH_SKIP);
+        $count = $request->get(RequestConstant::SEARCH_LIMIT_PARAM, RequestConstant::DEFAULT_SEARCH_LIMIT);
 
         if (is_null($searchText)) {
             return $this->_handleViewWithError(
@@ -33,29 +35,29 @@ class SearchController extends ApiController
 
         try
         {
-            $searchService = $this->getSearchService();
-            $mustQuery = $showlQuery = $mustNotQuery = $filterQuery = [];
-
-
-            $filterQuery[] = $searchService->getFilterCondition()->getExistsFilter('name');
-            $filterQuery[] = $searchService->getFilterCondition()->getTermsFilter('visible', ['all']);
-
-            $searchQuery = $searchService->getQueryCondition()->getBoolQuery($mustQuery, $showlQuery, $mustNotQuery);
-            $result = $searchService->searchDocuments('place', $searchQuery, [
-                'filters' => $filterQuery,
-                'sortings' => [
-                    'id' => [
-                        'order' => 'asc'
-                    ]
-                ]
-            ]);
+            $peopleSearchService = $this->getPeopleSearchService();
+            $resultPeople = $peopleSearchService->searchPeopleByFilter($skip, $count);
 
             return $this->_handleViewWithData([
-                'places' => $result
+                'people' => $resultPeople
             ]);
+
         }catch(ElasticsearchException $e)
         {
-            throw new ElasticsearchException($e);
+            return $this->_handleViewWithError(
+                new ElasticsearchException($e->getMessage(), $e->getCode())
+            );
         }
+    }
+
+    /**
+     * Получаем сервис поиска пользователей (людей)
+     * через еластик
+     *
+     * @return \RP\SearchBundle\Services\PeopleSearchService
+     */
+    public function getPeopleSearchService()
+    {
+        return $this->get('rp_search.search_service.people');
     }
 }

@@ -21,3 +21,12 @@ services:
     # сервис создания фильтра для поиска
     rp_search.search.query_filter:
         class: Common\Core\Facade\Search\QueryFilter\FilterFactory
+
+    # Базовый абстрактный поисковый сервис
+    rp_search.search_service.base:
+        class: RP\SearchBundle\Services\AbstractSearchService
+        parent: rp_search.search.engine
+
+    rp_search.search_service.people:
+        class: RP\SearchBundle\Services\PeopleSearchService
+        parent: rp_search.search_service.base

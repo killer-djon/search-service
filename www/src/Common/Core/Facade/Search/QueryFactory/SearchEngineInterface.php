@@ -28,12 +28,11 @@ interface SearchEngineInterface
      * т.е. поиск на основе индекса fos_elastica.index.%s.%s
      *
      * @param string Search type
-     * @param mixed $query Can be a string, an array or an \Elastica\Query object
-     * @param array $options
+     * @param \Elastica\Query $elasticQuery An \Elastica\Query object
      * @throws ElasticsearchException
      * @return array results
      */
-    public function searchDocuments($context, $query, $options = []);
+    public function searchDocuments($context, \Elastica\Query $elasticQuery);
 
     /**
      *
@@ -50,8 +49,4 @@ interface SearchEngineInterface
      */
     public function getFilterCondition();
 
-    /**
-     * @return \Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface
-     */
-    public function getQueryFactory();
 }

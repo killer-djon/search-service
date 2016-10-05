@@ -26,7 +26,7 @@ class SearchController extends ApiController
     public function searchUsersByNameAction(Request $request)
     {
         /** @var Текст запроса */
-        $searchUserName = $request->get(self::USERNAME_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
+        $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
         /** @var ID пользователя */
         $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
@@ -44,7 +44,7 @@ class SearchController extends ApiController
         $skip = $request->get(RequestConstant::SEARCH_SKIP_PARAM, RequestConstant::DEFAULT_SEARCH_SKIP);
         $count = $request->get(RequestConstant::SEARCH_LIMIT_PARAM, RequestConstant::DEFAULT_SEARCH_LIMIT);
 
-        if (is_null($searchUserName)) {
+        if (is_null($searchText)) {
             return $this->_handleViewWithError(
                 new BadRequestHttpException(
                     'Не указана поисковая строка username',
@@ -56,11 +56,15 @@ class SearchController extends ApiController
 
         try {
             $peopleSearchService = $this->getPeopleSearchService();
-            $resultPeople = $peopleSearchService->searchPeopleByUserName($userId, $searchUserName, $skip, $count);
+            $peopleSearchService->searchPeopleByUserName($userId, $searchText, $skip, $count);
 
             return $this->_handleViewWithData([
-                'info' => $resultPeople['hits'],
-                'people' => $resultPeople['result'],
+                'info' => [
+                    'people'    => $peopleSearchService->getTotalHits()
+                ],
+                'results' => [
+                    'people'    => $peopleSearchService->getTotalResults()
+                ],
             ]);
 
         } catch (ElasticsearchException $e) {

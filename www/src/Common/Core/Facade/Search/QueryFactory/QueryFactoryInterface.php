@@ -67,6 +67,7 @@ interface QueryFactoryInterface
      */
     public function setScriptFields(array $scriptFields = []);
 
+
     /**
      * Sets sort arguments for the query
      * Replaces existing values.

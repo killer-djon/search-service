@@ -9,6 +9,7 @@ services:
             - "@rp_search.search.query_filter"
         calls:
             - [ setContainer, [ "@service_container" ] ]
+            - [ setLogger, [ "@logger" ] ]
 
     # сервис поиского движка
     rp_search.search.query_factory:
@@ -30,3 +31,13 @@ services:
     rp_search.search_service.people:
         class: RP\SearchBundle\Services\PeopleSearchService
         parent: rp_search.search_service.base
+
+    #rp_common.search.elastica_to_model_transformer.user_profile:
+    #    class: RP\Common\Reporting\Search\ElasticaResultTransformer
+    #    arguments:
+    #        - "@doctrine_mongodb"
+    #        - RP\Common\Reporting\User\Document\UserProfileDocument
+    #    calls:
+    #        - [ "setPropertyAccessor", [ @fos_elastica.property_accessor ] ]
+    #    tags:
+    #        - { name: fos_elastica.elastica_to_model_transformer, index: rp, type: user }

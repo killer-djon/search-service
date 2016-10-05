@@ -1,7 +1,10 @@
 # Elastica Configuration
 fos_elastica:
     clients:
-        default: { host: %elasticsearch.host%, port: %elasticsearch.port% }
+        default:
+            host: '%elasticsearch.host%'
+            port: '%elasticsearch.port%'
+            logger: true
     serializer:
         serializer: jms_serializer
     default_manager: mongodb

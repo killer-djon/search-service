@@ -16,7 +16,7 @@ interface ConditionFactoryInterface
      *
      * @abstract
      * @link http://www.elasticsearch.org/guide/reference/query-dsl/match-all-query.html
-     * @return mixed
+     * @return \Elastica\Query\MatchAll
      */
     public function getMatchAllQuery();
 
@@ -29,6 +29,14 @@ interface ConditionFactoryInterface
      * @return \Elastica\Query\Match
      */
     public function getMatchQuery($fieldName, $value);
+
+    /**
+     * Получаем объект запроса поиска по совпадению в полях
+     *
+     * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-multi-match-query.html
+     * @return \Elastica\Query\MultiMatch
+     */
+    public function getMultiMatchQuery();
 
     /**
      * Условие запроса поиска по похожести текста

@@ -31,6 +31,15 @@ interface FilterFactoryInterface
     public function getGtFilter($fieldName, $value);
 
     /**
+     * Возвращает фильтр типа
+     *
+     * @abstract
+     * @param string $type
+     * @return \Elastica\Filter\AbstractFilter
+     */
+    public function getTypeFilter($type);
+
+    /**
      * Возвращает фильтр c условием по term
      * как условие строгое равно
      *

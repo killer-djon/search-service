@@ -11,14 +11,24 @@ use FOS\ElasticaBundle\Elastica\Index;
 use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use FOS\ElasticaBundle\Transformer\ElasticaToModelTransformerInterface;
+use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 class SearchEngine implements SearchEngineInterface
 {
+    /**
+     * Общие показатели результата поиска
+     *
+     * @var array Время на запрос и общее кол-во в результате
+     */
+    private $_totalHits = [];
 
-    private $_totalResults;
-
-    private $_totalHits;
+    /**
+     * Общие результат поиска
+     *
+     * @var array
+     */
+    private $_totalResults = [];
 
     /**
      * Контейнер ядра для получения сервисов
@@ -53,6 +63,13 @@ class SearchEngine implements SearchEngineInterface
     protected $_transformer;
 
     /**
+     * Объект логгера
+     *
+     * @var \Psr\Log\LoggerInterface $logger
+     */
+    protected $logger;
+
+    /**
      * При создании сервиса необходимо установить все сопутствующие объекты
      *
      * @param \FOS\ElasticaBundle\Elastica\Index $elasticaIndex
@@ -70,6 +87,17 @@ class SearchEngine implements SearchEngineInterface
         $this->_queryConditionFactory = $queryCondition;
         $this->_queryFilterFactory = $filterFactory;
         $this->_queryFactory = $queryFactory;
+    }
+
+    /**
+     * Получаем логгер
+     * при его помощи будет логировать инфу по запросам
+     *
+     * @param \Psr\Log\LoggerInterface $logger
+     */
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
     }
 
     /**
@@ -103,14 +131,14 @@ class SearchEngine implements SearchEngineInterface
      * при помощи сервиса fos_elastica.finder.%s.%s
      *
      * @param string Search type
-     * @param mixed $query Can be a string, an array or an \Elastica\Query object
+     * @param \Elastica\Query $elasticQuery An \Elastica\Query object
      * @param array $options
      * @throws ElasticsearchException
      * @return array results
      */
-    public function findDocuments($context, $query, $options = [])
+    public function findDocuments($context, \Elastica\Query $elasticQuery, $options = [])
     {
-
+        // @todo В будущем надо будет применить для пагинации
     }
 
     /**
@@ -127,6 +155,10 @@ class SearchEngine implements SearchEngineInterface
         try {
             $elasticType = $this->_getElasticType($context);
             $searchResults = $elasticType->search($elasticQuery);
+            $this->logger->info(json_encode([
+                'query_string' => $elasticQuery,
+                'time'         => date('d.m.Y H:i'),
+            ]));
 
             return $this->transformResult($searchResults);
         } catch (ElasticsearchException $e) {
@@ -144,15 +176,64 @@ class SearchEngine implements SearchEngineInterface
      */
     public function transformResult(\Elastica\ResultSet $resultSets)
     {
-        $_totalResults = array_map(function ($item) {
-            return $item->getData();
-        }, $resultSets->getResults());
+        $this->setTotalHits($resultSets);
+        $this->setTotalResults($resultSets);
 
-        $_totalHits = $resultSets->getTotalHits();
-        return [
-            'result' => $_totalResults,
-            'hits' => $_totalHits
+        return $this->getTotalResults();
+    }
+
+    /**
+     * Устанавливаем общие показатели запроса
+     *
+     * @param \Elastica\Result $resultSets
+     * @return array
+     */
+    private function setTotalHits(\Elastica\ResultSet $resultSets)
+    {
+        $elipsedTime = $resultSets->getTotalTime() / 1000;
+        $this->_totalHits = [
+            'totalHits' => $resultSets->getTotalHits(),
+            'totalTime' => $elipsedTime . 'ms'
         ];
+    }
+
+    /**
+     * Устанавливаем общие данные запроса
+     *
+     * @param \Elastica\Result $resultSets
+     * @return array
+     */
+    private function setTotalResults(\Elastica\ResultSet $resultSets)
+    {
+        $this->_totalResults = array_map(function ($item) {
+            $_hit = $item->getHit();
+            unset($_hit['_source']);
+
+            return [
+                'item' => $item->getData(),
+                'hit'  => $_hit,
+            ];
+        }, $resultSets->getResults());
+    }
+
+    /**
+     * Получить общий результат запроса
+     *
+     * @return array
+     */
+    public function getTotalResults()
+    {
+        return $this->_totalResults;
+    }
+
+    /**
+     * Получить общие показатели запроса
+     *
+     * @return array
+     */
+    public function getTotalHits()
+    {
+        return $this->_totalHits;
     }
 
     /**

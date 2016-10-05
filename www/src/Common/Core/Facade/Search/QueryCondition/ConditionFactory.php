@@ -34,6 +34,17 @@ class ConditionFactory implements ConditionFactoryInterface
     }
 
     /**
+     * Получаем объект запроса поиска по совпадению в полях
+     *
+     * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-multi-match-query.html
+     * @return \Elastica\Query\MultiMatch
+     */
+    public function getMultiMatchQuery()
+    {
+        return new \Elastica\Query\MultiMatch();
+    }
+
+    /**
      * Условие запроса поиска по похожести текста
      *
      * @param string $fieldName

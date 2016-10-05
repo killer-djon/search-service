@@ -6,17 +6,24 @@ abstract class PeopleSearchMapping
     /** Контекст поиска */
     const CONTEXT = 'people';
 
+    /**
+    name: { boost: 9, type: string, analyzer: ru_analyzer }
+    _nameNgram: { boost: 7, type: string, analyzer: ru_ngram_analyzer }
+    _translit: { boost: 8, type: string, analyzer: translit_analyzer }
+    _translitNgram: { boost: 7, type: string, analyzer: translit_ngram_analyzer }
+     */
+
     /** Поле имени пользователя */
-    const NAME_FIELD = 'name';
-    const NAME_TRANSLIT_FIELD = 'name._translit';
-    const NAME_NGRAM_FIELD = 'name._ngram';
-    const NAME_PREFIX_FIELD = 'name._prefix';
+    const NAME_FIELD = 'name'; // полное совпадение имени по русски
+    const NAME_NGRAM_FIELD = 'name._nameNgram'; // частичное совпадение имени от 3-х сивмолов по русски
+    const NAME_TRANSLIT_FIELD = 'name._translit'; // полное совпадение имени в транслите
+    const NAME_TRANSLIT_NGRAM_FIELD = 'name._translitNgram'; // частичное совпадение имени от 3-х сивмолов в транслите
 
     /** Поле фамилии пользователя */
-    const SURNAME_FIELD = 'surname';
-    const SURNAME_TRANSLIT_FIELD = 'surname._translit';
-    const SURNAME_NGRAM_FIELD = 'surname._ngram';
-    const SURNAME_PREFIX_FIELD = 'surname._prefix';
+    const SURNAME_FIELD = 'surname'; // полное совпадение фамилии по русски
+    const SURNAME_NGRAM_FIELD = 'surname._surnameNgram'; // частичное совпадение фамилии от 3-х сивмолов по русски
+    const SURNAME_TRANSLIT_FIELD = 'surname._translit'; // полное совпадение имени в транслите
+    const SURNAME_TRANSLIT_NGRAM_FIELD = 'surname._translitNgram'; // частичное совпадение имени от 3-х сивмолов в транслите
 
     /**
      * Поле имени пользователя для префиксного поиска

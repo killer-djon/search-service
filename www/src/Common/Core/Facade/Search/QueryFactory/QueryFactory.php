@@ -151,6 +151,7 @@ class QueryFactory implements QueryFactoryInterface
         return $this;
     }
 
+
     /**
      * Allows filtering of documents based on a minimum score.
      *

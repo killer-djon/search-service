@@ -259,4 +259,16 @@ class FilterFactory implements FilterFactoryInterface
 
         return $boolFilter;
     }
+
+    /**
+     * Возвращает фильтр типа
+     *
+     * @abstract
+     * @param string $type
+     * @return \Elastica\Filter\AbstractFilter
+     */
+    public function getTypeFilter($type)
+    {
+        return new \Elastica\Filter\Type($type);
+    }
 }

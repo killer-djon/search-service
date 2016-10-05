@@ -21,7 +21,7 @@ interface SearchEngineInterface
      * @throws ElasticsearchException
      * @return array results
      */
-    public function findDocuments($context, $query, $options = []);
+    public function findDocuments($context, \Elastica\Query $elasticQuery, $options = []);
 
     /**
      * Индексный поиск в еластике

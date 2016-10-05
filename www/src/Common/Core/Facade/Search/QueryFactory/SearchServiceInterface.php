@@ -64,4 +64,20 @@ interface SearchServiceInterface
      * @return \Elastica\Query
      */
     public function createQuery($skip = 0, $count = null);
+
+    /**
+     * Создание объект поиска на основе совпадения по полям
+     *
+     * @param string $searchText Текст поиска
+     * @param array $fields Набор полей учавствующих в поиске
+     * @param string $operator Оператор логического выражения ( or and )
+     * @param string $type Тип перебора полей в поиске
+     * @return \Elastica\Query\AbstractQuery
+     */
+    public function createMatchQuery(
+        $searchText,
+        array $fields,
+        $operator = \Elastica\Query\MultiMatch::OPERATOR_OR,
+        $type = \Elastica\Query\MultiMatch::TYPE_CROSS_FIELDS
+    );
 }

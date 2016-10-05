@@ -11,6 +11,13 @@ class PeopleSearchService extends AbstractSearchService
 {
 
     /**
+     * Минимальное значение скора (вес найденного результата)
+     *
+     * @const string MIN_SCORE_SEARCH
+     */
+    const MIN_SCORE_SEARCH = '3';
+
+    /**
      * Метод осуществляет поиск в еластике
      * по имени/фамилии пользьвателя
      *
@@ -18,28 +25,47 @@ class PeopleSearchService extends AbstractSearchService
      * @param string $username Часть искомой строки поиска
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
-     *
      * @return array Массив с найденными результатами
      */
     public function searchPeopleByUserName($userId, $username, $skip = 0, $count = null)
     {
-        $this->setConditionQueryShould([
-            $this->_queryConditionFactory->getFuzzyQuery(PeopleSearchMapping::NAME_PREFIX_FIELD, $username),
-            $this->_queryConditionFactory->getFuzzyQuery(PeopleSearchMapping::SURNAME_PREFIX_FIELD, $username),
-            /*$this->_queryConditionFactory->getMatchQuery(PeopleSearchMapping::NAME_FIELD, $username),
-            $this->_queryConditionFactory->getMatchQuery(PeopleSearchMapping::NAME_TRANSLIT_FIELD, $username),
-            $this->_queryConditionFactory->getMatchQuery(PeopleSearchMapping::SURNAME_FIELD, $username),
-            $this->_queryConditionFactory->getMatchQuery(PeopleSearchMapping::SURNAME_TRANSLIT_FIELD, $username)*/
 
-        ]);
         $this->setFilterQuery([
-            $this->_queryFilterFactory->getTermsFilter(PeopleSearchMapping::FRIEND_LIST_FIELD, [$userId])
+            $this->_queryFilterFactory->getTypeFilter(PeopleSearchMapping::CONTEXT),
         ]);
+
+        $scriptBuilder = new CustomScoreBuilderScript();
+        $script = $scriptBuilder->getScript();
+        //$this->setScriptFunction($script); // @todo надо разобраться почему не хочет скрипт рабоать
 
         /** Получаем сформированный объект запроса */
-        $queryResult = $this->createQuery($skip, $count);
+        $queryMatchResult = $this->createMatchQuery(
+            $username,
+            $this->getMatchQueryFields()
+        );
 
-        return $this->searchDocuments(PeopleSearchMapping::CONTEXT, $queryResult);
+        $queryMatchResult->setMinScore(self::MIN_SCORE_SEARCH);
+        return $this->searchDocuments(PeopleSearchMapping::CONTEXT, $queryMatchResult);
     }
 
+    /**
+     * Возвращаем набор полей для поиска по совпадению
+     *
+     * @return array $fields
+     */
+    private function getMatchQueryFields()
+    {
+        return [
+            // вариации поля имени
+            PeopleSearchMapping::NAME_FIELD,
+            PeopleSearchMapping::NAME_NGRAM_FIELD,
+            PeopleSearchMapping::NAME_TRANSLIT_FIELD,
+            PeopleSearchMapping::NAME_TRANSLIT_NGRAM_FIELD,
+            // вариации поля фамилии
+            PeopleSearchMapping::SURNAME_FIELD,
+            PeopleSearchMapping::SURNAME_NGRAM_FIELD,
+            PeopleSearchMapping::SURNAME_TRANSLIT_FIELD,
+            PeopleSearchMapping::SURNAME_TRANSLIT_NGRAM_FIELD,
+        ];
+    }
 }

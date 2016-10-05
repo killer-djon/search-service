@@ -10,6 +10,14 @@ use Common\Core\Facade\Search\QueryFactory\SearchServiceInterface;
 
 class AbstractSearchService extends SearchEngine implements SearchServiceInterface
 {
+
+    /**
+     * Объект скрипта в запросе
+     *
+     * @var \Elastica\Script
+     */
+    protected $_scriptFunction;
+
     /**
      * Набор условий запроса
      *
@@ -150,5 +158,57 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
                                             ->setSort($this->_sortingQueryData);
 
         return $queryFactory->getQueryFactory();
+    }
+
+    /**
+     * Создание объект поиска на основе совпадения по полям
+     *
+     * @param string $searchText Текст поиска
+     * @param array $fields Набор полей учавствующих в поиске
+     * @param string $operator Оператор логического выражения ( or and )
+     * @param string $type Тип перебора полей в поиске
+     * @return \Elastica\Query
+     */
+    public function createMatchQuery(
+        $searchText,
+        array $fields,
+        $operator = \Elastica\Query\MultiMatch::OPERATOR_OR,
+        $type = \Elastica\Query\MultiMatch::TYPE_CROSS_FIELDS
+    ) {
+
+        $matchQuery = $this->_queryConditionFactory->getMultiMatchQuery();
+
+        if (!empty($searchText)) {
+            $matchQuery = $this->_queryConditionFactory->getMultiMatchQuery();
+            $matchQuery->setQuery($searchText);
+            $matchQuery->setOperator($operator);
+            $matchQuery->setType($type);
+            $matchQuery->setFields($fields);
+        }
+
+        if(!is_null($this->_scriptFunction))
+        {
+            $customScore = new \Elastica\Query\FunctionScore();
+            $customScore->setQuery($matchQuery);
+            $matchQuery = $customScore->addScriptScoreFunction($this->_scriptFunction);
+        }
+
+        // Применить набор фильтров
+        if (sizeof($this->_filterQueryData) > 0) {
+            $filter = $this->_queryFilterFactory->getBoolAndFilter($this->_filterQueryData);
+            $matchQuery = new \Elastica\Query\Filtered($matchQuery, $filter);
+        }
+
+        $query = $this->_queryFactory->setQueryFactory($matchQuery);
+
+        return $query->getQueryFactory();
+    }
+
+    public function setScriptFunction($script)
+    {
+        $this->_scriptFunction = new \Elastica\Script($script);
+        $this->_scriptFunction->setLang(\Elastica\Script::LANG_GROOVY);
+
+        return $this;
     }
 }

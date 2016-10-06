@@ -5,7 +5,9 @@
 namespace RP\SearchBundle\Services;
 
 use Common\Core\Constants\Visible;
+use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
+use Common\Core\Facade\Service\Geo\GeoPointService;
 
 class PeopleSearchService extends AbstractSearchService
 {
@@ -15,7 +17,7 @@ class PeopleSearchService extends AbstractSearchService
      *
      * @const string MIN_SCORE_SEARCH
      */
-    const MIN_SCORE_SEARCH = '3';
+    const MIN_SCORE_SEARCH = '2';
 
     /**
      * Метод осуществляет поиск в еластике
@@ -23,29 +25,103 @@ class PeopleSearchService extends AbstractSearchService
      *
      * @param string $userId ID пользователя который посылает запрос
      * @param string $username Часть искомой строки поиска
+     * @param GeoPointService $point
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchPeopleByUserName($userId, $username, $skip = 0, $count = null)
+    public function searchPeopleByName($userId, $username, GeoPointService $point, $skip = 0, $count = null)
     {
-
-        $this->setFilterQuery([
-            $this->_queryFilterFactory->getTypeFilter(PeopleSearchMapping::CONTEXT),
+        // добавляем скрипты коорые выводятся в доп. полях
+        $this->setScriptFields([
+            'distance' => $this->_scriptFactory->getScript(
+                "
+                if (!doc[\"location . point\"].empty) {
+                    doc[\"location . point\"].distanceInKm({$point->getLatitude()}, {$point->getLongitude()})
+                }else{
+                    0.0;
+                }
+                "
+            ),
         ]);
 
-        $scriptBuilder = new CustomScoreBuilderScript();
-        $script = $scriptBuilder->getScript();
-        //$this->setScriptFunction($script); // @todo надо разобраться почему не хочет скрипт рабоать
 
         /** Получаем сформированный объект запроса */
         $queryMatchResult = $this->createMatchQuery(
             $username,
-            $this->getMatchQueryFields()
+            $this->getMatchQueryFields(),
+            $skip,
+            $count
         );
-
+        // устанавливаем минимальное значение для веса
         $queryMatchResult->setMinScore(self::MIN_SCORE_SEARCH);
+
+        // сортируем результат в момент получения данных
+        $queryMatchResult->setSort([
+            '_geo_distance' => [
+                'location.point' => [
+                    'lat' => $point->getLatitude(),
+                    'lon' => $point->getLongitude()
+                ],
+                'order' => 'asc',
+                'unit'  => 'km',
+                'distance_type' => 'plane'
+            ]
+        ]);
+
+        // устанавливаем все поля по умолчанию
+        $queryMatchResult->setSource(true);
+
+        // поиск документа
         return $this->searchDocuments(PeopleSearchMapping::CONTEXT, $queryMatchResult);
+    }
+
+    /**
+     * Метод осуществляет поиск людей
+     * в заданном городе по ID
+     *
+     * @param string $cityId ID города поиска
+     * @param GeoPointService $point
+     * @param int $skip Кол-во пропускаемых позиций поискового результата
+     * @param int $count Какое кол-во выводим
+     * @return array Массив с найденными результатами
+     */
+    public function searchPeopleByCityId($cityId, GeoPointService $point, $skip = 0, $count = null)
+    {
+        // добавляем скрипты коорые выводятся в доп. полях
+        $this->setScriptFields([
+            'distance' => $this->_scriptFactory->getScript(
+                "
+                if (!doc[\"location.point\"].empty) {
+                    doc[\"location.point\"].distanceInKm({$point->getLatitude()}, {$point->getLongitude()})
+                }else{
+                    0.0;
+                }
+                "
+            ),
+        ]);
+        /** задаем условия поиска по городу */
+        $this->setConditionQueryMust([
+            $this->_queryConditionFactory->getTermQuery(PeopleSearchMapping::LOCATION_CITY_ID_FIELD, $cityId),
+        ]);
+
+        $query = $this->createQuery($skip, $count);
+        // сортируем результат в момент получения данных
+        $query->setSort([
+            '_geo_distance' => [
+                'location.point' => [
+                    'lat' => $point->getLatitude(),
+                    'lon' => $point->getLongitude()
+                ],
+                'order' => 'asc',
+                'unit'  => 'km',
+                'distance_type' => 'plane'
+            ]
+        ]);
+        // устанавливаем все поля по умолчанию
+        $query->setSource(true);
+
+        return $this->searchDocuments(PeopleSearchMapping::CONTEXT, $query);
     }
 
     /**

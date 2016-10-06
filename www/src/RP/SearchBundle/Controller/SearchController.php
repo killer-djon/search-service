@@ -5,6 +5,7 @@
 namespace RP\SearchBundle\Controller;
 
 use Common\Core\Controller\ApiController;
+use Common\Core\Controller\ControllerTrait;
 use Elastica\Exception\ElasticsearchException;
 use Symfony\Component\HttpFoundation\Request;
 use Common\Core\Constants\RequestConstant;
@@ -13,8 +14,13 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class SearchController extends ApiController
 {
+    use ControllerTrait;
 
-    const USERNAME_SEARCH_PARAM = 'username';
+    /**
+     * Параметр поиска при запросе по городу
+     * @const string CITY_SEARCH_PARAM
+     */
+    const CITY_SEARCH_PARAM = 'cityId';
 
     /**
      * Поиск пользователей по имени/фамилии
@@ -41,13 +47,10 @@ class SearchController extends ApiController
             );
         }
 
-        $skip = $request->get(RequestConstant::SEARCH_SKIP_PARAM, RequestConstant::DEFAULT_SEARCH_SKIP);
-        $count = $request->get(RequestConstant::SEARCH_LIMIT_PARAM, RequestConstant::DEFAULT_SEARCH_LIMIT);
-
         if (is_null($searchText)) {
             return $this->_handleViewWithError(
                 new BadRequestHttpException(
-                    'Не указана поисковая строка username',
+                    'Не указана поисковая строка searchText',
                     null,
                     Response::HTTP_BAD_REQUEST
                 )
@@ -56,11 +59,14 @@ class SearchController extends ApiController
 
         try {
             $peopleSearchService = $this->getPeopleSearchService();
-            $peopleSearchService->searchPeopleByUserName($userId, $searchText, $skip, $count);
+            $peopleSearchService->searchPeopleByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
 
             return $this->_handleViewWithData([
                 'info' => [
                     'people'    => $peopleSearchService->getTotalHits()
+                ],
+                'cluster' => [
+                    'people'    => $peopleSearchService->getAggregations()
                 ],
                 'results' => [
                     'people'    => $peopleSearchService->getTotalResults()
@@ -73,6 +79,39 @@ class SearchController extends ApiController
             );
         }
     }
+
+
+    public function searchUsersByCityAction(Request $request)
+    {
+        $cityId = $request->get(self::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
+
+        if( is_null($cityId) )
+        {
+            return $this->_handleViewWithError(
+                new BadRequestHttpException(
+                    'Не задан город для поиска пользователей',
+                    null,
+                    Response::HTTP_BAD_REQUEST
+                )
+            );
+        }
+
+        $peopleSearchService = $this->getPeopleSearchService();
+        $peopleSearchService->searchPeopleByCityId($cityId, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+
+        return $this->_handleViewWithData([
+            'info' => [
+                'people'    => $peopleSearchService->getTotalHits()
+            ],
+            'cluster' => [
+                'people'    => $peopleSearchService->getAggregations()
+            ],
+            'results' => [
+                'people'    => $peopleSearchService->getTotalResults()
+            ],
+        ]);
+    }
+
 
     /**
      * Получаем сервис поиска пользователей (людей)

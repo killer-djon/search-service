@@ -4,6 +4,20 @@ namespace Common\Core\Constants;
 class RequestConstant
 {
     /**
+     * Параметр запроса долготы
+     *
+     * @var string LONGITUTE_PARAM
+     */
+    const LONGITUTE_PARAM = 'lon';
+
+    /**
+     * Параметр запроса широты
+     *
+     * @var string LATITUDE_PARAM
+     */
+    const LATITUDE_PARAM = 'lat';
+
+    /**
      * Параметр поисковой строки
      * для поиска по контексту
      *
@@ -41,7 +55,7 @@ class RequestConstant
      *
      * @const NULL NULLED_PARAMS
      */
-    const NULLED_PARAMS = NULL;
+    const NULLED_PARAMS = null;
 
     /**
      * Лимит при поиск в еластике по умолчанию
@@ -56,7 +70,6 @@ class RequestConstant
      * @const int DEFAULT_SEARCH_SKIP
      */
     const DEFAULT_SEARCH_SKIP = 0;
-
 
     /**
      * Скор по умолчанию (вес поиска)

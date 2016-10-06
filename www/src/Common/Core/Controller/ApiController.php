@@ -18,6 +18,8 @@ use Common\Core\Serializer\XMLWrapper;
  */
 abstract class ApiController extends FOSRestController
 {
+    use ControllerTrait;
+
     /**
      * Атрибут текст ошибки
      *
@@ -78,6 +80,7 @@ abstract class ApiController extends FOSRestController
     protected function setCurrentRequest(Request $request)
     {
         $this->_request = $request;
+        $this->parseSkipCountRequest($request);
     }
 
     /**

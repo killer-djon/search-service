@@ -46,7 +46,8 @@
         "predis/predis": "^v1.1",
         "friendsofsymfony/elastica-bundle": "^3.2",
         "russianplace/redis-bundle": "1.*",
-        "doctrine/orm": "^2.5"
+        "doctrine/orm": "^2.5",
+        "white-october/pagerfanta-bundle": "^1.0"
     },
     "repositories": [
         {

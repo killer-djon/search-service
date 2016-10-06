@@ -5,6 +5,7 @@
 namespace Common\Core\Facade\Search\QueryFactory;
 
 use Common\Core\Constants\RequestConstant;
+use Common\Core\Facade\Search\QueryScripting\QueryScriptFactoryInterface;
 use Elastica\Query;
 use Elastica\Exception\ElasticsearchException;
 use FOS\ElasticaBundle\Elastica\Index;
@@ -13,6 +14,7 @@ use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use FOS\ElasticaBundle\Transformer\ElasticaToModelTransformerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface;
 
 class SearchEngine implements SearchEngineInterface
 {
@@ -29,6 +31,13 @@ class SearchEngine implements SearchEngineInterface
      * @var array
      */
     private $_totalResults = [];
+
+    /**
+     * Бакеты аггрегированных данных
+     *
+     * @var array
+     */
+    private $_aggregationsResult = [];
 
     /**
      * Контейнер ядра для получения сервисов
@@ -53,9 +62,19 @@ class SearchEngine implements SearchEngineInterface
     public $_queryFilterFactory;
 
     /**
+     * @var \Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface Оъект добавляющий аггрегироание к запросу
+     */
+    public $_queryAggregationFactory;
+
+    /**
      * @var \FOS\ElasticaBundle\Elastica\Index $elasticaIndex
      */
     protected $_elasticaIndex;
+
+    /**
+     * @var \Common\Core\Facade\Search\QueryScripting\QueryScriptFactoryInterface
+     */
+    protected $_scriptFactory;
 
     /**
      * @var \FOS\ElasticaBundle\Transformer\ElasticaToModelTransformerInterface $_transformer
@@ -76,17 +95,23 @@ class SearchEngine implements SearchEngineInterface
      * @param \Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface Класс формирующий объект запроса
      * @param \Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface Объект формирования условий запроса
      * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface Оъект добавляющий фильтры к запросу
+     * @param \Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface Оъект добавляющий аггрегироание к запросу
+     * @param \Common\Core\Facade\Search\QueryScripting\QueryScriptFactoryInterface Объект скрипта для поля
      */
     public function __construct(
         Index $elasticaIndex,
         QueryFactoryInterface $queryFactory,
         ConditionFactoryInterface $queryCondition,
-        FilterFactoryInterface $filterFactory
+        FilterFactoryInterface $filterFactory,
+        QueryAggregationFactoryInterface $aggregationFactory,
+        QueryScriptFactoryInterface $scriptFactory
     ) {
         $this->_elasticaIndex = $elasticaIndex;
         $this->_queryConditionFactory = $queryCondition;
         $this->_queryFilterFactory = $filterFactory;
         $this->_queryFactory = $queryFactory;
+        $this->_queryAggregationFactory = $aggregationFactory;
+        $this->_scriptFactory = $scriptFactory;
     }
 
     /**
@@ -155,6 +180,7 @@ class SearchEngine implements SearchEngineInterface
         try {
             $elasticType = $this->_getElasticType($context);
             $searchResults = $elasticType->search($elasticQuery);
+
             $this->logger->info(json_encode([
                 'query_string' => $elasticQuery,
                 'time'         => date('d.m.Y H:i'),
@@ -178,22 +204,34 @@ class SearchEngine implements SearchEngineInterface
     {
         $this->setTotalHits($resultSets);
         $this->setTotalResults($resultSets);
+        $this->setAggregationsResult($resultSets);
 
         return $this->getTotalResults();
+    }
+
+    /**
+     * Устанавливаем результат аггрегации
+     *
+     * @param \Elastica\Result $resultSets
+     * @return void
+     */
+    private function setAggregationsResult(\Elastica\ResultSet $resultSets)
+    {
+        $this->_aggregationsResult = $resultSets->getAggregations();
     }
 
     /**
      * Устанавливаем общие показатели запроса
      *
      * @param \Elastica\Result $resultSets
-     * @return array
+     * @return void
      */
     private function setTotalHits(\Elastica\ResultSet $resultSets)
     {
         $elipsedTime = $resultSets->getTotalTime() / 1000;
         $this->_totalHits = [
             'totalHits' => $resultSets->getTotalHits(),
-            'totalTime' => $elipsedTime . 'ms'
+            'totalTime' => $elipsedTime . 'ms',
         ];
     }
 
@@ -201,7 +239,7 @@ class SearchEngine implements SearchEngineInterface
      * Устанавливаем общие данные запроса
      *
      * @param \Elastica\Result $resultSets
-     * @return array
+     * @return void
      */
     private function setTotalResults(\Elastica\ResultSet $resultSets)
     {
@@ -214,6 +252,16 @@ class SearchEngine implements SearchEngineInterface
                 'hit'  => $_hit,
             ];
         }, $resultSets->getResults());
+    }
+
+    /**
+     * Получить результат аггрегированных данных
+     *
+     * @return array
+     */
+    public function getAggregations()
+    {
+        return $this->_aggregationsResult;
     }
 
     /**

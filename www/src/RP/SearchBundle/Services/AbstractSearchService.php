@@ -12,6 +12,14 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
 {
 
     /**
+     * Набор полей со скриптами
+     * т.е. inline скрипты например
+     *
+     * @var array $_scriptFields
+     */
+    private $_scriptFields;
+
+    /**
      * Объект скрипта в запросе
      *
      * @var \Elastica\Script
@@ -61,6 +69,25 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     private $_sortingQueryData = [];
 
     /**
+     * Набор полей для выбора
+     * необходимо чтобы не каждый раз выбирать все поля
+     *
+     * @var array $_fieldsSelected
+     */
+    private $_fieldsSelected = [];
+
+    /**
+     * Определяем какой набор полей нам нужно выбрать
+     *
+     * @param array $fields набор полей для выборки
+     * @return SearchServiceInterface
+     */
+    public function setFieldsQuery(array $fields = [])
+    {
+        $this->_fieldsSelected = $fields;
+    }
+
+    /**
      * Метод который формирует условия запроса
      *
      * @param array $must Массив условий запроса $must
@@ -69,6 +96,19 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     public function setConditionQueryMust(array $must = [])
     {
         $this->_conditionQueryMustData = $must;
+    }
+
+
+    /**
+     * Устанавливаем набор полей со скриптами
+     * для определения custom значений в рассчете
+     *
+     * @param array $scriptFields
+     * @return void
+     */
+    public function setScriptFields(array $scriptFields = null)
+    {
+        $this->_scriptFields = $scriptFields;
     }
 
     /**
@@ -150,12 +190,14 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $searchQuery = new \Elastica\Query\Filtered($searchQuery, $filter);
         }
 
-        $queryFactory = $this->_queryFactory->setQueryFactory($searchQuery)
-                                            ->setSize($count)
-                                            ->setFrom($skip)
-                                            ->setAggregations($this->_aggregationQueryData)
-                                            ->setMinScore(0.1)
-                                            ->setSort($this->_sortingQueryData);
+        $queryFactory = $this->_queryFactory
+            ->setQueryFactory($searchQuery)
+            ->setSize($count)
+            ->setFrom($skip)
+            ->setAggregations($this->_aggregationQueryData)
+            ->setFields($this->_fieldsSelected)
+            ->setScriptFields($this->_scriptFields)
+            ->setSort($this->_sortingQueryData);
 
         return $queryFactory->getQueryFactory();
     }
@@ -165,6 +207,8 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      *
      * @param string $searchText Текст поиска
      * @param array $fields Набор полей учавствующих в поиске
+     * @param int $skip
+     * @param int $count
      * @param string $operator Оператор логического выражения ( or and )
      * @param string $type Тип перебора полей в поиске
      * @return \Elastica\Query
@@ -172,6 +216,8 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     public function createMatchQuery(
         $searchText,
         array $fields,
+        $skip = 0,
+        $count = null,
         $operator = \Elastica\Query\MultiMatch::OPERATOR_OR,
         $type = \Elastica\Query\MultiMatch::TYPE_CROSS_FIELDS
     ) {
@@ -186,8 +232,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $matchQuery->setFields($fields);
         }
 
-        if(!is_null($this->_scriptFunction))
-        {
+        if (!is_null($this->_scriptFunction)) {
             $customScore = new \Elastica\Query\FunctionScore();
             $customScore->setQuery($matchQuery);
             $matchQuery = $customScore->addScriptScoreFunction($this->_scriptFunction);
@@ -199,7 +244,14 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $matchQuery = new \Elastica\Query\Filtered($matchQuery, $filter);
         }
 
-        $query = $this->_queryFactory->setQueryFactory($matchQuery);
+        $query = $this->_queryFactory
+            ->setQueryFactory($matchQuery)
+            ->setSize($count)
+            ->setFrom($skip)
+            ->setAggregations($this->_aggregationQueryData)
+            ->setFields($this->_fieldsSelected)
+            ->setScriptFields($this->_scriptFields)
+            ->setSort($this->_sortingQueryData);
 
         return $query->getQueryFactory();
     }

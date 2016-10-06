@@ -123,8 +123,13 @@ class ConditionFactory implements ConditionFactoryInterface
      * @param string $langScript
      * @return \Elastica\Query\FunctionScore
      */
-    public function getCustomScoreQuery(AbstractQuery $query, $script, AbstractFilter $filter = null, array $params = [], $lang = \Elastica\Script::LANG_GROOVY)
-    {
+    public function getCustomScoreQuery(
+        AbstractQuery $query,
+        $script,
+        AbstractFilter $filter = null,
+        array $params = [],
+        $lang = \Elastica\Script::LANG_GROOVY
+    ) {
         $customScore = new \Elastica\Query\FunctionScore();
         $customScore->setQuery($query);
 

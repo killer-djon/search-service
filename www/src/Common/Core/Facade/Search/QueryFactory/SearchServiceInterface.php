@@ -70,13 +70,17 @@ interface SearchServiceInterface
      *
      * @param string $searchText Текст поиска
      * @param array $fields Набор полей учавствующих в поиске
+     * @param int $skip
+     * @param int $count
      * @param string $operator Оператор логического выражения ( or and )
      * @param string $type Тип перебора полей в поиске
-     * @return \Elastica\Query\AbstractQuery
+     * @return \Elastica\Query
      */
     public function createMatchQuery(
         $searchText,
         array $fields,
+        $skip = 0,
+        $count = null,
         $operator = \Elastica\Query\MultiMatch::OPERATOR_OR,
         $type = \Elastica\Query\MultiMatch::TYPE_CROSS_FIELDS
     );

@@ -142,9 +142,9 @@ class QueryFactory implements QueryFactoryInterface
      * @return $this
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-script-fields.html
      */
-    public function setScriptFields(array $scriptFields = [])
+    public function setScriptFields($scriptFields = null)
     {
-        if (!empty($scriptFields)) {
+        if (!is_null($scriptFields)) {
             $this->_queryObject->setScriptFields($scriptFields);
         }
 

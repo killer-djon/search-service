@@ -7,6 +7,8 @@ services:
             - "@rp_search.search.query_factory"
             - "@rp_search.search.query_condition"
             - "@rp_search.search.query_filter"
+            - "@rp_search.search.query_aggregation"
+            - "@rp_search.search.query_script_field"
         calls:
             - [ setContainer, [ "@service_container" ] ]
             - [ setLogger, [ "@logger" ] ]
@@ -22,6 +24,14 @@ services:
     # сервис создания фильтра для поиска
     rp_search.search.query_filter:
         class: Common\Core\Facade\Search\QueryFilter\FilterFactory
+
+    # сервис создания фильтра для поиска
+    rp_search.search.query_aggregation:
+        class: Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactory
+
+    # сервис создания фильтра для поиска
+    rp_search.search.query_script_field:
+        class: Common\Core\Facade\Search\QueryScripting\QueryScriptFactory
 
     # Базовый абстрактный поисковый сервис
     rp_search.search_service.base:

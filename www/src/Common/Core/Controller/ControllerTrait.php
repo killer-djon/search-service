@@ -32,14 +32,30 @@ trait ControllerTrait
      */
     private $_geoPoint;
 
+    /**
+     * Моделируем данные для псевдо-пагинации
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return void
+     */
     public function parseSkipCountRequest(Request $request)
     {
         $this->_skip = $request->get(RequestConstant::SEARCH_SKIP_PARAM, RequestConstant::DEFAULT_SEARCH_SKIP);
         $this->_count = $request->get(RequestConstant::SEARCH_LIMIT_PARAM, RequestConstant::DEFAULT_SEARCH_LIMIT);
+    }
 
+    /**
+     * Моделируем данные для геопозиционирования
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return void
+     */
+    public function parseGeoPointRequest(Request $request)
+    {
         $this->_geoPoint = new GeoPointService(
-            $request->get(RequestConstant::LATITUDE_PARAM),
-            $request->get(RequestConstant::LONGITUTE_PARAM)
+            $request->get((!is_null(RequestConstant::SHORT_LATITUDE_PARAM) ? RequestConstant::SHORT_LATITUDE_PARAM : RequestConstant::LONG_LATITUDE_PARAM)),
+            $request->get(!is_null(RequestConstant::SHORT_LONGITUTE_PARAM) ? RequestConstant::SHORT_LONGITUTE_PARAM : RequestConstant::LONG_LONGITUTE_PARAM),
+            $request->get(RequestConstant::RADIUS_PARAM)
         );
     }
 

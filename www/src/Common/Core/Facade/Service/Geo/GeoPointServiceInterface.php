@@ -16,4 +16,10 @@ interface GeoPointServiceInterface
      * @return null|float
      */
     public function getLongitude();
+
+    /**
+     * Возвращает радиус поиска
+     * @return null|int
+     */
+    public function getRadius();
 }

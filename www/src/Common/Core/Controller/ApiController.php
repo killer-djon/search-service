@@ -81,6 +81,7 @@ abstract class ApiController extends FOSRestController
     {
         $this->_request = $request;
         $this->parseSkipCountRequest($request);
+        $this->parseGeoPointRequest($request);
     }
 
     /**
@@ -343,5 +344,16 @@ abstract class ApiController extends FOSRestController
     protected function getSearchService()
     {
         return $this->get('rp_search.search.engine');
+    }
+
+    /**
+     * Получаем сервис поиска пользователей (людей)
+     * через еластик
+     *
+     * @return \RP\SearchBundle\Services\PeopleSearchService
+     */
+    public function getPeopleSearchService()
+    {
+        return $this->get('rp_search.search_service.people');
     }
 }

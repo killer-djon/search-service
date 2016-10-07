@@ -4,10 +4,10 @@
 RPSearchBundle_search_users_byname:
     path: /v{_version}/{_format}/users/name
     defaults:
-        _controller: RPSearchBundle:Search:searchUsersByName
+        _controller: RPSearchBundle:SearchUsers:searchUsersByName
         _version: 1
         _format: json
-        template: "RPSearchBundle:Search:searchusers.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+        template: "RPSearchBundle:SearchUsers:searchusers.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
     requirements:
         _method: (GET)
         _format: (json|xml|html|plist)
@@ -16,14 +16,30 @@ RPSearchBundle_search_users_byname:
 
 # Routing который формирует запрос для поиска пользователя
 # в определенном городе
-# пример запроса /api/search/v1/json/cityname
+# пример запроса /api/search/v1/json/users/city
 RPSearchBundle_search_users_bycity:
     path: /v{_version}/{_format}/users/city
     defaults:
-        _controller: RPSearchBundle:Search:searchUsersByCity
+        _controller: RPSearchBundle:SearchUsers:searchUsersByCity
         _version: 1
         _format: json
-        template: "RPSearchBundle:Search:searchusers.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+        template: "RPSearchBundle:SearchUsers:searchusersCity.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+
+
+# Routing который формирует запрос для поиска людей по друзьям
+# по имени/фамилии пользователя (начало/середина имени/фамилии)
+# пример запроса /api/search/v1/json/users/friend
+RPSearchBundle_search_users_byfriend:
+    path: /v{_version}/{_format}/users/friend
+    defaults:
+        _controller: RPSearchBundle:SearchUsers:searchUsersFriend
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchUsers:searchusersFriend.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
     requirements:
         _method: (GET)
         _format: (json|xml|html|plist)

@@ -5,17 +5,42 @@ class RequestConstant
 {
     /**
      * Параметр запроса долготы
+     * короткое представление
      *
      * @var string LONGITUTE_PARAM
      */
-    const LONGITUTE_PARAM = 'lon';
+    const SHORT_LONGITUTE_PARAM = 'lon';
 
     /**
      * Параметр запроса широты
+     * короткое представление
      *
      * @var string LATITUDE_PARAM
      */
-    const LATITUDE_PARAM = 'lat';
+    const SHORT_LATITUDE_PARAM = 'lat';
+
+    /**
+     * Параметр запроса долготы
+     * длинное представление
+     *
+     * @var string LONG_LONGITUTE_PARAM
+     */
+    const LONG_LONGITUTE_PARAM = 'longitude';
+
+    /**
+     * Параметр запроса широты
+     * длинное представление
+     *
+     * @var string LONG_LATITUDE_PARAM
+     */
+    const LONG_LATITUDE_PARAM = 'latitude';
+
+    /**
+     * Параметр запроса радиуса
+     *
+     * @var string RADIUS_PARAM
+     */
+    const RADIUS_PARAM = 'radius';
 
     /**
      * Параметр поисковой строки

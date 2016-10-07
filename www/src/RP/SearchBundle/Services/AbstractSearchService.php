@@ -197,6 +197,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             ->setAggregations($this->_aggregationQueryData)
             ->setFields($this->_fieldsSelected)
             ->setScriptFields($this->_scriptFields)
+            ->setHighlight([]) // @todo доработать
             ->setSort($this->_sortingQueryData);
 
         return $queryFactory->getQueryFactory();
@@ -251,6 +252,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             ->setAggregations($this->_aggregationQueryData)
             ->setFields($this->_fieldsSelected)
             ->setScriptFields($this->_scriptFields)
+            ->setHighlight([]) // @todo доработать
             ->setSort($this->_sortingQueryData);
 
         return $query->getQueryFactory();

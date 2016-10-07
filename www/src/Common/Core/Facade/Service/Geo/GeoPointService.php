@@ -57,18 +57,21 @@ class GeoPointService implements GeoPointServiceInterface
     private $_longitude;
 
     /**
-     * @var GeoPointValidator
+     * Параметр радиуса
+     *
+     * @var int $_radius
      */
-    private $_geoPointValidator;
+    private $_radius;
 
     /**
      * @param float $latitude
      * @param float $longitude
      */
-    public function __construct($latitude, $longitude)
+    public function __construct($latitude, $longitude, $radius = null)
     {
         $this->_setLatitude((float)$latitude);
         $this->_setLongitude((float)$longitude);
+        $this->_setRadius($radius);
     }
 
     /**
@@ -85,6 +88,15 @@ class GeoPointService implements GeoPointServiceInterface
     public function getLatitude()
     {
         return $this->_latitude;
+    }
+
+    /**
+     * Возвращает радиус поиска
+     * @return null|int
+     */
+    public function getRadius()
+    {
+        return $this->_radius;
     }
 
     /**
@@ -111,6 +123,14 @@ class GeoPointService implements GeoPointServiceInterface
     {
         $this->validateLongitude($longitude);
         $this->_longitude = $longitude;
+    }
+
+    /**
+     * @param int $radius
+     */
+    private function _setRadius($radius)
+    {
+        $this->_radius = (int)$radius;
     }
 
     /**

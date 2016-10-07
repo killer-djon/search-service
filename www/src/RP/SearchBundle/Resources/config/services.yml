@@ -9,6 +9,7 @@ services:
             - "@rp_search.search.query_filter"
             - "@rp_search.search.query_aggregation"
             - "@rp_search.search.query_script_field"
+            - "@rp_search.search.query_sorting"
         calls:
             - [ setContainer, [ "@service_container" ] ]
             - [ setLogger, [ "@logger" ] ]
@@ -32,6 +33,10 @@ services:
     # сервис создания фильтра для поиска
     rp_search.search.query_script_field:
         class: Common\Core\Facade\Search\QueryScripting\QueryScriptFactory
+
+    # сервис сортировки при поиске
+    rp_search.search.query_sorting:
+        class: Common\Core\Facade\Search\QuerySorting\QuerySortFactory
 
     # Базовый абстрактный поисковый сервис
     rp_search.search_service.base:

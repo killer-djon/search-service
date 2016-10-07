@@ -15,6 +15,7 @@ use FOS\ElasticaBundle\Transformer\ElasticaToModelTransformerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface;
+use Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface;
 
 class SearchEngine implements SearchEngineInterface
 {
@@ -49,37 +50,41 @@ class SearchEngine implements SearchEngineInterface
     /**
      * @var \Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface
      */
-    public $_queryFactory;
+    protected $_queryFactory;
 
     /**
      * @var \Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface Объект формирования условий запроса
      */
-    public $_queryConditionFactory;
+    protected $_queryConditionFactory;
 
     /**
      * @var \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface Оъект добавляющий фильтры к запросу
      */
-    public $_queryFilterFactory;
+    protected $_queryFilterFactory;
 
     /**
      * @var \Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface Оъект добавляющий аггрегироание к запросу
      */
-    public $_queryAggregationFactory;
-
-    /**
-     * @var \FOS\ElasticaBundle\Elastica\Index $elasticaIndex
-     */
-    protected $_elasticaIndex;
+    protected $_queryAggregationFactory;
 
     /**
      * @var \Common\Core\Facade\Search\QueryScripting\QueryScriptFactoryInterface
      */
     protected $_scriptFactory;
+    /**
+     * @var \Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface $_sortingFactory
+     */
+    protected $_sortingFactory;
 
     /**
      * @var \FOS\ElasticaBundle\Transformer\ElasticaToModelTransformerInterface $_transformer
      */
     protected $_transformer;
+
+    /**
+     * @var \FOS\ElasticaBundle\Elastica\Index $elasticaIndex
+     */
+    protected $_elasticaIndex;
 
     /**
      * Объект логгера
@@ -97,6 +102,7 @@ class SearchEngine implements SearchEngineInterface
      * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface Оъект добавляющий фильтры к запросу
      * @param \Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface Оъект добавляющий аггрегироание к запросу
      * @param \Common\Core\Facade\Search\QueryScripting\QueryScriptFactoryInterface Объект скрипта для поля
+     * @param \Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface Объект создания сортировки в запросе
      */
     public function __construct(
         Index $elasticaIndex,
@@ -104,7 +110,8 @@ class SearchEngine implements SearchEngineInterface
         ConditionFactoryInterface $queryCondition,
         FilterFactoryInterface $filterFactory,
         QueryAggregationFactoryInterface $aggregationFactory,
-        QueryScriptFactoryInterface $scriptFactory
+        QueryScriptFactoryInterface $scriptFactory,
+        QuerySortFactoryInterface $querySorting
     ) {
         $this->_elasticaIndex = $elasticaIndex;
         $this->_queryConditionFactory = $queryCondition;
@@ -112,6 +119,7 @@ class SearchEngine implements SearchEngineInterface
         $this->_queryFactory = $queryFactory;
         $this->_queryAggregationFactory = $aggregationFactory;
         $this->_scriptFactory = $scriptFactory;
+        $this->_sortingFactory = $querySorting;
     }
 
     /**
@@ -247,9 +255,25 @@ class SearchEngine implements SearchEngineInterface
             $_hit = $item->getHit();
             unset($_hit['_source']);
 
+            $fields = null;
+            $results = $item->getData();
+            /** получаем скриптовые поля трансформируя их в читабельные */
+            if( $item->hasFields() )
+            {
+                foreach ($item->getFields() as $fieldKey => $field)
+                {
+                    if( isset($results[$fieldKey]))
+                    {
+                        unset($results[$fieldKey]);
+                    }
+                    $results['tagsMatch'][$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
+                }
+            }
+
             return [
-                'item' => $item->getData(),
+                'item' => $results,
                 'hit'  => $_hit,
+
             ];
         }, $resultSets->getResults());
     }

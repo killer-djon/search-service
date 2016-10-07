@@ -5,6 +5,7 @@
 namespace RP\SearchBundle\Services;
 
 use Common\Core\Constants\Visible;
+use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use Common\Core\Facade\Service\Geo\GeoPointService;
@@ -23,56 +24,55 @@ class PeopleSearchService extends AbstractSearchService
      * Метод осуществляет поиск в еластике
      * по имени/фамилии пользьвателя
      *
-     * @param string $userId ID пользователя который посылает запрос
-     * @param string $username Часть искомой строки поиска
-     * @param GeoPointService $point
+     * @param string $searchText Поисковый запрос
+     * @param GeoPointServiceInterface $point
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchPeopleByName($userId, $username, GeoPointService $point, $skip = 0, $count = null)
+    public function searchPeopleByName($searchText, GeoPointServiceInterface $point, $skip = 0, $count = null)
     {
-        // добавляем скрипты коорые выводятся в доп. полях
-        $this->setScriptFields([
-            'distance' => $this->_scriptFactory->getScript(
-                "
-                if (!doc[\"location . point\"].empty) {
-                    doc[\"location . point\"].distanceInKm({$point->getLatitude()}, {$point->getLongitude()})
-                }else{
-                    0.0;
-                }
-                "
-            ),
+        /** формируем условия сортировки */
+        $this->setSortingQuery([
+            $this->_sortingFactory->getGeoDistanceSort(
+                PeopleSearchMapping::LOCATION_POINT_FIELD,
+                $point
+            )
         ]);
 
+        $this->setScriptFields([
+            'distance' => $this->_scriptFactory->getDistanceScript(
+                PeopleSearchMapping::LOCATION_POINT_FIELD,
+                $point
+            )
+        ]);
 
         /** Получаем сформированный объект запроса */
         $queryMatchResult = $this->createMatchQuery(
-            $username,
-            $this->getMatchQueryFields(),
+            $searchText,
+            [
+                // вариации поля имени
+                PeopleSearchMapping::NAME_FIELD,
+                PeopleSearchMapping::NAME_NGRAM_FIELD,
+                PeopleSearchMapping::NAME_TRANSLIT_FIELD,
+                PeopleSearchMapping::NAME_TRANSLIT_NGRAM_FIELD,
+                // вариации поля фамилии
+                PeopleSearchMapping::SURNAME_FIELD,
+                PeopleSearchMapping::SURNAME_NGRAM_FIELD,
+                PeopleSearchMapping::SURNAME_TRANSLIT_FIELD,
+                PeopleSearchMapping::SURNAME_TRANSLIT_NGRAM_FIELD,
+            ],
             $skip,
             $count
         );
-        // устанавливаем минимальное значение для веса
+
+        /** устанавливаем минимальное значение для веса */
         $queryMatchResult->setMinScore(self::MIN_SCORE_SEARCH);
 
-        // сортируем результат в момент получения данных
-        $queryMatchResult->setSort([
-            '_geo_distance' => [
-                'location.point' => [
-                    'lat' => $point->getLatitude(),
-                    'lon' => $point->getLongitude()
-                ],
-                'order' => 'asc',
-                'unit'  => 'km',
-                'distance_type' => 'plane'
-            ]
-        ]);
-
-        // устанавливаем все поля по умолчанию
+        /** устанавливаем все поля по умолчанию */
         $queryMatchResult->setSource(true);
 
-        // поиск документа
+        /** поиск документа */
         return $this->searchDocuments(PeopleSearchMapping::CONTEXT, $queryMatchResult);
     }
 
@@ -81,12 +81,12 @@ class PeopleSearchService extends AbstractSearchService
      * в заданном городе по ID
      *
      * @param string $cityId ID города поиска
-     * @param GeoPointService $point
+     * @param GeoPointServiceInterface $point
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchPeopleByCityId($cityId, GeoPointService $point, $skip = 0, $count = null)
+    public function searchPeopleByCityId($cityId, GeoPointServiceInterface $point, $skip = 0, $count = null)
     {
         // добавляем скрипты коорые выводятся в доп. полях
         $this->setScriptFields([
@@ -122,6 +122,22 @@ class PeopleSearchService extends AbstractSearchService
         $query->setSource(true);
 
         return $this->searchDocuments(PeopleSearchMapping::CONTEXT, $query);
+    }
+
+    /**
+     * Метод осуществляет поиск в еластике
+     * по имени/фамилии пользьвателя
+     *
+     * @param string $userId ID пользователя который посылает запрос
+     * @param string $searchText Поисковый запрос
+     * @param GeoPointServiceInterface $point
+     * @param int $skip Кол-во пропускаемых позиций поискового результата
+     * @param int $count Какое кол-во выводим
+     * @return array Массив с найденными результатами
+     */
+    public function searchPeopleFriends($userId, $searchText, GeoPointServiceInterface $point, $skip = 0, $count = null)
+    {
+        return [];
     }
 
     /**

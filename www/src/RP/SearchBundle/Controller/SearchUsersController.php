@@ -159,5 +159,4 @@ class SearchUsersController extends ApiController
             'people'    => $people,
         ]);
     }
-
 }

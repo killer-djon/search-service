@@ -1,5 +1,11 @@
-
+# routing поиск пользователей
 rp_search_users:
     resource: routing/searchUsers.yml
+    prefix:   /api/search
+    type: rest
+
+# routing поиска мест
+rp_search_places:
+    resource: routing/searchPlaces.yml
     prefix:   /api/search
     type: rest

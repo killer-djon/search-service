@@ -195,8 +195,7 @@ class SearchEngine implements SearchEngineInterface
     public function getPaginationAdapter($skip, $limit)
     {
         $totalCount = $this->_paginator->getNbResults();
-        if( $totalCount != 0 )
-        {
+        if ($totalCount != 0) {
             $count = ($limit >= $totalCount ? $totalCount : $limit);
             $pageCount = intval(($totalCount - 1) / $count) + 1;
             $page = intval($skip / $count) + 1;

@@ -53,7 +53,7 @@ interface ConditionFactoryInterface
      * @abstract
      * @param string $fieldName
      * @param string $value
-     * @return mixed
+     * @return \Elastica\Query\Prefix
      */
     public function getPrefixQuery($fieldName, $value, $boost = 1.0);
 
@@ -64,7 +64,7 @@ interface ConditionFactoryInterface
      * @param array $must
      * @param array $should
      * @param array $mustNot
-     * @return \Elastica\Query\BoolQuery
+     * @return \Elastica\Query\Bool
      */
     public function getBoolQuery(array $must, array $should, array $mustNot);
 
@@ -114,5 +114,14 @@ interface ConditionFactoryInterface
      * @return mixed
      */
     public function getFieldQuery($field, $value);
+
+    /**
+     * Типа regexp запроса.
+     *
+     * @param string $fieldName
+     * @param string $value
+     * @return mixed
+     */
+    public function getWildCardQuery($fieldName, $value);
 
 }

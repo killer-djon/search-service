@@ -64,7 +64,7 @@ class ConditionFactory implements ConditionFactoryInterface
      *
      * @param string $fieldName
      * @param string $value
-     * @return \Elastica\Query\PrefixCondition
+     * @return \Elastica\Query\Prefix
      */
     public function getPrefixQuery($fieldName, $value, $boost = 1.0)
     {
@@ -187,8 +187,23 @@ class ConditionFactory implements ConditionFactoryInterface
     {
         $queryString = new \Elastica\Query\QueryString($value);
         $queryString->setDefaultField($fieldName);
+        $queryString->setAnalyzeWildcard(true);
+        $queryString->setPhraseSlop(10);
 
         return $queryString;
     }
 
+    /**
+     * Типа regexp запроса.
+     *
+     * @param string $fieldName
+     * @param string $value
+     * @return mixed
+     */
+    public function getWildCardQuery($fieldName, $value)
+    {
+        $queryString = new \Elastica\Query\Wildcard($fieldName, $value);
+
+        return $queryString;
+    }
 }

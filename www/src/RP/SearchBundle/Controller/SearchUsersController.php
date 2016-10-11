@@ -63,7 +63,12 @@ class SearchUsersController extends ApiController
 
         /** выводим результат */
         return $this->_handleViewWithData([
-            'info'  => $peopleSearchService->getTotalHits(),
+            'info'  => [
+                'people'    => $peopleSearchService->getTotalHits(),
+            ],
+            'paginator' => [
+                'people'    => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount())
+            ],
             'people'    => $people,
         ]);
     }
@@ -93,9 +98,17 @@ class SearchUsersController extends ApiController
         }
 
         $peopleSearchService = $this->getPeopleSearchService();
-        $people = $peopleSearchService->searchPeopleByName();
+        $people = $peopleSearchService->searchPeopleByCityId($cityId, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
 
-        return $this->_handleViewWithData($people);
+        return $this->_handleViewWithData([
+            'info'  => [
+                'people'    => $peopleSearchService->getTotalHits(),
+            ],
+            'paginator' => [
+                'people'    => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount())
+            ],
+            'people'    => $people,
+        ]);
     }
 
     /**
@@ -104,10 +117,21 @@ class SearchUsersController extends ApiController
      * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function searchUsersFriend(Request $request)
+    public function searchUsersByFriendAction(Request $request)
     {
         /** @var Текст запроса */
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+
+
+        if (is_null($searchText)) {
+            return $this->_handleViewWithError(
+                new BadRequestHttpException(
+                    'Не указана поисковая строка searchText',
+                    null,
+                    Response::HTTP_BAD_REQUEST
+                )
+            );
+        }
 
         /** @var ID пользователя */
         $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
@@ -123,9 +147,17 @@ class SearchUsersController extends ApiController
         }
 
         $peopleSearchService = $this->getPeopleSearchService();
-        $people = $peopleSearchService->searchPeopleFriends($userId);
+        $people = $peopleSearchService->searchPeopleFriends($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
 
-        return $this->_handleViewWithData($people);
+        return $this->_handleViewWithData([
+            'info'  => [
+                'people'    => $peopleSearchService->getTotalHits(),
+            ],
+            'paginator' => [
+                'people'    => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount())
+            ],
+            'people'    => $people,
+        ]);
     }
 
 }

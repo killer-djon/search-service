@@ -4,14 +4,11 @@
  */
 namespace Common\Core\Facade\Search\QueryFactory;
 
-use Common\Core\Constants\RequestConstant;
 use Common\Core\Facade\Search\QueryScripting\QueryScriptFactoryInterface;
-use Elastica\Query;
 use Elastica\Exception\ElasticsearchException;
 use FOS\ElasticaBundle\Elastica\Index;
 use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
-use FOS\ElasticaBundle\Transformer\ElasticaToModelTransformerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface;
@@ -19,6 +16,13 @@ use Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface;
 
 class SearchEngine implements SearchEngineInterface
 {
+    /**
+     * Адаптер постраничной  навигации
+     *
+     * @var \Pagerfanta\Adapter\ElasticaAdapter $_paginator
+     */
+    private $_paginator;
+
     /**
      * Общие показатели результата поиска
      *
@@ -160,21 +164,6 @@ class SearchEngine implements SearchEngineInterface
     }
 
     /**
-     * Метод осуществляет поиск в еластике
-     * при помощи сервиса fos_elastica.finder.%s.%s
-     *
-     * @param string Search type
-     * @param \Elastica\Query $elasticQuery An \Elastica\Query object
-     * @param array $options
-     * @throws ElasticsearchException
-     * @return array results
-     */
-    public function findDocuments($context, \Elastica\Query $elasticQuery, $options = [])
-    {
-        // @todo В будущем надо будет применить для пагинации
-    }
-
-    /**
      * Индексный поиск в еластике
      * т.е. поиск на основе индекса fos_elastica.index.%s.%s
      *
@@ -187,16 +176,38 @@ class SearchEngine implements SearchEngineInterface
     {
         try {
             $elasticType = $this->_getElasticType($context);
-            $searchResults = $elasticType->search($elasticQuery);
+            $this->_paginator = new SearchElasticaAdapter($elasticType, $elasticQuery);
 
-            $this->logger->info(json_encode([
-                'query_string' => $elasticQuery,
-                'time'         => date('d.m.Y H:i'),
-            ]));
+            return $this->transformResult($this->_paginator->getResultSet());
 
-            return $this->transformResult($searchResults);
         } catch (ElasticsearchException $e) {
             throw new ElasticsearchException($e);
+        }
+    }
+
+    /**
+     * Возвращаем постраничную навигацию
+     *
+     * @param int $skip
+     * @param int $limit
+     * @return array
+     */
+    public function getPaginationAdapter($skip, $limit)
+    {
+        $totalCount = $this->_paginator->getNbResults();
+        if( $totalCount != 0 )
+        {
+            $count = ($limit >= $totalCount ? $totalCount : $limit);
+            $pageCount = intval(($totalCount - 1) / $count) + 1;
+            $page = intval($skip / $count) + 1;
+
+            return [
+                'totalCount' => (int)$totalCount,
+                'offset'     => (int)$skip,
+                'limit'      => (int)$count,
+                'countPage'  => (int)$pageCount,
+                'page'       => (int)$page,
+            ];
         }
     }
 
@@ -205,7 +216,7 @@ class SearchEngine implements SearchEngineInterface
      * получаем набор данных \Elastica\Result
      * который тупо переводим в массив для вывода результата
      *
-     * @param \Elastica\Result $resultSets
+     * @param \Elastica\ResultSet $resultSets
      * @return array $data Набор данных для вывода в результат
      */
     public function transformResult(\Elastica\ResultSet $resultSets)
@@ -258,12 +269,9 @@ class SearchEngine implements SearchEngineInterface
             $fields = null;
             $results = $item->getData();
             /** получаем скриптовые поля трансформируя их в читабельные */
-            if( $item->hasFields() )
-            {
-                foreach ($item->getFields() as $fieldKey => $field)
-                {
-                    if( isset($results[$fieldKey]))
-                    {
+            if ($item->hasFields()) {
+                foreach ($item->getFields() as $fieldKey => $field) {
+                    if (isset($results[$fieldKey])) {
                         unset($results[$fieldKey]);
                     }
                     $results['tagsMatch'][$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));

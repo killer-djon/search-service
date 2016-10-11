@@ -36,7 +36,7 @@ RPSearchBundle_search_users_bycity:
 RPSearchBundle_search_users_byfriend:
     path: /v{_version}/{_format}/users/friend
     defaults:
-        _controller: RPSearchBundle:SearchUsers:searchUsersFriend
+        _controller: RPSearchBundle:SearchUsers:searchUsersByFriend
         _version: 1
         _format: json
         template: "RPSearchBundle:SearchUsers:searchusersFriend.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)

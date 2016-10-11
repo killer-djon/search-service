@@ -5,8 +5,10 @@
  */
 namespace RP\SearchBundle\Services;
 
+use Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface;
 use Common\Core\Facade\Search\QueryFactory\SearchEngine;
 use Common\Core\Facade\Search\QueryFactory\SearchServiceInterface;
+use Elastica\Query;
 
 class AbstractSearchService extends SearchEngine implements SearchServiceInterface
 {
@@ -97,7 +99,6 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     {
         $this->_conditionQueryMustData = $must;
     }
-
 
     /**
      * Устанавливаем набор полей со скриптами
@@ -190,18 +191,16 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $searchQuery = new \Elastica\Query\Filtered($searchQuery, $filter);
         }
 
-        $queryFactory = $this->_queryFactory
-            ->setQueryFactory($searchQuery)
-            ->setSize($count)
-            ->setFrom($skip)
-            ->setAggregations($this->_aggregationQueryData)
-            ->setFields($this->_fieldsSelected)
-            ->setScriptFields($this->_scriptFields)
-            ->setHighlight([]) // @todo доработать
-            ->setSort($this->_sortingQueryData);
+        $queryFactory = $this->setQueryOptions(
+            $this->_queryFactory->setQueryFactory($searchQuery),
+            $skip,
+            $count
+        );
 
         return $queryFactory->getQueryFactory();
     }
+
+
 
     /**
      * Создание объект поиска на основе совпадения по полям
@@ -215,17 +214,16 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * @return \Elastica\Query
      */
     public function createMatchQuery(
-        $searchText,
-        array $fields,
+        $searchText = null,
+        array $fields = [],
         $skip = 0,
         $count = null,
         $operator = \Elastica\Query\MultiMatch::OPERATOR_OR,
         $type = \Elastica\Query\MultiMatch::TYPE_CROSS_FIELDS
     ) {
+        $matchQuery = $this->_queryConditionFactory->getMatchAllQuery();
 
-        $matchQuery = $this->_queryConditionFactory->getMultiMatchQuery();
-
-        if (!empty($searchText)) {
+        if (!is_null($searchText) || !empty($searchText)) {
             $matchQuery = $this->_queryConditionFactory->getMultiMatchQuery();
             $matchQuery->setQuery($searchText);
             $matchQuery->setOperator($operator);
@@ -245,17 +243,34 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $matchQuery = new \Elastica\Query\Filtered($matchQuery, $filter);
         }
 
-        $query = $this->_queryFactory
-            ->setQueryFactory($matchQuery)
-            ->setSize($count)
-            ->setFrom($skip)
-            ->setAggregations($this->_aggregationQueryData)
-            ->setFields($this->_fieldsSelected)
-            ->setScriptFields($this->_scriptFields)
-            ->setHighlight([]) // @todo доработать
-            ->setSort($this->_sortingQueryData);
+        $query = $this->setQueryOptions(
+            $this->_queryFactory->setQueryFactory($matchQuery),
+            $skip,
+            $count
+        );
 
         return $query->getQueryFactory();
+    }
+
+
+    /**
+     * Дополняем объект запроса опциями
+     * и возвращаем так же объект запроса
+     *
+     * @param QueryFactoryInterface $query
+     * @param int $skip
+     * @param int $count
+     * @return QueryFactoryInterface
+     */
+    private function setQueryOptions(QueryFactoryInterface $query, $skip = 0, $count = null)
+    {
+        return $query->setSize($count)
+                     ->setFrom($skip)
+                     ->setAggregations($this->_aggregationQueryData)
+                     ->setFields($this->_fieldsSelected)
+                     ->setScriptFields($this->_scriptFields)
+                     ->setHighlight([])// @todo доработать
+                     ->setSort($this->_sortingQueryData);
     }
 
     public function setScriptFunction($script)

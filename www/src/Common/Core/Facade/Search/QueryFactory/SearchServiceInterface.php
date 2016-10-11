@@ -77,8 +77,8 @@ interface SearchServiceInterface
      * @return \Elastica\Query
      */
     public function createMatchQuery(
-        $searchText,
-        array $fields,
+        $searchText = null,
+        array $fields = [],
         $skip = 0,
         $count = null,
         $operator = \Elastica\Query\MultiMatch::OPERATOR_OR,

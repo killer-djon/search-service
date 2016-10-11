@@ -87,7 +87,7 @@ class RequestConstant
      *
      * @const int DEFAULT_SEARCH_LIMIT
      */
-    const DEFAULT_SEARCH_LIMIT = 1000;
+    const DEFAULT_SEARCH_LIMIT = 20;
 
     /**
      * Кол-во пропускаем позиций при поиске с лимотом

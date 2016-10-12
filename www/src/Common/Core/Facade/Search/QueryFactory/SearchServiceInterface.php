@@ -84,4 +84,12 @@ interface SearchServiceInterface
         $operator = \Elastica\Query\MultiMatch::OPERATOR_OR,
         $type = \Elastica\Query\MultiMatch::TYPE_CROSS_FIELDS
     );
+
+    /**
+     * Формируем скриптовый запрос для рассчета разных фишек
+     *
+     * @param \Elastica\Script[] $scripts
+     * @return \Elastica\Query\AbstractQuery
+     */
+    public function setScriptFunctions(array $scripts);
 }

@@ -15,7 +15,6 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class SearchUsersController extends ApiController
 {
-    use ControllerTrait;
 
     /**
      * Параметр поиска при запросе по городу
@@ -86,6 +85,9 @@ class SearchUsersController extends ApiController
         /** @var ID города */
         $cityId = $request->get(self::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
 
+        /** @var Текст запроса (в случае если ищем по имени) */
+        $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+
         if( is_null($cityId) )
         {
             return $this->_handleViewWithError(
@@ -98,7 +100,7 @@ class SearchUsersController extends ApiController
         }
 
         $peopleSearchService = $this->getPeopleSearchService();
-        $people = $peopleSearchService->searchPeopleByCityId($cityId, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+        $people = $peopleSearchService->searchPeopleByCityId($cityId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
 
         return $this->_handleViewWithData([
             'info'  => [
@@ -121,7 +123,6 @@ class SearchUsersController extends ApiController
     {
         /** @var Текст запроса */
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
-
 
         if (is_null($searchText)) {
             return $this->_handleViewWithError(
@@ -159,4 +160,13 @@ class SearchUsersController extends ApiController
             'people'    => $people,
         ]);
     }
+
+    /**
+     * Поиск пользователей которые могут помочь
+     */
+    public function searchUsersHelpOffersAction(Request $request)
+    {
+
+    }
+
 }

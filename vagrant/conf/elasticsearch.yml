@@ -95,3 +95,7 @@ path.logs: /var/log/elasticsearch
 #action.destructive_requires_name: true
 
 discovery.zen.ping.multicast.enabled: false
+
+# enabled js scripting in the elastic
+script.inline: true
+script.indexed: true

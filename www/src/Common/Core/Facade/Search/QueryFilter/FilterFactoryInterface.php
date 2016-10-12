@@ -85,11 +85,12 @@ interface FilterFactoryInterface
      *
      * @abstract
      * @param string $fieldName Поле фильтра
-     * @param string $distance Радиус фильтра в километрах
-     * @param array $point Точка местоположения
+     * @param array $point , must be ['lat' => 40.3, 'lon' => 45.2]
+     * @param string $distance Радиус фильтра в километрах|метрах
+     * @param string $unit единица расстояния (default: km)
      * @return \Elastica\Filter\AbstractFilter
      */
-    public function getGeoDistanceFilter($fieldName, array $point, $distance);
+    public function getGeoDistanceFilter($fieldName, array $point, $distance, $unit = 'km');
 
     /**
      * Возвращает фильтр по промежутку расстояний (например: от 200км до 400км)

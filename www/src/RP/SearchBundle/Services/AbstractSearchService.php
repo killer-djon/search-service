@@ -24,9 +24,9 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     /**
      * Объект скрипта в запросе
      *
-     * @var \Elastica\Script
+     * @var \Elastica\Script[]
      */
-    protected $_scriptFunction;
+    protected $_scriptFunctions;
 
     /**
      * Набор условий запроса
@@ -109,7 +109,11 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      */
     public function setScriptFields(array $scriptFields = null)
     {
-        $this->_scriptFields = $scriptFields;
+        if (!is_null($this->_scriptFields)) {
+            $this->_scriptFields = array_merge($this->_scriptFields, $scriptFields);
+        } else {
+            $this->_scriptFields = $scriptFields;
+        }
     }
 
     /**
@@ -142,7 +146,11 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      */
     public function setFilterQuery(array $filters = [])
     {
-        $this->_filterQueryData = $filters;
+        if (!is_null($this->_filterQueryData)) {
+            $this->_filterQueryData = array_merge($this->_filterQueryData, $filters);
+        } else {
+            $this->_filterQueryData = $filters;
+        }
     }
 
     /**
@@ -200,8 +208,6 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         return $queryFactory->getQueryFactory();
     }
 
-
-
     /**
      * Создание объект поиска на основе совпадения по полям
      *
@@ -231,10 +237,16 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $matchQuery->setFields($fields);
         }
 
-        if (!is_null($this->_scriptFunction)) {
+        if (!is_null($this->_scriptFunctions) && !empty($this->_scriptFunctions)) {
             $customScore = new \Elastica\Query\FunctionScore();
             $customScore->setQuery($matchQuery);
-            $matchQuery = $customScore->addScriptScoreFunction($this->_scriptFunction);
+
+            foreach ($this->_scriptFunctions as $scriptFunction)
+            {
+                $customScore->addScriptScoreFunction($scriptFunction);
+            }
+
+            $matchQuery = $customScore;
         }
 
         // Применить набор фильтров
@@ -251,7 +263,6 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
 
         return $query->getQueryFactory();
     }
-
 
     /**
      * Дополняем объект запроса опциями
@@ -273,11 +284,18 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
                      ->setSort($this->_sortingQueryData);
     }
 
-    public function setScriptFunction($script)
+    /**
+     * Формируем скриптовый запрос для рассчета разных фишек
+     *
+     * @param \Elastica\Script[] $scripts
+     * @return \Elastica\Query\AbstractQuery
+     */
+    public function setScriptFunctions(array $scripts)
     {
-        $this->_scriptFunction = new \Elastica\Script($script);
-        $this->_scriptFunction->setLang(\Elastica\Script::LANG_GROOVY);
-
-        return $this;
+        foreach ($scripts as $script) {
+            if ($script instanceof \Elastica\Script) {
+                $this->_scriptFunctions[] = $script;
+            }
+        }
     }
 }

@@ -23,6 +23,16 @@ interface SearchEngineInterface
     public function searchDocuments($context, \Elastica\Query $elasticQuery);
 
     /**
+     * Поиск единственного документа по ID
+     *
+     * @param string Search type
+     * @param \Elastica\Query $elasticQuery An \Elastica\Query object
+     * @throws ElasticsearchException
+     * @return array results
+     */
+    public function searchSingleDocuments($context, \Elastica\Query $elasticQuery);
+
+    /**
      * Преобразование полученного результат из еластика
      * получаем набор данных \Elastica\Result
      * который тупо переводим в массив для вывода результата

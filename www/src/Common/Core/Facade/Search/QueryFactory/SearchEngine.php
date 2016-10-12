@@ -186,6 +186,30 @@ class SearchEngine implements SearchEngineInterface
     }
 
     /**
+     * Поиск единственного документа по ID
+     *
+     * @param string Search type
+     * @param \Elastica\Query $elasticQuery An \Elastica\Query object
+     * @throws ElasticsearchException
+     * @return array results
+     */
+    public function searchSingleDocuments($context, \Elastica\Query $elasticQuery)
+    {
+        try {
+            $elasticType = $this->_getElasticType($context);
+            $elasticQuery->setSize(1);
+            $elasticQuery->setFrom(0);
+
+            $resultSet = $elasticType->search($elasticQuery);
+
+            return $resultSet->current()->getData();
+
+        } catch (ElasticsearchException $e) {
+            throw new ElasticsearchException($e);
+        }
+    }
+
+    /**
      * Возвращаем постраничную навигацию
      *
      * @param int $skip

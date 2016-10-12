@@ -25,7 +25,6 @@ cp -f /home/vagrant/vagrant/conf/fastcgi_params /etc/nginx/
 
 # find you ip `ip addr show eth0 | grep inet | awk '{ print $2; }' | sed 's/\/.*$//'`
 usermod -Gnginx -gnginx -a vagrant
-chown -hR vagrant:nginx /home/vagrant/www
 
 # copying and moveng for php70
 sudo ln -s /usr/lib/systemd/system/php70-php-fpm.service /usr/lib/systemd/system/php-fpm.service

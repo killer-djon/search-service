@@ -11,7 +11,9 @@ cd /usr/share/elasticsearch
 bin/plugin install analysis-icu
 bin/plugin install analysis-phonetic
 bin/plugin install http://dl.bintray.com/content/imotov/elasticsearch-plugins/org/elasticsearch/elasticsearch-analysis-morphology/2.4.0/elasticsearch-analysis-morphology-2.4.0.zip
+bin/plugin install lang-javascript
 bin/plugin install mobz/elasticsearch-head
+bin/plugin install lmenezes/elasticsearch-kopf/v2.1.1
 
 systemctl daemon-reload
 systemctl enable elasticsearch.service

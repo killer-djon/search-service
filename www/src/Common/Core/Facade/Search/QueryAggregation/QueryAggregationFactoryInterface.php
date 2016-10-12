@@ -65,4 +65,12 @@ interface QueryAggregationFactoryInterface
      * @return \Elastica\Aggregation\AbstractAggregation
      */
     public function getGeoHashAggregation($fieldName, $startPoint, $precision = self::DEFAULT_RADIUS_DISTANCE);
+
+    /**
+     * Возвращаем единственный результат запроса
+     * нужно когда например получаем данные по ID
+     *
+     * @return \Elastica\Aggregation\AbstractAggregation
+     */
+    public function getTopHitsAggregation();
 }

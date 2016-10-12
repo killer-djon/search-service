@@ -99,4 +99,18 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
 
         return $geoHash;
     }
+
+    /**
+     * Возвращаем единственный результат запроса
+     * нужно когда например получаем данные по ID
+     *
+     * @return \Elastica\Aggregation\AbstractAggregation
+     */
+    public function getTopHitsAggregation()
+    {
+        $topHits = new \Elastica\Aggregation\TopHits('top_hits');
+        $topHits->setSize(1);
+
+        return $topHits;
+    }
 }

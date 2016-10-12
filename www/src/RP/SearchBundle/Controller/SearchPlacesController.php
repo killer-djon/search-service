@@ -14,5 +14,5 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class SearchPlacesController extends ApiController
 {
-    use ControllerTrait;
+
 }

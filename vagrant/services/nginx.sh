@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 # add epel release and install first time nginx
+yum -y reinstall epel-release
 yum -y install nginx
 setenforce 0 # disable enforce
 

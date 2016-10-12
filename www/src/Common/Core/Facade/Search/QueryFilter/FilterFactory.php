@@ -126,12 +126,17 @@ class FilterFactory implements FilterFactoryInterface
      * @abstract
      * @param string $fieldName Поле фильтра
      * @param array $point , must be ['lat' => 40.3, 'lon' => 45.2]
-     * @param string $distance Радиус фильтра в километрах
+     * @param string $distance Радиус фильтра в километрах|метрах
+     * @param string $unit единица расстояния (default: km)
      * @return \Elastica\Filter\AbstractFilter
      */
-    public function getGeoDistanceFilter($fieldName, array $point, $distance)
+    public function getGeoDistanceFilter($fieldName, array $point, $distance, $unit = 'km')
     {
-        return new \Elastica\Filter\GeoDistance($fieldName, $point, $distance);
+        $distance = (int)$distance . $unit;
+        $geoDistanceFilter = new \Elastica\Filter\GeoDistance($fieldName, $point, $distance);
+        $geoDistanceFilter->setParam('ignore_malformed', true);
+
+        return $geoDistanceFilter;
     }
 
     /**

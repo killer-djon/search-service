@@ -35,4 +35,15 @@ interface QueryScriptFactoryInterface
      * @return null|\Elastica\Script
      */
     public function getDistanceInPercentScript($pointField, $geopoint, $lang = \Elastica\Script::LANG_JS);
+
+    /**
+     * Формируем поле скрипта с пересекающихся тегов (интересов)
+     * найденых пользователей с заданным
+     *
+     * @param string $tagsField Название поля где хранятся теги
+     * @param array $tags набор тегов для рассчета
+     * @param string $lang Язык скрипта (default: groovy)
+     * @return null|\\Elastica\Script
+     */
+    public function getTagsIntersectScript($tagsField, array $tags, $lang = \Elastica\Script::LANG_JS);
 }

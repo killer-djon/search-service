@@ -34,6 +34,19 @@ class SearchUsersController extends ApiController
         /** @var Текст запроса */
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
+        /** @var ID пользователя */
+        $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
+
+        if (is_null($userId)) {
+            return $this->_handleViewWithError(
+                new BadRequestHttpException(
+                    'Не указан userId пользователя',
+                    null,
+                    Response::HTTP_BAD_REQUEST
+                )
+            );
+        }
+
         if (is_null($searchText)) {
             return $this->_handleViewWithError(
                 new BadRequestHttpException(
@@ -58,7 +71,7 @@ class SearchUsersController extends ApiController
         /** получаем сервис поиска */
         $peopleSearchService = $this->getPeopleSearchService();
         /** создаем запрос для поиска по имени/фамилии пользователей */
-        $people = $peopleSearchService->searchPeopleByName($searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+        $people = $peopleSearchService->searchPeopleByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
 
         /** выводим результат */
         return $this->_handleViewWithData([
@@ -99,8 +112,21 @@ class SearchUsersController extends ApiController
             );
         }
 
+        /** @var ID пользователя */
+        $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
+
+        if (is_null($userId)) {
+            return $this->_handleViewWithError(
+                new BadRequestHttpException(
+                    'Не указан userId пользователя',
+                    null,
+                    Response::HTTP_BAD_REQUEST
+                )
+            );
+        }
+
         $peopleSearchService = $this->getPeopleSearchService();
-        $people = $peopleSearchService->searchPeopleByCityId($cityId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
+        $people = $peopleSearchService->searchPeopleByCityId($userId, $cityId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
 
         return $this->_handleViewWithData([
             'info'  => [

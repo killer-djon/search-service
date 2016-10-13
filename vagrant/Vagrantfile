@@ -37,6 +37,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.provision "php71 install", type: "shell", path: "./services/php.sh"
   config.vm.provision "elasticsearch install", type: "shell", path: "./services/elasticsearch.sh"
   config.vm.provision "copymover install", type: "shell", path: "./services/copymover.sh"
-  config.vm.provision "runner services", type: "shell", path: "./services/runner.sh"
+  config.vm.provision "runner services", type: "shell", path: "./services/runner.sh", run: always
 
 end

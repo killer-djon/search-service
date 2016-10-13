@@ -25,15 +25,17 @@ class PeopleSearchService extends AbstractSearchService
      * Метод осуществляет поиск в еластике
      * по имени/фамилии пользьвателя
      *
+     * @param string $userId ID пользователя который делает запрос к АПИ
      * @param string $searchText Поисковый запрос
      * @param GeoPointServiceInterface $point
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchPeopleByName($searchText, GeoPointServiceInterface $point, $skip = 0, $count = null)
+    public function searchPeopleByName($userId, $searchText, GeoPointServiceInterface $point, $skip = 0, $count = null)
     {
-        $currentUser = $this->getUserById('10446');
+        /** получаем объект текущего пользователя */
+        $currentUser = $this->getUserById($userId);
 
         /** формируем условия сортировки */
         $this->setSortingQuery([
@@ -44,10 +46,9 @@ class PeopleSearchService extends AbstractSearchService
         ]);
 
         $this->setScriptFields([
-            'tags' => $this->_scriptFactory->getTagsIntersectInPercentScript(
+            'tagsInPercent' => $this->_scriptFactory->getTagsIntersectInPercentScript(
                 PeopleSearchMapping::TAGS_ID_FIELD,
-                $currentUser->getTags(),
-                \Elastica\Script::LANG_GROOVY
+                $currentUser->getTags()
             ),
             'distance' => $this->_scriptFactory->getDistanceScript(
                 PeopleSearchMapping::LOCATION_POINT_FIELD,
@@ -109,14 +110,18 @@ class PeopleSearchService extends AbstractSearchService
      * Метод осуществляет поиск людей
      * в заданном городе по ID
      *
+     * @param string $userId ID пользователя который делает запрос к АПИ
      * @param string $cityId ID города поиска
      * @param GeoPointServiceInterface $point
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchPeopleByCityId($cityId, GeoPointServiceInterface $point, $searchText = null, $skip = 0, $count = null)
+    public function searchPeopleByCityId($userId, $cityId, GeoPointServiceInterface $point, $searchText = null, $skip = 0, $count = null)
     {
+        /** получаем объект текущего пользователя */
+        $currentUser = $this->getUserById($userId);
+
         /** формируем условия сортировки */
         $this->setSortingQuery([
             $this->_sortingFactory->getGeoDistanceSort(
@@ -129,6 +134,10 @@ class PeopleSearchService extends AbstractSearchService
             'distance' => $this->_scriptFactory->getDistanceScript(
                 PeopleSearchMapping::LOCATION_POINT_FIELD,
                 $point
+            ),
+            'tagsInPercent' => $this->_scriptFactory->getTagsIntersectInPercentScript(
+                PeopleSearchMapping::TAGS_ID_FIELD,
+                $currentUser->getTags()
             ),
         ]);
 
@@ -178,9 +187,9 @@ class PeopleSearchService extends AbstractSearchService
 
     /**
      * Метод осуществляет поиск в еластике
-     * по имени/фамилии пользьвателя
+     * по имени/фамилии пользьвателя находяхищся в друзьях
      *
-     * @param string $userId ID пользователя который посылает запрос
+     * @param string $userId ID пользователя который делает запрос к АПИ
      * @param string $searchText Поисковый запрос
      * @param GeoPointServiceInterface $point
      * @param int $skip Кол-во пропускаемых позиций поискового результата
@@ -189,6 +198,9 @@ class PeopleSearchService extends AbstractSearchService
      */
     public function searchPeopleFriends($userId, $searchText, GeoPointServiceInterface $point, $skip = 0, $count = null)
     {
+        /** получаем объект текущего пользователя */
+        $currentUser = $this->getUserById($userId);
+        
         /** формируем условия сортировки */
         $this->setSortingQuery([
             $this->_sortingFactory->getGeoDistanceSort(
@@ -202,11 +214,36 @@ class PeopleSearchService extends AbstractSearchService
                 PeopleSearchMapping::LOCATION_POINT_FIELD,
                 $point
             ),
-            'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
-                PeopleSearchMapping::LOCATION_POINT_FIELD,
-                $point
+            'tagsInPercent' => $this->_scriptFactory->getTagsIntersectInPercentScript(
+                PeopleSearchMapping::TAGS_ID_FIELD,
+                $currentUser->getTags()
             ),
+            'tagsCount' => $this->_scriptFactory->getTagsIntersectScript(
+                PeopleSearchMapping::TAGS_ID_FIELD,
+                $currentUser->getTags()
+            )
         ]);
+
+        if (!is_null($point->getRadius())) {
+            $this->setScriptFields([
+                'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
+                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                ),
+            ]);
+
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getGeoDistanceFilter(
+                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    [
+                        'lat' => $point->getLatitude(),
+                        'lon' => $point->getLongitude(),
+                    ],
+                    $point->getRadius(),
+                    'm'
+                ),
+            ]);
+        }
 
         $this->setFilterQuery([
             $this->_queryFilterFactory->getTermsFilter(

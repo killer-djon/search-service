@@ -19,22 +19,10 @@ interface QueryScriptFactoryInterface
      * @param string $pointField Название поля с локацией (должно содержать lat, lon)
      * @param array|\Common\Core\Facade\Service\Geo\GeoPointServiceInterface $geopoint Объект геоданных
      * @param string $lang Язык скрипта (default: groovy)
-     * return null|\\Elastica\Script
+     * @throws ElasticsearchException
+     * @return null|\\Elastica\Script
      */
     public function getDistanceScript($pointField, $geopoint, $lang = \Elastica\Script::LANG_JS);
-
-    /**
-     * Формируем поле скрипта
-     * рассчитав по дистанции расстояние в процентном отношении
-     * относительно переданной точки
-     *
-     * @param string $pointField Название поля с локацией (должно содержать lat, lon)
-     * @param array|\Common\Core\Facade\Service\Geo\GeoPointServiceInterface $geopoint Объект геоданных
-     * @param string $lang Язык скрипта (default: groovy)
-     * @throws ElasticsearchException
-     * @return null|\Elastica\Script
-     */
-    public function getDistanceInPercentScript($pointField, $geopoint, $lang = \Elastica\Script::LANG_JS);
 
     /**
      * Формируем поле скрипта с пересекающихся тегов (интересов)
@@ -43,7 +31,21 @@ interface QueryScriptFactoryInterface
      * @param string $tagsField Название поля где хранятся теги
      * @param array $tags набор тегов для рассчета
      * @param string $lang Язык скрипта (default: groovy)
-     * @return null|\\Elastica\Script
+     * @throws ElasticsearchException
+     * @return \Elastica\Script
      */
     public function getTagsIntersectScript($tagsField, array $tags, $lang = \Elastica\Script::LANG_JS);
+
+    /**
+     * Формируем поле скрипта с пересекающихся тегов (интересов)
+     * в процентном отношении
+     *
+     * @param string $tagsField Название поля где хранятся теги
+     * @param array $tags набор тегов для рассчета
+     * @param string $lang Язык скрипта (default: groovy)
+     * @throws ElasticsearchException
+     * @return \Elastica\Script
+     */
+    public function getTagsIntersectInPercentScript($tagsField, array $tags, $lang = \Elastica\Script::LANG_JS);
+
 }

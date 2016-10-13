@@ -132,35 +132,49 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
      * @param string $tagsField Название поля где хранятся теги
      * @param array $tags набор тегов для рассчета
      * @param string $lang Язык скрипта (default: groovy)
+     * @throws ElasticsearchException
      * @return \Elastica\Script
      */
     public function getTagsIntersectScript($tagsField, array $tags, $lang = \Elastica\Script::LANG_JS)
     {
         if(!empty($tags))
         {
-            $tags = array_map(function($tag){
-                return $tag['id'];
-            }, $tags);
+            try
+            {
+                $tags = array_map(function($tag){
+                    return $tag['id'];
+                }, $tags);
 
-            $script = "
-                int total = 0;
+                $script = "
+                tagsCount = 0;
+                count = 0;
+                totalCount = 0;
+                list = [];
+                
                 if(tagsValue.size() > 0 && doc[tagIdField].values.size() > 0){
-                     for (int i = 0; i < doc[tagIdField].size(); i++){
-                        for( int j = 0; j < tagsValue.size(); j++ ){
-                            if( tagsValue[j] == doc[tagIdField][i] ){
-                                total++;
+                     for(var i = 0, len = tagsValue.size(); i < len; i++){
+                        ++tagsCount;
+                        for(var j = 0, lenJ = doc[tagIdField].values.size(); j < lenJ; j++){
+                            if( tagsValue[i] == doc[tagIdField][j] ){
+                                ++count;
+                                list.push(doc[tagIdField][j]);
                             }
                         }
-                     }
+                    }
                 }
-                return total.toString();
+                totalCount = count.toString();
             ";
 
-            return new \Elastica\Script($script, [
-                'tagIdField' => $tagsField,
-                'tagsValue' => $tags
-            ], $lang);
+                return new \Elastica\Script($script, [
+                    'tagIdField' => $tagsField,
+                    'tagsValue' => $tags
+                ], $lang);
+            }catch(ElasticsearchException $e){
+                throw new ElasticsearchException($e);
+            }
         }
+
+        return new \Elastica\Script("");
     }
 
     /**
@@ -170,39 +184,50 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
      * @param string $tagsField Название поля где хранятся теги
      * @param array $tags набор тегов для рассчета
      * @param string $lang Язык скрипта (default: groovy)
+     * @throws ElasticsearchException
      * @return \Elastica\Script
      */
     public function getTagsIntersectInPercentScript($tagsField, array $tags, $lang = \Elastica\Script::LANG_JS)
     {
         if(!empty($tags))
         {
-            $tags = array_map(function($tag){
-                return $tag['id'];
-            }, $tags);
+            try{
+                $tags = array_map(function($tag){
+                    return $tag['id'];
+                }, $tags);
 
-            $script = "
-                int count = 0;
-                int tagsCount = 0;
-                tagsInPercent = 0;
+                $script = "
+                count = 0;
+                tagsCount = 0;
+                tagInPercent = 0;
                 
                 if(tagsValue.size() > 0 && doc[tagIdField].values.size() > 0){
-                     for( int j = 0; j < tagsValue.size(); j++ ){   
-                        tagsCount++;
-                        for (int i = 0; i < doc[tagIdField].size(); i++){
-                            if( tagsValue[j] == doc[tagIdField][i] ){
-                                count++;
+                    for(var i = 0, len = tagsValue.size(); i < len; i++){
+                        ++tagsCount;
+                        for(var j = 0, lenJ = doc[tagIdField].values.size(); j < lenJ; j++){
+                            if( tagsValue[i] == doc[tagIdField][j] ){
+                                ++count;
                             }
                         }
-                     }
+                    }
+                    
+                    tagInPercent = count/tagsCount*100;
+                    tagInPercent = tagInPercent + '%'
+                }else
+                {
+                    tagInPercent += '%'
                 }
-                tagsInPercent = tagsCount + '-' + count; 
-                return tagsInPercent;
             ";
 
-            return new \Elastica\Script($script, [
-                'tagIdField' => $tagsField,
-                'tagsValue' => $tags
-            ], $lang);
+                return new \Elastica\Script($script, [
+                    'tagIdField' => $tagsField,
+                    'tagsValue' => $tags
+                ], $lang);
+            }catch(ElasticsearchException $e){
+                throw new ElasticsearchException($e);
+            }
         }
+
+        return new \Elastica\Script("");
     }
 }

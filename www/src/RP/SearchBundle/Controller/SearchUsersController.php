@@ -5,7 +5,6 @@
 namespace RP\SearchBundle\Controller;
 
 use Common\Core\Controller\ApiController;
-use Common\Core\Controller\ControllerTrait;
 use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use Symfony\Component\HttpFoundation\Request;
@@ -18,6 +17,7 @@ class SearchUsersController extends ApiController
 
     /**
      * Параметр поиска при запросе по городу
+     *
      * @const string CITY_SEARCH_PARAM
      */
     const CITY_SEARCH_PARAM = 'cityId';
@@ -33,20 +33,6 @@ class SearchUsersController extends ApiController
     {
         /** @var Текст запроса */
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
-
-        /** @var ID пользователя */
-        $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
-
-        if (is_null($userId)) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Не указан userId пользователя',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
-        }
-
         if (is_null($searchText)) {
             return $this->_handleViewWithError(
                 new BadRequestHttpException(
@@ -57,11 +43,22 @@ class SearchUsersController extends ApiController
             );
         }
 
-        if( mb_strlen($searchText) <= 2 )
-        {
+        if (mb_strlen($searchText) <= 2) {
             return $this->_handleViewWithError(
                 new BadRequestHttpException(
                     'Поисковая строка должны быть больше двух символов',
+                    null,
+                    Response::HTTP_BAD_REQUEST
+                )
+            );
+        }
+
+        /** @var ID пользователя */
+        $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
+        if (is_null($userId)) {
+            return $this->_handleViewWithError(
+                new BadRequestHttpException(
+                    'Не указан userId пользователя',
                     null,
                     Response::HTTP_BAD_REQUEST
                 )
@@ -75,16 +72,15 @@ class SearchUsersController extends ApiController
 
         /** выводим результат */
         return $this->_handleViewWithData([
-            'info'  => [
-                'people'    => $peopleSearchService->getTotalHits(),
+            'info'      => [
+                'people' => $peopleSearchService->getTotalHits(),
             ],
             'paginator' => [
-                'people'    => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount())
+                'people' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
             ],
             'people'    => $people,
         ]);
     }
-
 
     /**
      * Поиск пользователей по городу
@@ -101,8 +97,7 @@ class SearchUsersController extends ApiController
         /** @var Текст запроса (в случае если ищем по имени) */
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
-        if( is_null($cityId) )
-        {
+        if (is_null($cityId)) {
             return $this->_handleViewWithError(
                 new BadRequestHttpException(
                     'Не задан город для поиска пользователей',
@@ -129,11 +124,11 @@ class SearchUsersController extends ApiController
         $people = $peopleSearchService->searchPeopleByCityId($userId, $cityId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
 
         return $this->_handleViewWithData([
-            'info'  => [
-                'people'    => $peopleSearchService->getTotalHits(),
+            'info'      => [
+                'people' => $peopleSearchService->getTotalHits(),
             ],
             'paginator' => [
-                'people'    => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount())
+                'people' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
             ],
             'people'    => $people,
         ]);
@@ -177,11 +172,11 @@ class SearchUsersController extends ApiController
         $people = $peopleSearchService->searchPeopleFriends($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
 
         return $this->_handleViewWithData([
-            'info'  => [
-                'people'    => $peopleSearchService->getTotalHits(),
+            'info'      => [
+                'people' => $peopleSearchService->getTotalHits(),
             ],
             'paginator' => [
-                'people'    => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount())
+                'people' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
             ],
             'people'    => $people,
         ]);
@@ -193,6 +188,27 @@ class SearchUsersController extends ApiController
     public function searchUsersHelpOffersAction(Request $request)
     {
 
+    }
+
+    /**
+     * Поиск пользователя по его ID
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
+     * @param string $userId
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function searchUsersByIdAction(Request $request, $userId)
+    {
+        $peopleSearchService = $this->getPeopleSearchService();
+
+        try {
+            $user = $peopleSearchService->getUserById($userId);
+
+            return $this->_handleViewWithData($user->toArray());
+
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
     }
 
 }

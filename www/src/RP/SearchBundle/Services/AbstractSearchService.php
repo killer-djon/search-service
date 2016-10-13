@@ -8,7 +8,9 @@ namespace RP\SearchBundle\Services;
 use Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface;
 use Common\Core\Facade\Search\QueryFactory\SearchEngine;
 use Common\Core\Facade\Search\QueryFactory\SearchServiceInterface;
+use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Query;
+use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 
 class AbstractSearchService extends SearchEngine implements SearchServiceInterface
 {
@@ -205,6 +207,8 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $count
         );
 
+        $this->clearQueryFactory();
+
         return $queryFactory->getQueryFactory();
     }
 
@@ -241,8 +245,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $customScore = new \Elastica\Query\FunctionScore();
             $customScore->setQuery($matchQuery);
 
-            foreach ($this->_scriptFunctions as $scriptFunction)
-            {
+            foreach ($this->_scriptFunctions as $scriptFunction) {
                 $customScore->addScriptScoreFunction($scriptFunction);
             }
 
@@ -260,8 +263,25 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $skip,
             $count
         );
+        $this->clearQueryFactory();
 
         return $query->getQueryFactory();
+    }
+
+    /**
+     * Сбрасываем условия предыдущего конструктора запросов
+     * необходимо для того чтобы не собирать в кучу из разных запросов
+     * условия
+     *
+     * @return SearchServiceInterface
+     */
+    private function clearQueryFactory()
+    {
+        $this->setConditionQueryShould([]);
+        $this->setAggregationQuery([]);
+        $this->setConditionQueryMust([]);
+
+        return $this;
     }
 
     /**
@@ -275,13 +295,13 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      */
     private function setQueryOptions(QueryFactoryInterface $query, $skip = 0, $count = null)
     {
-        return $query->setSize($count)
-                     ->setFrom($skip)
-                     ->setAggregations($this->_aggregationQueryData)
+        return $query->setAggregations($this->_aggregationQueryData)
                      ->setFields($this->_fieldsSelected)
                      ->setScriptFields($this->_scriptFields)
                      ->setHighlight([])// @todo доработать
-                     ->setSort($this->_sortingQueryData);
+                     ->setSort($this->_sortingQueryData)
+                     ->setSize($count)
+                     ->setFrom($skip);
     }
 
     /**
@@ -297,5 +317,33 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
                 $this->_scriptFunctions[] = $script;
             }
         }
+    }
+
+    /**
+     * Получаем пользователя из еластика по его ID
+     *
+     * @param string $userId ID пользователя
+     * @return UserProfileService
+     */
+    public function getUserById($userId)
+    {
+        /** указываем условия запроса */
+        $this->setConditionQueryMust([
+            $this->_queryConditionFactory->getTermQuery(PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, $userId),
+        ]);
+
+        /** аггрегируем запрос чтобы получить единственный результат а не многомерный массив с одним элементом */
+        $this->setAggregationQuery([
+            $this->_queryAggregationFactory->getTopHitsAggregation(),
+        ]);
+
+        /** генерируем объект запроса */
+        $query = $this->createQuery();
+
+        /** находим ползователя в базе еластика по его ID */
+        $userSearchDocument = $this->searchSingleDocuments(PeopleSearchMapping::CONTEXT, $query);
+
+        /** Возращаем объект профиля пользователя */
+        return new UserProfileService($userSearchDocument);
     }
 }

@@ -43,16 +43,12 @@ services:
         class: RP\SearchBundle\Services\AbstractSearchService
         parent: rp_search.search.engine
 
+    # Сервис поиска людей в базе еластика
     rp_search.search_service.people:
         class: RP\SearchBundle\Services\PeopleSearchService
         parent: rp_search.search_service.base
 
-    #rp_common.search.elastica_to_model_transformer.user_profile:
-    #    class: RP\Common\Reporting\Search\ElasticaResultTransformer
-    #    arguments:
-    #        - "@doctrine_mongodb"
-    #        - RP\Common\Reporting\User\Document\UserProfileDocument
-    #    calls:
-    #        - [ "setPropertyAccessor", [ @fos_elastica.property_accessor ] ]
-    #    tags:
-    #        - { name: fos_elastica.elastica_to_model_transformer, index: rp, type: user }
+    # Сервис поиска мест в базе еластика
+    rp_search.search_service.places:
+        class: RP\SearchBundle\Services\PlacesSearchService
+        parent: rp_search.search_service.base

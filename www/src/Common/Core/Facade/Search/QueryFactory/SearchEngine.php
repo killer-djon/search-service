@@ -202,7 +202,8 @@ class SearchEngine implements SearchEngineInterface
 
             $resultSet = $elasticType->search($elasticQuery);
 
-            return $resultSet->current()->getData();
+            $data = $resultSet->current()->getData();
+            return $data;
 
         } catch (ElasticsearchException $e) {
             throw new ElasticsearchException($e);
@@ -244,6 +245,7 @@ class SearchEngine implements SearchEngineInterface
      */
     public function transformResult(\Elastica\ResultSet $resultSets)
     {
+
         $this->setTotalHits($resultSets);
         $this->setTotalResults($resultSets);
         $this->setAggregationsResult($resultSets);
@@ -354,4 +356,6 @@ class SearchEngine implements SearchEngineInterface
 
         return $this->_elasticaIndex->getType($context);
     }
+
+
 }

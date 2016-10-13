@@ -22,4 +22,9 @@ interface GeoPointServiceInterface
      * @return null|int
      */
     public function getRadius();
+
+    /**
+     * @return boolean
+     */
+    public function isValid();
 }

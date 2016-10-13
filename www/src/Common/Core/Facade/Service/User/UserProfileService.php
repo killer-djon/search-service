@@ -37,6 +37,21 @@ class UserProfileService extends ReportingService
      */
     protected $_tags;
 
+    /**
+     * @var string Имя пользователя
+     */
+    protected $_name;
+
+    /**
+     * @var string Фамилия пользователя
+     */
+    protected $_surname;
+
+    /**
+     * @var string Полное имя фамилия пользователя
+     */
+    protected $_fullname;
+
 
     /**
      * @inheritdoc
@@ -49,10 +64,13 @@ class UserProfileService extends ReportingService
 
         $this->_gender = strtoupper($data['gender']);
         $this->_location = new GeoPointService(
-            $data['location']['point']['lat'],
-            $data['location']['point']['lon']
+            (isset($data['location']['point']['lat']) ? $data['location']['point']['lat'] : null),
+            (isset($data['location']['point']['lon']) ? $data['location']['point']['lon'] : null)
         );
         $this->_tags = isset($data['tags']) && !empty($data['tags']) ? $data['tags'] : [];
+        $this->_name = $data['name'];
+        $this->_surname = $data['surname'];
+        $this->_fullname = $data['fullname'];
     }
 
     /**
@@ -98,5 +116,56 @@ class UserProfileService extends ReportingService
     public function getTags()
     {
         return $this->_tags;
+    }
+
+    /**
+     * Получаем имя пользователя
+     * @return string
+     */
+    public function getName()
+    {
+        return $this->_name;
+    }
+
+    /**
+     * Получаем фамилию пользователя
+     * @return string
+     */
+    public function getSurname()
+    {
+        return $this->_surname;
+    }
+
+    /**
+     * Получаем полное имя/фамилию пользователя
+     * @return string
+     */
+    public function getFullname()
+    {
+        return $this->_fullname;
+    }
+
+    /**
+     * Преобразуем в читабельный массив для вывода на экран
+     * @return array Массив данных
+     */
+    public function toArray()
+    {
+        return [
+            'id' => $this->getId(),
+            'name' => $this->getName(),
+            'surname' => $this->getSurname(),
+            'fullname' => $this->getFullname(),
+            'gender' => $this->getGender(),
+            'isOnline' => $this->getIsOnline(),
+            'lastActivity' => $this->getLastActivity()->format('c'),
+            'location' => [
+                'point' => [
+                    'longitude' => $this->getLocation()->getLongitude(),
+                    'latitude' => $this->getLocation()->getLatitude()
+                ]
+            ],
+            'tags' => $this->getTags(),
+        ];
     }
 }

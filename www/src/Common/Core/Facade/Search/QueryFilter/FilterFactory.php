@@ -276,4 +276,5 @@ class FilterFactory implements FilterFactoryInterface
     {
         return new \Elastica\Filter\Type($type);
     }
+
 }

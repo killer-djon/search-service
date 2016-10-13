@@ -212,7 +212,7 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                     }
                     
                     tagInPercent = count/tagsCount*100;
-                    tagInPercent = tagInPercent + '%'
+                    tagInPercent = Math.round(tagInPercent) + '%'
                 }else
                 {
                     tagInPercent += '%'

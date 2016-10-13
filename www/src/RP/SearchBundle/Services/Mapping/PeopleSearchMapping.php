@@ -6,13 +6,6 @@ abstract class PeopleSearchMapping
     /** Контекст поиска */
     const CONTEXT = 'people';
 
-    /**
-    name: { boost: 9, type: string, analyzer: ru_analyzer }
-    _nameNgram: { boost: 7, type: string, analyzer: ru_ngram_analyzer }
-    _translit: { boost: 8, type: string, analyzer: translit_analyzer }
-    _translitNgram: { boost: 7, type: string, analyzer: translit_ngram_analyzer }
-     */
-
     /** Поле имени пользователя */
     const NAME_FIELD = 'name'; // полное совпадение имени по русски
     const NAME_NGRAM_FIELD = 'name._nameNgram'; // частичное совпадение имени от 3-х сивмолов по русски

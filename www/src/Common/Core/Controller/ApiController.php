@@ -173,7 +173,7 @@ abstract class ApiController extends FOSRestController
     /**
      * Ответ с ошибкой.
      *
-     * @param string $errorMessage Текст сообщения
+     * @param mixed $errorMessage Текст сообщения
      * @param int $errorCode Код ошибки
      * @return \Symfony\Component\HttpFoundation\Response
      */
@@ -355,5 +355,16 @@ abstract class ApiController extends FOSRestController
     public function getPeopleSearchService()
     {
         return $this->get('rp_search.search_service.people');
+    }
+
+    /**
+     * Получаем сервис поиска мест
+     * через еластик
+     *
+     * @return \RP\SearchBundle\Services\PlacesSearchService
+     */
+    public function getPlacesSearchService()
+    {
+        return $this->get('rp_search.search_service.places');
     }
 }

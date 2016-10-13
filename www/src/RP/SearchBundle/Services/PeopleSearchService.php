@@ -37,27 +37,31 @@ class PeopleSearchService extends AbstractSearchService
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
 
-        /** формируем условия сортировки */
-        $this->setSortingQuery([
-            $this->_sortingFactory->getGeoDistanceSort(
-                PeopleSearchMapping::LOCATION_POINT_FIELD,
-                $point
-            ),
-        ]);
-
         $this->setScriptFields([
             'tagsInPercent' => $this->_scriptFactory->getTagsIntersectInPercentScript(
                 PeopleSearchMapping::TAGS_ID_FIELD,
                 $currentUser->getTags()
             ),
-            'distance' => $this->_scriptFactory->getDistanceScript(
-                PeopleSearchMapping::LOCATION_POINT_FIELD,
-                $point
-            )
+            'tagsCount'     => $this->_scriptFactory->getTagsIntersectScript(
+                PeopleSearchMapping::TAGS_ID_FIELD,
+                $currentUser->getTags()
+            ),
         ]);
 
-        if (!is_null($point->getRadius())) {
+        if (!is_null($point->getRadius()) && $point->isValid()) {
+            /** формируем условия сортировки */
+            $this->setSortingQuery([
+                $this->_sortingFactory->getGeoDistanceSort(
+                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                ),
+            ]);
+
             $this->setScriptFields([
+                'distance'          => $this->_scriptFactory->getDistanceScript(
+                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                ),
                 'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
                     PeopleSearchMapping::LOCATION_POINT_FIELD,
                     $point
@@ -96,9 +100,6 @@ class PeopleSearchService extends AbstractSearchService
             $count
         );
 
-        /** устанавливаем минимальное значение для веса */
-        $queryMatchResult->setMinScore(self::MIN_SCORE_SEARCH);
-
         /** устанавливаем все поля по умолчанию */
         $queryMatchResult->setSource(true);
 
@@ -131,21 +132,32 @@ class PeopleSearchService extends AbstractSearchService
         ]);
 
         $this->setScriptFields([
-            'distance' => $this->_scriptFactory->getDistanceScript(
-                PeopleSearchMapping::LOCATION_POINT_FIELD,
-                $point
-            ),
             'tagsInPercent' => $this->_scriptFactory->getTagsIntersectInPercentScript(
+                PeopleSearchMapping::TAGS_ID_FIELD,
+                $currentUser->getTags()
+            ),
+            'tagsCount'     => $this->_scriptFactory->getTagsIntersectScript(
                 PeopleSearchMapping::TAGS_ID_FIELD,
                 $currentUser->getTags()
             ),
         ]);
 
-        if (!is_null($searchText) && !empty($searchText)) {
+        if (!is_null($point->getRadius()) && $point->isValid()) {
             $this->setFilterQuery([
                 $this->_queryFilterFactory->getTermFilter([
                     PeopleSearchMapping::LOCATION_CITY_ID_FIELD => $cityId,
                 ]),
+            ]);
+
+            $this->setScriptFields([
+                'distance'          => $this->_scriptFactory->getDistanceScript(
+                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                ),
+                'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
+                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                ),
             ]);
 
             /** Получаем сформированный объект запроса */
@@ -174,9 +186,6 @@ class PeopleSearchService extends AbstractSearchService
 
             /** Получаем сформированный объект запроса */
             $query = $this->createQuery($skip, $count);
-
-            /** устанавливаем минимальное значение для веса */
-            $query->setMinScore(self::MIN_SCORE_SEARCH);
         }
 
         // устанавливаем все поля по умолчанию
@@ -200,32 +209,32 @@ class PeopleSearchService extends AbstractSearchService
     {
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
-        
-        /** формируем условия сортировки */
-        $this->setSortingQuery([
-            $this->_sortingFactory->getGeoDistanceSort(
-                PeopleSearchMapping::LOCATION_POINT_FIELD,
-                $point
-            ),
-        ]);
 
         $this->setScriptFields([
-            'distance'          => $this->_scriptFactory->getDistanceScript(
-                PeopleSearchMapping::LOCATION_POINT_FIELD,
-                $point
-            ),
             'tagsInPercent' => $this->_scriptFactory->getTagsIntersectInPercentScript(
                 PeopleSearchMapping::TAGS_ID_FIELD,
                 $currentUser->getTags()
             ),
-            'tagsCount' => $this->_scriptFactory->getTagsIntersectScript(
+            'tagsCount'     => $this->_scriptFactory->getTagsIntersectScript(
                 PeopleSearchMapping::TAGS_ID_FIELD,
                 $currentUser->getTags()
-            )
+            ),
         ]);
 
-        if (!is_null($point->getRadius())) {
+        if (!is_null($point->getRadius()) && $point->isValid()) {
+            /** формируем условия сортировки */
+            $this->setSortingQuery([
+                $this->_sortingFactory->getGeoDistanceSort(
+                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                ),
+            ]);
+
             $this->setScriptFields([
+                'distance'          => $this->_scriptFactory->getDistanceScript(
+                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                ),
                 'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
                     PeopleSearchMapping::LOCATION_POINT_FIELD,
                     $point
@@ -272,8 +281,7 @@ class PeopleSearchService extends AbstractSearchService
                 $skip,
                 $count
             );
-            /** устанавливаем минимальное значение для веса */
-            $queryMatchResult->setMinScore(self::MIN_SCORE_SEARCH);
+
         } else {
             /** Получаем сформированный объект запроса */
             $queryMatchResult = $this->createMatchQuery(null, [], $skip, $count);
@@ -284,34 +292,6 @@ class PeopleSearchService extends AbstractSearchService
 
         /** поиск документа */
         return $this->searchDocuments(PeopleSearchMapping::CONTEXT, $queryMatchResult);
-    }
-
-    /**
-     * Получаем пользователя из еластика по его ID
-     *
-     * @param string $userId ID пользователя
-     * @return UserProfileService
-     */
-    public function getUserById($userId)
-    {
-        /** указываем условия запроса */
-        $this->setConditionQueryMust([
-            $this->_queryConditionFactory->getTermQuery(PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, $userId),
-        ]);
-
-        /** аггрегируем запрос чтобы получить единственный результат а не многомерный массив с одним элементом */
-        $this->setAggregationQuery([
-            $this->_queryAggregationFactory->getTopHitsAggregation(),
-        ]);
-
-        /** генерируем объект запроса */
-        $query = $this->createQuery();
-
-        /** находим ползователя в базе еластика по его ID */
-        $userSearchDocument = $this->searchSingleDocuments(PeopleSearchMapping::CONTEXT, $query);
-
-        /** Возращаем объект профиля пользователя */
-        return new UserProfileService($userSearchDocument);
     }
 
 }

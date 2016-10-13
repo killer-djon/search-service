@@ -92,6 +92,7 @@ class GeoPointService implements GeoPointServiceInterface
 
     /**
      * Возвращает радиус поиска
+     *
      * @return null|int
      */
     public function getRadius()
@@ -104,7 +105,8 @@ class GeoPointService implements GeoPointServiceInterface
      */
     public function isValid()
     {
-        return $this->getLatitude() !== null && $this->getLongitude() !== null;
+        return $this->getLatitude() !== null && (int)$this->getLatitude() != 0
+                && $this->getLongitude() !== null && (int)$this->getLongitude() != 0;
     }
 
     /**

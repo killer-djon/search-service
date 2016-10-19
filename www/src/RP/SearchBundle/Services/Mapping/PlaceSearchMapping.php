@@ -22,10 +22,9 @@ abstract class PlaceSearchMapping
     const NAME_TRANSLIT_NGRAM_FIELD   = 'name._translitNgram';
     const NAME_WORDS_FIELD  = 'name._wordsName';
 
-    /** Маппинг поля имени места для префиксного поиска */
-    //const PREFIX_NAME_FIELD = 'name.prefix';
-
+	/** поле описания места */
     const DESCRIPTION_FIELD = 'description';
+    /** эти вариации полей пока не используем */
     const DESCRIPTION_TRANSLIT_FIELD = 'description._translit';
     const DESCRIPTION_NGRAM_FIELD = 'description._ngram';
     const DESCRIPTION_PREFIX_FIELD = 'description._prefix';
@@ -34,13 +33,21 @@ abstract class PlaceSearchMapping
     const TYPE_FIELD        = 'type';
     const TYPE_ID_FIELD     = 'type.id';
     const TYPE_NAME_FIELD   = 'type.name';
+    const TYPE_NAME_NGRAM_FIELD   = 'type._nameNgram';
+    const TYPE_NAME_TRANSLIT_FIELD   = 'type._translit';
+    const TYPE_NAME_TRANSLIT_NGRAM_FIELD   = 'type._translitNgram';
+    const TYPE_WORDS_FIELD  = 'type._wordsName';
 
     /**
      * Теги
      */
     const TAG_FIELD         = 'tags';
     const TAG_ID_FIELD      = 'tags.id';
-    const TAG_NAME_FIELD    = 'tags.name';
+    const TAG_NAME_FIELD    = 'tags.tagname';
+    const TAG_NAME_NGRAM_FIELD    = 'tags._nameNgram';
+    const TAG_NAME_TRANSLIT_FIELD    = 'tags._translit';
+    const TAG_NAME_TRANSLIT_NGRAM_FIELD    = 'tags._translitNgram';
+    const TAG_WORDS_FIELD    = 'tags._wordsName';
 
     /** Адрес */
     const LOCATION_ADDRESS_FIELD    = 'location.address';

@@ -45,6 +45,7 @@ class SearchPlacesController extends ApiController
 
         /** @var ID пользователя */
         $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
+        
         if (is_null($userId)) {
             return $this->_handleViewWithError(
                 new BadRequestHttpException(

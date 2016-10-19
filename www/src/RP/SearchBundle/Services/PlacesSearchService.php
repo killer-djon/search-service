@@ -31,23 +31,41 @@ class PlacesSearchService extends AbstractSearchService
      */
     public function searchPlacesByName($userId, $searchText, GeoPointServiceInterface $point, $skip = 0, $count = null)
     {
-        /** получаем текущего ползователя */
-        $currentUser = $this->getUserById($userId);
-
         $this->setConditionQueryShould([
             $this->_queryConditionFactory->getMultiMatchQuery()->setQuery($searchText)->setFields([
                 PlaceSearchMapping::NAME_FIELD,
                 PlaceSearchMapping::NAME_NGRAM_FIELD,
                 PlaceSearchMapping::NAME_TRANSLIT_FIELD,
-                PlaceSearchMapping::NAME_TRANSLIT_NGRAM_FIELD
+                PlaceSearchMapping::NAME_TRANSLIT_NGRAM_FIELD,
+                PlaceSearchMapping::TYPE_NAME_FIELD,
+                PlaceSearchMapping::TYPE_NAME_NGRAM_FIELD,
+                PlaceSearchMapping::TYPE_NAME_TRANSLIT_FIELD,
+                PlaceSearchMapping::TYPE_NAME_TRANSLIT_NGRAM_FIELD,
+                PlaceSearchMapping::TAG_NAME_FIELD,
+                PlaceSearchMapping::TAG_NAME_NGRAM_FIELD,
+                PlaceSearchMapping::TAG_NAME_TRANSLIT_FIELD,
+                PlaceSearchMapping::TAG_NAME_TRANSLIT_NGRAM_FIELD
             ]),
+            $this->_queryConditionFactory->getWildCardQuery(
+                PlaceSearchMapping::DESCRIPTION_FIELD,
+                $searchText
+            ),
             $this->_queryConditionFactory->getWildCardQuery(
                 PlaceSearchMapping::NAME_WORDS_FIELD,
                 $searchText
+            ),
+            $this->_queryConditionFactory->getWildCardQuery(
+                PlaceSearchMapping::TYPE_WORDS_FIELD,
+                $searchText
+            ),
+            $this->_queryConditionFactory->getWildCardQuery(
+                PlaceSearchMapping::TAG_WORDS_FIELD,
+                $searchText
             )
         ]);
+        
 
-        if( $point->isValid() )
+        if ($point->isValid()) 
         {
             $this->setScriptFields([
                 'distance'          => $this->_scriptFactory->getDistanceScript(
@@ -62,12 +80,28 @@ class PlacesSearchService extends AbstractSearchService
                     $point
                 ),
             ]);
+            
+            if(!is_null($point->getRadius()))
+            {
+	            $this->setFilterQuery([
+	                $this->_queryFilterFactory->getGeoDistanceFilter(
+	                    PlaceSearchMapping::LOCATION_POINT_FIELD,
+	                    [
+	                        'lat' => $point->getLatitude(),
+	                        'lon' => $point->getLongitude(),
+	                    ],
+	                    $point->getRadius(),
+	                    'm'
+	                )
+	            ]);
+            }
         }
 
         $queryMatch = $this->createQuery($skip, $count);
 
         /** отображаем все поля изначальные */
         $queryMatch->setSource(true);
+        
 
         return $this->searchDocuments(PlaceSearchMapping::CONTEXT, $queryMatch);
     }

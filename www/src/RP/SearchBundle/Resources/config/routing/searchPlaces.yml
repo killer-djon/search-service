@@ -1,6 +1,6 @@
 # Routing который формирует запрос для поиска мест
 # по имени места или частичное совпадение в имени места
-# пример запроса /api/search/v2/json/users/name
+# пример запроса /api/search/v1/json/places/name
 RPSearchBundle_search_places_byname:
     path: /v{_version}/{_format}/places/name
     defaults:

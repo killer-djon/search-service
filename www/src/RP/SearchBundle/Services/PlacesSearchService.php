@@ -4,6 +4,7 @@
  */
 namespace RP\SearchBundle\Services;
 
+use Common\Core\Constants\ModerationStatus;
 use Common\Core\Constants\Visible;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Elastica\Exception\ElasticsearchException;
@@ -31,6 +32,7 @@ class PlacesSearchService extends AbstractSearchService
      */
     public function searchPlacesByName($userId, $searchText, GeoPointServiceInterface $point, $skip = 0, $count = null)
     {
+	    
         $this->setConditionQueryShould([
             $this->_queryConditionFactory->getMultiMatchQuery()->setQuery($searchText)->setFields([
                 PlaceSearchMapping::NAME_FIELD,
@@ -62,6 +64,54 @@ class PlacesSearchService extends AbstractSearchService
                 PlaceSearchMapping::TAG_WORDS_FIELD,
                 $searchText
             )
+        ]);
+        
+        $this->setFilterQuery([
+	        $this->_queryFilterFactory->getBoolOrFilter([
+		        $this->_queryFilterFactory->getTermFilter([
+			        PlaceSearchMapping::BONUS_FIELD => ''
+		        ]),
+		        $this->_queryFilterFactory->getNotFilter(
+			        $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
+		        )
+	        ]),
+	        $this->_queryFilterFactory->getBoolOrFilter([
+		        $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
+		        $this->_queryFilterFactory->getNotFilter(
+			        $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::DISCOUNT_FIELD)
+		        )
+	        ]),
+	        $this->_queryFilterFactory->getBoolOrFilter([
+		        // или это автор и статус вывести на модерации
+		        $this->_queryFilterFactory->getBoolAndFilter([
+			        $this->_queryFilterFactory->getTermFilter([
+			        	PlaceSearchMapping::AUTHOR_ID_FIELD => $userId
+			        ]),
+			        $this->_queryFilterFactory->getTermsFilter(
+				        PlaceSearchMapping::MODERATION_STATUS_FIELD, [
+					        ModerationStatus::OK,
+					        ModerationStatus::RESTORED,
+					        ModerationStatus::DIRTY,
+					        ModerationStatus::REJECTED,
+					        ModerationStatus::NOT_IN_PROMO
+				        ]
+			        )
+		        ]),
+		        // или если не автор то 
+		        $this->_queryFilterFactory->getBoolAndFilter([
+			        $this->_queryFilterFactory->getNotFilter(
+				        $this->_queryFilterFactory->getTermFilter([
+				        	PlaceSearchMapping::AUTHOR_ID_FIELD => $userId
+				        ])
+			        ),
+			        $this->_queryFilterFactory->getTermsFilter(
+				        PlaceSearchMapping::MODERATION_STATUS_FIELD, [
+					        ModerationStatus::OK,
+							ModerationStatus::RESTORED
+				        ]
+			        )
+		        ]),
+	        ])
         ]);
         
 
@@ -101,7 +151,6 @@ class PlacesSearchService extends AbstractSearchService
 
         /** отображаем все поля изначальные */
         $queryMatch->setSource(true);
-        
 
         return $this->searchDocuments(PlaceSearchMapping::CONTEXT, $queryMatch);
     }

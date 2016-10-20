@@ -1,7 +1,7 @@
 <?php
 namespace Common\Core\Constants;
 
-class Location
+abstract class Location
 {
     /**
 	 * Параметр широты локации

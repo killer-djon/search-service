@@ -1,10 +1,10 @@
 <?php
-namespace Common\Core\Constants;
-
 /**
  * Значения видимости места
  */
-class Visible
+namespace Common\Core\Constants;
+
+abstract class Visible
 {
     /**
      * Значение "Никому"

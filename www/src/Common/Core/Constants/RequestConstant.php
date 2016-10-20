@@ -1,7 +1,7 @@
 <?php
 namespace Common\Core\Constants;
 
-class RequestConstant
+abstract class RequestConstant
 {
     /**
      * Параметр запроса долготы

@@ -68,4 +68,35 @@ class SearchPlacesController extends ApiController
             'places'    => $places,
         ]);
     }
+
+    public function searchPlacesByDiscountAction(Request $request)
+    {
+        /** @var ID пользователя */
+        $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
+        if (is_null($userId)) {
+            return $this->_handleViewWithError(
+                new BadRequestHttpException(
+                    'Не указан userId пользователя',
+                    null,
+                    Response::HTTP_BAD_REQUEST
+                )
+            );
+        }
+
+        /** @var Текст запроса */
+        $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+
+        $placeSearchService = $this->getPlacesSearchService();
+        $places = $placeSearchService->searchPlacesByDiscount($userId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
+
+        return $this->_handleViewWithData([
+            'info'      => [
+                'places' => $placeSearchService->getTotalHits(),
+            ],
+            'paginator' => [
+                'places' => $placeSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
+            ],
+            'places'    => $places,
+        ]);
+    }
 }

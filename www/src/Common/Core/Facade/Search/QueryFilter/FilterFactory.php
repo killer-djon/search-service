@@ -176,6 +176,23 @@ class FilterFactory implements FilterFactoryInterface
     public function getRangeFilter($fieldName, $from, $to)
     {
         return new \Elastica\Filter\Range($fieldName, [
+            'gt' => "$from",
+            'lt' => "$to",
+        ]);
+    }
+
+    /**
+     * Возвращает фильтр выборки по диапазону
+     * для number/date типов полей
+     *
+     * @param string $fieldName
+     * @param string $from
+     * @param string $to
+     * @return \Elastica\Filter\AbstractFilter
+     */
+    public function getNumericRangeFilter($fieldName, $from, $to)
+    {
+        return new \Elastica\Filter\NumericRange($fieldName, [
             'gt' => $from,
             'lt' => $to,
         ]);

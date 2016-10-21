@@ -12,3 +12,17 @@ RPSearchBundle_search_places_byname:
         _method: (GET)
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
+
+# Routing который формирует запрос для поиска мест со скидками/бонусами
+# пример запроса /api/search/v2/json/places/discount
+RPSearchBundle_search_places_bydiscount:
+    path: /v{_version}/{_format}/places/discount
+    defaults:
+        _controller: RPSearchBundle:SearchPlaces:searchPlacesByDiscount
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchPlaces:searchplacesdiscount.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию

@@ -128,8 +128,16 @@ class QueryFactory implements QueryFactoryInterface
      */
     public function setHighlight(array $highlightArgs = [])
     {
+        $highlight = [
+            "pre_tags"  => ["<em>"],
+            "post_tags" => ["</em>"],
+            "require_field_match" => false,
+            "fields"    => [],
+        ];
+
         if (!empty($highlightArgs)) {
-            $this->_queryObject->setHighlight($highlightArgs);
+            $highlight['fields'] = $highlightArgs;
+            $this->_queryObject->setHighlight($highlight);
         }
 
         return $this;

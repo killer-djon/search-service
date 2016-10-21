@@ -26,9 +26,6 @@ abstract class PlaceSearchMapping
     //const PREFIX_NAME_FIELD = 'name.prefix';
 
     const DESCRIPTION_FIELD = 'description';
-    const DESCRIPTION_TRANSLIT_FIELD = 'description._translit';
-    const DESCRIPTION_NGRAM_FIELD = 'description._ngram';
-    const DESCRIPTION_PREFIX_FIELD = 'description._prefix';
 
     /** Тип места */
     const TYPE_FIELD        = 'type';
@@ -40,7 +37,7 @@ abstract class PlaceSearchMapping
      */
     const TAG_FIELD         = 'tags';
     const TAG_ID_FIELD      = 'tags.id';
-    const TAG_NAME_FIELD    = 'tags.name';
+    const TAG_NAME_FIELD    = 'tags.tagname';
 
     /** Адрес */
     const LOCATION_ADDRESS_FIELD    = 'location.address';

@@ -142,22 +142,11 @@ class PeopleSearchService extends AbstractSearchService
             ),
         ]);
 
-        if (!is_null($point->getRadius()) && $point->isValid()) {
+        if (!is_null($searchText)) {
             $this->setFilterQuery([
                 $this->_queryFilterFactory->getTermFilter([
                     PeopleSearchMapping::LOCATION_CITY_ID_FIELD => $cityId,
                 ]),
-            ]);
-
-            $this->setScriptFields([
-                'distance'          => $this->_scriptFactory->getDistanceScript(
-                    PeopleSearchMapping::LOCATION_POINT_FIELD,
-                    $point
-                ),
-                'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
-                    PeopleSearchMapping::LOCATION_POINT_FIELD,
-                    $point
-                ),
             ]);
 
             /** Получаем сформированный объект запроса */
@@ -186,6 +175,45 @@ class PeopleSearchService extends AbstractSearchService
 
             /** Получаем сформированный объект запроса */
             $query = $this->createQuery($skip, $count);
+        }
+
+        if ($point->isValid()) {
+            /** формируем условия сортировки */
+            $this->setSortingQuery([
+                $this->_sortingFactory->getGeoDistanceSort(
+                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                ),
+            ]);
+
+            $this->setScriptFields([
+                'distance'          => $this->_scriptFactory->getDistanceScript(
+                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                )
+            ]);
+
+            if(!is_null($point->getRadius()))
+            {
+                $this->setScriptFields([
+                    'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
+                        PeopleSearchMapping::LOCATION_POINT_FIELD,
+                        $point
+                    )
+                ]);
+
+                $this->setFilterQuery([
+                    $this->_queryFilterFactory->getGeoDistanceFilter(
+                        PeopleSearchMapping::LOCATION_POINT_FIELD,
+                        [
+                            'lat' => $point->getLatitude(),
+                            'lon' => $point->getLongitude(),
+                        ],
+                        $point->getRadius(),
+                        'm'
+                    ),
+                ]);
+            }
         }
 
         // устанавливаем все поля по умолчанию
@@ -221,7 +249,7 @@ class PeopleSearchService extends AbstractSearchService
             ),
         ]);
 
-        if (!is_null($point->getRadius()) && $point->isValid()) {
+        if ($point->isValid()) {
             /** формируем условия сортировки */
             $this->setSortingQuery([
                 $this->_sortingFactory->getGeoDistanceSort(
@@ -234,24 +262,30 @@ class PeopleSearchService extends AbstractSearchService
                 'distance'          => $this->_scriptFactory->getDistanceScript(
                     PeopleSearchMapping::LOCATION_POINT_FIELD,
                     $point
-                ),
-                'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
-                    PeopleSearchMapping::LOCATION_POINT_FIELD,
-                    $point
-                ),
+                )
             ]);
 
-            $this->setFilterQuery([
-                $this->_queryFilterFactory->getGeoDistanceFilter(
-                    PeopleSearchMapping::LOCATION_POINT_FIELD,
-                    [
-                        'lat' => $point->getLatitude(),
-                        'lon' => $point->getLongitude(),
-                    ],
-                    $point->getRadius(),
-                    'm'
-                ),
-            ]);
+            if(!is_null($point->getRadius()))
+            {
+                $this->setScriptFields([
+                    'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
+                        PeopleSearchMapping::LOCATION_POINT_FIELD,
+                        $point
+                    )
+                ]);
+
+                $this->setFilterQuery([
+                    $this->_queryFilterFactory->getGeoDistanceFilter(
+                        PeopleSearchMapping::LOCATION_POINT_FIELD,
+                        [
+                            'lat' => $point->getLatitude(),
+                            'lon' => $point->getLongitude(),
+                        ],
+                        $point->getRadius(),
+                        'm'
+                    ),
+                ]);
+            }
         }
 
         $this->setFilterQuery([
@@ -292,6 +326,102 @@ class PeopleSearchService extends AbstractSearchService
 
         /** поиск документа */
         return $this->searchDocuments(PeopleSearchMapping::CONTEXT, $queryMatchResult);
+    }
+
+    /**
+     * Метод осуществляет поиск в еластике
+     * людей которые могут помочь (т.е. с флагом могуПомочь)
+     *
+     * @param string $userId ID пользователя который делает запрос к АПИ
+     * @param GeoPointServiceInterface $point
+     * @param string $searchText Поисковый запрос
+     * @param int $skip Кол-во пропускаемых позиций поискового результата
+     * @param int $count Какое кол-во выводим
+     * @return array Массив с найденными результатами
+     */
+    public function searchPeopleHelpOffers($userId, GeoPointServiceInterface $point, $searchText = null, $skip = 0, $count = null)
+    {
+        /** получаем объект текущего пользователя */
+        $currentUser = $this->getUserById($userId);
+
+        $this->setScriptFields([
+            'tagsInPercent' => $this->_scriptFactory->getTagsIntersectInPercentScript(
+                PeopleSearchMapping::TAGS_ID_FIELD,
+                $currentUser->getTags()
+            ),
+            'tagsCount'     => $this->_scriptFactory->getTagsIntersectScript(
+                PeopleSearchMapping::TAGS_ID_FIELD,
+                $currentUser->getTags()
+            ),
+        ]);
+
+        if(!is_null($searchText) && !empty($searchText))
+        {
+            $this->setConditionQueryShould([
+                $this->_queryConditionFactory->getMultiMatchQuery()->setQuery($searchText)->setFields([
+                    PeopleSearchMapping::HELP_OFFERS_NAME_FIELD,
+                    PeopleSearchMapping::HELP_OFFERS_NAME_NGRAM_FIELD,
+                    PeopleSearchMapping::HELP_OFFERS_NAME_TRANSLIT_FIELD,
+                    PeopleSearchMapping::HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD
+                ]),
+                $this->_queryConditionFactory->getWildCardQuery(
+                    PeopleSearchMapping::HELP_OFFERS_WORDS_NAME_FIELD,
+                    $searchText
+                )
+            ]);
+        }
+
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getExistsFilter(PeopleSearchMapping::HELP_OFFERS_LIST_FIELD)
+        ]);
+
+        if ($point->isValid()) {
+            /** формируем условия сортировки */
+            $this->setSortingQuery([
+                $this->_sortingFactory->getGeoDistanceSort(
+                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                ),
+            ]);
+
+            $this->setScriptFields([
+                'distance'          => $this->_scriptFactory->getDistanceScript(
+                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                )
+            ]);
+
+            if(!is_null($point->getRadius()))
+            {
+                $this->setScriptFields([
+                    'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
+                        PeopleSearchMapping::LOCATION_POINT_FIELD,
+                        $point
+                    ),
+                ]);
+
+                $this->setFilterQuery([
+                    $this->_queryFilterFactory->getGeoDistanceFilter(
+                        PeopleSearchMapping::LOCATION_POINT_FIELD,
+                        [
+                            'lat' => $point->getLatitude(),
+                            'lon' => $point->getLongitude(),
+                        ],
+                        $point->getRadius(),
+                        'm'
+                    ),
+                ]);
+            }
+        }
+
+
+        $queryMatch = $this->createQuery($skip, $count);
+
+        /** устанавливаем все поля по умолчанию */
+        $queryMatch->setSource(true);
+
+        /** поиск документа */
+        return $this->searchDocuments(PeopleSearchMapping::CONTEXT, $queryMatch);
     }
 
 }

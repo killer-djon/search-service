@@ -56,7 +56,11 @@ abstract class PeopleSearchMapping
 
     const HELP_OFFERS_NAME_TRANSLIT_FIELD = 'helpOffers._translit';
 
-    const HELP_OFFERS_NAME_NGRAM_FIELD = 'helpOffers._ngram';
+    const HELP_OFFERS_NAME_NGRAM_FIELD = 'helpOffers._nameNgram';
+
+    const HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD = 'helpOffers._translitNgram';
+
+    const HELP_OFFERS_WORDS_NAME_FIELD = 'helpOffers._wordsName';
 
     const HELP_OFFERS_NAME_PREFIX_FIELD = 'helpOffers._prefix';
 

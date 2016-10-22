@@ -132,7 +132,7 @@ class GeoPointService implements GeoPointServiceInterface
      */
     private function _setRadius($radius)
     {
-        $this->_radius = (!is_null($radius) ? (int)$radius : null);
+	    $this->_radius = $radius;
     }
 
     /**

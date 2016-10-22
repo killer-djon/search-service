@@ -78,7 +78,7 @@ class SearchUsersController extends ApiController
             'paginator' => [
                 'people' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
             ],
-            'people'    => $people,
+            'people'    => $peopleSearchService->getTotalResults(),
         ]);
     }
 
@@ -129,7 +129,7 @@ class SearchUsersController extends ApiController
             'paginator' => [
                 'people' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
             ],
-            'people'    => $people,
+            'people'    => $peopleSearchService->getTotalResults(),
         ]);
     }
 
@@ -177,16 +177,51 @@ class SearchUsersController extends ApiController
             'paginator' => [
                 'people' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
             ],
-            'people'    => $people,
+            'people'    => $peopleSearchService->getTotalResults(),
         ]);
     }
 
     /**
      * Поиск пользователей которые могут помочь
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
+     * @return \Symfony\Component\HttpFoundation\Response
      */
     public function searchUsersHelpOffersAction(Request $request)
     {
+        /** @var Текст запроса */
+        $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
+        /** @var ID пользователя */
+        $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
+        if (is_null($userId)) {
+            return $this->_handleViewWithError(
+                new BadRequestHttpException(
+                    'Не указан userId пользователя',
+                    null,
+                    Response::HTTP_BAD_REQUEST
+                )
+            );
+        }
+
+        $peopleSearchService = $this->getPeopleSearchService();
+        $peopleHelpOffers = $peopleSearchService->searchPeopleHelpOffers(
+            $userId,
+            $this->getGeoPoint(),
+            $searchText,
+            $this->getSkip(),
+            $this->getCount()
+        );
+
+        return $this->_handleViewWithData([
+            'info'      => [
+                'people' => $peopleSearchService->getTotalHits(),
+            ],
+            'paginator' => [
+                'people' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
+            ],
+            'people'    => $peopleSearchService->getTotalResults(),
+        ]);
     }
 
     /**

@@ -91,11 +91,10 @@ class SearchUsersController extends ApiController
      */
     public function searchUsersByCityAction(Request $request)
     {
-        /** @var ID города */
-        $cityId = $request->get(self::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
-
         /** @var Текст запроса (в случае если ищем по имени) */
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+        /** @var ID города */
+        $cityId = $request->get(self::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
 
         if (is_null($cityId)) {
             return $this->_handleViewWithError(

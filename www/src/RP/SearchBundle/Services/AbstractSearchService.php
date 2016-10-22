@@ -11,6 +11,7 @@ use Common\Core\Facade\Search\QueryFactory\SearchServiceInterface;
 use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Query;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
+use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 
 class AbstractSearchService extends SearchEngine implements SearchServiceInterface
 {
@@ -345,5 +346,34 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
 
         /** Возращаем объект профиля пользователя */
         return new UserProfileService($userSearchDocument);
+    }
+    
+    /**
+     * Получаем место по его ID
+     *
+     * @param string $placeId ID места
+     * @return PlaceService
+     */
+    public function getPlaceById($placeId)
+    {
+        /** указываем условия запроса */
+        $this->setConditionQueryMust([
+            $this->_queryConditionFactory->getTermQuery(PlaceSearchMapping::PLACE_ID_FIELD, $placeId),
+        ]);
+
+        /** аггрегируем запрос чтобы получить единственный результат а не многомерный массив с одним элементом */
+        $this->setAggregationQuery([
+            $this->_queryAggregationFactory->getTopHitsAggregation(),
+        ]);
+
+        /** генерируем объект запроса */
+        $query = $this->createQuery();
+
+        /** находим ползователя в базе еластика по его ID */
+        $placeSearchDocument = $this->searchSingleDocuments(PlaceSearchMapping::CONTEXT, $query);
+
+        /** Возращаем объект профиля пользователя */
+        //return new UserProfileService($placeSearchDocument); - @to do надо сделать сервис места
+        return $placeSearchDocument;
     }
 }

@@ -10,6 +10,7 @@ namespace RP\SearchBundle\Services\Mapping;
 
 abstract class PlaceSearchMapping
 {
+	const PLACE_ID_FIELD = 'id';
     /** Контекст поиска */
     const CONTEXT = 'places';
 

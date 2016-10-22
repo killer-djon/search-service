@@ -66,7 +66,87 @@ class PlacesSearchService extends AbstractSearchService
             )
         ]);
         
-        $this->setFilterQuery([
+        /** устанавливаем фильтры только для мест */
+        $this->setFilterPlaces($userId);
+
+        if ($point->isValid()) 
+        {
+            $this->setScriptFields([
+                'distance'          => $this->_scriptFactory->getDistanceScript(
+                    PlaceSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                )
+            ]);
+
+            $this->setSortingQuery([
+                $this->_sortingFactory->getGeoDistanceSort(
+                    PlaceSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                ),
+            ]);
+            
+            if(!is_null($point->getRadius()))
+            {
+	            $this->setFilterQuery([
+	                $this->_queryFilterFactory->getGeoDistanceFilter(
+	                    PlaceSearchMapping::LOCATION_POINT_FIELD,
+	                    [
+	                        'lat' => $point->getLatitude(),
+	                        'lon' => $point->getLongitude(),
+	                    ],
+	                    $point->getRadius(),
+	                    'm'
+	                )
+	            ]);
+            }
+        }
+
+        $queryMatch = $this->createQuery($skip, $count);
+
+        /** отображаем все поля изначальные */
+        $queryMatch->setSource(true);
+
+        return $this->searchDocuments(PlaceSearchMapping::CONTEXT, $queryMatch);
+    }
+    
+    
+    
+    /**
+     * Метод осуществляет поиск в еластике
+     * мест по городу
+     *
+     * @param string $userId ID пользователя который делает запрос к АПИ
+     * @param string $cityId ID города
+     * @param GeoPointServiceInterface $point
+     * @param int $skip Кол-во пропускаемых позиций поискового результата
+     * @param int $count Какое кол-во выводим
+     * @return array Массив с найденными результатами
+     */
+    public function searchPlacesByCity($userId, $cityId, GeoPointServiceInterface $point, $skip = 0, $count = null)
+    {
+	    $this->setConditionQueryMust([
+		    $this->_queryConditionFactory->getTermQuery(PlaceSearchMapping::LOCATION_CITY_ID_FIELD, $cityId)
+	    ]);
+	    
+	     /** устанавливаем фильтры только для мест */
+        $this->setFilterPlaces($userId);
+        
+        $queryMatch = $this->createQuery($skip, $count);
+        
+        return $this->searchDocuments(PlaceSearchMapping::CONTEXT, $queryMatch);
+        
+    }
+    
+    /**
+	 * Установка фильтров для поиска только мест
+	 * без бонусов и скидок только места
+	 * которые так же прошли модерацию (т.е. не удалены)   
+	 * @param string $userId ID пользователя (автор места)
+	 * @return void
+     */
+    private function setFilterPlaces($userId)
+    {
+	    $this->setFilterQuery([
 	        $this->_queryFilterFactory->getBoolOrFilter([
 		        $this->_queryFilterFactory->getTermFilter([
 			        PlaceSearchMapping::BONUS_FIELD => ''
@@ -113,45 +193,5 @@ class PlacesSearchService extends AbstractSearchService
 		        ]),
 	        ])
         ]);
-        
-
-        if ($point->isValid()) 
-        {
-            $this->setScriptFields([
-                'distance'          => $this->_scriptFactory->getDistanceScript(
-                    PlaceSearchMapping::LOCATION_POINT_FIELD,
-                    $point
-                )
-            ]);
-
-            $this->setSortingQuery([
-                $this->_sortingFactory->getGeoDistanceSort(
-                    PlaceSearchMapping::LOCATION_POINT_FIELD,
-                    $point
-                ),
-            ]);
-            
-            if(!is_null($point->getRadius()))
-            {
-	            $this->setFilterQuery([
-	                $this->_queryFilterFactory->getGeoDistanceFilter(
-	                    PlaceSearchMapping::LOCATION_POINT_FIELD,
-	                    [
-	                        'lat' => $point->getLatitude(),
-	                        'lon' => $point->getLongitude(),
-	                    ],
-	                    $point->getRadius(),
-	                    'm'
-	                )
-	            ]);
-            }
-        }
-
-        $queryMatch = $this->createQuery($skip, $count);
-
-        /** отображаем все поля изначальные */
-        $queryMatch->setSource(true);
-
-        return $this->searchDocuments(PlaceSearchMapping::CONTEXT, $queryMatch);
     }
 }

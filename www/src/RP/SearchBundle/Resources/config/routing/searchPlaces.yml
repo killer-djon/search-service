@@ -12,3 +12,34 @@ RPSearchBundle_search_places_byname:
         _method: (GET)
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
+        
+# Routing который формирует запрос для поиска мест
+# которые расположены в заданном городе по указанному радиусу
+# пример запроса /api/search/v1/json/places/city/{cityId}
+RPSearchBundle_search_places_bycity:
+    path: /v{_version}/{_format}/places/city/{cityId}
+    defaults:
+        _controller: RPSearchBundle:SearchPlaces:searchPlacesByCity
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchPlaces:searchplacescity.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        cityId: \w+
+        
+# Routing который формирует запрос для поиска одого места по ID
+# пример запроса /api/search/v1/json/places/{placeId}
+RPSearchBundle_search_places_byid:
+    path: /v{_version}/{_format}/places/{placeId}
+    defaults:
+        _controller: RPSearchBundle:SearchPlaces:searchPlacesById
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchPlaces:searchplaceid.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (OPTIONS|GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        placeId: \w+

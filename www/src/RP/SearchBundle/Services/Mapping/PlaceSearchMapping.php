@@ -1,11 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: eleshanu
- * Date: 13.10.16
- * Time: 18:18
- */
-
 namespace RP\SearchBundle\Services\Mapping;
 
 abstract class PlaceSearchMapping
@@ -25,10 +18,6 @@ abstract class PlaceSearchMapping
 
 	/** поле описания места */
     const DESCRIPTION_FIELD = 'description';
-    /** эти вариации полей пока не используем */
-    const DESCRIPTION_TRANSLIT_FIELD = 'description._translit';
-    const DESCRIPTION_NGRAM_FIELD = 'description._ngram';
-    const DESCRIPTION_PREFIX_FIELD = 'description._prefix';
 
     /** Тип места */
     const TYPE_FIELD        = 'type';

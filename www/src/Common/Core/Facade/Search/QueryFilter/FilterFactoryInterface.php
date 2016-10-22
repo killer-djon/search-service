@@ -123,6 +123,17 @@ interface FilterFactoryInterface
     public function getRangeFilter($fieldName, $from, $to);
 
     /**
+     * Возвращает фильтр выборки по диапазону
+     * для number/date типов полей
+     *
+     * @param string $fieldName
+     * @param string $from
+     * @param string $to
+     * @return \Elastica\Filter\AbstractFilter
+     */
+    public function getNumericRangeFilter($fieldName, $from, $to);
+
+    /**
      * Возвращает фильтр выборки по площади
      *
      * @param string $fieldName

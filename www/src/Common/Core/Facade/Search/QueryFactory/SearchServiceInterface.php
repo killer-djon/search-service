@@ -39,6 +39,14 @@ interface SearchServiceInterface
     public function setFilterQuery(array $filters = []);
 
     /**
+     * Устанавливаем условия подсветки для искомых значений полей
+     *
+     * @param array $highlights Набор полей с параметрами подсветки
+     * @return SearchServiceInterface
+     */
+    public function setHighlightQuery(array $highlights = []);
+
+    /**
      * Создаем аггрегированные условия запроса
      * так называемый aggregation (например суммирование результата по условию)
      * как аггрегированные функции

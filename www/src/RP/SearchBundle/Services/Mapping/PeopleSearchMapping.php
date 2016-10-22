@@ -34,7 +34,7 @@ abstract class PeopleSearchMapping
     /** Поле аватара пользователя */
     const AVATAR_FIELD = 'Avatar';
 
-    const TAGS_NAME_FIELD = 'tags.name';
+    const TAGS_NAME_FIELD = 'tags.tagname';
 
     const TAGS_ID_FIELD = 'tags.id';
 

@@ -82,6 +82,12 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     private $_fieldsSelected = [];
 
     /**
+     * набор полей для подсветки при поиске
+     * @var array $_highlightQueryData
+     */
+    private $_highlightQueryData = [];
+
+    /**
      * Определяем какой набор полей нам нужно выбрать
      *
      * @param array $fields набор полей для выборки
@@ -178,6 +184,18 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     public function setSortingQuery(array $sortings = [])
     {
         $this->_sortingQueryData = $sortings;
+    }
+
+
+    /**
+     * Устанавливаем условия подсветки для искомых значений полей
+     *
+     * @param array $highlights Набор полей с параметрами подсветки
+     * @return SearchServiceInterface
+     */
+    public function setHighlightQuery(array $highlights = [])
+    {
+        $this->_highlightQueryData = $highlights;
     }
 
     /**
@@ -299,7 +317,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         return $query->setAggregations($this->_aggregationQueryData)
                      ->setFields($this->_fieldsSelected)
                      ->setScriptFields($this->_scriptFields)
-                     ->setHighlight([])// @todo доработать
+                     ->setHighlight($this->_highlightQueryData)// @todo доработать
                      ->setSort($this->_sortingQueryData)
                      ->setSize($count)
                      ->setFrom($skip);

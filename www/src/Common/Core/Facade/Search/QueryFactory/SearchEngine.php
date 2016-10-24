@@ -169,12 +169,16 @@ class SearchEngine implements SearchEngineInterface
      *
      * @param string Search type
      * @param \Elastica\Query $elasticQuery An \Elastica\Query object
+     * @param bool $setSource (default: true) Показать исходные данные объекта в ответе
      * @throws ElasticsearchException
      * @return array results
      */
-    public function searchDocuments($context, \Elastica\Query $elasticQuery)
+    public function searchDocuments($context, \Elastica\Query $elasticQuery, $setSource = true)
     {
         try {
+            /** устанавливаем все поля по умолчанию */
+            $elasticQuery->setSource((bool)$setSource);
+
             $elasticType = $this->_getElasticType($context);
             $this->_paginator = new SearchElasticaAdapter($elasticType, $elasticQuery);
 
@@ -190,21 +194,26 @@ class SearchEngine implements SearchEngineInterface
      *
      * @param string Search type
      * @param \Elastica\Query $elasticQuery An \Elastica\Query object
+     * @param bool $setSource (default: true) Показать исходные данные объекта в ответе
      * @throws ElasticsearchException
-     * @return array results
+     * @return array|null results
      */
-    public function searchSingleDocuments($context, \Elastica\Query $elasticQuery)
+    public function searchSingleDocuments($context, \Elastica\Query $elasticQuery, $setSource = true)
     {
         try {
+            /** устанавливаем все поля по умолчанию */
+            $elasticQuery->setSource((bool)$setSource);
+
             $elasticType = $this->_getElasticType($context);
             $elasticQuery->setSize(1);
             $elasticQuery->setFrom(0);
 
             $resultSet = $elasticType->search($elasticQuery);
-
-            $data = $resultSet->current()->getData();
-
-            return $data;
+            if( $resultSet->current() !== false )
+            {
+                return $resultSet->current()->getData();
+            }
+            return null;
 
         } catch (ElasticsearchException $e) {
             throw new ElasticsearchException($e->getCode(), $e->getMessage());

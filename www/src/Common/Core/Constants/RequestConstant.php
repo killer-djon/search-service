@@ -59,6 +59,13 @@ abstract class RequestConstant
     const USER_ID_PARAM = 'userId';
 
     /**
+     * Параметр поиска при запросе по городу
+     *
+     * @const string CITY_SEARCH_PARAM
+     */
+    const CITY_SEARCH_PARAM = 'cityId';
+
+    /**
      * Параметр поисковой строки
      * кол-во пропускаемых записей поиска
      *

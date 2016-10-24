@@ -26,6 +26,13 @@ class SearchPlacesController extends ApiController
      */
     const CITY_SEARCH_PARAM = 'cityId';
 
+    /**
+     * Ключ контекста объекта ответа клиенту
+     *
+     * @const string KEY_FIELD_RESPONSE
+     */
+    const KEY_FIELD_RESPONSE = 'places';
+
 	/**
 	 * Поиск мест по введенному названию (части названия)
 	 * поиск идет по всем местам 
@@ -73,15 +80,7 @@ class SearchPlacesController extends ApiController
         $placeSearchService = $this->getPlacesSearchService();
         $places = $placeSearchService->searchPlacesByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
 
-        return $this->_handleViewWithData([
-            'info'      => [
-                'places' => $placeSearchService->getTotalHits(),
-            ],
-            'paginator' => [
-                'places' => $placeSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
-            ],
-            'places'    => $places,
-        ]);
+        return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
     }
     
     
@@ -120,19 +119,14 @@ class SearchPlacesController extends ApiController
                 )
             );
         }
+
+        /** @var Текст запроса */
+        $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
         
         $placeSearchService = $this->getPlacesSearchService();
-        $places = $placeSearchService->searchPlacesByCity($userId, $cityId, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
-        
-        return $this->_handleViewWithData([
-            'info'      => [
-                'places' => $placeSearchService->getTotalHits(),
-            ],
-            'paginator' => [
-                'places' => $placeSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
-            ],
-            'places'    => $places,
-        ]);
+        $places = $placeSearchService->searchPlacesByCity($userId, $cityId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
+
+        return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
         
     }
         
@@ -156,16 +150,8 @@ class SearchPlacesController extends ApiController
 
         $placeSearchService = $this->getPlacesSearchService();
         $places = $placeSearchService->searchPlacesByDiscount($userId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
-        
-        return $this->_handleViewWithData([
-            'info'      => [
-                'places' => $placeSearchService->getTotalHits(),
-            ],
-            'paginator' => [
-                'places' => $placeSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
-            ],
-            'places'    => $places,
-        ]);
+
+        return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
 
     }
     

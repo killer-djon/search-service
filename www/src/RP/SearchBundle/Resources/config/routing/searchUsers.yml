@@ -16,9 +16,9 @@ RPSearchBundle_search_users_byname:
 
 # Routing который формирует запрос для поиска пользователя
 # в определенном городе
-# пример запроса /api/search/v1/json/users/city
+# пример запроса /api/search/v1/json/users/city/{cityId}
 RPSearchBundle_search_users_bycity:
-    path: /v{_version}/{_format}/users/city
+    path: /v{_version}/{_format}/users/city/{cityId}
     defaults:
         _controller: RPSearchBundle:SearchUsers:searchUsersByCity
         _version: 1
@@ -28,6 +28,7 @@ RPSearchBundle_search_users_bycity:
         _method: (GET)
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
+        cityId: \w+
 
 
 # Routing который формирует запрос для поиска людей по друзьям
@@ -46,21 +47,6 @@ RPSearchBundle_search_users_byfriend:
         _version: '1' # устанавливаем обязательную версию
 
 # Routing который формирует запрос для поиска человека по ID
-# пример запроса /api/search/v1/json/users/10357
-RPSearchBundle_search_users_byid:
-    path: /v{_version}/{_format}/users/{userId}
-    defaults:
-        _controller: RPSearchBundle:SearchUsers:searchUsersById
-        _version: 1
-        _format: json
-        template: "RPSearchBundle:SearchUsers:searchusersById.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
-    requirements:
-        _method: (OPTIONS|GET)
-        _format: (json|xml|html|plist)
-        _version: '1' # устанавливаем обязательную версию
-        userId: \d+
-
-# Routing который формирует запрос для поиска человека по ID
 # пример запроса /api/search/v1/json/users/helpoffers
 RPSearchBundle_search_users_byhelpoffers:
     path: /v{_version}/{_format}/users/helpoffers
@@ -73,3 +59,18 @@ RPSearchBundle_search_users_byhelpoffers:
         _method: (GET)
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
+
+# Routing который формирует запрос для поиска человека по ID
+# пример запроса /api/search/v1/json/users/id/10357
+RPSearchBundle_search_users_byid:
+    path: /v{_version}/{_format}/users/id/{userId}
+    defaults:
+        _controller: RPSearchBundle:SearchUsers:searchUsersById
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchUsers:searchusersById.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (OPTIONS|GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        userId: \w+

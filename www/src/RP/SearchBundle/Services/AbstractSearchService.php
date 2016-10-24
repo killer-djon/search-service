@@ -15,7 +15,7 @@ use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 
 class AbstractSearchService extends SearchEngine implements SearchServiceInterface
 {
-
+    use SearchServiceTrait;
     /**
      * Набор полей со скриптами
      * т.е. inline скрипты например

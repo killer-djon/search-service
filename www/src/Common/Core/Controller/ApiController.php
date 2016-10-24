@@ -6,12 +6,15 @@
  */
 namespace Common\Core\Controller;
 
+use Common\Core\Constants\RequestConstant;
+use Common\Core\Facade\Search\QueryFactory\SearchServiceInterface;
 use FOS\RestBundle\Controller\FOSRestController;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Common\Core\Exceptions\ResponseFormatException;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
 use Common\Core\Serializer\XMLWrapper;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Основной абстрактный класс контроллера
@@ -56,6 +59,24 @@ abstract class ApiController extends FOSRestController
     const ERROR_CODE = 'errorCode';
 
     /**
+     * ID пользователя осуществившего запрос к API
+     * @var string $requestUserId
+     */
+    private $requestUserId;
+
+    /**
+     * ID города в запросе по городу
+     * @var string $requestCityId
+     */
+    private $requestCityId;
+
+    /**
+     * Объект запроса
+     * @var \Symfony\Component\HttpFoundation\Request $_request
+     */
+    private $_request;
+
+    /**
      * При необходимоси в реопределенном методе можем
      * заранее устаналивать нужные нам сервисы для удобства дальнейшей работы
      *
@@ -72,6 +93,8 @@ abstract class ApiController extends FOSRestController
         $this->setTemplateAction();
     }
 
+
+
     /**
      * Устанавливаем в свойство класса полученный объект запроса
      *
@@ -79,9 +102,54 @@ abstract class ApiController extends FOSRestController
      */
     protected function setCurrentRequest(Request $request)
     {
+        /** @var ID пользователя */
+        $this->requestUserId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
+        $this->requestCityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
         $this->_request = $request;
+
         $this->parseSkipCountRequest($request);
         $this->parseGeoPointRequest($request);
+    }
+
+    /**
+     * Полуачем ID пользователя
+     * который сделал запрос к API
+     * @return string $requestUserId
+     */
+    public function getRequestUserId()
+    {
+        if(is_null($this->requestUserId))
+        {
+            return $this->_handleViewWithError(
+                new BadRequestHttpException(
+                    'Не указан userId пользователя',
+                    null,
+                    Response::HTTP_BAD_REQUEST
+                )
+            );
+        }
+
+        return $this->requestUserId;
+    }
+
+    /**
+     * Полуачем ID города при запросе к API
+     * @return string $requestCityId
+     */
+    public function getRequestCityId()
+    {
+        if(is_null($this->requestCityId))
+        {
+            return $this->_handleViewWithError(
+                new BadRequestHttpException(
+                    'Не задан город для поиска по городу',
+                    null,
+                    Response::HTTP_BAD_REQUEST
+                )
+            );
+        }
+
+        return $this->requestCityId;
     }
 
     /**
@@ -126,6 +194,25 @@ abstract class ApiController extends FOSRestController
             default:
                 return $this->_handlerOtherFormat($data, $statusCode);
         }
+    }
+
+    /**
+     * Вспомогательный метод возврата результата клиенту
+     * @param \Common\Core\Facade\Search\QueryFactory\SearchServiceInterface $searchService
+     * @param string $keyFieldName Название поля в ключе объекта вывода
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function returnDataResult(SearchServiceInterface $searchService, $keyFieldName)
+    {
+        return $this->_handleViewWithData([
+            'info'      => [
+                $keyFieldName => $searchService->getTotalHits(),
+            ],
+            'paginator' => [
+                $keyFieldName => $searchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
+            ],
+            $keyFieldName    => $searchService->getTotalResults(),
+        ]);
     }
 
     /**

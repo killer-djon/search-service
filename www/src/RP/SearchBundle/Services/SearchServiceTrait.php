@@ -1,16 +1,12 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: eleshanu
- * Date: 21.10.16
- * Time: 15:50
+ * Трейт который просто формирует повторяющиеся условия запроса
  */
 
 namespace RP\SearchBundle\Services;
 
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Common\Core\Facade\Service\User\UserProfileService;
-use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 
 trait SearchServiceTrait
 {
@@ -19,17 +15,18 @@ trait SearchServiceTrait
      * для рассчета совпадения по интересу
      *
      * @param \Common\Core\Facade\Service\User\UserProfileService $currentUser Объект текущего пользователя
+     * @param object $classMapping Класс маппинга
      * @return void
      */
-    public function setScriptTagsField(UserProfileService $currentUser)
+    public function setScriptTagsConditions(UserProfileService $currentUser, $classMapping)
     {
         $this->setScriptFields([
             'tagsInPercent' => $this->_scriptFactory->getTagsIntersectInPercentScript(
-                PeopleSearchMapping::TAGS_ID_FIELD,
+                $classMapping::TAGS_ID_FIELD,
                 $currentUser->getTags()
             ),
             'tagsCount'     => $this->_scriptFactory->getTagsIntersectScript(
-                PeopleSearchMapping::TAGS_ID_FIELD,
+                $classMapping::TAGS_ID_FIELD,
                 $currentUser->getTags()
             ),
         ]);
@@ -40,42 +37,39 @@ trait SearchServiceTrait
      * учитывается сортировка по расстоянию, рассчет расстояния
      * или поиск в радиусе
      *
-     * @param \Common\Core\Facade\Service\User\UserProfileService $currentUser Объект текущего пользователя
+     * @param \Common\Core\Facade\Service\Geo\GeoPointServiceInterface $point Объект геопозиционирования
+     * @param object $classMapping Класс маппинга
+     * @param string $unit
      * @return void
      */
-    public function setGeoPointConditions(GeoPointServiceInterface $point)
+    public function setGeoPointConditions(GeoPointServiceInterface $point, $classMapping, $unit = 'm')
     {
-        if (!is_null($point->getRadius()) && $point->isValid()) {
-            /** формируем условия сортировки */
-            $this->setSortingQuery([
-                $this->_sortingFactory->getGeoDistanceSort(
-                    PeopleSearchMapping::LOCATION_POINT_FIELD,
-                    $point
-                ),
-            ]);
+        if ($point->isValid()) {
 
             $this->setScriptFields([
                 'distance'          => $this->_scriptFactory->getDistanceScript(
-                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $classMapping::LOCATION_POINT_FIELD,
                     $point
                 ),
                 'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
-                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $classMapping::LOCATION_POINT_FIELD,
                     $point
                 ),
             ]);
 
-            $this->setFilterQuery([
-                $this->_queryFilterFactory->getGeoDistanceFilter(
-                    PeopleSearchMapping::LOCATION_POINT_FIELD,
-                    [
-                        'lat' => $point->getLatitude(),
-                        'lon' => $point->getLongitude(),
-                    ],
-                    $point->getRadius(),
-                    'm'
-                ),
-            ]);
+            if (!is_null($point->getRadius())) {
+                $this->setFilterQuery([
+                    $this->_queryFilterFactory->getGeoDistanceFilter(
+                        $classMapping::LOCATION_POINT_FIELD,
+                        [
+                            'lat' => $point->getLatitude(),
+                            'lon' => $point->getLongitude(),
+                        ],
+                        $point->getRadius(),
+                        (string)$unit
+                    ),
+                ]);
+            }
         }
     }
 }

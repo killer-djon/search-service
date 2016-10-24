@@ -115,16 +115,52 @@ class PlacesSearchService extends AbstractSearchService
      * @param string $userId ID пользователя который делает запрос к АПИ
      * @param string $cityId ID города
      * @param GeoPointServiceInterface $point
+     * @param string $searchText Поисковый запрос
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchPlacesByCity($userId, $cityId, GeoPointServiceInterface $point, $skip = 0, $count = null)
+    public function searchPlacesByCity($userId, $cityId, GeoPointServiceInterface $point, $searchText = null, $skip = 0, $count = null)
     {
 	    $this->setConditionQueryMust([
 		    $this->_queryConditionFactory->getTermQuery(PlaceSearchMapping::LOCATION_CITY_ID_FIELD, $cityId)
 	    ]);
-	    
+
+        if( !is_null($searchText) )
+        {
+            $this->setConditionQueryShould([
+                $this->_queryConditionFactory->getMultiMatchQuery()->setQuery($searchText)->setFields([
+                    PlaceSearchMapping::NAME_FIELD,
+                    PlaceSearchMapping::NAME_NGRAM_FIELD,
+                    PlaceSearchMapping::NAME_TRANSLIT_FIELD,
+                    PlaceSearchMapping::NAME_TRANSLIT_NGRAM_FIELD,
+                    PlaceSearchMapping::TYPE_NAME_FIELD,
+                    PlaceSearchMapping::TYPE_NAME_NGRAM_FIELD,
+                    PlaceSearchMapping::TYPE_NAME_TRANSLIT_FIELD,
+                    PlaceSearchMapping::TYPE_NAME_TRANSLIT_NGRAM_FIELD,
+                    PlaceSearchMapping::TAG_NAME_FIELD,
+                    PlaceSearchMapping::TAG_NAME_NGRAM_FIELD,
+                    PlaceSearchMapping::TAG_NAME_TRANSLIT_FIELD,
+                    PlaceSearchMapping::TAG_NAME_TRANSLIT_NGRAM_FIELD
+                ]),
+                $this->_queryConditionFactory->getWildCardQuery(
+                    PlaceSearchMapping::DESCRIPTION_FIELD,
+                    $searchText
+                ),
+                $this->_queryConditionFactory->getWildCardQuery(
+                    PlaceSearchMapping::NAME_WORDS_FIELD,
+                    $searchText
+                ),
+                $this->_queryConditionFactory->getWildCardQuery(
+                    PlaceSearchMapping::TYPE_WORDS_FIELD,
+                    $searchText
+                ),
+                $this->_queryConditionFactory->getWildCardQuery(
+                    PlaceSearchMapping::TAG_WORDS_FIELD,
+                    $searchText
+                )
+            ]);
+        }
 	     /** устанавливаем фильтры только для мест */
         $this->setFilterPlaces($userId);
         

@@ -16,11 +16,11 @@ class SearchUsersController extends ApiController
 {
 
     /**
-     * Параметр поиска при запросе по городу
+     * Ключ контекста объекта ответа клиенту
      *
-     * @const string CITY_SEARCH_PARAM
+     * @const string KEY_FIELD_RESPONSE
      */
-    const CITY_SEARCH_PARAM = 'cityId';
+    const KEY_FIELD_RESPONSE = 'people';
 
     /**
      * Поиск пользователей по имени/фамилии
@@ -54,16 +54,7 @@ class SearchUsersController extends ApiController
         }
 
         /** @var ID пользователя */
-        $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
-        if (is_null($userId)) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Не указан userId пользователя',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
-        }
+        $userId = $this->getRequestUserId();
 
         /** получаем сервис поиска */
         $peopleSearchService = $this->getPeopleSearchService();
@@ -71,15 +62,7 @@ class SearchUsersController extends ApiController
         $people = $peopleSearchService->searchPeopleByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
 
         /** выводим результат */
-        return $this->_handleViewWithData([
-            'info'      => [
-                'people' => $peopleSearchService->getTotalHits(),
-            ],
-            'paginator' => [
-                'people' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
-            ],
-            'people'    => $peopleSearchService->getTotalResults(),
-        ]);
+        return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
     }
 
     /**
@@ -94,43 +77,15 @@ class SearchUsersController extends ApiController
         /** @var Текст запроса (в случае если ищем по имени) */
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
         /** @var ID города */
-        $cityId = $request->get(self::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
-
-        if (is_null($cityId)) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Не задан город для поиска пользователей',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
-        }
-
+        $cityId = $this->getRequestCityId();
         /** @var ID пользователя */
-        $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
-
-        if (is_null($userId)) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Не указан userId пользователя',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
-        }
+        $userId = $this->getRequestUserId();
 
         $peopleSearchService = $this->getPeopleSearchService();
         $people = $peopleSearchService->searchPeopleByCityId($userId, $cityId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
 
-        return $this->_handleViewWithData([
-            'info'      => [
-                'people' => $peopleSearchService->getTotalHits(),
-            ],
-            'paginator' => [
-                'people' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
-            ],
-            'people'    => $peopleSearchService->getTotalResults(),
-        ]);
+        /** выводим результат */
+        return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
     }
 
     /**
@@ -144,41 +99,14 @@ class SearchUsersController extends ApiController
         /** @var Текст запроса */
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
-        if (is_null($searchText)) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Не указана поисковая строка searchText',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
-        }
-
         /** @var ID пользователя */
-        $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
-
-        if (is_null($userId)) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Не указан userId пользователя',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
-        }
+        $userId = $this->getRequestUserId();
 
         $peopleSearchService = $this->getPeopleSearchService();
-        $people = $peopleSearchService->searchPeopleFriends($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+        $people = $peopleSearchService->searchPeopleFriends($userId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
 
-        return $this->_handleViewWithData([
-            'info'      => [
-                'people' => $peopleSearchService->getTotalHits(),
-            ],
-            'paginator' => [
-                'people' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
-            ],
-            'people'    => $peopleSearchService->getTotalResults(),
-        ]);
+        /** выводим результат */
+        return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
     }
 
     /**
@@ -193,16 +121,7 @@ class SearchUsersController extends ApiController
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
         /** @var ID пользователя */
-        $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
-        if (is_null($userId)) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Не указан userId пользователя',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
-        }
+        $userId = $this->getRequestUserId();
 
         $peopleSearchService = $this->getPeopleSearchService();
         $peopleHelpOffers = $peopleSearchService->searchPeopleHelpOffers(
@@ -213,15 +132,8 @@ class SearchUsersController extends ApiController
             $this->getCount()
         );
 
-        return $this->_handleViewWithData([
-            'info'      => [
-                'people' => $peopleSearchService->getTotalHits(),
-            ],
-            'paginator' => [
-                'people' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
-            ],
-            'people'    => $peopleSearchService->getTotalResults(),
-        ]);
+        /** выводим результат */
+        return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
     }
 
     /**
@@ -238,7 +150,11 @@ class SearchUsersController extends ApiController
         try {
             $user = $peopleSearchService->getUserById($userId);
 
-            return $this->_handleViewWithData($user->toArray());
+            if (!is_null($user)) {
+                return $this->_handleViewWithData($user->toArray());
+            }
+
+            return null;
 
         } catch (\HttpResponseException $e) {
             return $this->_handleViewWithError($e);

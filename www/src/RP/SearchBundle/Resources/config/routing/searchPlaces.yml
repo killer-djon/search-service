@@ -45,9 +45,9 @@ RPSearchBundle_search_places_bydiscount:
         _version: '1' # устанавливаем обязательную версию
                 
 # Routing который формирует запрос для поиска одого места по ID
-# пример запроса /api/search/v1/json/places/{placeId}
+# пример запроса /api/search/v1/json/places/id/{placeId}
 RPSearchBundle_search_places_byid:
-    path: /v{_version}/{_format}/places/{placeId}
+    path: /v{_version}/{_format}/places/id/{placeId}
     defaults:
         _controller: RPSearchBundle:SearchPlaces:searchPlacesById
         _version: 1

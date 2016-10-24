@@ -344,16 +344,19 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     }
 
     /**
-     * Получаем пользователя из еластика по его ID
+     * Поиск единственной записи по ID в заданном контексте
      *
-     * @param string $userId ID пользователя
-     * @return UserProfileService
+     * @param string $context Контекст поиска
+     * @param string $fieldId Поле идентификатора
+     * @param string $recordId ID искомой записи
+     *
+     * @return array|null Найденный результат или ничего
      */
-    public function getUserById($userId)
+    public function searchRecordById($context, $fieldId, $recordId)
     {
         /** указываем условия запроса */
         $this->setConditionQueryMust([
-            $this->_queryConditionFactory->getTermQuery(PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, $userId),
+            $this->_queryConditionFactory->getTermQuery($fieldId, $recordId),
         ]);
 
         /** аггрегируем запрос чтобы получить единственный результат а не многомерный массив с одним элементом */
@@ -365,38 +368,10 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         $query = $this->createQuery();
 
         /** находим ползователя в базе еластика по его ID */
-        $userSearchDocument = $this->searchSingleDocuments(PeopleSearchMapping::CONTEXT, $query);
+        $userSearchDocument = $this->searchSingleDocuments($context, $query);
 
         /** Возращаем объект профиля пользователя */
-        return new UserProfileService($userSearchDocument);
+        return $userSearchDocument;
     }
 
-    /**
-     * Получаем место по его ID
-     *
-     * @param string $placeId ID места
-     * @return PlaceService
-     */
-    public function getPlaceById($placeId)
-    {
-        /** указываем условия запроса */
-        $this->setConditionQueryMust([
-            $this->_queryConditionFactory->getTermQuery(PlaceSearchMapping::PLACE_ID_FIELD, $placeId),
-        ]);
-
-        /** аггрегируем запрос чтобы получить единственный результат а не многомерный массив с одним элементом */
-        $this->setAggregationQuery([
-            $this->_queryAggregationFactory->getTopHitsAggregation(),
-        ]);
-
-        /** генерируем объект запроса */
-        $query = $this->createQuery();
-
-        /** находим ползователя в базе еластика по его ID */
-        $placeSearchDocument = $this->searchSingleDocuments(PlaceSearchMapping::CONTEXT, $query);
-
-        /** Возращаем объект профиля пользователя */
-        //return new UserProfileService($placeSearchDocument); - @to do надо сделать сервис места
-        return $placeSearchDocument;
-    }
 }

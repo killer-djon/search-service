@@ -5,6 +5,7 @@
 namespace RP\SearchBundle\Controller;
 
 use Common\Core\Controller\ApiController;
+use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use Symfony\Component\HttpFoundation\Request;
 use Common\Core\Constants\RequestConstant;
 use Symfony\Component\HttpFoundation\Response;
@@ -121,7 +122,7 @@ class SearchPlacesController extends ApiController
         $placeSearchService = $this->getPlacesSearchService();
 
         try {
-            $place = $placeSearchService->getPlaceById($placeId);
+            $place = $placeSearchService->searchRecordById(PlaceSearchMapping::CONTEXT, PlaceSearchMapping::PLACE_ID_FIELD, $placeId);
 
             return $this->_handleViewWithData($place);
 

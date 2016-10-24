@@ -5,6 +5,7 @@
 namespace RP\SearchBundle\Controller;
 
 use Common\Core\Controller\ApiController;
+use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use Symfony\Component\HttpFoundation\Request;
@@ -150,9 +151,10 @@ class SearchUsersController extends ApiController
         $peopleSearchService = $this->getPeopleSearchService();
 
         try {
-            $user = $peopleSearchService->getUserById($userId);
+            $userContext = $peopleSearchService->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, $userId);
 
-            if (!is_null($user)) {
+            if (!is_null($userContext)) {
+                $user = new UserProfileService($userContext);
                 return $this->_handleViewWithData($user->toArray());
             }
 

@@ -18,13 +18,6 @@ class SearchPlacesController extends ApiController
      * @const string PLACE_ID_SEARCH_PARAM
      */
     const PLACE_ID_SEARCH_PARAM = 'placeId';
-    
-    /**
-     * Параметр поиска при запросе по городу
-     *
-     * @const string CITY_SEARCH_PARAM
-     */
-    const CITY_SEARCH_PARAM = 'cityId';
 
     /**
      * Ключ контекста объекта ответа клиенту
@@ -33,13 +26,13 @@ class SearchPlacesController extends ApiController
      */
     const KEY_FIELD_RESPONSE = 'places';
 
-	/**
-	 * Поиск мест по введенному названию (части названия)
-	 * поиск идет по всем местам 
-	 *
-	 * @param \Symfony\Component\HttpFoundation\Request $request
-	 * @return \Symfony\Component\HttpFoundation\Response
-	 */
+    /**
+     * Поиск мест по введенному названию (части названия)
+     * поиск идет по всем местам
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
     public function searchPlacesByNameAction(Request $request)
     {
         /** @var Текст запроса */
@@ -65,106 +58,67 @@ class SearchPlacesController extends ApiController
         }
 
         /** @var ID пользователя */
-        $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
-        
-        if (is_null($userId)) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Не указан userId пользователя',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
-        }
+        $userId = $this->getRequestUserId();
 
         $placeSearchService = $this->getPlacesSearchService();
         $places = $placeSearchService->searchPlacesByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
 
         return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
     }
-    
-    
+
     /**
-	 * Поиск мест по указанному городу
-	 * т.е. выводим те места которые в городе расположены
-	 *
-	 * @param \Symfony\Component\HttpFoundation\Request $request
-	 * @param string $cityId ID города поиска
-	 * @return \Symfony\Component\HttpFoundation\Response
-	 */
+     * Поиск мест по указанному городу
+     * т.е. выводим те места которые в городе расположены
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param string $cityId ID города поиска
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
     public function searchPlacesByCityAction(Request $request, $cityId)
     {
-	    /** @var ID пользователя */
-        $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
-        
-        if (is_null($userId)) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Не указан userId пользователя',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
-        }
-        
-        /** @var ID города */
-        $cityId = $request->get(self::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
+        /** @var ID пользователя */
+        $userId = $this->getRequestUserId();
 
-        if (is_null($cityId)) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Не задан город для поиска пользователей',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
-        }
+        /** @var ID города */
+        $cityId = $this->getRequestCityId();
 
         /** @var Текст запроса */
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
-        
+
         $placeSearchService = $this->getPlacesSearchService();
         $places = $placeSearchService->searchPlacesByCity($userId, $cityId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
 
         return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
-        
+
     }
-        
+
     public function searchPlacesByDiscountAction(Request $request)
     {
         /** @var ID пользователя */
-        $userId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
+        $userId = $this->getRequestUserId();
 
-        if (is_null($userId)) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Не указан userId пользователя',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
-        }
-        
+        $cityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
+
         /** @var Текст запроса */
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
         $placeSearchService = $this->getPlacesSearchService();
-        $places = $placeSearchService->searchPlacesByDiscount($userId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
+        $places = $placeSearchService->searchPlacesByDiscount($userId, $this->getGeoPoint(), $searchText, $cityId, $this->getSkip(), $this->getCount());
 
         return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
 
     }
-    
+
     /**
-	 * Поиск мест по заданному ID
-	 *
-	 * @param \Symfony\Component\HttpFoundation\Request $request
-	 * @param string $placeId id заданного места
-	 * @return \Symfony\Component\HttpFoundation\Response
-	 */
-	public function searchPlacesByIdAction(Request $request, $placeId)
-	{
-		$placeSearchService = $this->getPlacesSearchService();
+     * Поиск мест по заданному ID
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param string $placeId id заданного места
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function searchPlacesByIdAction(Request $request, $placeId)
+    {
+        $placeSearchService = $this->getPlacesSearchService();
 
         try {
             $place = $placeSearchService->getPlaceById($placeId);
@@ -174,5 +128,5 @@ class SearchPlacesController extends ApiController
         } catch (\HttpResponseException $e) {
             return $this->_handleViewWithError($e);
         }
-	}
+    }
 }

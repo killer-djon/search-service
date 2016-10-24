@@ -32,7 +32,7 @@ abstract class PlaceSearchMapping
      * Теги
      */
     const TAG_FIELD         = 'tags';
-    const TAG_ID_FIELD      = 'tags.id';
+    const TAGS_ID_FIELD      = 'tags.id';
     const TAG_NAME_FIELD    = 'tags.tagname';
     const TAG_NAME_NGRAM_FIELD    = 'tags._nameNgram';
     const TAG_NAME_TRANSLIT_FIELD    = 'tags._translit';

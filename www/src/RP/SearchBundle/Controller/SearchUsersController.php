@@ -76,10 +76,12 @@ class SearchUsersController extends ApiController
     {
         /** @var Текст запроса (в случае если ищем по имени) */
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
-        /** @var ID города */
-        $cityId = $this->getRequestCityId();
+
         /** @var ID пользователя */
         $userId = $this->getRequestUserId();
+
+        /** @var ID города */
+        $cityId = $this->getRequestCityId();
 
         $peopleSearchService = $this->getPeopleSearchService();
         $people = $peopleSearchService->searchPeopleByCityId($userId, $cityId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());

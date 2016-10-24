@@ -264,6 +264,18 @@ class FilterFactory implements FilterFactoryInterface
     }
 
     /**
+     * Возвращает фильтр несуществующего поля
+     *
+     * @param string $fieldName
+     * @return \Elastica\Filter\Missing
+     */
+    public function getMissingFilter($fieldName)
+    {
+        $missingFilter = new \Elastica\Filter\Missing($fieldName);
+        return $missingFilter;
+    }
+
+    /**
      * Основной объект фильтра для формированиия запроса
      * Filtered Query
      *

@@ -83,6 +83,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
 
     /**
      * набор полей для подсветки при поиске
+     *
      * @var array $_highlightQueryData
      */
     private $_highlightQueryData = [];
@@ -186,7 +187,6 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         $this->_sortingQueryData = $sortings;
     }
 
-
     /**
      * Устанавливаем условия подсветки для искомых значений полей
      *
@@ -213,11 +213,11 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $this->_conditionQueryShouldData,
             $this->_conditionQueryMustNotData
         );
-
         // Применить набор фильтров
         if (sizeof($this->_filterQueryData) > 0) {
             $filter = $this->_queryFilterFactory->getBoolAndFilter($this->_filterQueryData);
             $searchQuery = new \Elastica\Query\Filtered($searchQuery, $filter);
+
         }
 
         $queryFactory = $this->setQueryOptions(
@@ -225,6 +225,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $skip,
             $count
         );
+
 
         $this->clearQueryFactory();
 
@@ -297,8 +298,12 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     private function clearQueryFactory()
     {
         $this->setConditionQueryShould([]);
-        $this->setAggregationQuery([]);
         $this->setConditionQueryMust([]);
+        $this->setConditionQueryMustNot([]);
+        $this->setFilterQuery([]);
+        $this->setFieldsQuery([]);
+        $this->setHighlightQuery([]);
+        $this->setAggregationQuery([]);
 
         return $this;
     }
@@ -365,7 +370,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         /** Возращаем объект профиля пользователя */
         return new UserProfileService($userSearchDocument);
     }
-    
+
     /**
      * Получаем место по его ID
      *

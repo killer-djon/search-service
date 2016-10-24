@@ -176,6 +176,14 @@ interface FilterFactoryInterface
     public function getExistsFilter($fieldName);
 
     /**
+     * Возвращает фильтр несуществующего поля
+     *
+     * @param string $fieldName
+     * @return \Elastica\Filter\Missing
+     */
+    public function getMissingFilter($fieldName);
+
+    /**
      * Основной объект фильтра для формированиия запроса
      * Filtered Query
      *

@@ -71,7 +71,7 @@ class PeopleSearchService extends AbstractSearchService
         );
 
         /** поиск документа */
-        return $this->searchDocuments(PeopleSearchMapping::CONTEXT, $queryMatchResult);
+        return $this->searchDocuments($queryMatchResult, PeopleSearchMapping::CONTEXT);
     }
 
     /**
@@ -140,7 +140,7 @@ class PeopleSearchService extends AbstractSearchService
             $query = $this->createQuery($skip, $count);
         }
 
-        return $this->searchDocuments(PeopleSearchMapping::CONTEXT, $query);
+        return $this->searchDocuments($query, PeopleSearchMapping::CONTEXT);
     }
 
     /**
@@ -207,7 +207,7 @@ class PeopleSearchService extends AbstractSearchService
         }
 
         /** поиск документа */
-        return $this->searchDocuments(PeopleSearchMapping::CONTEXT, $queryMatchResult);
+        return $this->searchDocuments($queryMatchResult, PeopleSearchMapping::CONTEXT);
     }
 
     /**
@@ -253,7 +253,7 @@ class PeopleSearchService extends AbstractSearchService
         $queryMatch = $this->createQuery($skip, $count);
 
         /** поиск документа */
-        return $this->searchDocuments(PeopleSearchMapping::CONTEXT, $queryMatch);
+        return $this->searchDocuments($queryMatch, PeopleSearchMapping::CONTEXT);
     }
 
 }

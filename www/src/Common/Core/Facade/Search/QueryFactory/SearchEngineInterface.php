@@ -15,22 +15,24 @@ interface SearchEngineInterface
      * Индексный поиск в еластике
      * т.е. поиск на основе индекса fos_elastica.index.%s.%s
      *
-     * @param string Search type
      * @param \Elastica\Query $elasticQuery An \Elastica\Query object
+     * @param string $context Search type
+     * @param bool $setSource (default: true) Показать исходные данные объекта в ответе
      * @throws ElasticsearchException
      * @return array results
      */
-    public function searchDocuments($context, \Elastica\Query $elasticQuery);
+    public function searchDocuments(\Elastica\Query $elasticQuery, $context = null, $setSource = true);
 
     /**
      * Поиск единственного документа по ID
      *
-     * @param string Search type
      * @param \Elastica\Query $elasticQuery An \Elastica\Query object
+     * @param string|null $context Search type
+     * @param bool $setSource (default: true) Показать исходные данные объекта в ответе
      * @throws ElasticsearchException
-     * @return array results
+     * @return array|null results
      */
-    public function searchSingleDocuments($context, \Elastica\Query $elasticQuery);
+    public function searchSingleDocuments(\Elastica\Query $elasticQuery, $context = null, $setSource = true);
 
     /**
      * Преобразование полученного результат из еластика

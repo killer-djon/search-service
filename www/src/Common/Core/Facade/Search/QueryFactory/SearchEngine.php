@@ -9,6 +9,8 @@ use Elastica\Exception\ElasticsearchException;
 use FOS\ElasticaBundle\Elastica\Index;
 use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
+use Pagerfanta\Adapter\ArrayAdapter;
+use Pagerfanta\Adapter\NullAdapter;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface;
@@ -167,13 +169,13 @@ class SearchEngine implements SearchEngineInterface
      * Индексный поиск в еластике
      * т.е. поиск на основе индекса fos_elastica.index.%s.%s
      *
-     * @param string Search type
      * @param \Elastica\Query $elasticQuery An \Elastica\Query object
+     * @param string $context Search type
      * @param bool $setSource (default: true) Показать исходные данные объекта в ответе
      * @throws ElasticsearchException
      * @return array results
      */
-    public function searchDocuments($context, \Elastica\Query $elasticQuery, $setSource = true)
+    public function searchDocuments(\Elastica\Query $elasticQuery, $context = null, $setSource = true)
     {
         try {
             /** устанавливаем все поля по умолчанию */
@@ -190,15 +192,74 @@ class SearchEngine implements SearchEngineInterface
     }
 
     /**
+     * Массовый поиск в базе еласьика
+     * на основании полученных типов
+     * работает по принципу накопления всех запросов в пулл запросов
+     * и пакетная отправка в поиск _msearch
+     *
+     * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-multi-search.html
+     * @param \Elastica\Query $elasticQuery An \Elastica\Query object
+     * @param array $types Типы по которым будем проводить поиск
+     * @param bool $setSource (default: true) Показать исходные данные объекта в ответе
+     * @throws ElasticsearchException
+     * @return array results
+     */
+    public function searchMultiTypeDocuments(\Elastica\Query $elasticQuery, array $types, $setSource = true)
+    {
+        try {
+            /** устанавливаем все поля по умолчанию */
+            $elasticQuery->setSource((bool)$setSource);
+
+            $search = new \Elastica\Multi\Search($this->_elasticaIndex->getClient());
+            foreach ($types as $type => $fields) {
+                $elasticType = $this->_getElasticType($type);
+                $elasticQuery->getQuery()->setFields($fields);
+                $search->addSearch($elasticType->createSearch($elasticQuery));
+            }
+
+            return $this->multiTransformResult($search->search());
+        } catch (ElasticsearchException $e) {
+            throw new ElasticsearchException($e);
+        }
+    }
+
+    public function multiTransformResult(\Elastica\Multi\ResultSet $resultSets)
+    {
+        if ($resultSets->count() > 0) {
+            $resultSets->rewind();
+
+            $results = [];
+            while ($resultSets->valid()) {
+                $resultTypeValue = $resultSets->current();
+
+                $dataItem = $this->setTotalResults($resultTypeValue);
+                $dataItemKey = key($dataItem);
+
+                $this->_paginator = new NullAdapter($resultTypeValue->getTotalHits());
+
+                $results[] = [
+                    'info'         => $this->setTotalHits($resultTypeValue),
+                    'paginator' => $this->getPaginationAdapter(0, 10),
+                    $dataItemKey => $dataItem[$dataItemKey],
+                ];
+
+                $resultSets->next();
+            }
+
+            return $results;
+        }
+    }
+
+    /**
      * Поиск единственного документа по ID
      *
-     * @param string Search type
      * @param \Elastica\Query $elasticQuery An \Elastica\Query object
+     * @param string|null $context Search type
      * @param bool $setSource (default: true) Показать исходные данные объекта в ответе
      * @throws ElasticsearchException
      * @return array|null results
      */
-    public function searchSingleDocuments($context, \Elastica\Query $elasticQuery, $setSource = true)
+    public function searchSingleDocuments(\Elastica\Query $elasticQuery, $context = null, $setSource = true)
     {
         try {
             /** устанавливаем все поля по умолчанию */
@@ -209,10 +270,10 @@ class SearchEngine implements SearchEngineInterface
             $elasticQuery->setFrom(0);
 
             $resultSet = $elasticType->search($elasticQuery);
-            if( $resultSet->current() !== false )
-            {
+            if ($resultSet->current() !== false) {
                 return $resultSet->current()->getData();
             }
+
             return null;
 
         } catch (ElasticsearchException $e) {
@@ -231,6 +292,7 @@ class SearchEngine implements SearchEngineInterface
     public function getPaginationAdapter($skip, $limit)
     {
         $totalCount = $this->_paginator->getNbResults();
+
         if ($totalCount != 0) {
             $count = ($limit >= $totalCount ? $totalCount : $limit);
             $pageCount = intval(($totalCount - 1) / $count) + 1;
@@ -272,6 +334,8 @@ class SearchEngine implements SearchEngineInterface
     private function setAggregationsResult(\Elastica\ResultSet $resultSets)
     {
         $this->_aggregationsResult = $resultSets->getAggregations();
+
+        return $this->_aggregationsResult;
     }
 
     /**
@@ -287,6 +351,8 @@ class SearchEngine implements SearchEngineInterface
             'totalHits' => $resultSets->getTotalHits(),
             'totalTime' => $elipsedTime . 'ms',
         ];
+
+        return $this->_totalHits;
     }
 
     /**
@@ -297,28 +363,35 @@ class SearchEngine implements SearchEngineInterface
      */
     private function setTotalResults(\Elastica\ResultSet $resultSets)
     {
-        $this->_totalResults = array_map(function ($item) {
-            $_hit = $item->getHit();
-            unset($_hit['_source']);
-
-            $fields = null;
-            $results = $item->getData();
-            /** получаем скриптовые поля трансформируя их в читабельные */
-            if ($item->hasFields()) {
-                foreach ($item->getFields() as $fieldKey => $field) {
-                    if (isset($results[$fieldKey])) {
-                        unset($results[$fieldKey]);
+        $results = $resultSets->getResults();
+        array_walk($results, function ($resultItem) use (&$items) {
+            $record[$resultItem->getType()]['item'] = $resultItem->getData();
+            if ($resultItem->hasFields()) {
+                foreach ($resultItem->getFields() as $fieldKey => $field) {
+                    if (isset($record[$resultItem->getType()]['item'][$fieldKey])) {
+                        unset($record[$resultItem->getType()]['item'][$fieldKey]);
                     }
-                    $results['tagsMatch'][$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
+                    $record[$resultItem->getType()]['item']['tagsMatch'][$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
                 }
             }
+            $record[$resultItem->getType()]['hit'] = $resultItem->getHit();
+            if (isset($record[$resultItem->getType()]['hit']['_source'])) {
+                unset($record[$resultItem->getType()]['hit']['_source']);
+            }
 
-            return [
-                'item' => $results,
-                'hit'  => $_hit,
+            if (isset($record[$resultItem->getType()]['hit']['fields'])) {
+                unset($record[$resultItem->getType()]['hit']['fields']);
+            }
 
+            $items[$resultItem->getType()][] = [
+                'item' => $record[$resultItem->getType()]['item'],
+                'hit'  => $record[$resultItem->getType()]['hit'],
             ];
-        }, $resultSets->getResults());
+        });
+
+        $this->_totalResults = $items;
+
+        return $this->_totalResults;
     }
 
     /**
@@ -354,17 +427,22 @@ class SearchEngine implements SearchEngineInterface
     /**
      * Возвращает тип Elastic для заданного контекста
      *
-     * @param string $context
-     * @return \Elastica\Type
+     * @param string|null $context
+     * @return \Elastica\Type|\Elastica\Index
      * @throws \InvalidArgumentException
      */
-    protected function _getElasticType($context)
+    protected function _getElasticType($context = null)
     {
-        if (!is_string($context) || empty($context)) {
-            throw new \InvalidArgumentException('_getElasticType: Invalid argument'); // TODO: Сообщение
+        if (is_null($context)) {
+            return $this->_elasticaIndex;
         }
 
         return $this->_elasticaIndex->getType($context);
+    }
+
+    public function multiTypeSearch($query)
+    {
+        return $this->_elasticaIndex->search($query);
     }
 
 }

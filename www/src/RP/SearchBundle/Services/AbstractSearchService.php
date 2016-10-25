@@ -232,6 +232,29 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         return $queryFactory->getQueryFactory();
     }
 
+    public function createMultiTypeQueryMatch($types, $searchText, $skip = 0, $count = null)
+    {
+        $fields = [];
+        $matchQuery = $this->_queryConditionFactory->getMultiMatchQuery();
+        $matchQuery->setQuery($searchText);
+
+        foreach($types as $type)
+        {
+            $fields = array_merge($fields, $type);
+        }
+        $matchQuery->setFields($fields);
+
+
+        $query = $this->setQueryOptions(
+            $this->_queryFactory->setQueryFactory($matchQuery),
+            $skip,
+            $count
+        );
+        $this->clearQueryFactory();
+
+        return $this->multiTypeSearch($query->getQueryFactory());
+    }
+
     /**
      * Создание объект поиска на основе совпадения по полям
      *
@@ -344,6 +367,19 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     }
 
     /**
+     * Получить пользователя по его ID
+     * проксируем к методу получения записи по ID контекста
+     *
+     * @param string $userId ID пользователя для получения
+     * @return UserProfileService
+     */
+    public function getUserById($userId)
+    {
+        $user = $this->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, $userId);
+        return new UserProfileService($user);
+    }
+
+    /**
      * Поиск единственной записи по ID в заданном контексте
      *
      * @param string $context Контекст поиска
@@ -368,7 +404,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         $query = $this->createQuery();
 
         /** находим ползователя в базе еластика по его ID */
-        $userSearchDocument = $this->searchSingleDocuments($context, $query);
+        $userSearchDocument = $this->searchSingleDocuments($query, $context);
 
         /** Возращаем объект профиля пользователя */
         return $userSearchDocument;

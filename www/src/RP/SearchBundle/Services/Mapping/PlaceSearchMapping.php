@@ -76,4 +76,23 @@ abstract class PlaceSearchMapping
     /** Статус модерации */
     const MODERATION_STATUS_FIELD   = 'moderationStatus';
     const VISIBLE_FIELD = 'visible';
+
+    public static function getMultiTypeSearchFields()
+    {
+        return [
+            self::NAME_FIELD,
+            self::NAME_FIELD,
+            self::NAME_NGRAM_FIELD,
+            self::NAME_TRANSLIT_FIELD,
+            self::NAME_TRANSLIT_NGRAM_FIELD,
+            self::TYPE_NAME_FIELD,
+            self::TYPE_NAME_NGRAM_FIELD,
+            self::TYPE_NAME_TRANSLIT_FIELD,
+            self::TYPE_NAME_TRANSLIT_NGRAM_FIELD,
+            self::TAG_NAME_FIELD,
+            self::TAG_NAME_NGRAM_FIELD,
+            self::TAG_NAME_TRANSLIT_FIELD,
+            self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
+        ];
+    }
 }

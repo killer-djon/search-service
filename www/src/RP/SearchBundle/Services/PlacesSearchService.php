@@ -79,7 +79,7 @@ class PlacesSearchService extends AbstractSearchService
 
         $queryMatch = $this->createQuery($skip, $count);
 
-        return $this->searchDocuments(PlaceSearchMapping::CONTEXT, $queryMatch);
+        return $this->searchDocuments($queryMatch, PlaceSearchMapping::CONTEXT);
     }
 
     /**
@@ -147,7 +147,7 @@ class PlacesSearchService extends AbstractSearchService
         $this->setFilterPlaces($userId);
 
         $queryMatch = $this->createQuery($skip, $count);
-        return $this->searchDocuments(PlaceSearchMapping::CONTEXT, $queryMatch);
+        return $this->searchDocuments($queryMatch, PlaceSearchMapping::CONTEXT);
 
     }
 
@@ -215,7 +215,7 @@ class PlacesSearchService extends AbstractSearchService
         ]);
         $queryMatch = $this->createQuery($skip, $count);
 
-        return $this->searchDocuments(PlaceSearchMapping::CONTEXT, $queryMatch);
+        return $this->searchDocuments($queryMatch, PlaceSearchMapping::CONTEXT);
     }
 
     /**

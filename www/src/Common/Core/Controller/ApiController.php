@@ -60,18 +60,21 @@ abstract class ApiController extends FOSRestController
 
     /**
      * ID пользователя осуществившего запрос к API
+     *
      * @var string $requestUserId
      */
     private $requestUserId;
 
     /**
      * ID города в запросе по городу
+     *
      * @var string $requestCityId
      */
     private $requestCityId;
 
     /**
      * Объект запроса
+     *
      * @var \Symfony\Component\HttpFoundation\Request $_request
      */
     private $_request;
@@ -93,8 +96,6 @@ abstract class ApiController extends FOSRestController
         $this->setTemplateAction();
     }
 
-
-
     /**
      * Устанавливаем в свойство класса полученный объект запроса
      *
@@ -114,12 +115,12 @@ abstract class ApiController extends FOSRestController
     /**
      * Полуачем ID пользователя
      * который сделал запрос к API
+     *
      * @return string $requestUserId
      */
     public function getRequestUserId()
     {
-        if(is_null($this->requestUserId))
-        {
+        if (is_null($this->requestUserId)) {
             return $this->_handleViewWithError(
                 new BadRequestHttpException(
                     'Не указан userId пользователя',
@@ -134,12 +135,12 @@ abstract class ApiController extends FOSRestController
 
     /**
      * Полуачем ID города при запросе к API
+     *
      * @return string $requestCityId
      */
     public function getRequestCityId()
     {
-        if(is_null($this->requestCityId))
-        {
+        if (is_null($this->requestCityId)) {
             return $this->_handleViewWithError(
                 new BadRequestHttpException(
                     'Не задан город для поиска по городу',
@@ -198,21 +199,29 @@ abstract class ApiController extends FOSRestController
 
     /**
      * Вспомогательный метод возврата результата клиенту
+     *
      * @param \Common\Core\Facade\Search\QueryFactory\SearchServiceInterface $searchService
-     * @param string $keyFieldName Название поля в ключе объекта вывода
+     * @param string|array $fields Название поля в ключе объекта вывода
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function returnDataResult(SearchServiceInterface $searchService, $keyFieldName)
+    public function returnDataResult(SearchServiceInterface $searchService, $fields)
     {
-        return $this->_handleViewWithData([
-            'info'      => [
-                $keyFieldName => $searchService->getTotalHits(),
-            ],
-            'paginator' => [
-                $keyFieldName => $searchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
-            ],
-            $keyFieldName    => $searchService->getTotalResults(),
-        ]);
+        $keyFieldName = is_array($fields) ? $fields : [$fields];
+
+        $data['info'] = $searchService->getTotalHits();
+        /**
+         * постарничный адаптер срабатывает только для единичного поиска по типу
+         * в случае если мы проводим поиск по нескольким типам, тогда пагинация все равно будет 1 для всех
+         * т.е. общая
+         */
+
+        $data['pagination'] = $searchService->getPaginationAdapter($this->getSkip(), $this->getCount());
+
+        foreach ($keyFieldName as $field) {
+            $data[$field] = $searchService->getTotalResults()[$field];
+        }
+
+        return $this->_handleViewWithData($data);
     }
 
     /**
@@ -453,5 +462,16 @@ abstract class ApiController extends FOSRestController
     public function getPlacesSearchService()
     {
         return $this->get('rp_search.search_service.places');
+    }
+
+    /**
+     * Получаем сервис поиска маркеров
+     * через еластик
+     *
+     * @return \RP\SearchBundle\Services\MarkerSearchService
+     */
+    public function getMarkersSearchService()
+    {
+        return $this->get('rp_search.search_service.markers');
     }
 }

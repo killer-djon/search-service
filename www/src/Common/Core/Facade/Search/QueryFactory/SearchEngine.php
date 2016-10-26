@@ -32,6 +32,13 @@ class SearchEngine implements SearchEngineInterface
      */
     const DEFAULT_SKIP_QUERY = 0;
 
+    private $searchTypes = [
+        'people'    => 'people',
+        'places'    => 'places',
+        'helpOffers' => 'people',
+        'discounts' => 'places'
+    ];
+
     /**
      * Адаптер постраничной  навигации
      *
@@ -205,6 +212,8 @@ class SearchEngine implements SearchEngineInterface
         }
     }
 
+
+
     /**
      * Массовый поиск в базе еласьика
      * на основании полученных типов
@@ -229,9 +238,10 @@ class SearchEngine implements SearchEngineInterface
                 $elasticQuery->setSize(self::DEFAULT_SIZE_QUERY);
                 $elasticQuery->setFrom(self::DEFAULT_SKIP_QUERY);
 
-                $elasticType = $this->_getElasticType($keyType);
-                $search->addSearch($elasticType->createSearch($elasticQuery));
+                $elasticType = $this->_getElasticType($this->searchTypes[$keyType]);
+                $search->addSearch($elasticType->createSearch($elasticQuery), $keyType);
             });
+
 
             return $this->multiTransformResult($search->search());
         } catch (ElasticsearchException $e) {
@@ -249,38 +259,31 @@ class SearchEngine implements SearchEngineInterface
      */
     public function multiTransformResult(\Elastica\Multi\ResultSet $resultSets)
     {
-        if ($resultSets->count() > 0) {
-            $resultSets->rewind();
-
+        $resultIterator = $resultSets->getResultSets();
+        if(!empty($resultIterator))
+        {
             $results = $info = $items = [];
             $totalHits = 0;
             $totalTime = 0;
-            while ($resultSets->valid()) {
-                $resultTypeValue = $resultSets->current();
+            foreach($resultIterator as $key => $resultSet)
+            {
+                $dataItem[$key] = $this->setTotalResults($resultSet);
+                if(!is_null($dataItem[$key]) && !empty($dataItem[$key]))
+                {
+                    $hits[$key] = $this->setTotalHits($resultSet);
+                    $totalHits += $hits[$key]['totalHits'];
+                    $totalTime += (float)$hits[$key]['totalTime'];
 
-                $dataItem = $this->setTotalResults($resultTypeValue);
-                if (!is_null($dataItem)) {
-                    $dataItemKey = key($dataItem);
-
-                    $this->_paginator = new NullAdapter($resultTypeValue->getTotalHits());
-
-                    $hits = $this->setTotalHits($resultTypeValue);
-
-                    $totalHits += $hits['totalHits'];
-                    $totalTime += (float)$hits['totalTime'];
-
-
-                    $searchingType[$dataItemKey] = $hits;
+                    $searchingType[$key] = $hits[$key];
                     $info = [
                         'totalHits' => $totalHits,
                         'totalTime' => $totalTime . 'ms',
                         'searchType' => $searchingType
                     ];
-                    $items[$dataItemKey] = $dataItem[$dataItemKey];
+                    $items[$key] = $dataItem[$key][$this->searchTypes[$key]];
                 }
-
-                $resultSets->next();
             }
+
             $results['info'] = $info;
             $results['items'] = $items;
 

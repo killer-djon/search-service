@@ -114,6 +114,17 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     }
 
     /**
+     * Ручная очистка полей скриптов
+     * необходимо для случая многотипного поиска
+     * @return SearchServiceInterface
+     */
+    public function clearScriptFields()
+    {
+        $this->_scriptFields = [];
+        return $this;
+    }
+
+    /**
      * Устанавливаем набор полей со скриптами
      * для определения custom значений в рассчете
      *
@@ -149,6 +160,19 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     public function setConditionQueryShould(array $should = [])
     {
         $this->_conditionQueryShouldData = $should;
+    }
+
+
+
+    /**
+     * Ручная очистка фильтра
+     * необходимо для случая многотипного поиска
+     * @return SearchServiceInterface
+     */
+    public function clearFilter()
+    {
+        $this->_filterQueryData = [];
+        return $this;
     }
 
     /**

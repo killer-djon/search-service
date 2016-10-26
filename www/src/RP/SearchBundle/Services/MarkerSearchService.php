@@ -8,6 +8,8 @@ use Common\Core\Constants\Visible;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Elastica\Exception\ElasticsearchException;
 use Common\Core\Facade\Service\Geo\GeoPointService;
+use RP\SearchBundle\Services\Mapping\DiscountsSearchMapping;
+use RP\SearchBundle\Services\Mapping\HelpOffersSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 
@@ -20,7 +22,9 @@ class MarkerSearchService extends AbstractSearchService
      */
     private $filterTypes = [
         PeopleSearchMapping::CONTEXT => PeopleSearchMapping::class,
-        PlaceSearchMapping::CONTEXT => PlaceSearchMapping::class
+        PlaceSearchMapping::CONTEXT => PlaceSearchMapping::class,
+        HelpOffersSearchMapping::CONTEXT => HelpOffersSearchMapping::class,
+        DiscountsSearchMapping::CONTEXT => DiscountsSearchMapping::class
     ];
 
     /**
@@ -30,11 +34,9 @@ class MarkerSearchService extends AbstractSearchService
      * @param string $userId
      * @param array $filters По каким типам делаем поиск
      * @param string $searchText Поисковый запрос
-     * @param int $skip Кол-во пропускаемых позиций поискового результата
-     * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchMarkersByTypes($userId, array $filters, $searchText = null, $skip = 0, $count = null)
+    public function searchMarkersByTypes($userId, array $filters, GeoPointServiceInterface $point, $searchText = null)
     {
         $currentUser = $this->getUserById($userId);
 
@@ -47,7 +49,20 @@ class MarkerSearchService extends AbstractSearchService
             $queryMatchResults = [];
             foreach($searchTypes as $keyType => $typeFields)
             {
+                $this->clearScriptFields();
+                $this->clearFilter();
+
+                $this->setFilterQuery($this->filterTypes[$keyType]::getMatchSearchFilter($this->_queryFilterFactory, $userId));
                 $this->setScriptTagsConditions($currentUser, $this->filterTypes[$keyType]);
+                $this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
+
+                /** формируем условия сортировки */
+                $this->setSortingQuery([
+                    $this->_sortingFactory->getGeoDistanceSort(
+                        $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
+                        $point
+                    ),
+                ]);
 
                 /**
                  * Получаем сформированный объект запроса

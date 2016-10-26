@@ -1,6 +1,9 @@
 <?php
 namespace RP\SearchBundle\Services\Mapping;
 
+use Common\Core\Constants\ModerationStatus;
+use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
+
 abstract class PlaceSearchMapping extends AbstractSearchMapping
 {
 	const PLACE_ID_FIELD = 'id';
@@ -104,20 +107,67 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
             self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
             //поле описания места
             self::DESCRIPTION_FIELD,
-            // поле адреса
-            self::ADDRESS_FIELD
+            // поля с названием города проживания
+            self::LOCATION_CITY_NAME_FIELD,
+            self::LOCATION_CITY_INTERNATIONAL_NAME_FIELD,
         ];
     }
 
     /**
-     * Получаем поля для поиска
-     * сбор полей для формирования объекта запроса
-     * Query - c условиями запроса и фильтрами
+     * Собираем фильтр для поиска
      *
+     * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
      * @return array
      */
-    public static function getMultiQuerySearchFields()
+    public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-
+        return [
+            $filterFactory->getBoolOrFilter([
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getNotFilter(
+                        $filterFactory->getExistsFilter(self::BONUS_FIELD)
+                    ),
+                    $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0])
+                ]),
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getNotFilter(
+                        $filterFactory->getExistsFilter(self::BONUS_FIELD)
+                    ),
+                    $filterFactory->getNotFilter(
+                        $filterFactory->getExistsFilter(self::DISCOUNT_FIELD)
+                    ),
+                ]),
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getNotFilter(
+                        $filterFactory->getExistsFilter(self::DISCOUNT_FIELD)
+                    ),
+                    $filterFactory->getMissingFilter(self::BONUS_FIELD)
+                ])
+            ]),
+            $filterFactory->getBoolOrFilter([
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => $userId]),
+                    $filterFactory->getTermsFilter(self::MODERATION_STATUS_FIELD, [
+                        ModerationStatus::OK,
+                        ModerationStatus::DIRTY,
+                        ModerationStatus::RESTORED,
+                        ModerationStatus::REJECTED,
+                        ModerationStatus::NOT_IN_PROMO
+                    ])
+                ]),
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getNotFilter(
+                        $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => $userId])
+                    ),
+                    $filterFactory->getTermsFilter(self::MODERATION_STATUS_FIELD, [
+                        ModerationStatus::OK,
+                        ModerationStatus::RESTORED,
+                        ModerationStatus::REJECTED,
+                        ModerationStatus::NOT_IN_PROMO
+                    ])
+                ])
+            ])
+        ];
     }
 }

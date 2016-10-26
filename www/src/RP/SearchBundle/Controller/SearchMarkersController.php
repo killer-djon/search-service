@@ -35,9 +35,15 @@ class SearchMarkersController extends ApiController
         $userId = $this->getRequestUserId();
 
         $markersSearchService = $this->getMarkersSearchService();
-        $markers = $markersSearchService->searchMarkersByTypes($userId, $types, $searchText, $this->getSkip(), $this->getCount());
+        /**
+         * Сервисы многотипных поисков не используют skip/count
+         */
+        $markers = $markersSearchService->searchMarkersByTypes(
+            $userId,
+            $types,
+            $this->getGeoPoint(),
+            $searchText);
 
         return $this->_handleViewWithData($markers);
-        //return $this->returnDataResult($markersSearchService, $types);
     }
 }

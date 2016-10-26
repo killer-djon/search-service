@@ -1,6 +1,8 @@
 <?php
 namespace RP\SearchBundle\Services\Mapping;
 
+use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
+
 abstract class PeopleSearchMapping extends AbstractSearchMapping
 {
     /** Контекст поиска */
@@ -169,20 +171,24 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             self::SURNAME_TRANSLIT_NGRAM_FIELD,
             // поле интересов и занятий
             self::TAG_NAME_FIELD,
-            self::ACTIVITY_SPHERE_NAME_FIELD
+            self::ACTIVITY_SPHERE_NAME_FIELD,
+            // поля с названием города проживания
+            self::LOCATION_CITY_NAME_FIELD,
+            self::LOCATION_CITY_INTERNATIONAL_NAME_FIELD
+
         ];
     }
 
     /**
-     * Получаем поля для поиска
-     * сбор полей для формирования объекта запроса
-     * Query - c условиями запроса и фильтрами
+     * Собираем фильтр для поиска
      *
+     * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
      * @return array
      */
-    public static function getMultiQuerySearchFields()
+    public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-
+        return [];
     }
 
 }

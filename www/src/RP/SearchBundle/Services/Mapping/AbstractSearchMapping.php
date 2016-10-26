@@ -2,8 +2,9 @@
 /**
  * Базовый абстрактный класс мапперов поиска
  */
-
 namespace RP\SearchBundle\Services\Mapping;
+
+use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 
 abstract class AbstractSearchMapping
 {
@@ -17,11 +18,11 @@ abstract class AbstractSearchMapping
     abstract public static function getMultiMatchQuerySearchFields();
 
     /**
-     * Получаем поля для поиска
-     * сбор полей для формирования объекта запроса
-     * Query - c условиями запроса и фильтрами
+     * Собираем фильтр для поиска
      *
+     * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
      * @return array
      */
-    abstract public static function getMultiQuerySearchFields();
+    abstract public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null);
 }

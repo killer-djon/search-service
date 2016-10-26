@@ -19,6 +19,20 @@ use Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface;
 class SearchEngine implements SearchEngineInterface
 {
     /**
+     * Кол-во записей по умолчанию
+     *
+     * @const int DEFAULT_SIZE_QUERY
+     */
+    const DEFAULT_SIZE_QUERY = 10000;
+
+    /**
+     * Пропуск записей по умолчанию при многотипмном поиске
+     *
+     * @const int DEFAULT_SKIP_QUERY
+     */
+    const DEFAULT_SKIP_QUERY = 0;
+
+    /**
      * Адаптер постраничной  навигации
      *
      * @var \Pagerfanta\Adapter\ElasticaAdapter $_paginator
@@ -198,24 +212,26 @@ class SearchEngine implements SearchEngineInterface
      * и пакетная отправка в поиск _msearch
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-multi-search.html
-     * @param \Elastica\Query $elasticQuery An \Elastica\Query object
+     * @param \Elastica\Query[] $elasticQueries An \Elastica\Query array
      * @param array $types Типы по которым будем проводить поиск
      * @param bool $setSource (default: true) Показать исходные данные объекта в ответе
      * @throws ElasticsearchException
      * @return array results
      */
-    public function searchMultiTypeDocuments(\Elastica\Query $elasticQuery, array $types, $setSource = true)
+    public function searchMultiTypeDocuments(array $elasticQueries, array $types, $setSource = true)
     {
         try {
-            /** устанавливаем все поля по умолчанию */
-            $elasticQuery->setSource((bool)$setSource);
-
             $search = new \Elastica\Multi\Search($this->_elasticaIndex->getClient());
-            foreach ($types as $type => $fields) {
-                $elasticType = $this->_getElasticType($type);
-                $elasticQuery->getQuery()->setFields($fields);
+
+            // формируем объекты запроса
+            array_walk($elasticQueries, function ($elasticQuery, $keyType) use ($search, $setSource) {
+                $elasticQuery->setSource((bool)$setSource);
+                $elasticQuery->setSize(self::DEFAULT_SIZE_QUERY);
+                $elasticQuery->setFrom(self::DEFAULT_SKIP_QUERY);
+
+                $elasticType = $this->_getElasticType($keyType);
                 $search->addSearch($elasticType->createSearch($elasticQuery));
-            }
+            });
 
             return $this->multiTransformResult($search->search());
         } catch (ElasticsearchException $e) {
@@ -223,28 +239,49 @@ class SearchEngine implements SearchEngineInterface
         }
     }
 
+    /**
+     * Преобразование полученного результат из еластика
+     * данное преобразование необходимо для многотипного поиска
+     * т.е. поиска по нескольким типам
+     *
+     * @param \Elastica\Multi\ResultSet $resultSets
+     * @return array Набор данных для вывода в результат
+     */
     public function multiTransformResult(\Elastica\Multi\ResultSet $resultSets)
     {
         if ($resultSets->count() > 0) {
             $resultSets->rewind();
 
-            $results = [];
+            $results = $info = $items = [];
+            $totalHits = 0;
+            $totalTime = 0;
             while ($resultSets->valid()) {
                 $resultTypeValue = $resultSets->current();
 
                 $dataItem = $this->setTotalResults($resultTypeValue);
-                $dataItemKey = key($dataItem);
+                if (!is_null($dataItem)) {
+                    $dataItemKey = key($dataItem);
 
-                $this->_paginator = new NullAdapter($resultTypeValue->getTotalHits());
+                    $this->_paginator = new NullAdapter($resultTypeValue->getTotalHits());
 
-                $results[] = [
-                    'info'         => $this->setTotalHits($resultTypeValue),
-                    'paginator' => $this->getPaginationAdapter(0, 10),
-                    $dataItemKey => $dataItem[$dataItemKey],
-                ];
+                    $hits = $this->setTotalHits($resultTypeValue);
+
+                    $totalHits += $hits['totalHits'];
+                    $totalTime += (float)$hits['totalTime'];
+
+                    $info['common'] = [
+                        'totalHits' => $totalHits,
+                        'totalTime' => $totalTime . 'ms',
+                        'searchType' => $dataItemKey
+                    ];
+                    $info[$dataItemKey] = $hits;
+                    $items[$dataItemKey] = $dataItem[$dataItemKey];
+                }
 
                 $resultSets->next();
             }
+            $results['info'] = $info;
+            $results['items'] = $items;
 
             return $results;
         }
@@ -365,13 +402,13 @@ class SearchEngine implements SearchEngineInterface
     {
         $results = $resultSets->getResults();
         array_walk($results, function ($resultItem) use (&$items) {
-            $record[$resultItem->getType()]['item'] = $resultItem->getData();
+            $record[$resultItem->getType()] = $resultItem->getData();
             if ($resultItem->hasFields()) {
                 foreach ($resultItem->getFields() as $fieldKey => $field) {
-                    if (isset($record[$resultItem->getType()]['item'][$fieldKey])) {
-                        unset($record[$resultItem->getType()]['item'][$fieldKey]);
+                    if (isset($record[$resultItem->getType()][$fieldKey])) {
+                        unset($record[$resultItem->getType()][$fieldKey]);
                     }
-                    $record[$resultItem->getType()]['item']['tagsMatch'][$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
+                    $record[$resultItem->getType()]['tagsMatch'][$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
                 }
             }
             $record[$resultItem->getType()]['hit'] = $resultItem->getHit();
@@ -383,10 +420,9 @@ class SearchEngine implements SearchEngineInterface
                 unset($record[$resultItem->getType()]['hit']['fields']);
             }
 
-            $items[$resultItem->getType()][] = [
-                'item' => $record[$resultItem->getType()]['item'],
-                'hit'  => $record[$resultItem->getType()]['hit'],
-            ];
+            $items[$resultItem->getType()][] = array_merge($record[$resultItem->getType()], [
+                'hit'  => $record[$resultItem->getType()]['hit']
+            ]);
         });
 
         $this->_totalResults = $items;
@@ -438,11 +474,6 @@ class SearchEngine implements SearchEngineInterface
         }
 
         return $this->_elasticaIndex->getType($context);
-    }
-
-    public function multiTypeSearch($query)
-    {
-        return $this->_elasticaIndex->search($query);
     }
 
 }

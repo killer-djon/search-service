@@ -1,7 +1,7 @@
 <?php
 namespace RP\SearchBundle\Services\Mapping;
 
-abstract class PlaceSearchMapping
+abstract class PlaceSearchMapping extends AbstractSearchMapping
 {
 	const PLACE_ID_FIELD = 'id';
     /** Контекст поиска */
@@ -77,22 +77,47 @@ abstract class PlaceSearchMapping
     const MODERATION_STATUS_FIELD   = 'moderationStatus';
     const VISIBLE_FIELD = 'visible';
 
-    public static function getMultiTypeSearchFields()
+    /**
+     * Получаем поля для поиска
+     * сбор полей для формирования объекта запроса
+     * multiMatch - без точных условий с возможностью фильтрации
+     *
+     * @return array
+     */
+    public static function getMultiMatchQuerySearchFields()
     {
         return [
-            self::NAME_FIELD,
+            // поля с вариациями названия
             self::NAME_FIELD,
             self::NAME_NGRAM_FIELD,
             self::NAME_TRANSLIT_FIELD,
             self::NAME_TRANSLIT_NGRAM_FIELD,
+            // поля с вариациями типа места
             self::TYPE_NAME_FIELD,
             self::TYPE_NAME_NGRAM_FIELD,
             self::TYPE_NAME_TRANSLIT_FIELD,
             self::TYPE_NAME_TRANSLIT_NGRAM_FIELD,
+            // поля с вариациями названия тегов
             self::TAG_NAME_FIELD,
             self::TAG_NAME_NGRAM_FIELD,
             self::TAG_NAME_TRANSLIT_FIELD,
             self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
+            //поле описания места
+            self::DESCRIPTION_FIELD,
+            // поле адреса
+            self::ADDRESS_FIELD
         ];
+    }
+
+    /**
+     * Получаем поля для поиска
+     * сбор полей для формирования объекта запроса
+     * Query - c условиями запроса и фильтрами
+     *
+     * @return array
+     */
+    public static function getMultiQuerySearchFields()
+    {
+
     }
 }

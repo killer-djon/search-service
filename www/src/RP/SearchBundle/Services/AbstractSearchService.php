@@ -16,6 +16,9 @@ use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 class AbstractSearchService extends SearchEngine implements SearchServiceInterface
 {
     use SearchServiceTrait;
+
+
+
     /**
      * Набор полей со скриптами
      * т.е. inline скрипты например
@@ -226,7 +229,6 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $count
         );
 
-
         $this->clearQueryFactory();
 
         return $queryFactory->getQueryFactory();
@@ -238,12 +240,10 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         $matchQuery = $this->_queryConditionFactory->getMultiMatchQuery();
         $matchQuery->setQuery($searchText);
 
-        foreach($types as $type)
-        {
+        foreach ($types as $type) {
             $fields = array_merge($fields, $type);
         }
         $matchQuery->setFields($fields);
-
 
         $query = $this->setQueryOptions(
             $this->_queryFactory->setQueryFactory($matchQuery),
@@ -347,8 +347,8 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
                      ->setScriptFields($this->_scriptFields)
                      ->setHighlight($this->_highlightQueryData)// @todo доработать
                      ->setSort($this->_sortingQueryData)
-                     ->setSize($count)
-                     ->setFrom($skip);
+                     ->setSize(is_null($count) ? self::DEFAULT_SIZE_QUERY : (int)$count)
+                     ->setFrom(is_null($count) ? self::DEFAULT_SKIP_QUERY : $skip);
     }
 
     /**
@@ -376,6 +376,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     public function getUserById($userId)
     {
         $user = $this->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, $userId);
+
         return new UserProfileService($user);
     }
 
@@ -385,7 +386,6 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * @param string $context Контекст поиска
      * @param string $fieldId Поле идентификатора
      * @param string $recordId ID искомой записи
-     *
      * @return array|null Найденный результат или ничего
      */
     public function searchRecordById($context, $fieldId, $recordId)

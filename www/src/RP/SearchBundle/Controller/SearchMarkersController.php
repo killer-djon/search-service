@@ -32,9 +32,12 @@ class SearchMarkersController extends ApiController
         /** @var Текст запроса */
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
+        $userId = $this->getRequestUserId();
+
         $markersSearchService = $this->getMarkersSearchService();
-        $markers = $markersSearchService->searchMarkersByTypes($types, $searchText, $this->getSkip(), $this->getCount());
+        $markers = $markersSearchService->searchMarkersByTypes($userId, $types, $searchText, $this->getSkip(), $this->getCount());
 
         return $this->_handleViewWithData($markers);
+        //return $this->returnDataResult($markersSearchService, $types);
     }
 }

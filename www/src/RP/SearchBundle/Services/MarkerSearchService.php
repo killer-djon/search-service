@@ -27,37 +27,45 @@ class MarkerSearchService extends AbstractSearchService
      * Поиск маркеров по задданым типам
      * в поиске могут присутствовать несколько типов
      *
+     * @param string $userId
      * @param array $filters По каким типам делаем поиск
      * @param string $searchText Поисковый запрос
+     * @param int $skip Кол-во пропускаемых позиций поискового результата
+     * @param int $count Какое кол-во выводим
+     * @return array Массив с найденными результатами
      */
-    public function searchMarkersByTypes(array $filters, $searchText, $skip = 0, $count = null)
+    public function searchMarkersByTypes($userId, array $filters, $searchText = null, $skip = 0, $count = null)
     {
+        $currentUser = $this->getUserById($userId);
+
         array_walk($filters, function($filter) use (&$searchTypes){
-            array_key_exists($filter, $this->filterTypes) && $searchTypes[$filter] = $this->filterTypes[$filter]::getMultiTypeSearchFields();
+            array_key_exists($filter, $this->filterTypes) && $searchTypes[$filter] = $this->filterTypes[$filter]::getMultiMatchQuerySearchFields();
         });
 
         if(!is_null($searchTypes) && !empty($searchTypes))
         {
-            array_walk($searchTypes, function($sType) use (&$fields){
-                $fields = array_merge((array)$fields, $sType);
-            });
-            $types = array_keys($searchTypes);
+            $queryMatchResults = [];
+            foreach($searchTypes as $keyType => $typeFields)
+            {
+                $this->setScriptTagsConditions($currentUser, $this->filterTypes[$keyType]);
 
-            // $fields - получили общий список полей для поиска
-            // $types - общий список типов в индексе
-            /*$this->setFilterQuery(array_map(function($type){
-                return $this->_queryFilterFactory->getTypeFilter($type);
-            }, $types));
-            */
-            /** Получаем сформированный объект запроса */
-            $queryMatchResult = $this->createMatchQuery(
-                $searchText,
-                [],
-                $skip,
-                $count
-            );
+                /**
+                 * Получаем сформированный объект запроса
+                 * когда запрос многотипный НЕТ необходимости
+                 * указывать skip и count
+                 */
+                $queryMatchResults[$keyType] = $this->createMatchQuery(
+                    $searchText,
+                    $typeFields
+                );
+            }
 
-            return $this->searchMultiTypeDocuments($queryMatchResult, $searchTypes);
+            /**
+             * Так же при вызове метода поиска для многотипных
+             * поисков НЕТ необходимости передавать контекст поиска
+             * т.е. тип в котором ищем, надо искать везде
+             */
+            return $this->searchMultiTypeDocuments($queryMatchResults, $searchTypes);
         }
     }
 }

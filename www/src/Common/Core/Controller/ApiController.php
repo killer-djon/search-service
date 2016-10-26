@@ -201,27 +201,38 @@ abstract class ApiController extends FOSRestController
      * Вспомогательный метод возврата результата клиенту
      *
      * @param \Common\Core\Facade\Search\QueryFactory\SearchServiceInterface $searchService
-     * @param string|array $fields Название поля в ключе объекта вывода
+     * @param string $keyFieldName Название поля в ключе объекта вывода
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function returnDataResult(SearchServiceInterface $searchService, $fields)
+    public function returnDataResult(SearchServiceInterface $searchService, $keyFields)
     {
-        $keyFieldName = is_array($fields) ? $fields : [$fields];
+        $keyFieldNames = is_array($keyFields) ? $keyFields : [$keyFields];
 
+        /** общая информация по запросу */
         $data['info'] = $searchService->getTotalHits();
         /**
          * постарничный адаптер срабатывает только для единичного поиска по типу
          * в случае если мы проводим поиск по нескольким типам, тогда пагинация все равно будет 1 для всех
          * т.е. общая
          */
-
         $data['pagination'] = $searchService->getPaginationAdapter($this->getSkip(), $this->getCount());
 
-        foreach ($keyFieldName as $field) {
-            $data[$field] = $searchService->getTotalResults()[$field];
+        foreach ($keyFieldNames as $keyField) {
+            $total = $searchService->getTotalResults();
+            if(isset($total[$keyField]))
+            {
+                $data[$keyField] = $total[$keyField];
+                if( count($keyFieldNames) > 1 )
+                {
+                    $data['info'][$keyField] = [
+                        'totalHits' => count($data[$keyField])
+                    ];
+                }
+            }
         }
 
         return $this->_handleViewWithData($data);
+
     }
 
     /**

@@ -1,7 +1,7 @@
 <?php
 namespace RP\SearchBundle\Services\Mapping;
 
-abstract class PeopleSearchMapping
+abstract class PeopleSearchMapping extends AbstractSearchMapping
 {
     /** Контекст поиска */
     const CONTEXT = 'people';
@@ -34,18 +34,14 @@ abstract class PeopleSearchMapping
     /** Поле аватара пользователя */
     const AVATAR_FIELD = 'Avatar';
 
-    const TAGS_NAME_FIELD = 'tags.tagname';
-
-    const TAGS_ID_FIELD = 'tags.id';
-
-    const TAGS_IS_SELECTED_FIELD = 'tags.isSelected';
-
     /** Поле с интересами пользователя */
-    const TAG_LIST_FIELD = 'tags';
-    /** Поле ИД интереса */
-    const TAG_LIST_ID_FIELD = 'id';
-    /** Поле названия интереса */
-    const TAG_LIST_NAME_FIELD = 'name';
+    const TAG_FIELD         = 'tags';
+    const TAGS_ID_FIELD      = 'tags.id';
+    const TAG_NAME_FIELD    = 'tags.tagname';
+    const TAG_NAME_NGRAM_FIELD    = 'tags._nameNgram';
+    const TAG_NAME_TRANSLIT_FIELD    = 'tags._translit';
+    const TAG_NAME_TRANSLIT_NGRAM_FIELD    = 'tags._translitNgram';
+    const TAG_WORDS_FIELD    = 'tags._wordsName';
 
     /** "Могу помочь" */
     const HELP_OFFERS_LIST_FIELD = 'helpOffers';
@@ -151,7 +147,14 @@ abstract class PeopleSearchMapping
     /** Поле флага удаления пользователя, если пользователь был удален */
     const USER_REMOVED_FIELD = 'isRemoved';
 
-    public static function getMultiTypeSearchFields()
+    /**
+     * Получаем поля для поиска
+     * сбор полей для формирования объекта запроса
+     * multiMatch - без точных условий с возможностью фильтрации
+     *
+     * @return array
+     */
+    public static function getMultiMatchQuerySearchFields()
     {
         return [
             // вариации поля имени
@@ -164,7 +167,22 @@ abstract class PeopleSearchMapping
             self::SURNAME_NGRAM_FIELD,
             self::SURNAME_TRANSLIT_FIELD,
             self::SURNAME_TRANSLIT_NGRAM_FIELD,
+            // поле интересов и занятий
+            self::TAG_NAME_FIELD,
+            self::ACTIVITY_SPHERE_NAME_FIELD
         ];
+    }
+
+    /**
+     * Получаем поля для поиска
+     * сбор полей для формирования объекта запроса
+     * Query - c условиями запроса и фильтрами
+     *
+     * @return array
+     */
+    public static function getMultiQuerySearchFields()
+    {
+
     }
 
 }

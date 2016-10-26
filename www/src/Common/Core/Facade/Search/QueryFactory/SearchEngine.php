@@ -269,12 +269,13 @@ class SearchEngine implements SearchEngineInterface
                     $totalHits += $hits['totalHits'];
                     $totalTime += (float)$hits['totalTime'];
 
-                    $info['common'] = [
+
+                    $searchingType[$dataItemKey] = $hits;
+                    $info = [
                         'totalHits' => $totalHits,
                         'totalTime' => $totalTime . 'ms',
-                        'searchType' => $dataItemKey
+                        'searchType' => $searchingType
                     ];
-                    $info[$dataItemKey] = $hits;
                     $items[$dataItemKey] = $dataItem[$dataItemKey];
                 }
 

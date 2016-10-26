@@ -210,6 +210,7 @@ abstract class ApiController extends FOSRestController
 
         /** общая информация по запросу */
         $data['info'] = $searchService->getTotalHits();
+
         /**
          * постарничный адаптер срабатывает только для единичного поиска по типу
          * в случае если мы проводим поиск по нескольким типам, тогда пагинация все равно будет 1 для всех
@@ -221,7 +222,9 @@ abstract class ApiController extends FOSRestController
             $total = $searchService->getTotalResults();
             if(isset($total[$keyField]))
             {
-                $data[$keyField] = $total[$keyField];
+                $data['info']['searchType'][$keyField] = $searchService->getTotalHits();
+
+                $data['items'][$keyField] = $total[$keyField];
                 if( count($keyFieldNames) > 1 )
                 {
                     $data['info'][$keyField] = [

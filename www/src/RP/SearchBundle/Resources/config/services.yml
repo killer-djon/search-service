@@ -53,7 +53,7 @@ services:
         class: RP\SearchBundle\Services\PlacesSearchService
         parent: rp_search.search_service.base
 
-    # Сервис поиска мест в базе еластика
-    rp_search.search_service.markers:
-        class: RP\SearchBundle\Services\MarkerSearchService
+    # Сервис общего поиска (маркеров и поиска по локации)
+    rp_search.search_service.common:
+        class: RP\SearchBundle\Services\CommonSearchService
         parent: rp_search.search_service.base

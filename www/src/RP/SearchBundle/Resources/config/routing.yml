@@ -15,3 +15,9 @@ rp_search_markers:
     resource: routing/searchMarkers.yml
     prefix:   /api/search
     type: rest
+
+# routing поиска мест
+rp_search_common:
+    resource: routing/searchCommon.yml
+    prefix:   /api/search
+    type: rest

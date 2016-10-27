@@ -1,15 +1,15 @@
 # Routing который формирует запрос для поиска мест
 # по имени места или частичное совпадение в имени места
-# пример запроса /api/search/v1/json/places/name
+# пример запроса /api/search/v1/json/markers/{filterTypes}
 RPSearchBundle_search_markers:
     path: /v{_version}/{_format}/markers/{filterTypes}
     defaults:
-        _controller: RPSearchBundle:SearchMarkers:searchMarkersByType
+        _controller: RPSearchBundle:SearchMarkers:searchMarkersByFilter
         _version: 1
         _format: json
-        template: "RPSearchBundle:SearchMarkers:searchMarkersByType.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+        template: "RPSearchBundle:SearchMarkers:searchMarkersByFilter.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
     requirements:
         _method: (GET)
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
-        types: ([\w,:;]+)
+        filterTypes: ([\w,:;_\- ]+)

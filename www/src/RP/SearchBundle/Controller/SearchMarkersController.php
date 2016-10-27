@@ -16,33 +16,40 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class SearchMarkersController extends ApiController
 {
-    /**
-     * Разделитель фильтра маркеров
-     *
-     * @var string MARKER_FILTER_DELIMITER
-     */
-    const MARKER_FILTER_DELIMITER = ';';
 
-    public function searchMarkersByTypeAction(Request $request, $filterTypes)
+    /**
+     * Метод осуществляющий поиск маркеров
+     * по заданным условиям локации (радиус, широта и долгота)
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
+     * @param mixed $filterTypes Набор переданных фильтров
+     * @return \Symfony\Component\HttpFoundation\Response Возвращаем ответ
+     */
+    public function searchMarkersByFilterAction(Request $request, $filterTypes)
     {
-        /** разделяем фильтры по разделителю (разделитель может быть любым из спец.символов) */
-        $types = preg_replace('/[^\w]+/s', self::MARKER_FILTER_DELIMITER, $filterTypes);
-        $types = explode(self::MARKER_FILTER_DELIMITER, $types);
+        if( !$this->getGeoPoint()->isValid() )
+        {
+            return $this->_handleViewWithError(new BadRequestHttpException('Incorrect geoPoint requests data'));
+        }
+
+        // получаем фильтры и парсим их в нужный вид для дальнейшей работы
+        $types = $this->getParseFilters($filterTypes);
 
         /** @var Текст запроса */
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
         $userId = $this->getRequestUserId();
 
-        $markersSearchService = $this->getMarkersSearchService();
-        /**
-         * Сервисы многотипных поисков не используют skip/count
-         */
+        // получаем сервис многотипного поиска
+        $markersSearchService = $this->getCommonSearchService();
+
+        // выполняем поиск по маркерам
         $markers = $markersSearchService->searchMarkersByTypes(
             $userId,
             $types,
             $this->getGeoPoint(),
-            $searchText);
+            $searchText
+        );
 
         return $this->_handleViewWithData($markers);
     }

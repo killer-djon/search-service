@@ -24,6 +24,13 @@ abstract class ApiController extends FOSRestController
     use ControllerTrait;
 
     /**
+     * Разделитель фильтра маркеров
+     *
+     * @var string MARKER_FILTER_DELIMITER
+     */
+    const MARKER_FILTER_DELIMITER = ';';
+
+    /**
      * Атрибут текст ошибки
      *
      * @const string TEXT
@@ -110,6 +117,26 @@ abstract class ApiController extends FOSRestController
 
         $this->parseSkipCountRequest($request);
         $this->parseGeoPointRequest($request);
+    }
+
+    /**
+     * Парсим приходящий набор фильтров
+     * он может быть передан в строке разными разделителями
+     * допустимые разделители: , : ; - пробел
+     *
+     * @param mixed $filterTypes
+     * @return array Набор фильтров
+     */
+    public function getParseFilters($filterTypes)
+    {
+        if (is_array($filterTypes) && count($filterTypes)) {
+            return $filterTypes;
+        }
+
+        /** разделяем фильтры по разделителю (разделитель может быть любым из спец.символов) */
+        $types = preg_replace('/[^a-zA-Z0-9]+/', self::MARKER_FILTER_DELIMITER, $filterTypes);
+
+        return explode(self::MARKER_FILTER_DELIMITER, $types);
     }
 
     /**
@@ -220,15 +247,13 @@ abstract class ApiController extends FOSRestController
 
         foreach ($keyFieldNames as $keyField) {
             $total = $searchService->getTotalResults();
-            if(isset($total[$keyField]))
-            {
+            if (isset($total[$keyField])) {
                 $data['info']['searchType'][$keyField] = $searchService->getTotalHits();
 
                 $data['items'][$keyField] = $total[$keyField];
-                if( count($keyFieldNames) > 1 )
-                {
+                if (count($keyFieldNames) > 1) {
                     $data['info'][$keyField] = [
-                        'totalHits' => count($data[$keyField])
+                        'totalHits' => count($data[$keyField]),
                     ];
                 }
             }
@@ -482,10 +507,10 @@ abstract class ApiController extends FOSRestController
      * Получаем сервис поиска маркеров
      * через еластик
      *
-     * @return \RP\SearchBundle\Services\MarkerSearchService
+     * @return \RP\SearchBundle\Services\CommonSearchService
      */
-    public function getMarkersSearchService()
+    public function getCommonSearchService()
     {
-        return $this->get('rp_search.search_service.markers');
+        return $this->get('rp_search.search_service.common');
     }
 }

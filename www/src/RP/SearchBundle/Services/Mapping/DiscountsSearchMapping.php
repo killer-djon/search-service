@@ -26,13 +26,11 @@ class DiscountsSearchMapping extends PlaceSearchMapping
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
         return [
-            $filterFactory->getBoolAndFilter([
-                $filterFactory->getBoolOrFilter([
-                    $filterFactory->getRangeFilter(self::DISCOUNT_FIELD, 1, 100),
-                    $filterFactory->getExistsFilter(self::BONUS_FIELD),
-                ]),
-                $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::OK])
-            ])
+            $filterFactory->getBoolOrFilter([
+                $filterFactory->getRangeFilter(self::DISCOUNT_FIELD, 1, 100),
+                $filterFactory->getExistsFilter(self::BONUS_FIELD),
+            ]),
+            $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::OK])
         ];
     }
 }

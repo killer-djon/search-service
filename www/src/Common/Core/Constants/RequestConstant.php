@@ -87,7 +87,7 @@ abstract class RequestConstant
      *
      * @const NULL NULLED_PARAMS
      */
-    const NULLED_PARAMS = null;
+    const NULLED_PARAMS = NULL;
 
     /**
      * Лимит при поиск в еластике по умолчанию

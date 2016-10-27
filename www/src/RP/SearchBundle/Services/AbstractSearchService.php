@@ -10,6 +10,8 @@ use Common\Core\Facade\Search\QueryFactory\SearchEngine;
 use Common\Core\Facade\Search\QueryFactory\SearchServiceInterface;
 use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Query;
+use RP\SearchBundle\Services\Mapping\DiscountsSearchMapping;
+use RP\SearchBundle\Services\Mapping\HelpOffersSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 
@@ -17,7 +19,17 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
 {
     use SearchServiceTrait;
 
-
+    /**
+     * Доступные для поиска типы фильтров
+     *
+     * @var array $filterTypes
+     */
+    protected $filterTypes = [
+        PeopleSearchMapping::CONTEXT     => PeopleSearchMapping::class,
+        PlaceSearchMapping::CONTEXT      => PlaceSearchMapping::class,
+        HelpOffersSearchMapping::CONTEXT => HelpOffersSearchMapping::class,
+        DiscountsSearchMapping::CONTEXT  => DiscountsSearchMapping::class,
+    ];
 
     /**
      * Набор полей со скриптами
@@ -116,11 +128,13 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     /**
      * Ручная очистка полей скриптов
      * необходимо для случая многотипного поиска
+     *
      * @return SearchServiceInterface
      */
     public function clearScriptFields()
     {
         $this->_scriptFields = [];
+
         return $this;
     }
 
@@ -162,16 +176,16 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         $this->_conditionQueryShouldData = $should;
     }
 
-
-
     /**
      * Ручная очистка фильтра
      * необходимо для случая многотипного поиска
+     *
      * @return SearchServiceInterface
      */
     public function clearFilter()
     {
         $this->_filterQueryData = [];
+
         return $this;
     }
 
@@ -330,6 +344,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $skip,
             $count
         );
+
         $this->clearQueryFactory();
 
         return $query->getQueryFactory();

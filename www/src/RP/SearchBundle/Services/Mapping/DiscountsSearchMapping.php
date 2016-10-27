@@ -11,10 +11,23 @@ namespace RP\SearchBundle\Services\Mapping;
 use Common\Core\Constants\ModerationStatus;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 
-class DiscountsSearchMapping extends PlaceSearchMapping
+abstract class DiscountsSearchMapping extends PlaceSearchMapping
 {
     /** Контекст поиска */
     const CONTEXT = 'discounts';
+
+    /**
+     * Собираем фильтр для маркеров
+     *
+     * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
+     * @return array
+     */
+    public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
+    {
+        return self::getMatchSearchFilter($filterFactory, $userId);
+    }
+
 
     /**
      * Собираем фильтр для поиска

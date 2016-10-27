@@ -29,26 +29,26 @@ class SearchMarkersController extends ApiController
     {
         if( !$this->getGeoPoint()->isValid() )
         {
-            return $this->_handleViewWithError(new BadRequestHttpException('Incorrect geoPoint requests data'));
+            return $this->_handleViewWithError(new BadRequestHttpException('Некорректные координаты геопозиции'), Response::HTTP_BAD_REQUEST);
+        }
+
+        if(is_null($this->getGeoPoint()->getRadius()))
+        {
+            return $this->_handleViewWithError(new BadRequestHttpException('Радиус должен быть установлен'), Response::HTTP_BAD_REQUEST);
         }
 
         // получаем фильтры и парсим их в нужный вид для дальнейшей работы
         $types = $this->getParseFilters($filterTypes);
-
-        /** @var Текст запроса */
-        $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
-
         $userId = $this->getRequestUserId();
 
         // получаем сервис многотипного поиска
         $markersSearchService = $this->getCommonSearchService();
 
         // выполняем поиск по маркерам
-        $markers = $markersSearchService->searchMarkersByTypes(
+        $markers = $markersSearchService->searchMarkersByFilters(
             $userId,
             $types,
-            $this->getGeoPoint(),
-            $searchText
+            $this->getGeoPoint()
         );
 
         return $this->_handleViewWithData($markers);

@@ -180,6 +180,18 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     }
 
     /**
+     * Собираем фильтр для маркеров
+     *
+     * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
+     * @return array
+     */
+    public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
+    {
+        return [];
+    }
+
+    /**
      * Собираем фильтр для поиска
      *
      * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации

@@ -97,7 +97,7 @@ class GeoPointService implements GeoPointServiceInterface
      */
     public function getRadius()
     {
-        return $this->_radius;
+        return $this->_radius ?: NULL;
     }
 
     /**

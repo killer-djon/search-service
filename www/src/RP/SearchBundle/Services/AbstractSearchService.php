@@ -10,26 +10,12 @@ use Common\Core\Facade\Search\QueryFactory\SearchEngine;
 use Common\Core\Facade\Search\QueryFactory\SearchServiceInterface;
 use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Query;
-use RP\SearchBundle\Services\Mapping\DiscountsSearchMapping;
-use RP\SearchBundle\Services\Mapping\HelpOffersSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 
 class AbstractSearchService extends SearchEngine implements SearchServiceInterface
 {
     use SearchServiceTrait;
-
-    /**
-     * Доступные для поиска типы фильтров
-     *
-     * @var array $filterTypes
-     */
-    protected $filterTypes = [
-        PeopleSearchMapping::CONTEXT     => PeopleSearchMapping::class,
-        PlaceSearchMapping::CONTEXT      => PlaceSearchMapping::class,
-        HelpOffersSearchMapping::CONTEXT => HelpOffersSearchMapping::class,
-        DiscountsSearchMapping::CONTEXT  => DiscountsSearchMapping::class,
-    ];
 
     /**
      * Набор полей со скриптами

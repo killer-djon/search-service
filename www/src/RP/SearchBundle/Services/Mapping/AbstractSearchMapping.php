@@ -25,4 +25,13 @@ abstract class AbstractSearchMapping
      * @return array
      */
     abstract public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null);
+
+    /**
+     * Собираем фильтр для маркеров
+     *
+     * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
+     * @return array
+     */
+    abstract public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null);
 }

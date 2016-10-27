@@ -5,18 +5,27 @@
  */
 namespace RP\SearchBundle\Services;
 
-use Common\Core\Constants\Visible;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
-use Elastica\Exception\ElasticsearchException;
-use Common\Core\Facade\Service\Geo\GeoPointService;
-use RP\SearchBundle\Services\Mapping\DiscountsSearchMapping;
-use RP\SearchBundle\Services\Mapping\HelpOffersSearchMapping;
-use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
-use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 
 class CommonSearchService extends AbstractSearchService
 {
 
+    /**
+     * Глобальный (общий поиск) в системе
+     * варианты поиска могут быть:
+     *  1. Указан ID города и поисковый запрос
+     *  2. Указан ID города но пустой поисковый запрос
+     *  3. Не указан ID города, НО указан поисковый запрос
+     *
+     * @param string $userId
+     * @param string|null $searchText Поисковый запрос
+     * @param string|null $cityId ID города в котором будем искать
+     * @param \Common\Core\Facade\Service\Geo\GeoPointServiceInterface|null $point ТОчка координат
+     * @param string|null $filterType Коллекция в которой ищем или же пусто тогда во всех
+     * @param int $skip (default: 0)
+     * @param int|null $count Кол-во в результате
+     * @return array Массив с найденными результатами
+     */
     public function commonSearchByFilters(
         $userId,
         $searchText = null,
@@ -28,8 +37,7 @@ class CommonSearchService extends AbstractSearchService
     ) {
         $currentUser = $this->getUserById($userId);
 
-        if(is_null($filterType))
-        {
+        if (is_null($filterType)) {
             /**
              * Массив объектов запроса
              * ключами в массиве служит тип поиска (в какой коллекции искать надо)
@@ -40,8 +48,7 @@ class CommonSearchService extends AbstractSearchService
              * Если не задана категория поиска
              * тогда ищем во всех коллекциях еластика по условиям
              */
-            foreach($this->filterTypes as $keyType => $type)
-            {
+            foreach ($this->filterTypes as $keyType => $type) {
                 $this->clearScriptFields();
                 $this->clearFilter();
 
@@ -49,12 +56,11 @@ class CommonSearchService extends AbstractSearchService
                 $this->setScriptTagsConditions($currentUser, $type);
                 $this->setGeoPointConditions($point, $type);
 
-                if( !is_null($cityId) && !empty($cityId) && !is_null($type::LOCATION_CITY_ID_FIELD) )
-                {
+                if (!is_null($cityId) && !empty($cityId) && !is_null($type::LOCATION_CITY_ID_FIELD)) {
                     $this->setFilterQuery([
                         $this->_queryFilterFactory->getTermFilter([
-                            $type::LOCATION_CITY_ID_FIELD => $cityId
-                        ])
+                            $type::LOCATION_CITY_ID_FIELD => $cityId,
+                        ]),
                     ]);
                 }
 
@@ -69,7 +75,6 @@ class CommonSearchService extends AbstractSearchService
                 );
             }
 
-
             /**
              * Так же при вызове метода поиска для многотипных
              * поисков НЕТ необходимости передавать контекст поиска
@@ -78,12 +83,11 @@ class CommonSearchService extends AbstractSearchService
             return $this->searchMultiTypeDocuments($queryMatchResults);
         }
 
-        if( !is_null($cityId) && !empty($cityId) && !is_null($this->filterTypes[$filterType]::LOCATION_CITY_ID_FIELD) )
-        {
+        if (!is_null($cityId) && !empty($cityId) && !is_null($this->filterTypes[$filterType]::LOCATION_CITY_ID_FIELD)) {
             $this->setFilterQuery([
                 $this->_queryFilterFactory->getTermFilter([
-                    $this->filterTypes[$filterType]::LOCATION_CITY_ID_FIELD => $cityId
-                ])
+                    $this->filterTypes[$filterType]::LOCATION_CITY_ID_FIELD => $cityId,
+                ]),
             ]);
         }
 
@@ -98,7 +102,6 @@ class CommonSearchService extends AbstractSearchService
             $count
         );
 
-
         return $this->searchDocuments($queryMatch, $this->searchTypes[$filterType], true, $filterType);
     }
 
@@ -108,10 +111,10 @@ class CommonSearchService extends AbstractSearchService
      *
      * @param string $userId
      * @param array $filters По каким типам делаем поиск
-     * @param string $searchText Поисковый запрос
+     * @param \Common\Core\Facade\Service\Geo\GeoPointServiceInterface $point ТОчка координат
      * @return array Массив с найденными результатами
      */
-    public function searchMarkersByTypes($userId, array $filters, GeoPointServiceInterface $point, $searchText = null)
+    public function searchMarkersByFilters($userId, array $filters, GeoPointServiceInterface $point)
     {
         $currentUser = $this->getUserById($userId);
 
@@ -121,11 +124,12 @@ class CommonSearchService extends AbstractSearchService
 
         if (!is_null($searchTypes) && !empty($searchTypes)) {
             $queryMatchResults = [];
+
             foreach ($searchTypes as $keyType => $typeFields) {
                 $this->clearScriptFields();
                 $this->clearFilter();
 
-                $this->setFilterQuery($this->filterTypes[$keyType]::getMatchSearchFilter($this->_queryFilterFactory, $userId));
+                $this->setFilterQuery($this->filterTypes[$keyType]::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
                 $this->setScriptTagsConditions($currentUser, $this->filterTypes[$keyType]);
                 $this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
 
@@ -143,7 +147,7 @@ class CommonSearchService extends AbstractSearchService
                  * указывать skip и count
                  */
                 $queryMatchResults[$keyType] = $this->createMatchQuery(
-                    $searchText,
+                    null,
                     $typeFields
                 );
             }

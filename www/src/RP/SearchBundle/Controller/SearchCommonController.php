@@ -25,7 +25,7 @@ class SearchCommonController extends ApiController
      */
     public function searchCommonByFilterAction(Request $request, $filterType)
     {
-        $filterType = ($filterType == '_all' ? RequestConstant::NULLED_PARAMS : $filterType);
+        $filterType = ($filterType == '_all' ? RequestConstant::NULLED_PARAMS : strtolower($filterType));
 
         /** @var Текст запроса */
         $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
@@ -59,7 +59,7 @@ class SearchCommonController extends ApiController
             [
                 'info' => $commonSearchService->getTotalHits()
             ],
-            $searchData
+            $searchData ?: []
         ));
     }
 }

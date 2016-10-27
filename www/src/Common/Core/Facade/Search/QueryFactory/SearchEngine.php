@@ -9,9 +9,12 @@ use Elastica\Exception\ElasticsearchException;
 use FOS\ElasticaBundle\Elastica\Index;
 use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
-use Pagerfanta\Adapter\ArrayAdapter;
-use Pagerfanta\Adapter\NullAdapter;
 use Psr\Log\LoggerInterface;
+use RP\SearchBundle\Services\Mapping\DiscountsSearchMapping;
+use RP\SearchBundle\Services\Mapping\HelpOffersSearchMapping;
+use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
+use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
+use RP\SearchBundle\Services\Mapping\RusPlaceSearchMapping;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface;
 use Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface;
@@ -32,11 +35,30 @@ class SearchEngine implements SearchEngineInterface
      */
     const DEFAULT_SKIP_QUERY = 0;
 
+    /**
+     * Доступные для поиска типы фильтров
+     *
+     * @var array $filterTypes
+     */
+    protected $filterTypes = [
+        PeopleSearchMapping::CONTEXT     => PeopleSearchMapping::class,
+        PlaceSearchMapping::CONTEXT      => PlaceSearchMapping::class,
+        HelpOffersSearchMapping::CONTEXT => HelpOffersSearchMapping::class,
+        DiscountsSearchMapping::CONTEXT  => DiscountsSearchMapping::class,
+        RusPlaceSearchMapping::CONTEXT   => RusPlaceSearchMapping::class,
+    ];
+
+    /**
+     * Алиасы типов поиска
+     * т.е. по ключу мы можем искать в другой коллекции
+     * но при этом использовать всего-лишь фильтр
+     */
     protected $searchTypes = [
         'people'     => 'people',
         'places'     => 'places',
-        'helpOffers' => 'people',
+        'helpoffers' => 'people',
         'discounts'  => 'places',
+        'rusplaces'  => 'places',
     ];
 
     /**
@@ -236,7 +258,9 @@ class SearchEngine implements SearchEngineInterface
                 $elasticQuery->setFrom(self::DEFAULT_SKIP_QUERY);
 
                 $elasticType = $this->_getElasticType($this->searchTypes[$keyType]);
-                $search->addSearch($elasticType->createSearch($elasticQuery), $keyType);
+                $searchItem = $elasticType->createSearch($elasticQuery);
+
+                $search->addSearch($searchItem, $keyType);
             });
 
             return $this->multiTransformResult($search->search());

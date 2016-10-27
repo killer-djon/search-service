@@ -138,50 +138,20 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
         return [
-            $filterFactory->getBoolOrFilter([
-                $filterFactory->getBoolAndFilter([
-                    $filterFactory->getNotFilter(
-                        $filterFactory->getExistsFilter(self::BONUS_FIELD)
-                    ),
-                    $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0])
-                ]),
-                $filterFactory->getBoolAndFilter([
-                    $filterFactory->getNotFilter(
-                        $filterFactory->getExistsFilter(self::BONUS_FIELD)
-                    ),
-                    $filterFactory->getNotFilter(
-                        $filterFactory->getExistsFilter(self::DISCOUNT_FIELD)
-                    ),
-                ]),
-                $filterFactory->getBoolAndFilter([
-                    $filterFactory->getNotFilter(
-                        $filterFactory->getExistsFilter(self::DISCOUNT_FIELD)
-                    ),
-                    $filterFactory->getMissingFilter(self::BONUS_FIELD)
-                ])
-            ]),
-            $filterFactory->getBoolOrFilter([
-                $filterFactory->getBoolAndFilter([
-                    $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => $userId]),
-                    $filterFactory->getTermsFilter(self::MODERATION_STATUS_FIELD, [
-                        ModerationStatus::OK,
-                        ModerationStatus::DIRTY,
-                        ModerationStatus::RESTORED,
-                        ModerationStatus::REJECTED,
-                        ModerationStatus::NOT_IN_PROMO
-                    ])
-                ]),
-                $filterFactory->getBoolAndFilter([
-                    $filterFactory->getNotFilter(
-                        $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => $userId])
-                    ),
-                    $filterFactory->getTermsFilter(self::MODERATION_STATUS_FIELD, [
-                        ModerationStatus::OK,
-                        ModerationStatus::RESTORED,
-                        ModerationStatus::REJECTED,
-                        ModerationStatus::NOT_IN_PROMO
-                    ])
-                ])
+            $filterFactory->getNotFilter(
+                $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
+            ),
+            $filterFactory->getNotFilter(
+                $filterFactory->getExistsFilter(self::BONUS_FIELD)
+            ),
+            $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
+            $filterFactory->getBoolAndFilter([
+                $filterFactory->getNotFilter(
+                    $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => $userId])
+                ),
+                $filterFactory->getNotFilter(
+                    $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::DIRTY])
+                )
             ])
         ];
     }

@@ -36,20 +36,9 @@ class PlacesSearchService extends AbstractSearchService
         $currentUser = $this->getUserById($userId);
 
         $this->setConditionQueryShould([
-            $this->_queryConditionFactory->getMultiMatchQuery()->setQuery($searchText)->setFields([
-                PlaceSearchMapping::NAME_FIELD,
-                PlaceSearchMapping::NAME_NGRAM_FIELD,
-                PlaceSearchMapping::NAME_TRANSLIT_FIELD,
-                PlaceSearchMapping::NAME_TRANSLIT_NGRAM_FIELD,
-                PlaceSearchMapping::TYPE_NAME_FIELD,
-                PlaceSearchMapping::TYPE_NAME_NGRAM_FIELD,
-                PlaceSearchMapping::TYPE_NAME_TRANSLIT_FIELD,
-                PlaceSearchMapping::TYPE_NAME_TRANSLIT_NGRAM_FIELD,
-                PlaceSearchMapping::TAG_NAME_FIELD,
-                PlaceSearchMapping::TAG_NAME_NGRAM_FIELD,
-                PlaceSearchMapping::TAG_NAME_TRANSLIT_FIELD,
-                PlaceSearchMapping::TAG_NAME_TRANSLIT_NGRAM_FIELD,
-            ]),
+            $this->_queryConditionFactory->getMultiMatchQuery()
+                ->setQuery($searchText)
+                ->setFields(PlaceSearchMapping::getMultiMatchQuerySearchFields()),
             $this->_queryConditionFactory->getWildCardQuery(
                 PlaceSearchMapping::DESCRIPTION_FIELD,
                 $searchText
@@ -105,20 +94,9 @@ class PlacesSearchService extends AbstractSearchService
 
         if (!is_null($searchText) && !empty($searchText)) {
             $this->setConditionQueryShould([
-                $this->_queryConditionFactory->getMultiMatchQuery()->setQuery($searchText)->setFields([
-                    PlaceSearchMapping::NAME_FIELD,
-                    PlaceSearchMapping::NAME_NGRAM_FIELD,
-                    PlaceSearchMapping::NAME_TRANSLIT_FIELD,
-                    PlaceSearchMapping::NAME_TRANSLIT_NGRAM_FIELD,
-                    PlaceSearchMapping::TYPE_NAME_FIELD,
-                    PlaceSearchMapping::TYPE_NAME_NGRAM_FIELD,
-                    PlaceSearchMapping::TYPE_NAME_TRANSLIT_FIELD,
-                    PlaceSearchMapping::TYPE_NAME_TRANSLIT_NGRAM_FIELD,
-                    PlaceSearchMapping::TAG_NAME_FIELD,
-                    PlaceSearchMapping::TAG_NAME_NGRAM_FIELD,
-                    PlaceSearchMapping::TAG_NAME_TRANSLIT_FIELD,
-                    PlaceSearchMapping::TAG_NAME_TRANSLIT_NGRAM_FIELD,
-                ]),
+                $this->_queryConditionFactory->getMultiMatchQuery()
+                    ->setQuery($searchText)
+                    ->setFields(PlaceSearchMapping::getMultiMatchQuerySearchFields()),
                 $this->_queryConditionFactory->getWildCardQuery(
                     PlaceSearchMapping::DESCRIPTION_FIELD,
                     $searchText
@@ -229,43 +207,20 @@ class PlacesSearchService extends AbstractSearchService
     private function setFilterPlaces($userId)
     {
         $this->setFilterQuery([
-            $this->_queryFilterFactory->getBoolOrFilter([
-                $this->_queryFilterFactory->getMissingFilter(PlaceSearchMapping::DISCOUNT_FIELD),
-                $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0])
-            ]),
+            $this->_queryFilterFactory->getNotFilter(
+                $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
+            ),
             $this->_queryFilterFactory->getNotFilter(
                 $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
             ),
-            $this->_queryFilterFactory->getBoolOrFilter([
-                // или это автор и статус вывести на модерации
-                $this->_queryFilterFactory->getBoolAndFilter([
-                    $this->_queryFilterFactory->getTermFilter([
-                        PlaceSearchMapping::AUTHOR_ID_FIELD => $userId
-                    ]),
-                    $this->_queryFilterFactory->getTermsFilter(
-                        PlaceSearchMapping::MODERATION_STATUS_FIELD, [
-                            ModerationStatus::OK,
-                            ModerationStatus::RESTORED,
-                            ModerationStatus::DIRTY,
-                            ModerationStatus::REJECTED,
-                            ModerationStatus::NOT_IN_PROMO
-                        ]
-                    )
-                ]),
-                // или если не автор то
-                $this->_queryFilterFactory->getBoolAndFilter([
-                    $this->_queryFilterFactory->getNotFilter(
-                        $this->_queryFilterFactory->getTermFilter([
-                            PlaceSearchMapping::AUTHOR_ID_FIELD => $userId
-                        ])
-                    ),
-                    $this->_queryFilterFactory->getTermsFilter(
-                        PlaceSearchMapping::MODERATION_STATUS_FIELD, [
-                            ModerationStatus::OK,
-                            ModerationStatus::RESTORED
-                        ]
-                    )
-                ]),
+            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
+            $this->_queryFilterFactory->getBoolAndFilter([
+                $this->_queryFilterFactory->getNotFilter(
+                    $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId])
+                ),
+                $this->_queryFilterFactory->getNotFilter(
+                    $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DIRTY])
+                )
             ])
         ]);
     }

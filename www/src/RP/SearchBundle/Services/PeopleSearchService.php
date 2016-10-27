@@ -54,18 +54,7 @@ class PeopleSearchService extends AbstractSearchService
         /** Получаем сформированный объект запроса */
         $queryMatchResult = $this->createMatchQuery(
             $searchText,
-            [
-                // вариации поля имени
-                PeopleSearchMapping::NAME_FIELD,
-                PeopleSearchMapping::NAME_NGRAM_FIELD,
-                PeopleSearchMapping::NAME_TRANSLIT_FIELD,
-                PeopleSearchMapping::NAME_TRANSLIT_NGRAM_FIELD,
-                // вариации поля фамилии
-                PeopleSearchMapping::SURNAME_FIELD,
-                PeopleSearchMapping::SURNAME_NGRAM_FIELD,
-                PeopleSearchMapping::SURNAME_TRANSLIT_FIELD,
-                PeopleSearchMapping::SURNAME_TRANSLIT_NGRAM_FIELD,
-            ],
+            PeopleSearchMapping::getMultiMatchQuerySearchFields(),
             $skip,
             $count
         );
@@ -115,18 +104,7 @@ class PeopleSearchService extends AbstractSearchService
             /** Получаем сформированный объект запроса */
             $query = $this->createMatchQuery(
                 $searchText,
-                [
-                    // вариации поля имени
-                    PeopleSearchMapping::NAME_FIELD,
-                    PeopleSearchMapping::NAME_NGRAM_FIELD,
-                    PeopleSearchMapping::NAME_TRANSLIT_FIELD,
-                    PeopleSearchMapping::NAME_TRANSLIT_NGRAM_FIELD,
-                    // вариации поля фамилии
-                    PeopleSearchMapping::SURNAME_FIELD,
-                    PeopleSearchMapping::SURNAME_NGRAM_FIELD,
-                    PeopleSearchMapping::SURNAME_TRANSLIT_FIELD,
-                    PeopleSearchMapping::SURNAME_TRANSLIT_NGRAM_FIELD,
-                ],
+                PeopleSearchMapping::getMultiMatchQuerySearchFields(),
                 $skip,
                 $count
             );
@@ -185,18 +163,7 @@ class PeopleSearchService extends AbstractSearchService
             /** Получаем сформированный объект запроса */
             $queryMatchResult = $this->createMatchQuery(
                 $searchText,
-                [
-                    // вариации поля имени
-                    PeopleSearchMapping::NAME_FIELD,
-                    PeopleSearchMapping::NAME_NGRAM_FIELD,
-                    PeopleSearchMapping::NAME_TRANSLIT_FIELD,
-                    PeopleSearchMapping::NAME_TRANSLIT_NGRAM_FIELD,
-                    // вариации поля фамилии
-                    PeopleSearchMapping::SURNAME_FIELD,
-                    PeopleSearchMapping::SURNAME_NGRAM_FIELD,
-                    PeopleSearchMapping::SURNAME_TRANSLIT_FIELD,
-                    PeopleSearchMapping::SURNAME_TRANSLIT_NGRAM_FIELD,
-                ],
+                PeopleSearchMapping::getMultiMatchQuerySearchFields(),
                 $skip,
                 $count
             );

@@ -6,6 +6,25 @@ namespace Common\Core\Facade\Search\QueryAggregation;
 
 class QueryAggregationFactory implements QueryAggregationFactoryInterface
 {
+    /**
+     * Определение точности кластеризации по геоточкам
+     *
+     * @var array массив прямоугольников
+     */
+    private $geo_hash_precisions = [
+        [5009400.0, 4992600.0],
+        [1252300.0, 624100.0],
+        [156500.0, 156000.0],
+        [39100.0, 19500.0],
+        [4900.0, 4900.0],
+        [1200.0, 1200.0],
+        [152.9, 152.4],
+        [38.2, 19],
+        [4.8, 4.8],
+        [1.2, 0.595],
+        [0.149, 0.149],
+        [0.037, 0.019],
+    ];
 
     /**
      * Получаем аггрегированный скрипт AVG
@@ -74,7 +93,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         $startPoint,
         $radius,
         $unit = 'km',
-        $distanceType = \Elastica\Aggregation\GeoDistance::DISTANCE_TYPE_SLOPPY_ARC
+        $distanceType = \Elastica\Aggregation\GeoDistance::DISTANCE_TYPE_PLANE
     ) {
         $geoDistance = new \Elastica\Aggregation\GeoDistance('geo_distance', $fieldName, $startPoint);
         $geoDistance->setUnit($unit);
@@ -89,13 +108,41 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
      *
      * @param string $fieldName Название поля
      * @param string|array $startPoint valid formats are array("lat" => 52.3760, "lon" => 4.894), "52.3760, 4.894", and array(4.894, 52.3760)
-     * @param int $precision an integer between 1 and 12, inclusive. Defaults to 5.
+     * @param string|int $precision an integer between 1 and 12, inclusive. Defaults to 5.
      * @return \Elastica\Aggregation\AbstractAggregation
      */
     public function getGeoHashAggregation($fieldName, $startPoint, $precision = self::DEFAULT_RADIUS_DISTANCE)
     {
+        $precision = (int)$precision;
+
+        if($precision > 12)
+        {
+            $precisionPoint = [];
+            foreach($this->geo_hash_precisions as $key => $pointMap)
+            {
+                $min = $pointMap[0];
+                $max = $pointMap[1];
+
+                $x = $min/$precision;
+                $y = $max/$precision;
+
+                $precisionPoint[$key] = [
+                    'min'   => (float)$x,
+                    'max'   => (float)$y
+                ];
+            }
+
+            $precisionPoint = array_filter(array_map(function($range){
+                return array_sum($range);
+            }, $precisionPoint), function($arValue){
+                return $arValue >= 1;
+            });
+
+            $precision = current(array_keys($precisionPoint, min($precisionPoint))) + 1;
+        }
+
         $geoHash = new \Elastica\Aggregation\GeohashGrid('geohash_grid', $fieldName);
-        $geoHash->setPrecision((int)$precision);
+        $geoHash->setPrecision($precision);
 
         return $geoHash;
     }

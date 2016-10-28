@@ -20,7 +20,7 @@ class SearchCommonController extends ApiController
      * в контексте всех имеющихся типов в базе еластика
      *
      * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
-     * @param string|null $type Категория запроса (people,places,discounts...)
+     * @param string|null $filterType Категория запроса (people,places,discounts...)
      * @return \Symfony\Component\HttpFoundation\Response Возвращаем ответ
      */
     public function searchCommonByFilterAction(Request $request, $filterType)

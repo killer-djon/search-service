@@ -11,6 +11,7 @@ use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Psr\Log\LoggerInterface;
 use RP\SearchBundle\Services\Mapping\DiscountsSearchMapping;
+use RP\SearchBundle\Services\Mapping\EventsSearchMapping;
 use RP\SearchBundle\Services\Mapping\HelpOffersSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
@@ -46,6 +47,7 @@ class SearchEngine implements SearchEngineInterface
         HelpOffersSearchMapping::CONTEXT => HelpOffersSearchMapping::class,
         DiscountsSearchMapping::CONTEXT  => DiscountsSearchMapping::class,
         RusPlaceSearchMapping::CONTEXT   => RusPlaceSearchMapping::class,
+        EventsSearchMapping::CONTEXT     => EventsSearchMapping::class,
     ];
 
     /**
@@ -59,6 +61,7 @@ class SearchEngine implements SearchEngineInterface
         'helpoffers' => 'people',
         'discounts'  => 'places',
         'rusplaces'  => 'places',
+        'events'     => 'events',
     ];
 
     /**
@@ -258,6 +261,7 @@ class SearchEngine implements SearchEngineInterface
                 $elasticQuery->setFrom(self::DEFAULT_SKIP_QUERY);
 
                 $elasticType = $this->_getElasticType($this->searchTypes[$keyType]);
+
                 $searchItem = $elasticType->createSearch($elasticQuery);
 
                 $search->addSearch($searchItem, $keyType);
@@ -283,8 +287,10 @@ class SearchEngine implements SearchEngineInterface
 
         if (!empty($resultIterator)) {
             $results = $info = $items = [];
+            $aggs = [];
             $totalHits = 0;
             $totalTime = 0;
+
             foreach ($resultIterator as $key => $resultSet) {
                 $dataItem[$key] = $this->setTotalResults($resultSet);
                 if (!is_null($dataItem[$key]) && !empty($dataItem[$key])) {
@@ -299,11 +305,14 @@ class SearchEngine implements SearchEngineInterface
                         'searchType' => $searchingType,
                     ];
                     $items[$key] = $dataItem[$key][$this->searchTypes[$key]];
+                    $aggs[$key] = $this->setAggregationsResult($resultSet);
                 }
             }
 
+            $results['cluster'] = $aggs;
             $results['info'] = $info;
             $results['items'] = $items;
+
 
             return $results;
         }
@@ -388,20 +397,19 @@ class SearchEngine implements SearchEngineInterface
     /**
      * Устанавливаем результат аггрегации
      *
-     * @param \Elastica\Result $resultSets
+     * @param \Elastica\ResultSet $resultSets
      * @return void
      */
     private function setAggregationsResult(\Elastica\ResultSet $resultSets)
     {
-        $this->_aggregationsResult = $resultSets->getAggregations();
-
-        return $this->_aggregationsResult;
+        $this->_aggregationsResult = current($resultSets->getAggregations());
+        return $this->_aggregationsResult['buckets'];
     }
 
     /**
      * Устанавливаем общие показатели запроса
      *
-     * @param \Elastica\Result $resultSets
+     * @param \Elastica\ResultSet $resultSets
      * @return void
      */
     private function setTotalHits(\Elastica\ResultSet $resultSets)

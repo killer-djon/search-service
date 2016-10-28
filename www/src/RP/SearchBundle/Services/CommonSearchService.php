@@ -64,6 +64,20 @@ class CommonSearchService extends AbstractSearchService
                     ]);
                 }
 
+                if( $point->isValid() && !is_null($point->getRadius()) )
+                {
+                    $this->setAggregationQuery([
+                        $this->_queryAggregationFactory->getGeoHashAggregation(
+                            $type::LOCATION_POINT_FIELD,
+                            [
+                                "lat" => $point->getLatitude(),
+                                "lon" => $point->getLongitude()
+                            ],
+                            $point->getRadius()
+                        )
+                    ]);
+                }
+
                 /**
                  * Получаем сформированный объект запроса
                  * когда запрос многотипный НЕТ необходимости
@@ -133,6 +147,17 @@ class CommonSearchService extends AbstractSearchService
                 $this->setScriptTagsConditions($currentUser, $this->filterTypes[$keyType]);
                 $this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
 
+                $this->setAggregationQuery([
+                    $this->_queryAggregationFactory->getGeoHashAggregation(
+                        $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
+                        [
+                            "lat" => $point->getLatitude(),
+                            "lon" => $point->getLongitude()
+                        ],
+                        $point->getRadius()
+                    )
+                ]);
+
                 /** формируем условия сортировки */
                 $this->setSortingQuery([
                     $this->_sortingFactory->getGeoDistanceSort(
@@ -151,6 +176,7 @@ class CommonSearchService extends AbstractSearchService
                     $typeFields
                 );
             }
+
 
             /**
              * Так же при вызове метода поиска для многотипных

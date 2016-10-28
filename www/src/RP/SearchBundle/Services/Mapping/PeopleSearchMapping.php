@@ -8,42 +8,14 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     /** Контекст поиска */
     const CONTEXT = 'people';
 
-    /** Поле имени пользователя */
-    const NAME_FIELD = 'name'; // полное совпадение имени по русски
-    const NAME_NGRAM_FIELD = 'name._nameNgram'; // частичное совпадение имени от 3-х сивмолов по русски
-    const NAME_TRANSLIT_FIELD = 'name._translit'; // полное совпадение имени в транслите
-    const NAME_TRANSLIT_NGRAM_FIELD = 'name._translitNgram'; // частичное совпадение имени от 3-х сивмолов в транслите
-
     /** Поле фамилии пользователя */
     const SURNAME_FIELD = 'surname'; // полное совпадение фамилии по русски
     const SURNAME_NGRAM_FIELD = 'surname._surnameNgram'; // частичное совпадение фамилии от 3-х сивмолов по русски
     const SURNAME_TRANSLIT_FIELD = 'surname._translit'; // полное совпадение имени в транслите
     const SURNAME_TRANSLIT_NGRAM_FIELD = 'surname._translitNgram'; // частичное совпадение имени от 3-х сивмолов в транслите
 
-    /**
-     * Поле имени пользователя для префиксного поиска
-     *
-     * @deprecated
-     */
-    const PREFIX_NAME_FIELD = 'name._prefix';
-    /**
-     * Поле фамилии пользователя для префиксного поиска
-     *
-     * @deprecated
-     */
-    const PREFIX_SURNAME_FIELD = 'surname._prefix';
-
     /** Поле аватара пользователя */
     const AVATAR_FIELD = 'Avatar';
-
-    /** Поле с интересами пользователя */
-    const TAG_FIELD         = 'tags';
-    const TAGS_ID_FIELD      = 'tags.id';
-    const TAG_NAME_FIELD    = 'tags.tagname';
-    const TAG_NAME_NGRAM_FIELD    = 'tags._nameNgram';
-    const TAG_NAME_TRANSLIT_FIELD    = 'tags._translit';
-    const TAG_NAME_TRANSLIT_NGRAM_FIELD    = 'tags._translitNgram';
-    const TAG_WORDS_FIELD    = 'tags._wordsName';
 
     /** "Могу помочь" */
     const HELP_OFFERS_LIST_FIELD = 'helpOffers';
@@ -65,30 +37,9 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     /** Поле точки местоположения пользователя */
     const LOCATION_POINT_FIELD = 'location.point';
 
-    /** Поле широты в точке местоположения */
-    const LOCATION_POINT_LAT_FIELD = 'lat';
-    /** Поле долготы в точке местоположения */
-    const LOCATION_POINT_LON_FIELD = 'lon';
-
-    /** Поле идентификатора города */
-    const LOCATION_CITY_ID_FIELD = 'location.city.id';
-
-    /** Город местоположения */
-    const LOCATION_CITY_FIELD = 'location.city';
-    const LOCATION_CITY_NAME_FIELD = 'location.city.name';
-    const LOCATION_CITY_NAME_TRANSLIT_FIELD = 'location.city._translit';
-    const LOCATION_CITY_NAME_PREFIX_FIELD = 'location.city._prefix';
-    const LOCATION_CITY_INTERNATIONAL_NAME_FIELD = 'location.city.internationalName';
-
-    /** Страна местоположения */
-    const LOCATION_COUNTRY_ID_FIELD = 'location.country.id';
-    const LOCATION_COUNTRY_NAME_FIELD = 'location.country.name';
-    const LOCATION_COUNTRY_NAME_TRANSLIT_FIELD = 'location.country._translit';
-    const LOCATION_COUNTRY_NAME_PREFIX_FIELD = 'location.country._prefix';
-    const LOCATION_COUNTRY_INTERNATIONAL_NAME_FIELD = 'location.country.internationalName';
-
     /** Поле родного города пользователя */
     const HOMECITY_FIELD = 'homecity';
+
     const RESIDENCE_CITY_FIELD = 'residenceCity';
 
     /** Поле пола */
@@ -170,7 +121,12 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             self::SURNAME_TRANSLIT_FIELD,
             self::SURNAME_TRANSLIT_NGRAM_FIELD,
             // поле интересов и занятий
+            // по интересам
             self::TAG_NAME_FIELD,
+            self::TAG_NAME_NGRAM_FIELD,
+            self::TAG_NAME_TRANSLIT_FIELD,
+            self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
+            // сфера деятельности
             self::ACTIVITY_SPHERE_NAME_FIELD,
             // поля с названием города проживания
             self::LOCATION_CITY_NAME_FIELD,

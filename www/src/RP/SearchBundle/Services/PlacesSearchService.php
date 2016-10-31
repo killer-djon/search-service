@@ -44,7 +44,7 @@ class PlacesSearchService extends AbstractSearchService
                 $searchText
             ),
             $this->_queryConditionFactory->getWildCardQuery(
-                PlaceSearchMapping::NAME_WORDS_FIELD,
+                PlaceSearchMapping::NAME_WORDS_NAME_FIELD,
                 $searchText
             ),
             $this->_queryConditionFactory->getWildCardQuery(
@@ -67,7 +67,6 @@ class PlacesSearchService extends AbstractSearchService
         $this->setFilterPlaces($userId);
 
         $queryMatch = $this->createQuery($skip, $count);
-
         return $this->searchDocuments($queryMatch, PlaceSearchMapping::CONTEXT);
     }
 
@@ -102,7 +101,7 @@ class PlacesSearchService extends AbstractSearchService
                     $searchText
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
-                    PlaceSearchMapping::NAME_WORDS_FIELD,
+                    PlaceSearchMapping::NAME_WORDS_NAME_FIELD,
                     $searchText
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
@@ -148,14 +147,11 @@ class PlacesSearchService extends AbstractSearchService
         /** если задан поисковый запрос скидки */
         if (!is_null($searchText) && !empty($searchText)) {
             $this->setConditionQueryShould([
-                $this->_queryConditionFactory->getMultiMatchQuery()->setQuery($searchText)->setFields([
-                    PlaceSearchMapping::NAME_FIELD,
-                    PlaceSearchMapping::NAME_NGRAM_FIELD,
-                    PlaceSearchMapping::NAME_TRANSLIT_FIELD,
-                    PlaceSearchMapping::NAME_TRANSLIT_NGRAM_FIELD,
-                ]),
+                $this->_queryConditionFactory->getMultiMatchQuery()
+                    ->setQuery($searchText)
+                    ->setFields(PlaceSearchMapping::getMultiMatchQuerySearchFields()),
                 $this->_queryConditionFactory->getWildCardQuery(
-                    PlaceSearchMapping::NAME_WORDS_FIELD,
+                    PlaceSearchMapping::NAME_WORDS_NAME_FIELD,
                     $searchText
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
@@ -178,8 +174,12 @@ class PlacesSearchService extends AbstractSearchService
         }
 
         $this->setFilterQuery([
-            $this->_queryFilterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 1, 100),
-            $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
+            $this->_queryFilterFactory->getBoolOrFilter([
+                $this->_queryFilterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 1, 100),
+                $this->_queryFilterFactory->getNotFilter(
+                    $this->_queryFilterFactory->getMissingFilter(PlaceSearchMapping::BONUS_FIELD)
+                )
+            ]),
         ]);
 
         /** добавляем к условию поиска рассчет по совпадению интересов */
@@ -214,14 +214,6 @@ class PlacesSearchService extends AbstractSearchService
                 $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
             ),
             $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
-            $this->_queryFilterFactory->getBoolAndFilter([
-                $this->_queryFilterFactory->getNotFilter(
-                    $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId])
-                ),
-                $this->_queryFilterFactory->getNotFilter(
-                    $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DIRTY])
-                )
-            ])
         ]);
     }
 }

@@ -52,12 +52,18 @@ class PeopleSearchService extends AbstractSearchService
         ]);
 
         /** Получаем сформированный объект запроса */
-        $queryMatchResult = $this->createMatchQuery(
-            $searchText,
-            PeopleSearchMapping::getMultiMatchQuerySearchFields(),
-            $skip,
-            $count
-        );
+        $this->setConditionQueryShould([
+            $this->_queryConditionFactory->getMultiMatchQuery()
+                                         ->setQuery($searchText)
+                                         ->setFields(PeopleSearchMapping::getMultiMatchQuerySearchFields()),
+            $this->_queryConditionFactory->getWildCardQuery(
+                PeopleSearchMapping::FULLNAME_MORPHOLOGY_FIELD,
+                $searchText
+            )
+        ]);
+
+        // Получаем сформированный объект запроса
+        $queryMatchResult = $this->createQuery($skip, $count);
 
         /** поиск документа */
         return $this->searchDocuments($queryMatchResult, PeopleSearchMapping::CONTEXT);
@@ -204,14 +210,24 @@ class PeopleSearchService extends AbstractSearchService
 
         if (!is_null($searchText) && !empty($searchText)) {
             $this->setConditionQueryShould([
-                $this->_queryConditionFactory->getMultiMatchQuery()->setQuery($searchText)->setFields([
-                    PeopleSearchMapping::HELP_OFFERS_NAME_FIELD,
-                    PeopleSearchMapping::HELP_OFFERS_NAME_NGRAM_FIELD,
-                    PeopleSearchMapping::HELP_OFFERS_NAME_TRANSLIT_FIELD,
-                    PeopleSearchMapping::HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD,
-                ]),
+                $this->_queryConditionFactory->getMultiMatchQuery()
+                    ->setQuery($searchText)
+                    ->setFields(array_merge(
+                        PeopleSearchMapping::getMultiMatchQuerySearchFields(),
+                        [
+                            PeopleSearchMapping::HELP_OFFERS_NAME_FIELD,
+                            PeopleSearchMapping::HELP_OFFERS_NAME_NGRAM_FIELD,
+                            PeopleSearchMapping::HELP_OFFERS_NAME_TRANSLIT_FIELD,
+                            PeopleSearchMapping::HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD,
+                        ]
+                    )
+                ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     PeopleSearchMapping::HELP_OFFERS_WORDS_NAME_FIELD,
+                    $searchText
+                ),
+                $this->_queryConditionFactory->getWildCardQuery(
+                    PeopleSearchMapping::FULLNAME_MORPHOLOGY_FIELD,
                     $searchText
                 ),
             ]);

@@ -14,6 +14,9 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     const SURNAME_TRANSLIT_FIELD = 'surname._translit'; // полное совпадение имени в транслите
     const SURNAME_TRANSLIT_NGRAM_FIELD = 'surname._translitNgram'; // частичное совпадение имени от 3-х сивмолов в транслите
 
+    // Морфологический разбор поля полного имени
+    const FULLNAME_MORPHOLOGY_FIELD = 'fullname';
+
     /** Поле аватара пользователя */
     const AVATAR_FIELD = 'Avatar';
 

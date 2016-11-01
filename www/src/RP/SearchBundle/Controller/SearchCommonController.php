@@ -25,41 +25,47 @@ class SearchCommonController extends ApiController
      */
     public function searchCommonByFilterAction(Request $request, $filterType)
     {
-        $filterType = ($filterType == '_all' ? RequestConstant::NULLED_PARAMS : strtolower($filterType));
+        try {
+            $filterType = ($filterType == '_all' ? RequestConstant::NULLED_PARAMS : strtolower($filterType));
 
-        /** @var Текст запроса */
-        $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
-        $searchText = (mb_strlen($searchText) <= 2 ? RequestConstant::NULLED_PARAMS : trim($searchText));
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+            $searchText = (mb_strlen($searchText) <= 2 ? RequestConstant::NULLED_PARAMS : trim($searchText));
 
-        // получаем из запроса ID пользователя
-        $userId = $this->getRequestUserId();
+            // получаем из запроса ID пользователя
+            $userId = $this->getRequestUserId();
 
-        // получаем ID города если он указан в запросе
-        $cityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
+            // получаем ID города если он указан в запросе
+            $cityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
 
-        if ((is_null($cityId) || empty($cityId)) && is_null($searchText)) {
-            return $this->_handleViewWithError(new BadRequestHttpException(
-                'Необходимо указать один из обязательных параметров запроса (cityId или searchText)'
-            ), Response::HTTP_BAD_REQUEST);
+            if ((is_null($cityId) || empty($cityId)) && is_null($searchText)) {
+                return $this->_handleViewWithError(new BadRequestHttpException(
+                    'Необходимо указать один из обязательных параметров запроса (cityId или searchText)'
+                ), Response::HTTP_BAD_REQUEST);
+            }
+
+            $commonSearchService = $this->getCommonSearchService();
+
+            $searchData = $commonSearchService->commonSearchByFilters(
+                $userId,
+                $searchText,
+                $cityId,
+                $this->getGeoPoint(),
+                $filterType,
+                $this->getSkip(),
+                $this->getCount()
+            );
+
+            return $this->_handleViewWithData(array_merge(
+                [
+                    'info' => $commonSearchService->getTotalHits(),
+                ],
+                $searchData ?: []
+            ));
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
         }
-
-        $commonSearchService = $this->getCommonSearchService();
-
-        $searchData = $commonSearchService->commonSearchByFilters(
-            $userId,
-            $searchText,
-            $cityId,
-            $this->getGeoPoint(),
-            $filterType,
-            $this->getSkip(),
-            $this->getCount()
-        );
-
-        return $this->_handleViewWithData(array_merge(
-            [
-                'info' => $commonSearchService->getTotalHits()
-            ],
-            $searchData ?: []
-        ));
     }
 }

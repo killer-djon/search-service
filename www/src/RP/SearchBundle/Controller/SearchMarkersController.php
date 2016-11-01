@@ -6,6 +6,7 @@
 namespace RP\SearchBundle\Controller;
 
 use Common\Core\Controller\ApiController;
+use Common\Core\Exceptions\SearchServiceException;
 use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
@@ -27,30 +28,34 @@ class SearchMarkersController extends ApiController
      */
     public function searchMarkersByFilterAction(Request $request, $filterTypes)
     {
-        if( !$this->getGeoPoint()->isValid() )
-        {
-            return $this->_handleViewWithError(new BadRequestHttpException('Некорректные координаты геопозиции'), Response::HTTP_BAD_REQUEST);
+        try {
+            if (!$this->getGeoPoint()->isValid()) {
+                return $this->_handleViewWithError(new BadRequestHttpException('Некорректные координаты геопозиции'), Response::HTTP_BAD_REQUEST);
+            }
+
+            if (is_null($this->getGeoPoint()->getRadius())) {
+                return $this->_handleViewWithError(new BadRequestHttpException('Радиус должен быть установлен'), Response::HTTP_BAD_REQUEST);
+            }
+
+            // получаем фильтры и парсим их в нужный вид для дальнейшей работы
+            $types = $this->getParseFilters($filterTypes);
+
+            $userId = $this->getRequestUserId();
+            // получаем сервис многотипного поиска
+            $markersSearchService = $this->getCommonSearchService();
+
+            // выполняем поиск по маркерам
+            $markers = $markersSearchService->searchMarkersByFilters(
+                $userId,
+                $types,
+                $this->getGeoPoint()
+            );
+
+            return $this->_handleViewWithData($markers);
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
         }
-
-        if(is_null($this->getGeoPoint()->getRadius()))
-        {
-            return $this->_handleViewWithError(new BadRequestHttpException('Радиус должен быть установлен'), Response::HTTP_BAD_REQUEST);
-        }
-
-        // получаем фильтры и парсим их в нужный вид для дальнейшей работы
-        $types = $this->getParseFilters($filterTypes);
-
-        $userId = $this->getRequestUserId();
-        // получаем сервис многотипного поиска
-        $markersSearchService = $this->getCommonSearchService();
-
-        // выполняем поиск по маркерам
-        $markers = $markersSearchService->searchMarkersByFilters(
-            $userId,
-            $types,
-            $this->getGeoPoint()
-        );
-
-        return $this->_handleViewWithData($markers);
     }
 }

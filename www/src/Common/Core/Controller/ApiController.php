@@ -517,4 +517,15 @@ abstract class ApiController extends FOSRestController
     {
         return $this->get('rp_search.search_service.common');
     }
+
+    /**
+     * Получаем сервис поиска событий
+     * через еластик
+     *
+     * @return \RP\SearchBundle\Services\EventsSearchService
+     */
+    public function getEventsSearchService()
+    {
+        return $this->get('rp_search.search_service.events');
+    }
 }

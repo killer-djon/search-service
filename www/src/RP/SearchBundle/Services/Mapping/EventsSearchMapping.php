@@ -12,6 +12,8 @@ class EventsSearchMapping extends AbstractSearchMapping
     /** Контекст поиска */
     const CONTEXT = 'events';
 
+    const EVENT_ID_FIELD = 'id';
+
     /** Тип события */
     const TYPE_ID_FIELD     = 'type.id';
     const TYPE_NAME_FIELD   = 'type.name';
@@ -25,6 +27,9 @@ class EventsSearchMapping extends AbstractSearchMapping
 
     /** Помечено ли на уделание событие */
     const PLACE_IS_REMOVED = 'place.isRemoved';
+
+    /** Дополнительные поля */
+    const PLACE_ID_FIELD  = 'place.id';
 
     /** Дополнительные поля */
     const PLACE_NAME_FIELD  = 'place.name';

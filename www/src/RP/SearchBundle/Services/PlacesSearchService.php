@@ -88,10 +88,6 @@ class PlacesSearchService extends AbstractSearchService
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
 
-        $this->setConditionQueryMust([
-            $this->_queryConditionFactory->getTermQuery(PlaceSearchMapping::LOCATION_CITY_ID_FIELD, $cityId),
-        ]);
-
         if (!is_null($searchText) && !empty($searchText)) {
             $this->setConditionQueryShould([
                 $this->_queryConditionFactory->getMultiMatchQuery()
@@ -115,6 +111,11 @@ class PlacesSearchService extends AbstractSearchService
                 ),
             ]);
         }
+
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::LOCATION_CITY_ID_FIELD => $cityId])
+        ]);
+
         /** добавляем к условию поиска рассчет по совпадению интересов */
         $this->setScriptTagsConditions($currentUser, PlaceSearchMapping::class);
 

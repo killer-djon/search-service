@@ -57,3 +57,8 @@ services:
     rp_search.search_service.common:
         class: RP\SearchBundle\Services\CommonSearchService
         parent: rp_search.search_service.base
+
+    # Сервис поиска событий
+    rp_search.search_service.events:
+        class: RP\SearchBundle\Services\EventsSearchService
+        parent: rp_search.search_service.base

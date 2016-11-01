@@ -5,6 +5,7 @@
 namespace RP\SearchBundle\Controller;
 
 use Common\Core\Controller\ApiController;
+use Common\Core\Exceptions\SearchServiceException;
 use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
@@ -32,38 +33,44 @@ class SearchUsersController extends ApiController
      */
     public function searchUsersByNameAction(Request $request)
     {
-        /** @var Текст запроса */
-        $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
-        if (is_null($searchText)) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Не указана поисковая строка searchText',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
+        try {
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+            if (is_null($searchText)) {
+                return $this->_handleViewWithError(
+                    new BadRequestHttpException(
+                        'Не указана поисковая строка searchText',
+                        null,
+                        Response::HTTP_BAD_REQUEST
+                    )
+                );
+            }
+
+            if (mb_strlen($searchText) <= 2) {
+                return $this->_handleViewWithError(
+                    new BadRequestHttpException(
+                        'Поисковая строка должны быть больше двух символов',
+                        null,
+                        Response::HTTP_BAD_REQUEST
+                    )
+                );
+            }
+
+            /** @var ID пользователя */
+            $userId = $this->getRequestUserId();
+
+            /** получаем сервис поиска */
+            $peopleSearchService = $this->getPeopleSearchService();
+            /** создаем запрос для поиска по имени/фамилии пользователей */
+            $people = $peopleSearchService->searchPeopleByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+
+            /** выводим результат */
+            return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
         }
-
-        if (mb_strlen($searchText) <= 2) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Поисковая строка должны быть больше двух символов',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
-        }
-
-        /** @var ID пользователя */
-        $userId = $this->getRequestUserId();
-
-        /** получаем сервис поиска */
-        $peopleSearchService = $this->getPeopleSearchService();
-        /** создаем запрос для поиска по имени/фамилии пользователей */
-        $people = $peopleSearchService->searchPeopleByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
-
-        /** выводим результат */
-        return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
     }
 
     /**
@@ -75,20 +82,26 @@ class SearchUsersController extends ApiController
      */
     public function searchUsersByCityAction(Request $request)
     {
-        /** @var Текст запроса (в случае если ищем по имени) */
-        $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+        try {
+            /** @var Текст запроса (в случае если ищем по имени) */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
-        /** @var ID пользователя */
-        $userId = $this->getRequestUserId();
+            /** @var ID пользователя */
+            $userId = $this->getRequestUserId();
 
-        /** @var ID города */
-        $cityId = $this->getRequestCityId();
+            /** @var ID города */
+            $cityId = $this->getRequestCityId();
 
-        $peopleSearchService = $this->getPeopleSearchService();
-        $people = $peopleSearchService->searchPeopleByCityId($userId, $cityId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
+            $peopleSearchService = $this->getPeopleSearchService();
+            $people = $peopleSearchService->searchPeopleByCityId($userId, $cityId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
 
-        /** выводим результат */
-        return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
+            /** выводим результат */
+            return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
     }
 
     /**
@@ -99,17 +112,23 @@ class SearchUsersController extends ApiController
      */
     public function searchUsersByFriendAction(Request $request)
     {
-        /** @var Текст запроса */
-        $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+        try {
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
-        /** @var ID пользователя */
-        $userId = $this->getRequestUserId();
+            /** @var ID пользователя */
+            $userId = $this->getRequestUserId();
 
-        $peopleSearchService = $this->getPeopleSearchService();
-        $people = $peopleSearchService->searchPeopleFriends($userId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
+            $peopleSearchService = $this->getPeopleSearchService();
+            $people = $peopleSearchService->searchPeopleFriends($userId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
 
-        /** выводим результат */
-        return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
+            /** выводим результат */
+            return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
     }
 
     /**
@@ -120,23 +139,29 @@ class SearchUsersController extends ApiController
      */
     public function searchUsersHelpOffersAction(Request $request)
     {
-        /** @var Текст запроса */
-        $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+        try {
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
-        /** @var ID пользователя */
-        $userId = $this->getRequestUserId();
+            /** @var ID пользователя */
+            $userId = $this->getRequestUserId();
 
-        $peopleSearchService = $this->getPeopleSearchService();
-        $peopleHelpOffers = $peopleSearchService->searchPeopleHelpOffers(
-            $userId,
-            $this->getGeoPoint(),
-            $searchText,
-            $this->getSkip(),
-            $this->getCount()
-        );
+            $peopleSearchService = $this->getPeopleSearchService();
+            $peopleHelpOffers = $peopleSearchService->searchPeopleHelpOffers(
+                $userId,
+                $this->getGeoPoint(),
+                $searchText,
+                $this->getSkip(),
+                $this->getCount()
+            );
 
-        /** выводим результат */
-        return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
+            /** выводим результат */
+            return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
     }
 
     /**
@@ -155,14 +180,17 @@ class SearchUsersController extends ApiController
 
             if (!is_null($userContext)) {
                 $user = new UserProfileService($userContext);
+
                 return $this->_handleViewWithData($user->toArray());
             }
 
-            return null;
-
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {
             return $this->_handleViewWithError($e);
         }
+
+        return null;
     }
 
 }

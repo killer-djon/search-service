@@ -1,0 +1,62 @@
+# Routing который формирует запрос для поиска событий
+# по имени события или по его описанию (так же по части слова)
+# пример запроса /api/search/v1/json/events/name
+RPSearchBundle_search_events_byname:
+    path: /v{_version}/{_format}/events/name
+    defaults:
+        _controller: RPSearchBundle:SearchEvents:searchEventsByName
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchEvents:searchevents.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+
+# Routing который формирует запрос для поиска событий
+# в определенном городе
+# пример запроса /api/search/v1/json/events/city/{cityId}
+RPSearchBundle_search_events_bycity:
+    path: /v{_version}/{_format}/events/city/{cityId}
+    defaults:
+        _controller: RPSearchBundle:SearchEvents:searchEventsByCity
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchEvents:searchEventsByCity.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        cityId: \w+
+
+# Routing который формирует запрос для поиска событий
+# по ID
+# пример запроса /api/search/v1/json/events/id/{eventId}
+RPSearchBundle_search_events_byid:
+    path: /v{_version}/{_format}/events/id/{eventId}
+    defaults:
+        _controller: RPSearchBundle:SearchEvents:searchEventsById
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchEvents:searchEventsById.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        eventId: \w+
+
+# Routing который формирует запрос для поиска событий
+# по ID
+# пример запроса /api/search/v1/json/events/place/{placesId}
+RPSearchBundle_search_events_byPlaceIds:
+    path: /v{_version}/{_format}/events/place/{placesId}
+    defaults:
+        _controller: RPSearchBundle:SearchEvents:searchEventsByPlacesId
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchEvents:searchEventsByPlaceId.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        placesId: ([\w,:;_\- ]+)

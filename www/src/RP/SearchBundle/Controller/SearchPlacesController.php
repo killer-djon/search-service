@@ -5,6 +5,7 @@
 namespace RP\SearchBundle\Controller;
 
 use Common\Core\Controller\ApiController;
+use Common\Core\Exceptions\SearchServiceException;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use Symfony\Component\HttpFoundation\Request;
 use Common\Core\Constants\RequestConstant;
@@ -36,35 +37,41 @@ class SearchPlacesController extends ApiController
      */
     public function searchPlacesByNameAction(Request $request)
     {
-        /** @var Текст запроса */
-        $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
-        if (is_null($searchText)) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Не указана поисковая строка searchText',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
+        try {
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+            if (is_null($searchText)) {
+                return $this->_handleViewWithError(
+                    new BadRequestHttpException(
+                        'Не указана поисковая строка searchText',
+                        null,
+                        Response::HTTP_BAD_REQUEST
+                    )
+                );
+            }
+
+            if (mb_strlen($searchText) <= 2) {
+                return $this->_handleViewWithError(
+                    new BadRequestHttpException(
+                        'Поисковая строка должны быть больше двух символов',
+                        null,
+                        Response::HTTP_BAD_REQUEST
+                    )
+                );
+            }
+
+            /** @var ID пользователя */
+            $userId = $this->getRequestUserId();
+
+            $placeSearchService = $this->getPlacesSearchService();
+            $places = $placeSearchService->searchPlacesByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+
+            return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
         }
-
-        if (mb_strlen($searchText) <= 2) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Поисковая строка должны быть больше двух символов',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
-        }
-
-        /** @var ID пользователя */
-        $userId = $this->getRequestUserId();
-
-        $placeSearchService = $this->getPlacesSearchService();
-        $places = $placeSearchService->searchPlacesByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
-
-        return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
     }
 
     /**
@@ -77,36 +84,48 @@ class SearchPlacesController extends ApiController
      */
     public function searchPlacesByCityAction(Request $request, $cityId)
     {
-        /** @var ID пользователя */
-        $userId = $this->getRequestUserId();
+        try {
+            /** @var ID пользователя */
+            $userId = $this->getRequestUserId();
 
-        /** @var ID города */
-        $cityId = $this->getRequestCityId();
+            /** @var ID города */
+            $cityId = $this->getRequestCityId();
 
-        /** @var Текст запроса */
-        $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
-        $placeSearchService = $this->getPlacesSearchService();
-        $places = $placeSearchService->searchPlacesByCity($userId, $cityId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
+            $placeSearchService = $this->getPlacesSearchService();
+            $places = $placeSearchService->searchPlacesByCity($userId, $cityId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
 
-        return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
+            return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
 
     }
 
     public function searchPlacesByDiscountAction(Request $request)
     {
-        /** @var ID пользователя */
-        $userId = $this->getRequestUserId();
+        try {
+            /** @var ID пользователя */
+            $userId = $this->getRequestUserId();
 
-        $cityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
+            $cityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
 
-        /** @var Текст запроса */
-        $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
-        $placeSearchService = $this->getPlacesSearchService();
-        $places = $placeSearchService->searchPlacesByDiscount($userId, $this->getGeoPoint(), $searchText, $cityId, $this->getSkip(), $this->getCount());
+            $placeSearchService = $this->getPlacesSearchService();
+            $places = $placeSearchService->searchPlacesByDiscount($userId, $this->getGeoPoint(), $searchText, $cityId, $this->getSkip(), $this->getCount());
 
-        return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
+            return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
 
     }
 
@@ -128,6 +147,8 @@ class SearchPlacesController extends ApiController
 
             return $this->_handleViewWithData($place);
 
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {
             return $this->_handleViewWithError($e);
         }

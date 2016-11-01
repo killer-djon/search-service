@@ -136,7 +136,11 @@ abstract class ApiController extends FOSRestController
         /** разделяем фильтры по разделителю (разделитель может быть любым из спец.символов) */
         $types = preg_replace('/[^a-zA-Z0-9]+/', self::MARKER_FILTER_DELIMITER, $filterTypes);
 
-        return explode(self::MARKER_FILTER_DELIMITER, strtolower($types));
+        $filtered = array_filter(explode(self::MARKER_FILTER_DELIMITER, strtolower($types)), function ($type) {
+            return !empty($type);
+        });
+
+        return array_values($filtered);
     }
 
     /**

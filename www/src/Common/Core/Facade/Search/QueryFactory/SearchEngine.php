@@ -174,6 +174,11 @@ class SearchEngine implements SearchEngineInterface
         $this->_sortingFactory = $querySorting;
     }
 
+    public function getFilterTypes()
+    {
+        return $this->filterTypes;
+    }
+
     /**
      * Получаем логгер
      * при его помощи будет логировать инфу по запросам
@@ -267,6 +272,7 @@ class SearchEngine implements SearchEngineInterface
                 $search->addSearch($searchItem, $keyType);
             });
 
+
             return $this->multiTransformResult($search->search());
         } catch (ElasticsearchException $e) {
             throw new ElasticsearchException($e);
@@ -284,6 +290,7 @@ class SearchEngine implements SearchEngineInterface
     public function multiTransformResult(\Elastica\Multi\ResultSet $resultSets)
     {
         $resultIterator = $resultSets->getResultSets();
+
 
         if (!empty($resultIterator)) {
             $results = $info = $items = [];

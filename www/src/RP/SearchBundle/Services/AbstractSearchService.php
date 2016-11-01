@@ -428,6 +428,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         /** генерируем объект запроса */
         $query = $this->createQuery();
 
+
         /** находим ползователя в базе еластика по его ID */
         $userSearchDocument = $this->searchSingleDocuments($query, $context);
 

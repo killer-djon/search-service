@@ -39,8 +39,8 @@ class SearchMarkersController extends ApiController
 
         // получаем фильтры и парсим их в нужный вид для дальнейшей работы
         $types = $this->getParseFilters($filterTypes);
-        $userId = $this->getRequestUserId();
 
+        $userId = $this->getRequestUserId();
         // получаем сервис многотипного поиска
         $markersSearchService = $this->getCommonSearchService();
 

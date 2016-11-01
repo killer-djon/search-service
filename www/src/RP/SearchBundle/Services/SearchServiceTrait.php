@@ -57,7 +57,7 @@ trait SearchServiceTrait
                 ),
             ]);
 
-            if (!is_null($point->getRadius())) {
+            if (!is_null($point->getRadius()) && !empty($point->getRadius())) {
                 $this->setFilterQuery([
                     $this->_queryFilterFactory->getGeoDistanceFilter(
                         $classMapping::LOCATION_POINT_FIELD,

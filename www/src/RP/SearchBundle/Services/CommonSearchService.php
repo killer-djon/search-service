@@ -64,17 +64,16 @@ class CommonSearchService extends AbstractSearchService
                     ]);
                 }
 
-                if( $point->isValid() && !is_null($point->getRadius()) )
-                {
+                if ($point->isValid() && !is_null($point->getRadius())) {
                     $this->setAggregationQuery([
                         $this->_queryAggregationFactory->getGeoHashAggregation(
                             $type::LOCATION_POINT_FIELD,
                             [
                                 "lat" => $point->getLatitude(),
-                                "lon" => $point->getLongitude()
+                                "lon" => $point->getLongitude(),
                             ],
                             $point->getRadius()
-                        )
+                        ),
                     ]);
                 }
 
@@ -88,6 +87,7 @@ class CommonSearchService extends AbstractSearchService
                     $type::getMultiMatchQuerySearchFields()
                 );
             }
+
 
             /**
              * Так же при вызове метода поиска для многотипных
@@ -133,7 +133,13 @@ class CommonSearchService extends AbstractSearchService
         $currentUser = $this->getUserById($userId);
 
         array_walk($filters, function ($filter) use (&$searchTypes) {
-            array_key_exists($filter, $this->filterTypes) && $searchTypes[$filter] = $this->filterTypes[$filter]::getMultiMatchQuerySearchFields();
+            if (!preg_match('/(all)/i', $filter)) {
+                array_key_exists($filter, $this->filterTypes) && $searchTypes[$filter] = $this->filterTypes[$filter]::getMultiMatchQuerySearchFields();
+            } else {
+                foreach ($this->getFilterTypes() as $key => $class) {
+                    $searchTypes[$key] = $class::getMultiMatchQuerySearchFields();
+                }
+            }
         });
 
         if (!is_null($searchTypes) && !empty($searchTypes)) {
@@ -152,10 +158,10 @@ class CommonSearchService extends AbstractSearchService
                         $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
                         [
                             "lat" => $point->getLatitude(),
-                            "lon" => $point->getLongitude()
+                            "lon" => $point->getLongitude(),
                         ],
                         $point->getRadius()
-                    )
+                    ),
                 ]);
 
                 /** формируем условия сортировки */
@@ -176,7 +182,6 @@ class CommonSearchService extends AbstractSearchService
                     $typeFields
                 );
             }
-
 
             /**
              * Так же при вызове метода поиска для многотипных

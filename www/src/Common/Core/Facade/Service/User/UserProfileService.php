@@ -53,6 +53,8 @@ class UserProfileService extends ReportingService
     protected $_fullname;
 
 
+
+
     /**
      * @inheritdoc
      */

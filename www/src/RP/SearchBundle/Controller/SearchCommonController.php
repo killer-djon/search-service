@@ -26,6 +26,7 @@ class SearchCommonController extends ApiController
     public function searchCommonByFilterAction(Request $request, $filterType)
     {
         try {
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
             $filterType = ($filterType == '_all' ? RequestConstant::NULLED_PARAMS : strtolower($filterType));
 
             /** @var Текст запроса */
@@ -56,12 +57,22 @@ class SearchCommonController extends ApiController
                 $this->getCount()
             );
 
+            if(!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION)
+            {
+                return $this->_handleViewWithData(
+                    $this->getVersioningData($commonSearchService),
+                    null,
+                    !self::INCLUDE_IN_CONTEXT
+                );
+            }
+
             return $this->_handleViewWithData(array_merge(
                 [
                     'info' => $commonSearchService->getTotalHits(),
                 ],
                 $searchData ?: []
             ));
+
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

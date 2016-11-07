@@ -291,10 +291,10 @@ class SearchEngine implements SearchEngineInterface
     {
         $resultIterator = $resultSets->getResultSets();
 
-
         if (!empty($resultIterator)) {
             $results = $info = $items = [];
             $aggs = [];
+            $searchingType = [];
             $totalHits = 0;
             $totalTime = 0;
 
@@ -320,6 +320,8 @@ class SearchEngine implements SearchEngineInterface
             $results['info'] = $info;
             $results['items'] = $items;
 
+            $this->_totalResults = $items;
+            $this->_totalHits = $info;
 
             return $results;
         }
@@ -394,7 +396,7 @@ class SearchEngine implements SearchEngineInterface
      */
     public function transformResult(\Elastica\ResultSet $resultSets, $keyField = null)
     {
-        $this->setTotalHits($resultSets);
+        $this->setTotalHits($resultSets, $keyField);
         $this->setTotalResults($resultSets, $keyField);
         $this->setAggregationsResult($resultSets);
 
@@ -417,15 +419,21 @@ class SearchEngine implements SearchEngineInterface
      * Устанавливаем общие показатели запроса
      *
      * @param \Elastica\ResultSet $resultSets
-     * @return void
+     * @param string|null $keyField Ключ в котором храним данные вывода (необходим при алиасах типов в поиске)
+     * @return array
      */
-    private function setTotalHits(\Elastica\ResultSet $resultSets)
+    private function setTotalHits(\Elastica\ResultSet $resultSets, $keyField = null)
     {
         $elipsedTime = $resultSets->getTotalTime() / 1000;
-        $this->_totalHits = [
+        $this->_totalHits = (!is_null($keyField) && !empty($keyField) ? [
+            $keyField => [
+                'totalHits' => $resultSets->getTotalHits(),
+                'totalTime' => $elipsedTime . 'ms',
+            ]
+        ] : [
             'totalHits' => $resultSets->getTotalHits(),
             'totalTime' => $elipsedTime . 'ms',
-        ];
+        ]);
 
         return $this->_totalHits;
     }
@@ -433,9 +441,9 @@ class SearchEngine implements SearchEngineInterface
     /**
      * Устанавливаем общие данные запроса
      *
-     * @param \Elastica\Result $resultSets
+     * @param \Elastica\ResultSet $resultSets
      * @param string|null $keyField Ключ в котором храним данные вывода (необходим при алиасах типов в поиске)
-     * @return void
+     * @return array
      */
     private function setTotalResults(\Elastica\ResultSet $resultSets, $keyField = null)
     {

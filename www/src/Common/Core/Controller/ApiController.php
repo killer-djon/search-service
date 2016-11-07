@@ -9,6 +9,7 @@ namespace Common\Core\Controller;
 use Common\Core\Constants\RequestConstant;
 use Common\Core\Facade\Search\QueryFactory\SearchServiceInterface;
 use FOS\RestBundle\Controller\FOSRestController;
+use RP\SearchBundle\Services\AbstractSearchService;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Common\Core\Exceptions\ResponseFormatException;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,6 +23,13 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 abstract class ApiController extends FOSRestController
 {
     use ControllerTrait;
+
+    /**
+     * Включаем ли ответ в контекст массива
+     *
+     * @const bool INCLUDE_IN_CONTEXT
+     */
+    const INCLUDE_IN_CONTEXT = true;
 
     /**
      * Разделитель фильтра маркеров
@@ -211,9 +219,11 @@ abstract class ApiController extends FOSRestController
      * Оборачиваем данные в XMLWrapper, задаем их во View и возвращаем объект Response
      *
      * @param boolean|array|\Common\Core\Serializer\ResultSet $data
+     * @param int|NULL $statusCode Код ответа
+     * @param bool $invokeTo Включаем в объект ответа полученные данные (default: true)
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    protected function _handleViewWithData($data, $statusCode = null)
+    protected function _handleViewWithData($data, $statusCode = null, $invokeTo = self::INCLUDE_IN_CONTEXT)
     {
         if (empty($this->_requestFormat)) {
             throw new ResponseFormatException();
@@ -224,7 +234,7 @@ abstract class ApiController extends FOSRestController
                 return $this->_handlerHtmlFormat($data, $statusCode);
                 break;
             default:
-                return $this->_handlerOtherFormat($data, $statusCode);
+                return $this->_handlerOtherFormat($data, $statusCode, $invokeTo);
         }
     }
 
@@ -288,13 +298,15 @@ abstract class ApiController extends FOSRestController
      *
      * @param boolean|array|\Common\Core\Serializer\ResultSet $data
      * @param integer $statusCode
+     * @param bool $invokeTo Включи ли ответ в массив вложенный
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    protected function _handlerOtherFormat($data, $statusCode = null)
+    protected function _handlerOtherFormat($data, $statusCode = null, $invokeTo = self::INCLUDE_IN_CONTEXT)
     {
         $view = $this->view();
         $xmlWrapper = new XMLWrapper();
         $isError = is_array($data) && array_key_exists(self::ERROR, $data);
+
 
         if (!$isError) {
             $xmlWrapper->data = [self::RESULT => $data];
@@ -305,8 +317,9 @@ abstract class ApiController extends FOSRestController
         }
 
         $view->setStatusCode($statusCode);
+        $view->setData(($invokeTo === self::INCLUDE_IN_CONTEXT ? $xmlWrapper : $xmlWrapper->data[self::RESULT]));
 
-        return $this->handleView($view->setData($xmlWrapper));
+        return $this->handleView($view);
     }
 
     /**
@@ -331,6 +344,30 @@ abstract class ApiController extends FOSRestController
             $this->buildError($errorMessage, $errorCode),
             $errorCode
         );
+    }
+
+    /**
+     * Возвращаем данные для старых версий приложения
+     * для того чтобы предусмотреть возможность
+     * корректного отображения данных в старых приложениях
+     * Предополагается что сервис уже извлек данные и их надо
+     * всего-лишь промапить для корректной отдачи конечному пользователю
+     *
+     * @param AbstractSearchService $searchService
+     * @return array
+     */
+    public function getVersioningData(AbstractSearchService $searchService)
+    {
+        // набор данных полученных из сервиа поиска
+        $resultData = $searchService->getTotalResults();
+
+        // набор общей информации
+        $resultInfo = $searchService->getTotalHits();
+
+        return [
+            'results' => $resultData,
+            'info' => (isset($resultInfo['searchType']) ? $resultInfo['searchType'] : $resultInfo)
+        ];
     }
 
     /**
@@ -379,6 +416,7 @@ abstract class ApiController extends FOSRestController
      * Транслитерация текст
      *
      * @param string $str Текст который нужно конвертировать
+     * @return string
      */
     private function _translit($str)
     {

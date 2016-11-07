@@ -4,6 +4,23 @@ namespace Common\Core\Constants;
 abstract class RequestConstant
 {
     /**
+     * Параметр запроса версии
+     * необходимо для поддержки старых приложений
+     *
+     * @var string VERSION_PARAM
+     */
+    const VERSION_PARAM = 'version';
+
+    /**
+     * Параметр запроса версии
+     * номер версии
+     *
+     * @var int DEFAULT_VERSION
+     */
+    const DEFAULT_VERSION = 3;
+
+
+    /**
      * Параметр запроса долготы
      * короткое представление
      *

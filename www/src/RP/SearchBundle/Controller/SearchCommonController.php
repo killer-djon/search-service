@@ -30,7 +30,7 @@ class SearchCommonController extends ApiController
             $filterType = ($filterType == '_all' ? RequestConstant::NULLED_PARAMS : $filterType);
 
             /** @var Текст запроса */
-            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
             $searchText = (mb_strlen($searchText) <= 2 ? RequestConstant::NULLED_PARAMS : trim($searchText));
 
             // получаем из запроса ID пользователя
@@ -38,8 +38,9 @@ class SearchCommonController extends ApiController
 
             // получаем ID города если он указан в запросе
             $cityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
+            $cityId = !empty($cityId) ?$cityId: RequestConstant::NULLED_PARAMS;
 
-            if ((is_null($cityId) || empty($cityId)) && is_null($searchText)) {
+            if ( is_null($cityId) && is_null($searchText) ) {
                 return $this->_handleViewWithError(new BadRequestHttpException(
                     'Необходимо указать один из обязательных параметров запроса (cityId или searchText)'
                 ), Response::HTTP_BAD_REQUEST);

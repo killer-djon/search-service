@@ -27,7 +27,7 @@ class SearchCommonController extends ApiController
     {
         try {
             $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
-            $filterType = ($filterType == '_all' ? RequestConstant::NULLED_PARAMS : strtolower($filterType));
+            $filterType = ($filterType == '_all' ? RequestConstant::NULLED_PARAMS : $filterType);
 
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
@@ -57,8 +57,7 @@ class SearchCommonController extends ApiController
                 $this->getCount()
             );
 
-            if(!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION)
-            {
+            if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                 return $this->_handleViewWithData(
                     $this->getVersioningData($commonSearchService),
                     null,

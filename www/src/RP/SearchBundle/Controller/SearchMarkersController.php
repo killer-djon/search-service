@@ -29,6 +29,7 @@ class SearchMarkersController extends ApiController
     public function searchMarkersByFilterAction(Request $request, $filterTypes)
     {
         try {
+
             if (!$this->getGeoPoint()->isValid()) {
                 return $this->_handleViewWithError(new BadRequestHttpException('Некорректные координаты геопозиции'), Response::HTTP_BAD_REQUEST);
             }
@@ -37,6 +38,7 @@ class SearchMarkersController extends ApiController
                 return $this->_handleViewWithError(new BadRequestHttpException('Радиус должен быть установлен'), Response::HTTP_BAD_REQUEST);
             }
 
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
             // получаем фильтры и парсим их в нужный вид для дальнейшей работы
             $types = $this->getParseFilters($filterTypes);
 
@@ -51,7 +53,16 @@ class SearchMarkersController extends ApiController
                 $this->getGeoPoint()
             );
 
+            if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                return $this->_handleViewWithData(
+                    $this->getVersioningData($markersSearchService),
+                    null,
+                    !self::INCLUDE_IN_CONTEXT
+                );
+            }
+
             return $this->_handleViewWithData($markers);
+
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

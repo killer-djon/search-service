@@ -58,9 +58,9 @@ class SearchEngine implements SearchEngineInterface
     protected $searchTypes = [
         'people'     => 'people',
         'places'     => 'places',
-        'helpoffers' => 'people',
+        'helpOffers' => 'people',
         'discounts'  => 'places',
-        'rusplaces'  => 'places',
+        'rusPlaces'  => 'places',
         'events'     => 'events',
     ];
 

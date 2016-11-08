@@ -13,7 +13,7 @@ use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 class HelpOffersSearchMapping extends PeopleSearchMapping
 {
     /** Контекст поиска */
-    const CONTEXT = 'helpoffers';
+    const CONTEXT = 'helpOffers';
 
     /**
      * Собираем фильтр для маркеров
@@ -24,7 +24,9 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
      */
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return [];
+        return [
+            $filterFactory->getExistsFilter(self::HELP_OFFERS_LIST_FIELD)
+        ];
     }
 
     /**

@@ -144,7 +144,7 @@ abstract class ApiController extends FOSRestController
         /** разделяем фильтры по разделителю (разделитель может быть любым из спец.символов) */
         $types = preg_replace('/[^a-zA-Z0-9]+/', self::MARKER_FILTER_DELIMITER, $filterTypes);
 
-        $filtered = array_filter(explode(self::MARKER_FILTER_DELIMITER, strtolower($types)), function ($type) {
+        $filtered = array_filter(explode(self::MARKER_FILTER_DELIMITER, $types), function ($type) {
             return !empty($type);
         });
 
@@ -307,7 +307,6 @@ abstract class ApiController extends FOSRestController
         $xmlWrapper = new XMLWrapper();
         $isError = is_array($data) && array_key_exists(self::ERROR, $data);
 
-
         if (!$isError) {
             $xmlWrapper->data = [self::RESULT => $data];
         } else {
@@ -347,6 +346,26 @@ abstract class ApiController extends FOSRestController
     }
 
     /**
+     * Временный метод который добавляет ключ tagNames
+     * во все массивы где есть tags
+     * - необходимо для поддержки старых версий приложения
+     * Метод будет пробегатся рекурсивно по массиву вниз
+     *
+     * @param array $inputArray Ссылка на искходный массив
+     * @return void
+     */
+    private function restructTagsField(&$inputArray)
+    {
+        array_walk($inputArray, function (&$arItem) {
+            if (is_array($arItem) && !isset($arItem['tags'])) {
+                $this->restructTagsField($arItem);
+            }
+
+            $arItem['tagNames'] =& $arItem['tags'];
+        });
+    }
+
+    /**
      * Возвращаем данные для старых версий приложения
      * для того чтобы предусмотреть возможность
      * корректного отображения данных в старых приложениях
@@ -364,9 +383,13 @@ abstract class ApiController extends FOSRestController
         // набор общей информации
         $resultInfo = $searchService->getTotalHits();
 
+        if (!empty($resultData)) {
+            $this->restructTagsField($resultData);
+        }
+
         return [
             'results' => $resultData,
-            'info' => (isset($resultInfo['searchType']) ? $resultInfo['searchType'] : $resultInfo)
+            'info'    => (isset($resultInfo['searchType']) ? $resultInfo['searchType'] : $resultInfo),
         ];
     }
 

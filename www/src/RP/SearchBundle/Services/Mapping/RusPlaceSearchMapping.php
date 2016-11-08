@@ -11,7 +11,7 @@ use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 abstract class RusPlaceSearchMapping extends PlaceSearchMapping
 {
     /** Контекст поиска */
-    const CONTEXT = 'rusplaces';
+    const CONTEXT = 'rusPlaces';
 
     /**
      * Собираем фильтр для маркеров

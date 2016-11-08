@@ -43,7 +43,6 @@ class CommonSearchService extends AbstractSearchService
              * ключами в массиве служит тип поиска (в какой коллекции искать надо)
              */
             $queryMatchResults = [];
-
             /**
              * Если не задана категория поиска
              * тогда ищем во всех коллекциях еластика по условиям
@@ -87,7 +86,6 @@ class CommonSearchService extends AbstractSearchService
                     $type::getMultiMatchQuerySearchFields()
                 );
             }
-
 
             /**
              * Так же при вызове метода поиска для многотипных

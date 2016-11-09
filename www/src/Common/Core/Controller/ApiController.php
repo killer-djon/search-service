@@ -284,7 +284,7 @@ abstract class ApiController extends FOSRestController
      * @param integer $statusCode
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    protected function _handlerHtmlFormat($data, $statusCode = null)
+    private function _handlerHtmlFormat($data, $statusCode = null)
     {
         $response = $this->render($this->_template, [self::RESULT => $data]);
         $response->setStatusCode($statusCode);
@@ -301,7 +301,7 @@ abstract class ApiController extends FOSRestController
      * @param bool $invokeTo Включи ли ответ в массив вложенный
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    protected function _handlerOtherFormat($data, $statusCode = null, $invokeTo = self::INCLUDE_IN_CONTEXT)
+    private function _handlerOtherFormat($data, $statusCode = null, $invokeTo = self::INCLUDE_IN_CONTEXT)
     {
         $view = $this->view();
         $xmlWrapper = new XMLWrapper();

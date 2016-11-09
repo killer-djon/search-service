@@ -60,6 +60,22 @@ RPSearchBundle_search_users_byhelpoffers:
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
 
+# Routing который формирует запрос для поиска
+# предпологаемых дрезей по совпадению интересов
+# пример запроса /api/search/v1/json/users/helpoffers
+RPSearchBundle_search_users_byinterests:
+    path: /v{_version}/{_format}/users/interests/{userId}
+    defaults:
+        _controller: RPSearchBundle:SearchUsers:searchPossibleFriends
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchUsers:searchPossibleFriends.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        userId: \w+
+
 # Routing который формирует запрос для поиска человека по ID
 # пример запроса /api/search/v1/json/users/id/10357
 RPSearchBundle_search_users_byid:

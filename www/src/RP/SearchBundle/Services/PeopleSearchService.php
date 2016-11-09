@@ -22,6 +22,23 @@ class PeopleSearchService extends AbstractSearchService
     const MIN_SCORE_SEARCH = '3';
 
     /**
+     * Радиус по возможным друзьям
+     * у которых максимальное значение
+     * совпадение по интересам ( 50% - 100% )
+     *
+     * @const string DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX
+     */
+    const DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX = 10000;
+
+    /**
+     * Радиус по возможным друзьям
+     * c остальным значением совпаденя по интересам
+     *
+     * @const string DEFAULT_POSSIBLE_FRIENDS_RADIUS_MIN
+     */
+    const DEFAULT_POSSIBLE_FRIENDS_RADIUS_MIN = 1000000;
+
+    /**
      * Метод осуществляет поиск в еластике
      * по имени/фамилии пользьвателя
      *
@@ -239,4 +256,57 @@ class PeopleSearchService extends AbstractSearchService
         return $this->searchDocuments($queryMatch, PeopleSearchMapping::CONTEXT);
     }
 
+    /**
+     * Поиск людей которые приблезительно
+     * совпав по проценту интересов могут быть
+     * потенциальными друзьями
+     *
+     * @param string $userId ID пользователя который делает запрос к АПИ
+     * @param GeoPointServiceInterface $point
+     * @param string $searchText Поисковый запрос
+     * @param int $skip Кол-во пропускаемых позиций поискового результата
+     * @param int $count Какое кол-во выводим
+     * @return array Массив с найденными результатами
+     */
+    public function searchPossibleFriendsForUser($userId, GeoPointServiceInterface $point, $searchText = null, $skip = 0, $count = null)
+    {
+        /** получаем объект текущего пользователя */
+        $currentUser = $this->getUserById($userId);
+
+        if( count($currentUser->getTags()) > 0 )
+        {
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getNotFilter(
+                    $this->_queryFilterFactory->getTermsFilter(
+                        PeopleSearchMapping::FRIEND_LIST_FIELD,
+                        [$userId]
+                    )
+                )
+            ]);
+
+            $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);
+            $this->setGeoPointConditions($point, PeopleSearchMapping::class);
+
+            if( $point->isValid() )
+            {
+                $this->setFilterQuery([
+                    $this->_queryFilterFactory->getGeoDistanceFilter(
+                        PeopleSearchMapping::LOCATION_POINT_FIELD,
+                        [
+                            'lat' => $point->getLatitude(),
+                            'lon' => $point->getLongitude(),
+                        ],
+                        self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX,
+                        'm'
+                    )
+                ]);
+            }
+
+
+            $queryMatch = $this->createMatchQuery($searchText, [], $skip, $count);
+            return $this->searchDocuments($queryMatch, PeopleSearchMapping::CONTEXT);
+        }
+
+        return [];
+    }
 }

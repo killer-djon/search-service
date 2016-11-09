@@ -191,4 +191,37 @@ class SearchUsersController extends ApiController
         return null;
     }
 
+    /**
+     * Поиск возможных друзей
+     * по совпадению по интересам
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
+     * @param string $userId ID пользователя
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function searchPossibleFriendsAction(Request $request, $userId)
+    {
+        $peopleSearchService = $this->getPeopleSearchService();
+
+        try {
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+
+            $possibleFriends = $peopleSearchService->searchPossibleFriendsForUser(
+                $userId,
+                $this->getGeoPoint(),
+                $searchText,
+                $this->getSkip(),
+                $this->getCount()
+            );
+
+            return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
+
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+    }
+
 }

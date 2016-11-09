@@ -4,13 +4,14 @@ namespace Common\Core\Facade\Search\QueryScripting;
 interface QueryScriptFactoryInterface
 {
     /**
-     * Получаем объект скрипта
+     * Формируем объект скрипта
      *
      * @param string|\Elastica\Script $script
-     * @param array $params Параметры передаваемые в скрипт
+     * @param array|null $params Параметры передаваемые в скрипт
+     * @param string $lang Язык исполнения скрипта (default: js)
      * @return \Elastica\Script
      */
-    public function getScript($script);
+    public function getScript($script, array $params = null, $lang = \Elastica\Script::LANG_JS);
 
     /**
      * Формируем поле скрипта с расчетом дистанции

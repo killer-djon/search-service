@@ -47,6 +47,10 @@ class SearchCommonController extends ApiController
             }
 
             $commonSearchService = $this->getCommonSearchService();
+            // ужасный костыль после перехода к новому сервису надо убрать
+            if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                $commonSearchService->setOldFormat(true);
+            }
 
             $searchData = $commonSearchService->commonSearchByFilters(
                 $userId,
@@ -59,8 +63,9 @@ class SearchCommonController extends ApiController
             );
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                $oldFormat = $this->getVersioningData($commonSearchService);
                 return $this->_handleViewWithData(
-                    $this->getVersioningData($commonSearchService),
+                    $oldFormat,
                     null,
                     !self::INCLUDE_IN_CONTEXT
                 );

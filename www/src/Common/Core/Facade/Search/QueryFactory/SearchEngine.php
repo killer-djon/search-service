@@ -23,6 +23,33 @@ use Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface;
 class SearchEngine implements SearchEngineInterface
 {
     /**
+     * Устанавливаем флаг формата данных для старых версий
+     *
+     * @var boolean $oldFormatVersion
+     */
+    protected $oldFormatVersion = false;
+
+    /**
+     * Устанавливаем флаг формата данных для старых версий
+     * @param bool $flag
+     * @return void
+     */
+    public function setOldFormat($flag = false)
+    {
+        $this->oldFormatVersion = $flag;
+    }
+
+    /**
+     * Получаем флаг формата данных для старых версий
+     * @return bool
+     */
+    public function getOldFormat()
+    {
+        return $this->oldFormatVersion;
+    }
+
+
+    /**
      * Кол-во записей по умолчанию
      *
      * @const int DEFAULT_SIZE_QUERY
@@ -458,7 +485,6 @@ class SearchEngine implements SearchEngineInterface
     private function setTotalResults(\Elastica\ResultSet $resultSets, $keyField = null)
     {
         $results = $resultSets->getResults();
-
         array_walk($results, function ($resultItem) use (&$items, $keyField) {
             $type = $keyField ?: $resultItem->getType();
 
@@ -480,9 +506,19 @@ class SearchEngine implements SearchEngineInterface
                 unset($record[$type]['hit']['fields']);
             }
 
-            $items[$type][] = array_merge($record[$type], [
-                'hit' => $record[$type]['hit'],
-            ]);
+            if( $this->getOldFormat() )
+            {
+                $items[$type][] = [
+                    'item' => $record[$type],
+                    'hit'  => $record[$type]['hit'],
+                ];
+            }else
+            {
+                $items[$type][] = array_merge($record[$type], [
+                    'hit' => $record[$type]['hit'],
+                ]);
+            }
+
         });
 
         $this->_totalResults = $items;

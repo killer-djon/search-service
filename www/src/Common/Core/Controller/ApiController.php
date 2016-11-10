@@ -361,7 +361,10 @@ abstract class ApiController extends FOSRestController
                 $this->restructTagsField($arItem);
             }
 
-            $arItem['tagNames'] =& $arItem['tags'];
+            if( isset($arItem['tags']) )
+            {
+                $arItem['tagNames'] =& $arItem['tags'];
+            }
         });
     }
 

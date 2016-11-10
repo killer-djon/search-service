@@ -215,7 +215,13 @@ class SearchUsersController extends ApiController
                 $this->getCount()
             );
 
-            return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
+            //return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
+            return $this->_handleViewWithData(array_merge(
+                [
+                    'info' => $peopleSearchService->getTotalHits(),
+                ],
+                $possibleFriends ?: [])
+            );
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);

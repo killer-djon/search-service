@@ -6,7 +6,7 @@ interface QueryScriptFactoryInterface
     /**
      * Формируем объект скрипта
      *
-     * @param string|\Elastica\Script $script
+     * @param string $script
      * @param array|null $params Параметры передаваемые в скрипт
      * @param string $lang Язык исполнения скрипта (default: js)
      * @return \Elastica\Script

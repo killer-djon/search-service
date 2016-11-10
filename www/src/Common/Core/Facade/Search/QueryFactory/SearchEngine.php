@@ -272,7 +272,6 @@ class SearchEngine implements SearchEngineInterface
                 $search->addSearch($searchItem, $keyType);
             });
 
-
             return $this->multiTransformResult($search->search());
         } catch (ElasticsearchException $e) {
             throw new ElasticsearchException($e);
@@ -368,6 +367,11 @@ class SearchEngine implements SearchEngineInterface
      */
     public function getPaginationAdapter($skip, $limit)
     {
+
+        if (is_null($this->_paginator)) {
+            return [];
+        }
+
         $totalCount = $this->_paginator->getNbResults();
 
         if ($totalCount != 0) {
@@ -396,11 +400,16 @@ class SearchEngine implements SearchEngineInterface
      */
     public function transformResult(\Elastica\ResultSet $resultSets, $keyField = null)
     {
-        $this->setTotalHits($resultSets, $keyField);
-        $this->setTotalResults($resultSets, $keyField);
-        $this->setAggregationsResult($resultSets);
 
-        return $this->getTotalResults();
+        if ($resultSets->count() > 0) {
+            $this->setTotalHits($resultSets, $keyField);
+            $this->setTotalResults($resultSets, $keyField);
+            $this->setAggregationsResult($resultSets);
+
+            return $this->getTotalResults();
+        }
+
+        return [];
     }
 
     /**
@@ -412,6 +421,7 @@ class SearchEngine implements SearchEngineInterface
     private function setAggregationsResult(\Elastica\ResultSet $resultSets)
     {
         $this->_aggregationsResult = current($resultSets->getAggregations());
+
         return $this->_aggregationsResult['buckets'];
     }
 
@@ -429,7 +439,7 @@ class SearchEngine implements SearchEngineInterface
             $keyField => [
                 'totalHits' => $resultSets->getTotalHits(),
                 'totalTime' => $elipsedTime . 'ms',
-            ]
+            ],
         ] : [
             'totalHits' => $resultSets->getTotalHits(),
             'totalTime' => $elipsedTime . 'ms',

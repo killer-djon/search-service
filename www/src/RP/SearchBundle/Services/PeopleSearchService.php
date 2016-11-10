@@ -4,6 +4,7 @@
  */
 namespace RP\SearchBundle\Services;
 
+use Common\Core\Constants\SortingOrder;
 use Common\Core\Constants\Visible;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Common\Core\Facade\Service\User\UserProfileService;
@@ -26,17 +27,17 @@ class PeopleSearchService extends AbstractSearchService
      * у которых максимальное значение
      * совпадение по интересам ( 50% - 100% )
      *
-     * @const string DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX
+     * @const string DEFAULT_POSSIBLE_FRIENDS_RADIUS_MIN
      */
-    const DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX = 10000;
+    const DEFAULT_POSSIBLE_FRIENDS_RADIUS_MIN = 10000;
 
     /**
      * Радиус по возможным друзьям
      * c остальным значением совпаденя по интересам
      *
-     * @const string DEFAULT_POSSIBLE_FRIENDS_RADIUS_MIN
+     * @const string DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX
      */
-    const DEFAULT_POSSIBLE_FRIENDS_RADIUS_MIN = 1000000;
+    const DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX = 1000000;
 
     /**
      * Метод осуществляет поиск в еластике
@@ -273,19 +274,70 @@ class PeopleSearchService extends AbstractSearchService
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
 
-        if( count($currentUser->getTags()) > 0 )
+        $tagsIntersectRange = [
+            'category1' => [
+                'min' => 50,
+                'max' => 100,
+                'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MIN
+            ],
+            'category2' => [
+                'min' => 30,
+                'max' => 50,
+                'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX
+            ],
+            'category3' => [
+                'min' => 0,
+                'max' => 30,
+                'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX
+            ]
+        ];
+
+        $tags = array_map(function($tag){
+            return $tag['id'];
+        }, $currentUser->getTags());
+
+        $script_string = "
+            count = 0;
+            tagsCount = 0;
+            tagInPercent = 0;
+
+            if(tagsValue.size() > 0 && doc[tagIdField].values.size() > 0){
+                for(var i = 0, len = tagsValue.size(); i < len; i++){
+                    ++tagsCount;
+                    for(var j = 0, lenJ = doc[tagIdField].values.size(); j < lenJ; j++){
+                        if( tagsValue[i] == doc[tagIdField][j] ){
+                            ++count;
+                        }
+                    }
+                }
+
+                tagInPercent = count/tagsCount*100;
+                tagInPercent = Math.round(tagInPercent)
+            }
+
+            tagInPercent >= intersectRange.min && tagInPercent <=  intersectRange.max
+        ";
+
+        $resultQuery = [];
+
+        foreach( $tagsIntersectRange as $key => $tagsRange )
         {
+            $this->clearScriptFields();
+            $this->clearFilter();
+
             $this->setFilterQuery([
                 $this->_queryFilterFactory->getNotFilter(
                     $this->_queryFilterFactory->getTermsFilter(
                         PeopleSearchMapping::FRIEND_LIST_FIELD,
                         [$userId]
                     )
+                ),
+                $this->_queryFilterFactory->getNotFilter(
+                    $this->_queryFilterFactory->getTermFilter([PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId])
                 )
             ]);
 
             $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);
-            $this->setGeoPointConditions($point, PeopleSearchMapping::class);
 
             if( $point->isValid() )
             {
@@ -296,17 +348,37 @@ class PeopleSearchService extends AbstractSearchService
                             'lat' => $point->getLatitude(),
                             'lon' => $point->getLongitude(),
                         ],
-                        self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX,
+                        (int)$tagsRange['distance'],
                         'm'
                     )
                 ]);
             }
 
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getScriptFilter(
+                    $this->_scriptFactory->getScript($script_string, [
+                        'tagIdField' => PeopleSearchMapping::TAGS_ID_FIELD,
+                        'tagsValue' => $tags,
+                        'intersectRange' => [
+                            'min' => (int)$tagsRange['min'],
+                            'max' => (int)$tagsRange['max'],
+                        ]
+                    ])
+                )
+            ]);
+
+            /** формируем условия сортировки по удаленности */
+            $this->setSortingQuery([
+                $this->_sortingFactory->getGeoDistanceSort(
+                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                ),
+            ]);
 
             $queryMatch = $this->createMatchQuery($searchText, [], $skip, $count);
-            return $this->searchDocuments($queryMatch, PeopleSearchMapping::CONTEXT);
+            $resultQuery = $this->searchDocuments($queryMatch, PeopleSearchMapping::CONTEXT);
         }
 
-        return [];
+        return $resultQuery;
     }
 }

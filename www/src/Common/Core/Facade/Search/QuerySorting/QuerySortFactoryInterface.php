@@ -5,6 +5,7 @@
 namespace Common\Core\Facade\Search\QuerySorting;
 
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
+use Elastica\AbstractScript;
 
 interface QuerySortFactoryInterface
 {
@@ -46,14 +47,12 @@ interface QuerySortFactoryInterface
      * это необходимо допустим для сортировки рассчитывая дистанцию но не выводить ее
      * или например сортировка вычисляемого результата (допустим сортировать по возсрасту * 2)
      *
-     * @param string|\Elastica\Script Скрипт сортировки
-     * @param array $params параметры передаваемые в скрипт
+     * @param AbstractScript $script Скрипт сортировки
      * @param string $order Sort order (asc|desc)
      * @param string $sortFieldType Тип вычисляемого поля сортировки ( number, string, long, date ... )
-     * @param string $lang Скриптовый язык
      * @return array
      */
-    public function getScriptingSort($script, $params = [], $order = 'asc', $sortFieldType = 'string', $lang = \Elastica\Script::LANG_JS);
+    public function getScriptingSort(AbstractScript $script, $order = 'asc', $sortFieldType = 'string');
 
     /**
      * Сортировка с применением аггрегированной функции

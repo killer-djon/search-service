@@ -204,6 +204,8 @@ class SearchUsersController extends ApiController
         $peopleSearchService = $this->getPeopleSearchService();
 
         try {
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
+
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
@@ -215,7 +217,15 @@ class SearchUsersController extends ApiController
                 $this->getCount()
             );
 
-            //return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
+            if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                $oldFormat = $this->getVersioningData($peopleSearchService);
+                return $this->_handleViewWithData(
+                    $oldFormat['results'][PeopleSearchMapping::CONTEXT],
+                    null,
+                    !self::INCLUDE_IN_CONTEXT
+                );
+            }
+
             return $this->_handleViewWithData(array_merge(
                 [
                     'info' => $peopleSearchService->getTotalHits(),

@@ -138,6 +138,12 @@ class CommonSearchService extends AbstractSearchService
         $currentUser = $this->getUserById($userId);
 
         array_walk($filters, function ($filter) use (&$searchTypes) {
+            // временный костыль для IOS приложения
+            // это чтобы грамАтным угодить
+            if ($filter == 'people') {
+                $filter = 'peoples';
+            }
+
             if (!preg_match('/(all)/i', $filter)) {
                 array_key_exists($filter, $this->filterTypes) && $searchTypes[$filter] = $this->filterTypes[$filter]::getMultiMatchQuerySearchFields();
             } else {

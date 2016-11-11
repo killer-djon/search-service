@@ -72,6 +72,7 @@ class SearchEngine implements SearchEngineInterface
      */
     protected $filterTypes = [
         PeopleSearchMapping::CONTEXT    => PeopleSearchMapping::class,
+        'peoples'                       => PeopleSearchMapping::class,
         FriendsSearchMapping::CONTEXT   => FriendsSearchMapping::class,
         PlaceSearchMapping::CONTEXT     => PlaceSearchMapping::class,
         RusPlaceSearchMapping::CONTEXT  => RusPlaceSearchMapping::class,
@@ -107,6 +108,7 @@ class SearchEngine implements SearchEngineInterface
         'rusPlaces'  => 'places',
         'events'     => 'events',
         'friends'    => 'people',
+        'peoples'    => 'people',
     ];
 
     /**
@@ -308,7 +310,6 @@ class SearchEngine implements SearchEngineInterface
                 $elasticQuery->setSource((bool)$setSource);
                 //$elasticQuery->setSize(self::DEFAULT_SIZE_QUERY);
                 //$elasticQuery->setFrom(self::DEFAULT_SKIP_QUERY);
-
 
                 $elasticType = $this->_getElasticType($this->searchTypes[$keyType]);
 

@@ -21,7 +21,7 @@ abstract class AbstractSearchMapping
     /** Поле с интересами пользователя */
     const TAG_FIELD         = 'tags';
     const TAGS_ID_FIELD      = 'tags.id';
-    const TAG_NAME_FIELD    = 'tags.tagname';
+    const TAG_NAME_FIELD    = 'tags.name';
     const TAG_NAME_NGRAM_FIELD    = 'tags._nameNgram';
     const TAG_NAME_TRANSLIT_FIELD    = 'tags._translit';
     const TAG_NAME_TRANSLIT_NGRAM_FIELD    = 'tags._translitNgram';

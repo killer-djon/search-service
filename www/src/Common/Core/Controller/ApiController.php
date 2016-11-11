@@ -385,6 +385,12 @@ abstract class ApiController extends FOSRestController
             isset($item['lat']) && $item['latitude'] = $item['lat'];
             isset($item['lon']) && $item['longitude'] = $item['lon'];
         });
+
+        foreach($inputArray as $key => & $arItem)
+        {
+            isset($arItem['location']['point']) && $arItem['latitude'] =& $arItem['location']['point']['lat'];
+            isset($arItem['location']['point']) && $arItem['longitude'] =& $arItem['location']['point']['lon'];
+        }
     }
 
     protected $fieldsMap = [

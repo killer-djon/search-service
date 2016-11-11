@@ -2,21 +2,18 @@
 /**
  * Created by PhpStorm.
  * User: eleshanu
- * Date: 26.10.16
- * Time: 16:13
+ * Date: 11.11.16
+ * Time: 17:40
  */
 
 namespace RP\SearchBundle\Services\Mapping;
 
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 
-class HelpOffersSearchMapping extends PeopleSearchMapping
+class FriendsSearchMapping extends PeopleSearchMapping
 {
-    /** Контекст маркера */
-    const CONTEXT = 'helpOffers';
-
     /** Контекст поиска */
-    const CONTEXT_MARKER = 'help';
+    const CONTEXT = 'friends';
 
     /**
      * Собираем фильтр для маркеров
@@ -28,7 +25,7 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
         return [
-            $filterFactory->getExistsFilter(self::HELP_OFFERS_LIST_FIELD)
+            $filterFactory->getTermsFilter(self::FRIEND_LIST_FIELD, [$userId])
         ];
     }
 
@@ -41,8 +38,6 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
      */
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return [
-            $filterFactory->getExistsFilter(self::HELP_OFFERS_LIST_FIELD)
-        ];
+        return [];
     }
 }

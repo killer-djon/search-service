@@ -12,6 +12,7 @@ use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Psr\Log\LoggerInterface;
 use RP\SearchBundle\Services\Mapping\DiscountsSearchMapping;
 use RP\SearchBundle\Services\Mapping\EventsSearchMapping;
+use RP\SearchBundle\Services\Mapping\FriendsSearchMapping;
 use RP\SearchBundle\Services\Mapping\HelpOffersSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
@@ -70,13 +71,14 @@ class SearchEngine implements SearchEngineInterface
      * @var array $filterTypes
      */
     protected $filterTypes = [
-        PeopleSearchMapping::CONTEXT     => PeopleSearchMapping::class,
-        PlaceSearchMapping::CONTEXT      => PlaceSearchMapping::class,
-        HelpOffersSearchMapping::CONTEXT => HelpOffersSearchMapping::class,
-        DiscountsSearchMapping::CONTEXT  => DiscountsSearchMapping::class,
-        RusPlaceSearchMapping::CONTEXT   => RusPlaceSearchMapping::class,
-        EventsSearchMapping::CONTEXT     => EventsSearchMapping::class,
+        PeopleSearchMapping::CONTEXT    => PeopleSearchMapping::class,
+        FriendsSearchMapping::CONTEXT   => FriendsSearchMapping::class,
+        PlaceSearchMapping::CONTEXT     => PlaceSearchMapping::class,
+        RusPlaceSearchMapping::CONTEXT  => RusPlaceSearchMapping::class,
+        EventsSearchMapping::CONTEXT    => EventsSearchMapping::class,
+        DiscountsSearchMapping::CONTEXT => DiscountsSearchMapping::class,
     ];
+    //[@"people",@"friends",@"places",@"rusPlaces",@"events",@"discounts"];
 
     /**
      * Доступные для поиска типы фильтров
@@ -84,11 +86,11 @@ class SearchEngine implements SearchEngineInterface
      * @var array $filterSearchTypes
      */
     protected $filterSearchTypes = [
-        PeopleSearchMapping::CONTEXT    => PeopleSearchMapping::class,
-        PlaceSearchMapping::CONTEXT     => PlaceSearchMapping::class,
-        'help'                          => HelpOffersSearchMapping::class,
-        DiscountsSearchMapping::CONTEXT => DiscountsSearchMapping::class,
-        EventsSearchMapping::CONTEXT    => EventsSearchMapping::class,
+        PeopleSearchMapping::CONTEXT            => PeopleSearchMapping::class,
+        PlaceSearchMapping::CONTEXT             => PlaceSearchMapping::class,
+        HelpOffersSearchMapping::CONTEXT_MARKER => HelpOffersSearchMapping::class,
+        DiscountsSearchMapping::CONTEXT         => DiscountsSearchMapping::class,
+        EventsSearchMapping::CONTEXT            => EventsSearchMapping::class,
     ];
 
     /**
@@ -104,6 +106,7 @@ class SearchEngine implements SearchEngineInterface
         'discounts'  => 'places',
         'rusPlaces'  => 'places',
         'events'     => 'events',
+        'friends'    => 'people',
     ];
 
     /**
@@ -303,8 +306,9 @@ class SearchEngine implements SearchEngineInterface
 
             foreach ($elasticQueries as $keyType => $elasticQuery) {
                 $elasticQuery->setSource((bool)$setSource);
-                $elasticQuery->setSize(self::DEFAULT_SIZE_QUERY);
-                $elasticQuery->setFrom(self::DEFAULT_SKIP_QUERY);
+                //$elasticQuery->setSize(self::DEFAULT_SIZE_QUERY);
+                //$elasticQuery->setFrom(self::DEFAULT_SKIP_QUERY);
+
 
                 $elasticType = $this->_getElasticType($this->searchTypes[$keyType]);
 
@@ -557,7 +561,6 @@ class SearchEngine implements SearchEngineInterface
     {
         return $this->_totalResults;
     }
-
 
     /**
      * Получить общие показатели запроса

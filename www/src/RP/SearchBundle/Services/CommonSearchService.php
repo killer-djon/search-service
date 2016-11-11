@@ -11,6 +11,12 @@ class CommonSearchService extends AbstractSearchService
 {
 
     /**
+     * Кол-во выводимых данных
+     * по блокам в общем поиске
+     */
+    const DEFAULT_SEARCH_BLOCK_SIZE = 3;
+
+    /**
      * Глобальный (общий поиск) в системе
      * варианты поиска могут быть:
      *  1. Указан ID города и поисковый запрос
@@ -83,7 +89,8 @@ class CommonSearchService extends AbstractSearchService
                  */
                 $queryMatchResults[$keyType] = $this->createMatchQuery(
                     $searchText,
-                    $type::getMultiMatchQuerySearchFields()
+                    $type::getMultiMatchQuerySearchFields(),
+                    0, self::DEFAULT_SEARCH_BLOCK_SIZE
                 );
             }
 
@@ -132,7 +139,7 @@ class CommonSearchService extends AbstractSearchService
 
         array_walk($filters, function ($filter) use (&$searchTypes) {
             if (!preg_match('/(all)/i', $filter)) {
-                array_key_exists($filter, $this->filterSearchTypes) && $searchTypes[$filter] = $this->filterSearchTypes[$filter]::getMultiMatchQuerySearchFields();
+                array_key_exists($filter, $this->filterTypes) && $searchTypes[$filter] = $this->filterTypes[$filter]::getMultiMatchQuerySearchFields();
             } else {
                 foreach ($this->getFilterTypes() as $key => $class) {
                     $searchTypes[$key] = $class::getMultiMatchQuerySearchFields();
@@ -147,13 +154,13 @@ class CommonSearchService extends AbstractSearchService
                 $this->clearScriptFields();
                 $this->clearFilter();
 
-                $this->setFilterQuery($this->filterSearchTypes[$keyType]::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
-                $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$keyType]);
-                $this->setGeoPointConditions($point, $this->filterSearchTypes[$keyType]);
+                $this->setFilterQuery($this->filterTypes[$keyType]::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
+                $this->setScriptTagsConditions($currentUser, $this->filterTypes[$keyType]);
+                $this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
 
                 $this->setAggregationQuery([
                     $this->_queryAggregationFactory->getGeoHashAggregation(
-                        $this->filterSearchTypes[$keyType]::LOCATION_POINT_FIELD,
+                        $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
                         [
                             "lat" => $point->getLatitude(),
                             "lon" => $point->getLongitude(),
@@ -165,7 +172,7 @@ class CommonSearchService extends AbstractSearchService
                 /** формируем условия сортировки */
                 $this->setSortingQuery([
                     $this->_sortingFactory->getGeoDistanceSort(
-                        $this->filterSearchTypes[$keyType]::LOCATION_POINT_FIELD,
+                        $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
                         $point
                     ),
                 ]);

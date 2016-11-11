@@ -68,11 +68,12 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
             $script = "
             if (!doc[pointField].empty) {
                 distance = doc[pointField].distanceInKm(lat, lon);
-                distance.toFixed(3)
             }else
             {
                 distance = 0
             }
+            
+            distance = parseFloat(Number(distance).toFixed(2))
             ";
 
             return new \Elastica\Script(
@@ -109,11 +110,12 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
             if (!doc[pointField].empty && radius) {
                 var distance = doc[pointField].distanceInKm(lat, lon);
                 distanceInPercent = distance * 100 / (radius / 1000);
-                Math.round(distanceInPercent) + '%'
             }else
             {
-                distanceInPercent = 100 + '%'
+                distanceInPercent = 100
             }
+            
+            distanceInPercent = parseInt(distanceInPercent)
             ";
 
             return new \Elastica\Script(
@@ -163,7 +165,7 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                         }
                     }
                 }
-                totalCount = count.toString();
+                totalCount = parseInt(count)
             ";
 
                 return new \Elastica\Script($script, [
@@ -213,11 +215,9 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                     }
                     
                     tagInPercent = count/tagsCount*100;
-                    tagInPercent = Math.round(tagInPercent) + '%'
-                }else
-                {
-                    tagInPercent += '%'
                 }
+                
+                tagInPercent = parseInt(tagInPercent)
             ";
 
                 return new \Elastica\Script($script, [

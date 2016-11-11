@@ -38,9 +38,9 @@ class SearchCommonController extends ApiController
 
             // получаем ID города если он указан в запросе
             $cityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
-            $cityId = !empty($cityId) ?$cityId: RequestConstant::NULLED_PARAMS;
+            $cityId = !empty($cityId) ? $cityId : RequestConstant::NULLED_PARAMS;
 
-            if ( is_null($cityId) && is_null($searchText) ) {
+            if (is_null($cityId) && is_null($searchText)) {
                 return $this->_handleViewWithError(new BadRequestHttpException(
                     'Необходимо указать один из обязательных параметров запроса (cityId или searchText)'
                 ), Response::HTTP_BAD_REQUEST);
@@ -64,6 +64,7 @@ class SearchCommonController extends ApiController
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                 $oldFormat = $this->getVersioningData($commonSearchService);
+
                 return $this->_handleViewWithData(
                     $oldFormat,
                     null,

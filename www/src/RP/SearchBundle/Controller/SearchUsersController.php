@@ -219,6 +219,7 @@ class SearchUsersController extends ApiController
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                 $oldFormat = $this->getVersioningData($peopleSearchService);
+
                 return $this->_handleViewWithData(
                     $oldFormat['results'][PeopleSearchMapping::CONTEXT],
                     null,
@@ -227,10 +228,10 @@ class SearchUsersController extends ApiController
             }
 
             return $this->_handleViewWithData(array_merge(
-                [
-                    'info' => $peopleSearchService->getTotalHits(),
-                ],
-                $possibleFriends ?: [])
+                    [
+                        'info' => $peopleSearchService->getTotalHits(),
+                    ],
+                    $possibleFriends ?: [])
             );
 
         } catch (SearchServiceException $e) {

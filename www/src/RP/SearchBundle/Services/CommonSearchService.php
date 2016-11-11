@@ -47,7 +47,7 @@ class CommonSearchService extends AbstractSearchService
              * Если не задана категория поиска
              * тогда ищем во всех коллекциях еластика по условиям
              */
-            foreach ($this->filterTypes as $keyType => $type) {
+            foreach ($this->filterSearchTypes as $keyType => $type) {
                 $this->clearScriptFields();
                 $this->clearFilter();
 
@@ -95,21 +95,21 @@ class CommonSearchService extends AbstractSearchService
             return $this->searchMultiTypeDocuments($queryMatchResults);
         }
 
-        if (!is_null($cityId) && !empty($cityId) && !is_null($this->filterTypes[$filterType]::LOCATION_CITY_ID_FIELD)) {
+        if (!is_null($cityId) && !empty($cityId) && !is_null($this->filterSearchTypes[$filterType]::LOCATION_CITY_ID_FIELD)) {
             $this->setFilterQuery([
                 $this->_queryFilterFactory->getTermFilter([
-                    $this->filterTypes[$filterType]::LOCATION_CITY_ID_FIELD => $cityId,
+                    $this->filterSearchTypes[$filterType]::LOCATION_CITY_ID_FIELD => $cityId,
                 ]),
             ]);
         }
 
-        $this->setFilterQuery($this->filterTypes[$filterType]::getMatchSearchFilter($this->_queryFilterFactory, $userId));
-        $this->setScriptTagsConditions($currentUser, $this->filterTypes[$filterType]);
-        $this->setGeoPointConditions($point, $this->filterTypes[$filterType]);
+        $this->setFilterQuery($this->filterSearchTypes[$filterType]::getMatchSearchFilter($this->_queryFilterFactory, $userId));
+        $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$filterType]);
+        $this->setGeoPointConditions($point, $this->filterSearchTypes[$filterType]);
 
         $queryMatch = $this->createMatchQuery(
             $searchText,
-            $this->filterTypes[$filterType]::getMultiMatchQuerySearchFields(),
+            $this->filterSearchTypes[$filterType]::getMultiMatchQuerySearchFields(),
             $skip,
             $count
         );
@@ -132,7 +132,7 @@ class CommonSearchService extends AbstractSearchService
 
         array_walk($filters, function ($filter) use (&$searchTypes) {
             if (!preg_match('/(all)/i', $filter)) {
-                array_key_exists($filter, $this->filterTypes) && $searchTypes[$filter] = $this->filterTypes[$filter]::getMultiMatchQuerySearchFields();
+                array_key_exists($filter, $this->filterSearchTypes) && $searchTypes[$filter] = $this->filterSearchTypes[$filter]::getMultiMatchQuerySearchFields();
             } else {
                 foreach ($this->getFilterTypes() as $key => $class) {
                     $searchTypes[$key] = $class::getMultiMatchQuerySearchFields();
@@ -147,13 +147,13 @@ class CommonSearchService extends AbstractSearchService
                 $this->clearScriptFields();
                 $this->clearFilter();
 
-                $this->setFilterQuery($this->filterTypes[$keyType]::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
-                $this->setScriptTagsConditions($currentUser, $this->filterTypes[$keyType]);
-                $this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
+                $this->setFilterQuery($this->filterSearchTypes[$keyType]::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
+                $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$keyType]);
+                $this->setGeoPointConditions($point, $this->filterSearchTypes[$keyType]);
 
                 $this->setAggregationQuery([
                     $this->_queryAggregationFactory->getGeoHashAggregation(
-                        $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
+                        $this->filterSearchTypes[$keyType]::LOCATION_POINT_FIELD,
                         [
                             "lat" => $point->getLatitude(),
                             "lon" => $point->getLongitude(),
@@ -165,7 +165,7 @@ class CommonSearchService extends AbstractSearchService
                 /** формируем условия сортировки */
                 $this->setSortingQuery([
                     $this->_sortingFactory->getGeoDistanceSort(
-                        $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
+                        $this->filterSearchTypes[$keyType]::LOCATION_POINT_FIELD,
                         $point
                     ),
                 ]);

@@ -31,6 +31,7 @@ class SearchEngine implements SearchEngineInterface
 
     /**
      * Устанавливаем флаг формата данных для старых версий
+     *
      * @param bool $flag
      * @return void
      */
@@ -41,13 +42,13 @@ class SearchEngine implements SearchEngineInterface
 
     /**
      * Получаем флаг формата данных для старых версий
+     *
      * @return bool
      */
     public function getOldFormat()
     {
         return $this->oldFormatVersion;
     }
-
 
     /**
      * Кол-во записей по умолчанию
@@ -64,7 +65,7 @@ class SearchEngine implements SearchEngineInterface
     const DEFAULT_SKIP_QUERY = 0;
 
     /**
-     * Доступные для поиска типы фильтров
+     * Доступные для маркеров типы фильтров
      *
      * @var array $filterTypes
      */
@@ -78,6 +79,19 @@ class SearchEngine implements SearchEngineInterface
     ];
 
     /**
+     * Доступные для поиска типы фильтров
+     *
+     * @var array $filterSearchTypes
+     */
+    protected $filterSearchTypes = [
+        PeopleSearchMapping::CONTEXT    => PeopleSearchMapping::class,
+        PlaceSearchMapping::CONTEXT     => PlaceSearchMapping::class,
+        'help'                          => HelpOffersSearchMapping::class,
+        DiscountsSearchMapping::CONTEXT => DiscountsSearchMapping::class,
+        EventsSearchMapping::CONTEXT    => EventsSearchMapping::class,
+    ];
+
+    /**
      * Алиасы типов поиска
      * т.е. по ключу мы можем искать в другой коллекции
      * но при этом использовать всего-лишь фильтр
@@ -86,6 +100,7 @@ class SearchEngine implements SearchEngineInterface
         'people'     => 'people',
         'places'     => 'places',
         'helpOffers' => 'people',
+        'help'       => 'people',
         'discounts'  => 'places',
         'rusPlaces'  => 'places',
         'events'     => 'events',
@@ -286,8 +301,7 @@ class SearchEngine implements SearchEngineInterface
         try {
             $search = new \Elastica\Multi\Search($this->_elasticaIndex->getClient());
 
-            // формируем объекты запроса
-            array_walk($elasticQueries, function ($elasticQuery, $keyType) use ($search, $setSource) {
+            foreach ($elasticQueries as $keyType => $elasticQuery) {
                 $elasticQuery->setSource((bool)$setSource);
                 $elasticQuery->setSize(self::DEFAULT_SIZE_QUERY);
                 $elasticQuery->setFrom(self::DEFAULT_SKIP_QUERY);
@@ -297,7 +311,7 @@ class SearchEngine implements SearchEngineInterface
                 $searchItem = $elasticType->createSearch($elasticQuery);
 
                 $search->addSearch($searchItem, $keyType);
-            });
+            }
 
             return $this->multiTransformResult($search->search());
         } catch (ElasticsearchException $e) {
@@ -374,7 +388,7 @@ class SearchEngine implements SearchEngineInterface
 
             $resultSet = $elasticType->search($elasticQuery);
             if ($resultSet->current() !== false) {
-                return $resultSet->current()->getData();
+                return $items = $resultSet->current()->getData();
             }
 
             return null;
@@ -485,7 +499,8 @@ class SearchEngine implements SearchEngineInterface
     private function setTotalResults(\Elastica\ResultSet $resultSets, $keyField = null)
     {
         $results = $resultSets->getResults();
-        array_walk($results, function ($resultItem) use (&$items, $keyField) {
+        $items = [];
+        foreach ($results as $resultItem) {
             $type = $keyField ?: $resultItem->getType();
 
             $record[$type] = $resultItem->getData();
@@ -506,24 +521,21 @@ class SearchEngine implements SearchEngineInterface
                 unset($record[$type]['hit']['fields']);
             }
 
-            if( $this->getOldFormat() )
-            {
+            if ($this->getOldFormat()) {
                 $items[$type][] = [
                     'item' => $record[$type],
                     'hit'  => $record[$type]['hit'],
                 ];
-            }else
-            {
+            } else {
                 $items[$type][] = array_merge($record[$type], [
                     'hit' => $record[$type]['hit'],
                 ]);
             }
-
-        });
+        }
 
         $this->_totalResults = $items;
 
-        return $this->_totalResults;
+        return $this->getTotalResults();
     }
 
     /**
@@ -545,6 +557,7 @@ class SearchEngine implements SearchEngineInterface
     {
         return $this->_totalResults;
     }
+
 
     /**
      * Получить общие показатели запроса

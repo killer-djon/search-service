@@ -361,11 +361,84 @@ abstract class ApiController extends FOSRestController
                 $this->restructTagsField($arItem);
             }
 
-            if( isset($arItem['tags']) )
-            {
+            if (isset($arItem['tags'])) {
                 $arItem['tagNames'] =& $arItem['tags'];
             }
         });
+    }
+
+    /**
+     * Временный метод который меняет
+     * название полей lat, lon
+     * на длиные названия longitude, latitude
+     *
+     * @param array $inputArray Ссылка на искходный массив
+     * @return void
+     */
+    private function restructLocationField(&$inputArray)
+    {
+        array_walk($inputArray, function (& $item) {
+            if (is_array($item) && !isset($item['lat']) && !isset($item['lon'])) {
+                $this->restructLocationField($item);
+            }
+
+            isset($item['lat']) && $item['latitude'] = $item['lat'];
+            isset($item['lon']) && $item['longitude'] = $item['lon'];
+        });
+    }
+
+    protected $fieldsMap = [
+        'fullname'          => 'fullName',
+        'tagsInPercent'     => 'matchingInterestsInPercents',
+        'tagsCount'         => 'tagsPct',
+        'distanceInPercent' => 'distancePct',
+    ];
+
+    /**
+     * Временный метод
+     * предназначен для замены имени ключа в объектах ответа
+     *
+     * @param array $inputArray
+     * @return array
+     */
+    private function changeKeysName($inputArray)
+    {
+        $return = [];
+        foreach ($inputArray as $key => $value) {
+            if (array_key_exists($key, $this->fieldsMap)) {
+                $key = $this->fieldsMap[$key];
+            }
+
+            if (is_array($value)) {
+                $value = $this->changeKeysName($value);
+            }
+
+            $return[$key] = $value;
+        }
+
+        return $return;
+    }
+
+    /**
+     * Временный метод
+     * убриаем из объектов пустые значения
+     * необходимо для совместимости старых приложений
+     *
+     * @param array $inputArray
+     * @return array
+     */
+    private function excludeEmptyValue($inputArray)
+    {
+        $return = [];
+        foreach ($inputArray as $key => $value) {
+            if (is_array($value)) {
+                $value = $this->excludeEmptyValue($value);
+            }
+
+            !empty($value) && $return[$key] = $value;
+        }
+
+        return $return;
     }
 
     /**
@@ -388,6 +461,9 @@ abstract class ApiController extends FOSRestController
 
         if (!empty($resultData)) {
             $this->restructTagsField($resultData);
+            $this->restructLocationField($resultData);
+            $resultData = $this->changeKeysName($resultData);
+            $resultData = $this->excludeEmptyValue($resultData);
         }
 
         return [

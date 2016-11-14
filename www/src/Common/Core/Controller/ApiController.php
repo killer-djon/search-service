@@ -442,7 +442,10 @@ abstract class ApiController extends FOSRestController
                 $value = $this->excludeEmptyValue($value);
             }
 
-            !empty($value) && $return[$key] = $value;
+            if( !empty($value) || $value == 0 )
+            {
+                $return[$key] = $value;
+            }
         }
 
         return $return;

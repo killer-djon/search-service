@@ -515,6 +515,8 @@ class SearchEngine implements SearchEngineInterface
                         unset($record[$type][$fieldKey]);
                     }
                     $record[$type]['tagsMatch'][$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
+                    // для совместимости со старыми прилоежнмия
+                    $record[$type][$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
                 }
             }
             $record[$type]['hit'] = $resultItem->getHit();

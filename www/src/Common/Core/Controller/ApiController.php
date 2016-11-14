@@ -345,6 +345,7 @@ abstract class ApiController extends FOSRestController
         );
     }
 
+
     /**
      * Временный метод который добавляет ключ tagNames
      * во все массивы где есть tags

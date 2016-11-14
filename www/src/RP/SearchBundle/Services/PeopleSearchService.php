@@ -338,6 +338,7 @@ class PeopleSearchService extends AbstractSearchService
             ]);
 
             $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);
+            $this->setGeoPointConditions($point, PeopleSearchMapping::class);
 
             if( $point->isValid() )
             {

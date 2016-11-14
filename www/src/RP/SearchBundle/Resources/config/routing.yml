@@ -17,6 +17,12 @@ rp_search_events:
     type: rest
 
 # routing поиска мест
+rp_search_city:
+    resource: routing/searchCity.yml
+    prefix:   /api/search
+    type: rest
+
+# routing поиска мест
 rp_search_markers:
     resource: routing/searchMarkers.yml
     prefix:   /api/search
@@ -27,3 +33,4 @@ rp_search_common:
     resource: routing/searchCommon.yml
     prefix:   /api/search
     type: rest
+

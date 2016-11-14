@@ -62,3 +62,8 @@ services:
     rp_search.search_service.events:
         class: RP\SearchBundle\Services\EventsSearchService
         parent: rp_search.search_service.base
+
+    # Сервис поиска городов
+    rp_search.search_service.city:
+        class: RP\SearchBundle\Services\CitySearchService
+        parent: rp_search.search_service.base

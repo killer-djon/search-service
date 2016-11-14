@@ -147,7 +147,11 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
      */
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return [];
+        return [
+            $filterFactory->getNotFilter(
+                $filterFactory->getTermsFilter(self::FRIEND_LIST_FIELD, [$userId])
+            )
+        ];
     }
 
     /**

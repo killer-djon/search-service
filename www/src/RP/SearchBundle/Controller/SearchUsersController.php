@@ -113,6 +113,9 @@ class SearchUsersController extends ApiController
     public function searchUsersByFriendAction(Request $request)
     {
         try {
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
+            $simpleList = $request->get('simpleList');
+
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
@@ -121,6 +124,27 @@ class SearchUsersController extends ApiController
 
             $peopleSearchService = $this->getPeopleSearchService();
             $people = $peopleSearchService->searchPeopleFriends($userId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
+
+            if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                $oldFormat = $this->getVersioningData($peopleSearchService);
+
+                if ($simpleList) {
+                    return $this->_handleViewWithData(
+                        $oldFormat['results'][PeopleSearchMapping::CONTEXT],
+                        null,
+                        !self::INCLUDE_IN_CONTEXT
+                    );
+                } else {
+                    return $this->_handleViewWithData(
+                        [
+                            'users'      => $oldFormat['results'][PeopleSearchMapping::CONTEXT],
+                            'pagination' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
+                        ],
+                        null,
+                        !self::INCLUDE_IN_CONTEXT
+                    );
+                }
+            }
 
             /** выводим результат */
             return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);

@@ -82,7 +82,8 @@ class SearchCommonController extends ApiController
                 }
 
                 return $this->_handleViewWithData(
-                    ['results' => $data],
+                    ['results' => $data, 'info' => $oldFormat['info']],
+                    //$oldFormat,
                     null,
                     !self::INCLUDE_IN_CONTEXT
                 );

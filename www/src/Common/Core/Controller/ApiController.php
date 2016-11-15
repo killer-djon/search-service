@@ -434,7 +434,7 @@ abstract class ApiController extends FOSRestController
      * @param array $inputArray
      * @return array
      */
-    private function excludeEmptyValue($inputArray)
+    public function excludeEmptyValue($inputArray)
     {
         $return = [];
         foreach ($inputArray as $key => $value) {

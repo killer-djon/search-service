@@ -81,9 +81,10 @@ class SearchCommonController extends ApiController
                     }
                 }
 
+                $data = $this->excludeEmptyValue($data);
+
                 return $this->_handleViewWithData(
                     ['results' => $data, 'info' => $oldFormat['info']],
-                    //$oldFormat,
                     null,
                     !self::INCLUDE_IN_CONTEXT
                 );

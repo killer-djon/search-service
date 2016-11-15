@@ -438,11 +438,11 @@ abstract class ApiController extends FOSRestController
     {
         $return = [];
         foreach ($inputArray as $key => $value) {
-            if (is_array($value)) {
+            if (is_array($value) && !empty($value)) {
                 $value = $this->excludeEmptyValue($value);
             }
 
-            if( !empty($value) || $value == 0 )
+            if( !empty($value) )
             {
                 $return[$key] = $value;
             }

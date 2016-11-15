@@ -80,7 +80,6 @@ class SearchCommonController extends ApiController
                         );
                     }
 
-                    $data = $this->excludeEmptyValue($data);
                     $data = [
                         'results' => $data,
                         'info' => $oldFormat['info']

@@ -12,6 +12,7 @@ use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Query;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
+use RP\SearchBundle\Services\Transformers\CityTransformer;
 
 class AbstractSearchService extends SearchEngine implements SearchServiceInterface
 {
@@ -88,6 +89,22 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * @var array $_highlightQueryData
      */
     private $_highlightQueryData = [];
+
+    /**
+     * @var CityTransformer $cityTransformer
+     */
+    public $cityTransformer;
+
+    /**
+     * Оперделяем проеобразователь для городов
+     *
+     * @param CityTransformer $cityTransformer
+     * @return void
+     */
+    public function setCityTransformer(CityTransformer $cityTransformer)
+    {
+        $this->cityTransformer = $cityTransformer;
+    }
 
     /**
      * Определяем какой набор полей нам нужно выбрать
@@ -427,7 +444,6 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
 
         /** генерируем объект запроса */
         $query = $this->createQuery();
-
 
         /** находим ползователя в базе еластика по его ID */
         $userSearchDocument = $this->searchSingleDocuments($query, $context);

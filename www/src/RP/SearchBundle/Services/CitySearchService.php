@@ -5,6 +5,7 @@
 
 namespace RP\SearchBundle\Services;
 
+use Common\Core\Constants\Location;
 use Common\Core\Constants\SortingOrder;
 use Common\Core\Constants\Visible;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
@@ -33,17 +34,30 @@ class CitySearchService extends AbstractSearchService
 
         $this->setFilterQuery([
             $this->_queryFilterFactory->getTermsFilter(CitySearchMapping::CITY_TYPE_FIELD, [
-                'city'
-            ])
+                Location::CITY_TYPE,
+                Location::TOWN_TYPE,
+            ]),
+        ]);
+
+        $this->setConditionQueryShould([
+            $this->_queryConditionFactory->getPrefixQuery(
+                CitySearchMapping::NAME_FIELD,
+                $searchText,
+                2.0
+            ),
+            $this->_queryConditionFactory->getPrefixQuery(
+                CitySearchMapping::INTERNATIONAL_NAME_FIELD,
+                $searchText,
+                1.0
+            )
+        ]);
+
+        $this->setSortingQuery([
+            $this->_sortingFactory->getFieldSort(CitySearchMapping::NAME_FIELD)
         ]);
 
         /** Получаем сформированный объект запроса */
-        $queryMatchResult = $this->createMatchQuery(
-            $searchText,
-            CitySearchMapping::getMultiMatchQuerySearchFields(),
-            $skip,
-            $count
-        );
+        $queryMatchResult = $this->createQuery($skip, $count);
 
         /** поиск документа */
         return $this->searchDocuments($queryMatchResult, CitySearchMapping::CONTEXT);

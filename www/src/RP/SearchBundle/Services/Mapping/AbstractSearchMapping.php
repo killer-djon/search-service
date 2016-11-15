@@ -8,6 +8,8 @@ use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 
 abstract class AbstractSearchMapping
 {
+
+
     /** Поле имени пользователя */
     const NAME_FIELD = 'name'; // полное совпадение имени по русски
     const NAME_NGRAM_FIELD = 'name._nameNgram'; // частичное совпадение имени от 3-х сивмолов по русски
@@ -72,4 +74,6 @@ abstract class AbstractSearchMapping
      * @return array
      */
     abstract public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null);
+
+
 }

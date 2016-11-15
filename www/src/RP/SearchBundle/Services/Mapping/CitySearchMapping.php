@@ -22,6 +22,12 @@ abstract class CitySearchMapping extends AbstractSearchMapping
     /** Поле названия страны */
     const COUNTRY_FIELD = 'Country';
 
+    /** Поле названия страны */
+    const COUNTRY_NAME_FIELD = 'Country.Name';
+
+    /** Поле названия страны */
+    const COUNTRY_SHIRT_NAME_FIELD = 'Country.shortName';
+
     /** Маппинг поля имени города для префиксного поиска */
     const TRANSLIT_NAME_FIELD = 'Name._translit';
 
@@ -30,6 +36,12 @@ abstract class CitySearchMapping extends AbstractSearchMapping
 
     /** Центр города */
     const CENTER_CITY_POINT_FIELD = 'CenterPoint';
+
+    /** Центр города широта */
+    const CENTER_CITY_POINT_LATITUDE_FIELD = 'CenterPoint.lat';
+
+    /** Центр города долгота */
+    const CENTER_CITY_POINT_LONGITUDE_FIELD = 'CenterPoint.lon';
 
     /** Тип населенного пункта */
     const CITY_TYPE_FIELD = 'Type';

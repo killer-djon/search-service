@@ -62,10 +62,10 @@ class SearchCityController extends ApiController
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                 $oldFormat = $this->getVersioningData($citySearchService);
 
+                $oldFormat = $citySearchService->cityTransformer->transform($oldFormat['results'], CitySearchMapping::CONTEXT);
+
                 return $this->_handleViewWithData(
-                    (isset($oldFormat['results'][CitySearchMapping::CONTEXT])
-                    ? $oldFormat['results'][CitySearchMapping::CONTEXT]
-                    : []),
+                    [self::KEY_FIELD_RESPONSE => $oldFormat],
                     null,
                     !self::INCLUDE_IN_CONTEXT
                 );

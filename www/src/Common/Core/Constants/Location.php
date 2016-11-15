@@ -62,5 +62,29 @@ abstract class Location
 	 * @const string DEFAULT_LONGITUDE
      */
     const DEFAULT_LONGITUDE = 37.6186;
+
+    /**
+     * Тип города
+     * @const string CITY_TYPE
+     */
+    const CITY_TYPE = 'city';
+
+    /**
+     * Тип административного центра
+     * @const string TOWN_TYPE
+     */
+    const TOWN_TYPE = 'town';
+
+    /**
+     * Тип деревня
+     * @const string VILLAGE_TYPE
+     */
+    const VILLAGE_TYPE = 'village';
+
+    /**
+     * Тип пригород
+     * @const string SUBURBAN_TYPE
+     */
+    const SUBURBAN_TYPE = 'suburb';
 }
 

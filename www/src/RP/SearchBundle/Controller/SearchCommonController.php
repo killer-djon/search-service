@@ -63,10 +63,26 @@ class SearchCommonController extends ApiController
             );
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+
                 $oldFormat = $this->getVersioningData($commonSearchService);
+                $data = [];
+                if(!empty($oldFormat))
+                {
+                    $keys = array_keys($oldFormat['results']);
+
+                    foreach ($keys as $format)
+                    {
+
+                        $data[$format] = $commonSearchService->peopleTransformer->transform(
+                            $oldFormat['results'],
+                            $format,
+                            'item'
+                        );
+                    }
+                }
 
                 return $this->_handleViewWithData(
-                    $oldFormat,
+                    ['results' => $data],
                     null,
                     !self::INCLUDE_IN_CONTEXT
                 );

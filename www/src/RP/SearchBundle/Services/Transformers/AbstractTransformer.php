@@ -28,6 +28,7 @@ class AbstractTransformer
 
     /**
      * Сервис поиска
+     *
      * @var SearchEngine
      */
     protected $searchService;
@@ -72,45 +73,35 @@ class AbstractTransformer
 
     /**
      * Gets a value from an array using a dot separated path.
-     *
      *     // Get the value of $array['foo']['bar']
      *     $value = Arr::path($array, 'foo.bar');
-     *
      * Using a wildcard "*" will search intermediate arrays and return an array.
-     *
      *     // Get the values of "color" in theme
      *     $colors = Arr::path($array, 'theme.*.color');
-     *
      *     // Using an array of keys
      *     $colors = Arr::path($array, array('theme', '*', 'color'));
      *
-     * @param   array   $array      array to search
-     * @param   mixed   $path       key path string (delimiter separated) or array of keys
-     * @param   mixed   $default    default value if the path is not set
-     * @param   string  $delimiter  key path delimiter
+     * @param   array $array array to search
+     * @param   mixed $path key path string (delimiter separated) or array of keys
+     * @param   mixed $default default value if the path is not set
+     * @param   string $delimiter key path delimiter
      * @return  mixed
      */
-    public static function path($array, $path, $default = NULL, $delimiter = NULL)
+    public static function path($array, $path, $default = null, $delimiter = null)
     {
-        if ( ! is_array($array))
-        {
+        if (!is_array($array)) {
             // This is not an array!
             return $default;
         }
-        if (is_array($path))
-        {
+        if (is_array($path)) {
             // The path has already been separated into keys
             $keys = $path;
-        }
-        else
-        {
-            if (array_key_exists($path, $array))
-            {
+        } else {
+            if (array_key_exists($path, $array)) {
                 // No need to do extra processing
                 return $array[$path];
             }
-            if ($delimiter === NULL)
-            {
+            if ($delimiter === null) {
                 // Use the default delimiter
                 $delimiter = self::$delimiter;
             }
@@ -121,65 +112,84 @@ class AbstractTransformer
             // Split the keys by delimiter
             $keys = explode($delimiter, $path);
         }
-        do
-        {
+        do {
             $key = array_shift($keys);
-            if (ctype_digit($key))
-            {
+            if (ctype_digit($key)) {
                 // Make the key an integer
-                $key = (int) $key;
+                $key = (int)$key;
             }
-            if (isset($array[$key]))
-            {
-                if ($keys)
-                {
-                    if (is_array($array[$key]))
-                    {
+            if (isset($array[$key])) {
+                if ($keys) {
+                    if (is_array($array[$key])) {
                         // Dig down into the next part of the path
                         $array = $array[$key];
-                    }
-                    else
-                    {
+                    } else {
                         // Unable to dig deeper
                         break;
                     }
-                }
-                else
-                {
+                } else {
                     // Found the path requested
                     return $array[$key];
                 }
-            }
-            elseif ($key === '*')
-            {
+            } elseif ($key === '*') {
                 // Handle wildcards
-                $values = array();
-                foreach ($array as $arr)
-                {
-                    if ($value = AbstractTransformer::path($arr, implode('.', $keys)))
-                    {
+                $values = [];
+                foreach ($array as $arr) {
+                    if ($value = AbstractTransformer::path($arr, implode('.', $keys))) {
                         $values[] = $value;
                     }
                 }
-                if ($values)
-                {
+                if ($values) {
                     // Found the values requested
                     return $values;
-                }
-                else
-                {
+                } else {
                     // Unable to dig deeper
                     break;
                 }
-            }
-            else
-            {
+            } else {
                 // Unable to dig deeper
                 break;
             }
-        }
-        while ($keys);
+        } while ($keys);
+
         // Unable to find the value requested
         return $default;
+    }
+
+    /**
+     * Set a value on an array by path.
+     *
+     * @see Arr::path()
+     * @param array $array Array to update
+     * @param string $path Path
+     * @param mixed $value Value to set
+     * @param string $delimiter Path delimiter
+     */
+    public static function set_path(& $array, $path, $value, $delimiter = null)
+    {
+        if (!$delimiter) {
+            // Use the default delimiter
+            $delimiter = AbstractTransformer::$delimiter;
+        }
+        // The path has already been separated into keys
+        $keys = $path;
+        if (!is_array($path)) {
+            // Split the keys by delimiter
+            $keys = explode($delimiter, $path);
+        }
+        // Set current $array to inner-most array path
+        while (count($keys) > 1) {
+            $key = array_shift($keys);
+            if (ctype_digit($key)) {
+                // Make the key an integer
+                $key = (int)$key;
+            }
+            if (!isset($array[$key])) {
+                $array[$key] = [];
+            }
+            $array = &$array[$key];
+        }
+        // Set key on inner-most array
+        $array[array_shift($keys)] = $value;
     }
 }

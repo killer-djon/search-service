@@ -30,9 +30,10 @@ class CityTransformer extends AbstractTransformer implements TransformerInterfac
      *
      * @param array $dataResult Набор данных для преобразования
      * @param string $context Контекст массива (т.е. ключ ассоц.массива)
+     * @param string $subContext Это если есть вложенность, нам нужен ключ вложенного объекта
      * @return array
      */
-    public function transform(array $dataResult, $context)
+    public function transform(array $dataResult, $context, $subContext = null)
     {
         $result = [];
 

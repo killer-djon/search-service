@@ -13,6 +13,7 @@ use Elastica\Query;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Transformers\CityTransformer;
+use RP\SearchBundle\Services\Transformers\PeopleTransformer;
 
 class AbstractSearchService extends SearchEngine implements SearchServiceInterface
 {
@@ -104,6 +105,22 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     public function setCityTransformer(CityTransformer $cityTransformer)
     {
         $this->cityTransformer = $cityTransformer;
+    }
+
+    /**
+     * @var PeopleTransformer $peopleTransformer
+     */
+    public $peopleTransformer;
+
+    /**
+     * Оперделяем проеобразователь для городов
+     *
+     * @param PeopleTransformer $peopleTransformer
+     * @return void
+     */
+    public function setPeopleTransformer(PeopleTransformer $peopleTransformer)
+    {
+        $this->peopleTransformer = $peopleTransformer;
     }
 
     /**

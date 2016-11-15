@@ -123,12 +123,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             self::SURNAME_NGRAM_FIELD,
             self::SURNAME_TRANSLIT_FIELD,
             self::SURNAME_TRANSLIT_NGRAM_FIELD,
-            // поле интересов и занятий
-            // по интересам
-            self::TAG_NAME_FIELD,
-            self::TAG_NAME_NGRAM_FIELD,
-            self::TAG_NAME_TRANSLIT_FIELD,
-            self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
+
             // сфера деятельности
             self::ACTIVITY_SPHERE_NAME_FIELD,
             // поля с названием города проживания

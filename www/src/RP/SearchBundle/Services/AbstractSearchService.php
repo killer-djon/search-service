@@ -14,6 +14,7 @@ use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Transformers\CityTransformer;
 use RP\SearchBundle\Services\Transformers\PeopleTransformer;
+use RP\SearchBundle\Services\Transformers\PlaceTypeTransformer;
 
 class AbstractSearchService extends SearchEngine implements SearchServiceInterface
 {
@@ -97,6 +98,16 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     public $cityTransformer;
 
     /**
+     * @var PeopleTransformer $peopleTransformer
+     */
+    public $peopleTransformer;
+
+    /**
+     * @var PlaceTypeTransformer $placeTypeTransformer
+     */
+    public $placeTypeTransformer;
+
+    /**
      * Оперделяем проеобразователь для городов
      *
      * @param CityTransformer $cityTransformer
@@ -108,9 +119,15 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     }
 
     /**
-     * @var PeopleTransformer $peopleTransformer
+     * Оперделяем проеобразователь для городов
+     *
+     * @param PlaceTypeTransformer $placeTypeTransformer
+     * @return void
      */
-    public $peopleTransformer;
+    public function setPlaceTypeTransformer(PlaceTypeTransformer $placeTypeTransformer)
+    {
+        $this->placeTypeTransformer = $placeTypeTransformer;
+    }
 
     /**
      * Оперделяем проеобразователь для городов

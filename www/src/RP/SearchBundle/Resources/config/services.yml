@@ -45,6 +45,7 @@ services:
         calls:
             - [ setCityTransformer, [ "@rp_search.transform_interface.city" ] ]
             - [ setPeopleTransformer, [ "@rp_search.transform_interface.people" ] ]
+            - [ setPlaceTypeTransformer, [ "@rp_search.transform_interface.placetype" ] ]
 
     # Сервис поиска людей в базе еластика
     rp_search.search_service.people:
@@ -88,3 +89,9 @@ services:
         parent: rp_search.transform_interface.base
         calls:
             - [ setSearchService, [ "@rp_search.search_service.people" ] ]
+
+    rp_search.transform_interface.placetype:
+        class: RP\SearchBundle\Services\Transformers\PlaceTypeTransformer
+        parent: rp_search.transform_interface.base
+        calls:
+            - [ setSearchService, [ "@rp_search.search_service.places" ] ]

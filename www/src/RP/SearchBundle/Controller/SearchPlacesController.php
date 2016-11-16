@@ -7,6 +7,7 @@ namespace RP\SearchBundle\Controller;
 use Common\Core\Controller\ApiController;
 use Common\Core\Exceptions\SearchServiceException;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
+use RP\SearchBundle\Services\Mapping\PlaceTypeSearchMapping;
 use Symfony\Component\HttpFoundation\Request;
 use Common\Core\Constants\RequestConstant;
 use Symfony\Component\HttpFoundation\Response;
@@ -27,6 +28,13 @@ class SearchPlacesController extends ApiController
      * @const string KEY_FIELD_RESPONSE
      */
     const KEY_FIELD_RESPONSE = 'places';
+
+    /**
+     * Ключ контекста объекта ответа клиенту
+     *
+     * @const string KEY_FIELD_PLACE_TYPE_RESPONSE
+     */
+    const KEY_FIELD_PLACE_TYPE_RESPONSE = 'placetype';
 
     /**
      * Поиск мест по введенному названию (части названия)
@@ -146,6 +154,80 @@ class SearchPlacesController extends ApiController
             $place = $placeSearchService->getPlaceById($userId, PlaceSearchMapping::CONTEXT, PlaceSearchMapping::PLACE_ID_FIELD, $placeId);
 
             return $this->_handleViewWithData($place);
+
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+    }
+
+    /**
+     * Поиск типов мест по названию
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function searchPlaceTypeByNameAction(Request $request)
+    {
+        try {
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
+
+            /** @var ID пользователя */
+            $userId = $this->getRequestUserId();
+
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
+            $searchText = empty($searchText) ? RequestConstant::NULLED_PARAMS : $searchText;
+
+            $placeSearchService = $this->getPlacesSearchService();
+            $placesType = $placeSearchService->searchPlacesTypeByName(
+                $userId,
+                $searchText
+            );
+
+            if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                $oldFormat = $this->getVersioningData($placeSearchService);
+                $oldFormat = $placeSearchService->placeTypeTransformer->transform($oldFormat['results'], PlaceTypeSearchMapping::CONTEXT);
+
+                return $this->_handleViewWithData(
+                    $oldFormat,
+                    null,
+                    !self::INCLUDE_IN_CONTEXT
+                );
+            }
+
+            return $this->_handleViewWithData($placesType);
+
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+    }
+
+    /**
+     * Поиск типов мест по названию
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param string $placeTypeId ID типа места
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function searchPlaceTypeByIdAction(Request $request, $placeTypeId)
+    {
+        $placeSearchService = $this->getPlacesSearchService();
+
+        try {
+            /** @var ID пользователя */
+            $userId = $this->getRequestUserId();
+            $placeType = $placeSearchService->getPlaceTypeById(
+                $userId,
+                PlaceTypeSearchMapping::CONTEXT,
+                PlaceTypeSearchMapping::PLACE_TYPE_ID_FIELD,
+                $placeTypeId
+            );
+
+            return $this->_handleViewWithData($placeType);
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);

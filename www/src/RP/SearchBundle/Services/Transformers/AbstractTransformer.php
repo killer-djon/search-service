@@ -192,4 +192,42 @@ class AbstractTransformer
         // Set key on inner-most array
         $array[array_shift($keys)] = $value;
     }
+
+    /**
+     * Convert a flat array with parent ID's to a nested tree
+     *
+     * @link http://blog.tekerson.com/2009/03/03/converting-a-flat-array-with-parent-ids-to-a-nested-tree/
+     * @param array $flat Flat array
+     * @param string $idField Key name for the element containing the item ID
+     * @param string $parentIdField Key name for the element containing the parent item ID
+     * @param string $childNodesField Key name for the element for placement children
+     * @return array
+     */
+    public static function convertToTree(array $flat, $idField = 'id', $parentIdField = 'parentId', $childNodesField = 'children') {
+        $flat = array_merge([
+            [
+                'id' => 1,
+                'parentId' => 0,
+                'name' => 'Root',
+            ]
+        ], $flat);
+        $indexed = [];
+        // first pass - get the array indexed by the primary id
+        foreach ($flat as $row) {
+            $indexed[$row[$idField]] = $row;
+            $indexed[$row[$idField]][$childNodesField] = [];
+        }
+
+        //second pass
+        $root = null;
+        foreach ($indexed as $id => $row) {
+            $indexed[$row[$parentIdField]][$childNodesField][] =& $indexed[$id];
+            if (!$row[$parentIdField]) {
+                $root = $id;
+            }
+        }
+
+        return $indexed[$root][$childNodesField];
+    }
+
 }

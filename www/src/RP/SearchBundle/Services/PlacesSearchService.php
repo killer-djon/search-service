@@ -9,6 +9,7 @@ use Common\Core\Constants\Visible;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
+use RP\SearchBundle\Services\Mapping\PlaceTypeSearchMapping;
 
 class PlacesSearchService extends AbstractSearchService
 {
@@ -73,6 +74,35 @@ class PlacesSearchService extends AbstractSearchService
 
     /**
      * Метод осуществляет поиск в еластике
+     * по имени тип места
+     *
+     * @param string $userId ID пользователя который делает запрос к АПИ
+     * @param string|null $searchText Поисковый запрос
+     * @param int $skip Кол-во пропускаемых позиций поискового результата
+     * @param int $count Какое кол-во выводим
+     * @return array Массив с найденными результатами
+     */
+    public function searchPlacesTypeByName($userId, $searchText = null, $skip = 0, $count = null)
+    {
+        /** получаем объект текущего пользователя */
+        $currentUser = $this->getUserById($userId);
+
+        $queryMatch = $this->createMatchQuery(
+            $searchText,
+            [
+                PlaceTypeSearchMapping::NAME_FIELD,
+                PlaceTypeSearchMapping::NAME_NGRAM_FIELD,
+                PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD,
+                PlaceTypeSearchMapping::NAME_TRANSLIT_NGRAM_FIELD
+            ],
+            $skip, $count
+        );
+
+        return $this->searchDocuments($queryMatch, PlaceTypeSearchMapping::CONTEXT);
+    }
+
+    /**
+     * Метод осуществляет поиск в еластике
      * мест по городу
      *
      * @param string $userId ID пользователя который делает запрос к АПИ
@@ -113,7 +143,7 @@ class PlacesSearchService extends AbstractSearchService
         }
 
         $this->setFilterQuery([
-            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::LOCATION_CITY_ID_FIELD => $cityId])
+            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::LOCATION_CITY_ID_FIELD => $cityId]),
         ]);
 
         /** добавляем к условию поиска рассчет по совпадению интересов */
@@ -208,8 +238,7 @@ class PlacesSearchService extends AbstractSearchService
      */
     private function setFilterPlaces($userId = null)
     {
-        if(!is_null($userId) && !empty($userId))
-        {
+        if (!is_null($userId) && !empty($userId)) {
             $this->setFilterQuery([
                 $this->_queryFilterFactory->getBoolOrFilter([
                     $this->_queryFilterFactory->getBoolAndFilter([
@@ -218,8 +247,8 @@ class PlacesSearchService extends AbstractSearchService
                             ModerationStatus::OK,
                             ModerationStatus::DIRTY,
                             ModerationStatus::RESTORED,
-                            ModerationStatus::REJECTED
-                        ])
+                            ModerationStatus::REJECTED,
+                        ]),
                     ]),
                     $this->_queryFilterFactory->getBoolAndFilter([
                         $this->_queryFilterFactory->getNotFilter(
@@ -229,11 +258,10 @@ class PlacesSearchService extends AbstractSearchService
                             $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
                         ),
                         $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
-                    ])
-                ])
+                    ]),
+                ]),
             ]);
-        }else
-        {
+        } else {
             $this->setFilterQuery([
                 $this->_queryFilterFactory->getBoolAndFilter([
                     $this->_queryFilterFactory->getNotFilter(
@@ -243,7 +271,7 @@ class PlacesSearchService extends AbstractSearchService
                         $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
                     ),
                     $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
-                ])
+                ]),
             ]);
         }
 
@@ -262,6 +290,20 @@ class PlacesSearchService extends AbstractSearchService
     {
         $this->setFilterPlaces($userId);
 
+        return $this->searchRecordById($context, $fieldId, $recordId);
+    }
+
+    /**
+     * Поиск типа места по его ID
+     *
+     * @param string $userId ID автора места
+     * @param string $context Контекст поиска
+     * @param string $fieldId Название поля идентификатора
+     * @param string $recordId ID записи места которое надо найти
+     * @return array Набор данных найденной записи
+     */
+    public function getPlaceTypeById($userId, $context, $fieldId, $recordId)
+    {
         return $this->searchRecordById($context, $fieldId, $recordId);
     }
 }

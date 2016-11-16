@@ -82,9 +82,16 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
      */
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return array_merge(self::getMatchSearchFilter($filterFactory, $userId), [
-            $filterFactory->getTermFilter([self::IS_RUSSIAN_FIELD => false])
-        ]);
+        return [
+            $filterFactory->getTermFilter([self::IS_RUSSIAN_FIELD => false]),
+            $filterFactory->getTermsFilter(self::MODERATION_STATUS_FIELD, [
+                ModerationStatus::OK,
+                ModerationStatus::DIRTY,
+                ModerationStatus::NOT_IN_PROMO,
+                ModerationStatus::REJECTED,
+                ModerationStatus::RESTORED
+            ])
+        ];
     }
 
 

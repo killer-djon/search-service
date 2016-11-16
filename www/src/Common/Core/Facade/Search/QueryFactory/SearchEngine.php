@@ -426,10 +426,10 @@ class SearchEngine implements SearchEngineInterface
             $page = intval($skip / $count) + 1;
 
             return [
-                'totalCount' => (int)$totalCount,
+                'count' => (int)$totalCount,
                 'offset'     => (int)$skip,
                 'limit'      => (int)$count,
-                'countPage'  => (int)$pageCount,
+                'page_count'  => (int)$pageCount,
                 'page'       => (int)$page,
             ];
         }

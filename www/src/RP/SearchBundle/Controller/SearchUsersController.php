@@ -128,9 +128,14 @@ class SearchUsersController extends ApiController
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                 $oldFormat = $this->getVersioningData($peopleSearchService);
 
+                $dataResult = (isset($oldFormat['results'][PeopleSearchMapping::CONTEXT])
+                    ? $oldFormat['results'][PeopleSearchMapping::CONTEXT]
+                    : []);
+
+
                 if ($simpleList) {
                     return $this->_handleViewWithData(
-                        $oldFormat['results'][PeopleSearchMapping::CONTEXT],
+                        $dataResult,
                         null,
                         !self::INCLUDE_IN_CONTEXT
                     );

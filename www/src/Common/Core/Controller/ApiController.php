@@ -242,7 +242,7 @@ abstract class ApiController extends FOSRestController
      * Вспомогательный метод возврата результата клиенту
      *
      * @param \Common\Core\Facade\Search\QueryFactory\SearchServiceInterface $searchService
-     * @param string $keyFieldName Название поля в ключе объекта вывода
+     * @param string $keyFields Название поля в ключе объекта вывода
      * @return \Symfony\Component\HttpFoundation\Response
      */
     public function returnDataResult(SearchServiceInterface $searchService, $keyFields)
@@ -442,7 +442,7 @@ abstract class ApiController extends FOSRestController
                 $value = $this->excludeEmptyValue($value);
             }
 
-            if( !empty($value) )
+            if( !empty($value) || !is_null($value) )
             {
                 $return[$key] = $value;
             }

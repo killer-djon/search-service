@@ -65,6 +65,8 @@ class SearchMarkersController extends ApiController
                             AbstractTransformer::recursiveTransformAvatar($obj);
                         }
                     }
+
+                    $oldFormat['results'] = AbstractTransformer::array_filter_recursive($oldFormat['results']);
                 }
 
                 return $this->_handleViewWithData(

@@ -5,6 +5,7 @@
  */
 namespace RP\SearchBundle\Services;
 
+use Common\Core\Exceptions\SearchServiceException;
 use Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface;
 use Common\Core\Facade\Search\QueryFactory\SearchEngine;
 use Common\Core\Facade\Search\QueryFactory\SearchServiceInterface;
@@ -447,13 +448,19 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * проксируем к методу получения записи по ID контекста
      *
      * @param string $userId ID пользователя для получения
+     * @throws SearchServiceException
      * @return UserProfileService
      */
     public function getUserById($userId)
     {
-        $user = $this->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, $userId);
+        try{
+            $user = $this->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, $userId);
 
-        return new UserProfileService($user);
+            return new UserProfileService($user);
+        }catch(SearchServiceException $e)
+        {
+            throw new SearchServiceException('User not found with ID '.$userId);
+        }
     }
 
     /**

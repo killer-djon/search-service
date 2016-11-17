@@ -211,13 +211,13 @@ class SearchUsersController extends ApiController
                 return $this->_handleViewWithData($userContext);
             }
 
+            return null;
+
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {
             return $this->_handleViewWithError($e);
         }
-
-        return null;
     }
 
     /**

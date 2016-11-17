@@ -20,7 +20,7 @@ class PeopleTransformer extends AbstractTransformer implements TransformerInterf
         if (!is_null($dataResult[$context]) && isset($dataResult[$context])) {
             foreach ($dataResult[$context] as $key => $itemObject) {
                 $obj = (!is_null($subContext) ? $itemObject[$subContext] : $itemObject);
-                $this->recursiveTransformAvatar($obj);
+                AbstractTransformer::recursiveTransformAvatar($obj);
 
                 if (!is_null($subContext)) {
                     $result[] = [$subContext => $obj];
@@ -33,17 +33,5 @@ class PeopleTransformer extends AbstractTransformer implements TransformerInterf
         return $result;
     }
 
-    private function recursiveTransformAvatar(& $itemObject)
-    {
-        $avatarItems = AbstractTransformer::path($itemObject, 'avatar.comments.items');
-        if (!is_null($avatarItems) && !empty($avatarItems)) {
-            foreach ($avatarItems as $key => & $avatar) {
-                AbstractTransformer::set_path($avatar, 'author.avatar.mediumAvatar', [
-                    'path' => AbstractTransformer::path($avatar, 'author.avatar.mediumAvatar'),
-                ]);
-            }
 
-            AbstractTransformer::set_path($itemObject, 'avatar.comments.items', $avatarItems);
-        }
-    }
 }

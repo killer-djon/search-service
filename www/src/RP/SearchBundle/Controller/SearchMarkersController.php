@@ -10,6 +10,7 @@ use Common\Core\Exceptions\SearchServiceException;
 use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
+use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\HttpFoundation\Request;
 use Common\Core\Constants\RequestConstant;
 use Symfony\Component\HttpFoundation\Response;
@@ -54,8 +55,20 @@ class SearchMarkersController extends ApiController
             );
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                $oldFormat = $this->getVersioningData($markersSearchService);
+
+                if (!empty($oldFormat)) {
+                    $keys = array_keys($oldFormat['results']);
+
+                    foreach ($keys as $format) {
+                        foreach ($oldFormat['results'][$format] as &$obj) {
+                            AbstractTransformer::recursiveTransformAvatar($obj);
+                        }
+                    }
+                }
+
                 return $this->_handleViewWithData(
-                    $this->getVersioningData($markersSearchService),
+                    $oldFormat['results'],
                     null,
                     !self::INCLUDE_IN_CONTEXT
                 );

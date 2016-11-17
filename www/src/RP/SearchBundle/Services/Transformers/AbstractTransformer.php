@@ -203,13 +203,14 @@ class AbstractTransformer
      * @param string $childNodesField Key name for the element for placement children
      * @return array
      */
-    public static function convertToTree(array $flat, $idField = 'id', $parentIdField = 'parentId', $childNodesField = 'children') {
+    public static function convertToTree(array $flat, $idField = 'id', $parentIdField = 'parentId', $childNodesField = 'children')
+    {
         $flat = array_merge([
             [
-                'id' => 1,
+                'id'       => 1,
                 'parentId' => 0,
-                'name' => 'Root',
-            ]
+                'name'     => 'Root',
+            ],
         ], $flat);
         $indexed = [];
         // first pass - get the array indexed by the primary id
@@ -254,6 +255,25 @@ class AbstractTransformer
         }
 
         return $haystack;
+    }
+
+    /**
+     * Метод опять для быдло андройда который
+     * в avatar комментов вкладывает mediumAvatar ключ path
+     */
+    public static function recursiveTransformAvatar(& $itemObject)
+    {
+        $avatarItems = AbstractTransformer::path($itemObject, 'avatar.comments.items');
+
+        if (!is_null($avatarItems) && !empty($avatarItems)) {
+            foreach ($avatarItems as $key => & $avatar) {
+
+                AbstractTransformer::set_path($avatar, 'author.avatar.mediumAvatar', [
+                    'path' => AbstractTransformer::path($avatar, 'author.avatar.mediumAvatar'),
+                ]);
+            }
+            AbstractTransformer::set_path($itemObject, 'avatar.comments.items', $avatarItems);
+        }
     }
 
 }

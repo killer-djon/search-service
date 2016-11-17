@@ -315,7 +315,7 @@ class PeopleSearchService extends AbstractSearchService
                 tagInPercent = Math.round(tagInPercent)
             }
 
-            tagInPercent >= intersectRange.min && tagInPercent <=  intersectRange.max
+            (tagInPercent >= intersectRange.min && tagInPercent <= intersectRange.max)
         ";
 
         $resultQuery = [];
@@ -326,6 +326,16 @@ class PeopleSearchService extends AbstractSearchService
             $this->clearFilter();
 
             $this->setFilterQuery([
+                $this->_queryFilterFactory->getScriptFilter(
+                    $this->_scriptFactory->getScript($script_string, [
+                        'tagIdField' => PeopleSearchMapping::TAGS_ID_FIELD,
+                        'tagsValue' => $tags,
+                        'intersectRange' => [
+                            'min' => (int)$tagsRange['min'],
+                            'max' => (int)$tagsRange['max'],
+                        ]
+                    ])
+                ),
                 $this->_queryFilterFactory->getNotFilter(
                     $this->_queryFilterFactory->getTermsFilter(
                         PeopleSearchMapping::FRIEND_LIST_FIELD,
@@ -355,19 +365,6 @@ class PeopleSearchService extends AbstractSearchService
                 ]);
             }
 
-            $this->setFilterQuery([
-                $this->_queryFilterFactory->getScriptFilter(
-                    $this->_scriptFactory->getScript($script_string, [
-                        'tagIdField' => PeopleSearchMapping::TAGS_ID_FIELD,
-                        'tagsValue' => $tags,
-                        'intersectRange' => [
-                            'min' => (int)$tagsRange['min'],
-                            'max' => (int)$tagsRange['max'],
-                        ]
-                    ])
-                )
-            ]);
-
             /** формируем условия сортировки по удаленности */
             $this->setSortingQuery([
                 $this->_sortingFactory->getGeoDistanceSort(
@@ -377,7 +374,7 @@ class PeopleSearchService extends AbstractSearchService
             ]);
 
             $queryMatch = $this->createMatchQuery($searchText, [], $skip, $count);
-            $resultQuery = $this->searchDocuments($queryMatch, PeopleSearchMapping::CONTEXT);
+            $resultQuery[$key] = $this->searchDocuments($queryMatch, PeopleSearchMapping::CONTEXT);
         }
 
         return $resultQuery;

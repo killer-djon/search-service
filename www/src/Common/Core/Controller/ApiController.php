@@ -356,7 +356,7 @@ abstract class ApiController extends FOSRestController
      * @param array $inputArray Ссылка на искходный массив
      * @return void
      */
-    private function restructTagsField(&$inputArray)
+    public function restructTagsField(&$inputArray)
     {
         array_walk($inputArray, function (&$arItem) {
             if (is_array($arItem) && !isset($arItem['tags'])) {
@@ -377,7 +377,7 @@ abstract class ApiController extends FOSRestController
      * @param array $inputArray Ссылка на искходный массив
      * @return void
      */
-    private function restructLocationField(&$inputArray)
+    public function restructLocationField(&$inputArray)
     {
         array_walk($inputArray, function (& $item) {
             if (is_array($item) && !isset($item['lat']) && !isset($item['lon'])) {
@@ -409,7 +409,7 @@ abstract class ApiController extends FOSRestController
      * @param array $inputArray
      * @return array
      */
-    private function changeKeysName($inputArray)
+    public function changeKeysName($inputArray)
     {
         $return = [];
         foreach ($inputArray as $key => $value) {
@@ -437,20 +437,6 @@ abstract class ApiController extends FOSRestController
      */
     public function excludeEmptyValue($inputArray)
     {
-        /*$return = [];
-        foreach ($inputArray as $key => $value) {
-            if (is_array($value) && !empty($value)) {
-                $value = $this->excludeEmptyValue($value);
-            }
-
-            if( !empty($value) )
-            {
-                $return[$key] = $value;
-            }
-        }
-
-        return $return;*/
-
         return AbstractTransformer::array_filter_recursive($inputArray);
     }
 

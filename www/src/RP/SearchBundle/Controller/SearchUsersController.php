@@ -246,22 +246,34 @@ class SearchUsersController extends ApiController
                 $this->getCount()
             );
 
+            $data = [];
+
+            foreach ($possibleFriends as $keyCategory => $possibleFriend)
+            {
+                if( isset($possibleFriend[PeopleSearchMapping::CONTEXT]) )
+                {
+                    $data = $data + $possibleFriend[PeopleSearchMapping::CONTEXT];
+                }
+            }
+
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
-                $oldFormat = $this->getVersioningData($peopleSearchService);
+                //$oldFormat = $this->getVersioningData($peopleSearchService);
+                $this->restructTagsField($data);
+                $this->restructLocationField($data);
+                $data = $this->changeKeysName($data);
+                $data = $this->excludeEmptyValue($data);
 
                 return $this->_handleViewWithData(
-                    $oldFormat['results'][PeopleSearchMapping::CONTEXT],
+                    $data,
                     null,
                     !self::INCLUDE_IN_CONTEXT
                 );
             }
 
-            return $this->_handleViewWithData(array_merge(
-                    [
-                        'info' => $peopleSearchService->getTotalHits(),
-                    ],
-                    $possibleFriends ?: [])
-            );
+            return $this->_handleViewWithData([
+                'info' => $peopleSearchService->getTotalHits(),
+                PeopleSearchMapping::CONTEXT => $data
+            ]);
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);

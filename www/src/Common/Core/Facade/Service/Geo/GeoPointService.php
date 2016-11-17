@@ -105,8 +105,7 @@ class GeoPointService implements GeoPointServiceInterface
      */
     public function isValid()
     {
-        return $this->getLatitude() !== null && (int)$this->getLatitude() != 0
-                && $this->getLongitude() !== null && (int)$this->getLongitude() != 0;
+        return $this->getLatitude() !== null && $this->getLongitude() !== null;
     }
 
     /**

@@ -68,7 +68,7 @@ class SearchMarkersController extends ApiController
                 }
 
                 return $this->_handleViewWithData(
-                    $oldFormat['results'],
+                    $oldFormat,
                     null,
                     !self::INCLUDE_IN_CONTEXT
                 );

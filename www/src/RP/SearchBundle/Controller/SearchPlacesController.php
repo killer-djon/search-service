@@ -189,9 +189,21 @@ class SearchPlacesController extends ApiController
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                 $oldFormat = $this->getVersioningData($placeSearchService);
                 $oldFormat = $placeSearchService->placeTypeTransformer->transform($oldFormat['results'], PlaceTypeSearchMapping::CONTEXT);
+                $data = [];
+
+                if(!empty($oldFormat))
+                {
+                    foreach($oldFormat as $key => $item)
+                    {
+                        if(isset($item['children']) && !empty($item['children']) )
+                        {
+                            $data[] = $item;
+                        }
+                    }
+                }
 
                 return $this->_handleViewWithData(
-                    $oldFormat,
+                    $data,
                     null,
                     !self::INCLUDE_IN_CONTEXT
                 );

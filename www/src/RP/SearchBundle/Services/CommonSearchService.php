@@ -240,11 +240,12 @@ class CommonSearchService extends AbstractSearchService
         $this->setFilterQuery([
             $this->_queryFilterFactory->getGtFilter(TagNameSearchMapping::USERS_COUNT_FIELD, 0),
         ]);
+
         $this->setSortingQuery([
             $this->_sortingFactory->getFieldSort(TagNameSearchMapping::USERS_COUNT_FIELD, SortingOrder::SORTING_DESC),
         ]);
 
-        $script_string = "sum = doc['usersCount'].value + doc['placeCount'].value + doc['eventsCount'].value";
+        $script_string = "doc['usersCount'].value + doc['placeCount'].value + doc['eventsCount'].value";
 
         $this->setScriptFields([
             'sumCount' => $this->_scriptFactory->getScript($script_string),

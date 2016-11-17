@@ -118,12 +118,49 @@ class SearchCommonController extends ApiController
     {
         try {
             $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
+            // получаем из запроса ID пользователя
+            $userId = $this->getRequestUserId();
+
+            $commonSearchService = $this->getCommonSearchService();
+            $interests = $commonSearchService->searchCountInterests($userId, null, $this->getSkip(), $this->getCount());
+
+            $resultInterests = $commonSearchService->tagNamesTransformer->transform($interests, TagNameSearchMapping::CONTEXT);
+
+            if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                return $this->_handleViewWithData(
+                    $resultInterests,
+                    null,
+                    !self::INCLUDE_IN_CONTEXT
+                );
+            }
+
+            return $this->_handleViewWithData([
+                TagNameSearchMapping::CONTEXT => $resultInterests,
+            ]);
+
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+    }
+
+    /**
+     * Поиск интересов
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
+     * @return \Symfony\Component\HttpFoundation\Response Возвращаем ответ
+     */
+    public function searchInterestsByNameAction(Request $request)
+    {
+        try {
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
+            // получаем из запроса ID пользователя
+            $userId = $this->getRequestUserId();
+
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
             $searchText = (mb_strlen($searchText) <= 2 ? RequestConstant::NULLED_PARAMS : trim($searchText));
-
-            // получаем из запроса ID пользователя
-            $userId = $this->getRequestUserId();
 
             $commonSearchService = $this->getCommonSearchService();
             $interests = $commonSearchService->searchCountInterests($userId, $searchText, $this->getSkip(), $this->getCount());
@@ -141,7 +178,6 @@ class SearchCommonController extends ApiController
             return $this->_handleViewWithData([
                 TagNameSearchMapping::CONTEXT => $resultInterests,
             ]);
-
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

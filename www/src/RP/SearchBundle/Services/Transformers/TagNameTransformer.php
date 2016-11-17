@@ -14,17 +14,20 @@ class TagNameTransformer extends AbstractTransformer implements TransformerInter
      * @var array $transformMapping
      */
     private $transformMapping = [
-        'id'       => TagNameSearchMapping::TAG_NAME_ID_FIELD,
-        'name'     => TagNameSearchMapping::NAME_FIELD,
-        'usersCount' => TagNameSearchMapping::USERS_COUNT_FIELD,
-        'placeCount' => TagNameSearchMapping::PLACE_COUNT_FIELD,
+        'id'          => TagNameSearchMapping::TAG_NAME_ID_FIELD,
+        'name'        => TagNameSearchMapping::NAME_FIELD,
+        'usersCount'  => TagNameSearchMapping::USERS_COUNT_FIELD,
+        'placeCount'  => TagNameSearchMapping::PLACE_COUNT_FIELD,
         'eventsCount' => TagNameSearchMapping::EVENTS_COUNT_FIELD,
-        'sumCount' => TagNameSearchMapping::TOTAL_FIELD
+        'sumCount'    => TagNameSearchMapping::TOTAL_FIELD,
     ];
-
 
     public function transform(array $dataResult, $context, $subContext = null)
     {
+        if (!isset($dataResult[$context])) {
+            return [];
+        }
+
         $result = [];
         foreach ($dataResult[$context] as $key => $item) {
             $tagItems = [];

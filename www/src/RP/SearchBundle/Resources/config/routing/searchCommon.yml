@@ -15,11 +15,26 @@ RPSearchBundle_search_common:
 
 # Routing который формирует запрос для вывода интересов
 # (самых популярных)
-# пример запроса /api/search/v1/json/common/interests/{interestCount}
-RPSearchBundle_search_interests:
-    path: /v{_version}/{_format}/common/interests/count
+# пример запроса /api/search/v1/json/common/interests/top
+RPSearchBundle_search_interests_top:
+    path: /v{_version}/{_format}/common/interests/top
     defaults:
         _controller: RPSearchBundle:SearchCommon:searchInterests
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchCommon:searchInterests.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+
+# Routing который формирует запрос для вывода интересов
+# по поисковому запросу
+# пример запроса /api/search/v1/json/common/interests/name
+RPSearchBundle_search_interests_name:
+    path: /v{_version}/{_format}/common/interests/name
+    defaults:
+        _controller: RPSearchBundle:SearchCommon:searchInterestsByName
         _version: 1
         _format: json
         template: "RPSearchBundle:SearchCommon:searchInterests.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)

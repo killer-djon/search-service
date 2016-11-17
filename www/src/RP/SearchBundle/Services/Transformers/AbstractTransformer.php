@@ -238,23 +238,37 @@ class AbstractTransformer
      * @param array|null $haystack набор данных
      * @return array Очищенный массив данных
      */
-    public static function array_filter_recursive(array $haystack = null)
+    public static function array_filter_recursive($haystack)
     {
-        if (is_null($haystack) && empty($haystack)) {
-            return [];
-        }
-
-        foreach ($haystack as $key => $value) {
+        return AbstractTransformer::array_walk_recursive_delete($haystack, function ($value) {
             if (is_array($value)) {
-                $haystack[$key] = AbstractTransformer::array_filter_recursive($haystack[$key]);
+                return empty($value);
             }
+            return ($value === null);
+        });
 
-            if (is_array($haystack[$key]) && empty($haystack[$key])) {
-                unset($haystack[$key]);
+    }
+
+    /**
+     * Remove any elements where the callback returns true
+     *
+     * @param  array    $array    the array to walk
+     * @param  callable $callback callback takes ($value, $key, $userdata)
+     * @param  mixed    $userdata additional data passed to the callback.
+     * @return array
+     */
+    public static function array_walk_recursive_delete(array &$array, callable $callback, $userdata = null)
+    {
+        foreach ($array as $key => &$value) {
+            if (is_array($value)) {
+                $value = AbstractTransformer::array_walk_recursive_delete($value, $callback, $userdata);
+            }
+            if ($callback($value, $key, $userdata)) {
+                unset($array[$key]);
             }
         }
 
-        return $haystack;
+        return $array;
     }
 
     /**

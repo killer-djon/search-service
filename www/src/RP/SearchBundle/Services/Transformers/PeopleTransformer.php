@@ -30,7 +30,7 @@ class PeopleTransformer extends AbstractTransformer implements TransformerInterf
             }
         }
 
-        return $result;
+        return AbstractTransformer::array_filter_recursive($result);
     }
 
 

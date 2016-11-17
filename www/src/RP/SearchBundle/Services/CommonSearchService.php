@@ -96,7 +96,7 @@ class CommonSearchService extends AbstractSearchService
                 $queryMatchResults[$keyType] = $this->createMatchQuery(
                     $searchText,
                     $type::getMultiMatchQuerySearchFields(),
-                    0, self::DEFAULT_SEARCH_BLOCK_SIZE
+                    0, 100
                 );
             }
 

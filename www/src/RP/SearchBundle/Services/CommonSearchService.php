@@ -82,6 +82,12 @@ class CommonSearchService extends AbstractSearchService
                     ]);
                 }
 
+                $this->setHighlightQuery([
+                    'description' => [
+                        'term_vector' => 'with_positions_offsets'
+                    ]
+                ]);
+
                 /**
                  * Получаем сформированный объект запроса
                  * когда запрос многотипный НЕТ необходимости

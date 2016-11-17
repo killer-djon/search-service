@@ -131,7 +131,7 @@ class QueryFactory implements QueryFactoryInterface
         $highlight = [
             "pre_tags"  => ["<em>"],
             "post_tags" => ["</em>"],
-            "require_field_match" => false,
+            "require_field_match" => true,
             "fields"    => [],
         ];
 

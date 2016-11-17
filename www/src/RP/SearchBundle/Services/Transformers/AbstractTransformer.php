@@ -230,4 +230,30 @@ class AbstractTransformer
         return $indexed[$root][$childNodesField];
     }
 
+    /**
+     * Очищаем объекты от пустых массивов
+     * !!! необходиом для быдло андройда иначе там косяк с парсингом JSON объекта
+     *
+     * @param array|null $haystack набор данных
+     * @return array Очищенный массив данных
+     */
+    public static function array_filter_recursive(array $haystack = null)
+    {
+        if (is_null($haystack) && empty($haystack)) {
+            return [];
+        }
+
+        foreach ($haystack as $key => $value) {
+            if (is_array($value)) {
+                $haystack[$key] = AbstractTransformer::array_filter_recursive($haystack[$key]);
+            }
+
+            if (is_array($haystack[$key]) && empty($haystack[$key])) {
+                unset($haystack[$key]);
+            }
+        }
+
+        return $haystack;
+    }
+
 }

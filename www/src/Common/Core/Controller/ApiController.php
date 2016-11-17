@@ -10,6 +10,7 @@ use Common\Core\Constants\RequestConstant;
 use Common\Core\Facade\Search\QueryFactory\SearchServiceInterface;
 use FOS\RestBundle\Controller\FOSRestController;
 use RP\SearchBundle\Services\AbstractSearchService;
+use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Common\Core\Exceptions\ResponseFormatException;
 use Symfony\Component\HttpFoundation\Response;
@@ -436,19 +437,21 @@ abstract class ApiController extends FOSRestController
      */
     public function excludeEmptyValue($inputArray)
     {
-        $return = [];
+        /*$return = [];
         foreach ($inputArray as $key => $value) {
             if (is_array($value) && !empty($value)) {
                 $value = $this->excludeEmptyValue($value);
             }
 
-            if( !empty($value) || !is_null($value) )
+            if( !empty($value) )
             {
                 $return[$key] = $value;
             }
         }
 
-        return $return;
+        return $return;*/
+
+        return AbstractTransformer::array_filter_recursive($inputArray);
     }
 
     /**

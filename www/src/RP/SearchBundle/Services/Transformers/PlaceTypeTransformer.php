@@ -25,14 +25,26 @@ class PlaceTypeTransformer extends AbstractTransformer implements TransformerInt
         $listArray = $this->getPlaceTypeData($dataResult[$context]);
         $data = AbstractTransformer::convertToTree($listArray);
 
-        array_walk_recursive($data, function(&$item, $key){
-            if( isset($item['parentId']) )
-            {
-                unset($item);
-            }
-        });
-
+        $this->removeParentField($data);
         return AbstractTransformer::array_filter_recursive($data);
+    }
+
+    public function removeParentField(&$input)
+    {
+        if(!empty($input))
+        {
+            foreach($input as $key => &$value)
+            {
+                if( is_array($value) )
+                {
+                    $this->removeParentField($value);
+                }
+
+                if( isset($value['parentId']) ){
+                    unset($value['parentId']);
+                }
+            }
+        }
     }
 
     public function getPlaceTypeData($placesType)

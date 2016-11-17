@@ -5,9 +5,11 @@
 namespace RP\SearchBundle\Controller;
 
 use Common\Core\Controller\ApiController;
+use Common\Core\Exceptions\SearchServiceException;
 use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
+use RP\SearchBundle\Services\Mapping\TagNameSearchMapping;
 use Symfony\Component\HttpFoundation\Request;
 use Common\Core\Constants\RequestConstant;
 use Symfony\Component\HttpFoundation\Response;
@@ -15,6 +17,7 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class SearchCommonController extends ApiController
 {
+
     /**
      * Метод осуществляющий глобальный поиск
      * в контексте всех имеющихся типов в базе еластика
@@ -66,12 +69,10 @@ class SearchCommonController extends ApiController
 
                 $oldFormat = $this->getVersioningData($commonSearchService);
                 $data = [];
-                if(!empty($oldFormat))
-                {
+                if (!empty($oldFormat)) {
                     $keys = array_keys($oldFormat['results']);
 
-                    foreach ($keys as $format)
-                    {
+                    foreach ($keys as $format) {
 
                         $data[$format] = $commonSearchService->peopleTransformer->transform(
                             $oldFormat['results'],
@@ -82,11 +83,9 @@ class SearchCommonController extends ApiController
 
                     $data = [
                         'results' => $data,
-                        'info' => $oldFormat['info']
+                        'info'    => $oldFormat['info'],
                     ];
                 }
-
-
 
                 return $this->_handleViewWithData(
                     $data,
@@ -101,6 +100,47 @@ class SearchCommonController extends ApiController
                 ],
                 $searchData ?: []
             ));
+
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+    }
+
+    /**
+     * Вывод ТОП n интересов
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
+     * @return \Symfony\Component\HttpFoundation\Response Возвращаем ответ
+     */
+    public function searchInterestsAction(Request $request)
+    {
+        try {
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
+            $searchText = (mb_strlen($searchText) <= 2 ? RequestConstant::NULLED_PARAMS : trim($searchText));
+
+            // получаем из запроса ID пользователя
+            $userId = $this->getRequestUserId();
+
+            $commonSearchService = $this->getCommonSearchService();
+            $interests = $commonSearchService->searchCountInterests($userId, $searchText, $this->getSkip(), $this->getCount());
+
+            $resultInterests = $commonSearchService->tagNamesTransformer->transform($interests, TagNameSearchMapping::CONTEXT);
+
+            if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                return $this->_handleViewWithData(
+                    $resultInterests,
+                    null,
+                    !self::INCLUDE_IN_CONTEXT
+                );
+            }
+
+            return $this->_handleViewWithData([
+                TagNameSearchMapping::CONTEXT => $resultInterests,
+            ]);
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);

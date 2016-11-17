@@ -5,7 +5,9 @@
  */
 namespace RP\SearchBundle\Services;
 
+use Common\Core\Constants\SortingOrder;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
+use RP\SearchBundle\Services\Mapping\TagNameSearchMapping;
 
 class CommonSearchService extends AbstractSearchService
 {
@@ -13,8 +15,17 @@ class CommonSearchService extends AbstractSearchService
     /**
      * Кол-во выводимых данных
      * по блокам в общем поиске
+     *
+     * @const int DEFAULT_SEARCH_BLOCK_SIZE
      */
     const DEFAULT_SEARCH_BLOCK_SIZE = 3;
+
+    /**
+     * Кол-во выводимых интересов по умолчанию
+     *
+     * @const int DEFAULT_INTERESTS_COUNT
+     */
+    const DEFAULT_INTERESTS_COUNT = 5;
 
     /**
      * Глобальный (общий поиск) в системе
@@ -88,7 +99,6 @@ class CommonSearchService extends AbstractSearchService
                     ]
                 ]);*/
                 $this->setHighlightQuery($type::getHighlightConditions());
-
 
                 /**
                  * Получаем сформированный объект запроса
@@ -210,4 +220,38 @@ class CommonSearchService extends AbstractSearchService
             return $this->searchMultiTypeDocuments($queryMatchResults);
         }
     }
+
+    /**
+     * Поиск интересов, возможные варианты:
+     * 1. Либо вывод топ интересов (в случае пустой поисковой строки)
+     * 2. либо вывод N кол-во интересов
+     * 3. либо поиск интересов по запросу
+     *
+     * @param string $userId
+     * @param string|null $searchText Поисковый запрос
+     * @param int $skip (default: 0)
+     * @param int|null $count Кол-во в результате
+     * @return array Массив с найденными результатами
+     */
+    public function searchCountInterests($userId, $searchText = null, $skip = 0, $count = null)
+    {
+        $count = is_null($searchText) && empty($searchText) ? self::DEFAULT_INTERESTS_COUNT : $count;
+
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getGtFilter(TagNameSearchMapping::USERS_COUNT_FIELD, 0),
+        ]);
+        $this->setSortingQuery([
+            $this->_sortingFactory->getFieldSort(TagNameSearchMapping::USERS_COUNT_FIELD, SortingOrder::SORTING_DESC),
+        ]);
+
+        $queryMatchAll = $this->createMatchQuery(
+            $searchText,
+            TagNameSearchMapping::getMultiMatchQuerySearchFields(),
+            $skip,
+            $count
+        );
+
+        return $this->searchDocuments($queryMatchAll, TagNameSearchMapping::CONTEXT);
+    }
+
 }

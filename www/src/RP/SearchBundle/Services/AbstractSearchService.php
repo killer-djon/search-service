@@ -16,6 +16,7 @@ use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Transformers\CityTransformer;
 use RP\SearchBundle\Services\Transformers\PeopleTransformer;
 use RP\SearchBundle\Services\Transformers\PlaceTypeTransformer;
+use RP\SearchBundle\Services\Transformers\TagNameTransformer;
 
 class AbstractSearchService extends SearchEngine implements SearchServiceInterface
 {
@@ -109,6 +110,11 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     public $placeTypeTransformer;
 
     /**
+     * @var TagNameTransformer $tagNamesTransformer
+     */
+    public $tagNamesTransformer;
+
+    /**
      * Оперделяем проеобразователь для городов
      *
      * @param CityTransformer $cityTransformer
@@ -117,6 +123,17 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     public function setCityTransformer(CityTransformer $cityTransformer)
     {
         $this->cityTransformer = $cityTransformer;
+    }
+
+    /**
+     * Оперделяем проеобразователь интересов
+     *
+     * @param TagNameTransformer $tagNamesTransformer
+     * @return void
+     */
+    public function setTagNamesTransformer(TagNameTransformer $tagNamesTransformer)
+    {
+        $this->tagNamesTransformer = $tagNamesTransformer;
     }
 
     /**
@@ -310,27 +327,6 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         return $queryFactory->getQueryFactory();
     }
 
-    public function createMultiTypeQueryMatch($types, $searchText, $skip = 0, $count = null)
-    {
-        $fields = [];
-        $matchQuery = $this->_queryConditionFactory->getMultiMatchQuery();
-        $matchQuery->setQuery($searchText);
-
-        foreach ($types as $type) {
-            $fields = array_merge($fields, $type);
-        }
-        $matchQuery->setFields($fields);
-
-        $query = $this->setQueryOptions(
-            $this->_queryFactory->setQueryFactory($matchQuery),
-            $skip,
-            $count
-        );
-        $this->clearQueryFactory();
-
-        return $this->multiTypeSearch($query->getQueryFactory());
-    }
-
     /**
      * Создание объект поиска на основе совпадения по полям
      *
@@ -453,13 +449,12 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      */
     public function getUserById($userId)
     {
-        try{
+        try {
             $user = $this->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, $userId);
 
             return new UserProfileService($user);
-        }catch(SearchServiceException $e)
-        {
-            throw new SearchServiceException('User not found with ID '.$userId);
+        } catch (SearchServiceException $e) {
+            throw new SearchServiceException('User not found with ID ' . $userId);
         }
     }
 

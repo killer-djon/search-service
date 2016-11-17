@@ -82,11 +82,13 @@ class CommonSearchService extends AbstractSearchService
                     ]);
                 }
 
-                $this->setHighlightQuery([
+                /*$this->setHighlightQuery([
                     'description' => [
                         'term_vector' => 'with_positions_offsets'
                     ]
-                ]);
+                ]);*/
+                $this->setHighlightQuery($type::getHighlightConditions());
+
 
                 /**
                  * Получаем сформированный объект запроса
@@ -99,7 +101,6 @@ class CommonSearchService extends AbstractSearchService
                     0, self::DEFAULT_SEARCH_BLOCK_SIZE
                 );
             }
-
 
             /**
              * Так же при вызове метода поиска для многотипных

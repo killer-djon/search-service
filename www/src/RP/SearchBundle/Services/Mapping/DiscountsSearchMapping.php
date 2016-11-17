@@ -46,4 +46,17 @@ abstract class DiscountsSearchMapping extends PlaceSearchMapping
             $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::OK])
         ];
     }
+
+    /**
+     * Статический класс получения условий подсветки при поиске
+     * @return array
+     */
+    public static function getHighlightConditions()
+    {
+        $highlight[self::DESCRIPTION_FIELD] = [
+            'term_vector' => 'with_positions_offsets'
+        ];
+
+        return $highlight;
+    }
 }

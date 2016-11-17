@@ -45,4 +45,17 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
             $filterFactory->getExistsFilter(self::HELP_OFFERS_LIST_FIELD)
         ];
     }
+
+    /**
+     * Статический класс получения условий подсветки при поиске
+     * @return array
+     */
+    public static function getHighlightConditions()
+    {
+        $highlight[self::HELP_OFFERS_NAME_FIELD] = [
+            'term_vector' => 'with_positions_offsets'
+        ];
+
+        return $highlight;
+    }
 }

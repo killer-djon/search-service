@@ -75,5 +75,13 @@ abstract class AbstractSearchMapping
      */
     abstract public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null);
 
+    /**
+     * Статический класс получения условий подсветки при поиске
+     * @return array
+     */
+    public static function getHighlightConditions()
+    {
+        return [];
+    }
 
 }

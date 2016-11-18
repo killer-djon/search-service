@@ -206,11 +206,10 @@ class CommonSearchService extends AbstractSearchService
                 $queryMatchResults[$keyType] = $this->createMatchQuery(
                     null,
                     $typeFields,
-                    $skip,
-                    $count
+                    (count($searchTypes) == 1 ? $skip : 0),
+                    (count($searchTypes) == 1 ? $count : null)
                 );
             }
-
 
             /**
              * Так же при вызове метода поиска для многотипных

@@ -144,9 +144,11 @@ class CommonSearchService extends AbstractSearchService
      * @param string $userId
      * @param array $filters По каким типам делаем поиск
      * @param \Common\Core\Facade\Service\Geo\GeoPointServiceInterface $point ТОчка координат
+     * @param int $skip (default: 0)
+     * @param int|null $count Кол-во в результате
      * @return array Массив с найденными результатами
      */
-    public function searchMarkersByFilters($userId, array $filters, GeoPointServiceInterface $point)
+    public function searchMarkersByFilters($userId, array $filters, GeoPointServiceInterface $point, $skip = 0, $count = null)
     {
         $currentUser = $this->getUserById($userId);
 
@@ -189,12 +191,12 @@ class CommonSearchService extends AbstractSearchService
                 ]);
 
                 /** формируем условия сортировки */
-                $this->setSortingQuery([
+                $this->setSortingQuery(
                     $this->_sortingFactory->getGeoDistanceSort(
                         $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
                         $point
-                    ),
-                ]);
+                    )
+                );
 
                 /**
                  * Получаем сформированный объект запроса
@@ -203,9 +205,12 @@ class CommonSearchService extends AbstractSearchService
                  */
                 $queryMatchResults[$keyType] = $this->createMatchQuery(
                     null,
-                    $typeFields
+                    $typeFields,
+                    $skip,
+                    $count
                 );
             }
+
 
             /**
              * Так же при вызове метода поиска для многотипных

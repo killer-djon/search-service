@@ -51,7 +51,9 @@ class SearchMarkersController extends ApiController
             $markers = $markersSearchService->searchMarkersByFilters(
                 $userId,
                 $types,
-                $this->getGeoPoint()
+                $this->getGeoPoint(),
+                $this->getSkip(),
+                $this->getCount()
             );
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {

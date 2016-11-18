@@ -421,7 +421,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
                      ->setHighlight($this->_highlightQueryData)// @todo доработать
                      ->setSort($this->_sortingQueryData)
                      ->setSize(is_null($count) ? self::DEFAULT_SIZE_QUERY : (int)$count)
-                     ->setFrom(is_null($count) ? self::DEFAULT_SKIP_QUERY : $skip);
+                     ->setFrom(is_null($skip) ? self::DEFAULT_SKIP_QUERY : $skip);
     }
 
     /**

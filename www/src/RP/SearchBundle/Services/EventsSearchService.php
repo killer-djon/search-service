@@ -60,12 +60,12 @@ class EventsSearchService extends AbstractSearchService
 
         if ($point->isValid()) {
             /** формируем условия сортировки */
-            $this->setSortingQuery([
+            $this->setSortingQuery(
                 $this->_sortingFactory->getGeoDistanceSort(
                     EventsSearchMapping::LOCATION_POINT_FIELD,
                     $point
-                ),
-            ]);
+                )
+            );
         }
 
         $queryMatch = $this->createQuery($skip, $count);
@@ -123,12 +123,12 @@ class EventsSearchService extends AbstractSearchService
 
         if ($point->isValid()) {
             /** формируем условия сортировки */
-            $this->setSortingQuery([
+            $this->setSortingQuery(
                 $this->_sortingFactory->getGeoDistanceSort(
                     EventsSearchMapping::LOCATION_POINT_FIELD,
                     $point
-                ),
-            ]);
+                )
+            );
         }
 
         $queryMatch = $this->createQuery($skip, $count);
@@ -201,12 +201,12 @@ class EventsSearchService extends AbstractSearchService
 
         if ($point->isValid()) {
             /** формируем условия сортировки */
-            $this->setSortingQuery([
+            $this->setSortingQuery(
                 $this->_sortingFactory->getGeoDistanceSort(
                     EventsSearchMapping::LOCATION_POINT_FIELD,
                     $point
-                ),
-            ]);
+                )
+            );
         }
 
         $queryMatch = $this->createQuery($skip, $count);

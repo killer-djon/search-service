@@ -62,12 +62,12 @@ class PeopleSearchService extends AbstractSearchService
         $this->setGeoPointConditions($point, PeopleSearchMapping::class);
 
         /** формируем условия сортировки */
-        $this->setSortingQuery([
+        $this->setSortingQuery(
             $this->_sortingFactory->getGeoDistanceSort(
                 PeopleSearchMapping::LOCATION_POINT_FIELD,
                 $point
-            ),
-        ]);
+            )
+        );
 
         /** Получаем сформированный объект запроса */
         $this->setConditionQueryShould([
@@ -105,12 +105,12 @@ class PeopleSearchService extends AbstractSearchService
         $currentUser = $this->getUserById($userId);
 
         /** формируем условия сортировки */
-        $this->setSortingQuery([
+        $this->setSortingQuery(
             $this->_sortingFactory->getGeoDistanceSort(
                 PeopleSearchMapping::LOCATION_POINT_FIELD,
                 $point
-            ),
-        ]);
+            )
+        );
 
         /** добавляем к условию поиска рассчет по совпадению интересов */
         $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);
@@ -175,12 +175,12 @@ class PeopleSearchService extends AbstractSearchService
         ]);
 
         /** формируем условия сортировки */
-        $this->setSortingQuery([
+        $this->setSortingQuery(
             $this->_sortingFactory->getGeoDistanceSort(
                 PeopleSearchMapping::LOCATION_POINT_FIELD,
                 $point
-            ),
-        ]);
+            )
+        );
 
         if (!is_null($searchText) && !empty($searchText)) {
 
@@ -366,12 +366,12 @@ class PeopleSearchService extends AbstractSearchService
             }
 
             /** формируем условия сортировки по удаленности */
-            $this->setSortingQuery([
+            $this->setSortingQuery(
                 $this->_sortingFactory->getGeoDistanceSort(
                     PeopleSearchMapping::LOCATION_POINT_FIELD,
                     $point
-                ),
-            ]);
+                )
+            );
 
             $queryMatch = $this->createMatchQuery($searchText, [], $skip, $count);
             $resultQuery[$key] = $this->searchDocuments($queryMatch, PeopleSearchMapping::CONTEXT);

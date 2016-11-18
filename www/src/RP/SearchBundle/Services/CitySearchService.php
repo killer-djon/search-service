@@ -52,9 +52,9 @@ class CitySearchService extends AbstractSearchService
             )
         ]);
 
-        $this->setSortingQuery([
+        $this->setSortingQuery(
             $this->_sortingFactory->getFieldSort(CitySearchMapping::NAME_FIELD)
-        ]);
+        );
 
         /** Получаем сформированный объект запроса */
         $queryMatchResult = $this->createQuery($skip, $count);

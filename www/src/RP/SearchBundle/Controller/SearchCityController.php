@@ -13,6 +13,7 @@ use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\CitySearchService;
 use RP\SearchBundle\Services\Mapping\CitySearchMapping;
+use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use Symfony\Component\HttpFoundation\Request;
 use Common\Core\Constants\RequestConstant;
 use Symfony\Component\HttpFoundation\Response;
@@ -59,6 +60,8 @@ class SearchCityController extends ApiController
             $citySearchService = $this->getCitySearchService();
             $cities = $citySearchService->searchCityByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
 
+
+
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                 $oldFormat = $this->getVersioningData($citySearchService);
 
@@ -94,13 +97,16 @@ class SearchCityController extends ApiController
      */
     public function searchCityByIdAction(Request $request, $cityId)
     {
-        $peopleSearchService = $this->getPeopleSearchService();
-
         try {
-            $userContext = $peopleSearchService->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, $userId);
+            $citySearchService = $this->getCitySearchService();
+            $city = $citySearchService->searchRecordById(
+                CitySearchMapping::CONTEXT,
+                CitySearchMapping::ID_FIELD,
+                $cityId
+            );
 
-            if (!is_null($userContext)) {
-                return $this->_handleViewWithData($userContext);
+            if (!is_null($city)) {
+                return $this->_handleViewWithData($city);
             }
 
         } catch (SearchServiceException $e) {

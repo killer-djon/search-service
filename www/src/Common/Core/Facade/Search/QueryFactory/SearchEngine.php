@@ -443,7 +443,6 @@ class SearchEngine implements SearchEngineInterface
      */
     public function transformResult(\Elastica\ResultSet $resultSets, $keyField = null)
     {
-
         if ($resultSets->count() > 0) {
             $this->setTotalHits($resultSets, $keyField);
             $this->setTotalResults($resultSets, $keyField);

@@ -191,12 +191,9 @@ class SearchPlacesController extends ApiController
                 $oldFormat = $placeSearchService->placeTypeTransformer->transform($oldFormat['results'], PlaceTypeSearchMapping::CONTEXT);
                 $data = [];
 
-                if(!empty($oldFormat))
-                {
-                    foreach($oldFormat as $key => $item)
-                    {
-                        if(isset($item['children']) && !empty($item['children']) )
-                        {
+                if (!empty($oldFormat)) {
+                    foreach ($oldFormat as $key => $item) {
+                        if (isset($item['children']) && !empty($item['children'])) {
                             $data[] = $item;
                         }
                     }

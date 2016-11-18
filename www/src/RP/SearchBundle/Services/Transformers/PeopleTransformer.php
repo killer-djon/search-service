@@ -23,7 +23,10 @@ class PeopleTransformer extends AbstractTransformer implements TransformerInterf
                 AbstractTransformer::recursiveTransformAvatar($obj);
 
                 if (!is_null($subContext)) {
-                    $result[] = [$subContext => $obj];
+                    $result[] = (isset($itemObject['hit']) ? array_merge(
+                        [$subContext => $obj],
+                        ['hit' => $itemObject['hit']]
+                    ) : [$subContext => $obj]);
                 } else {
                     $result[] = $obj;
                 }

@@ -105,9 +105,15 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
         return [
-            $filterFactory->getNotFilter(
-                $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
-            )
+            $filterFactory->getBoolAndFilter([
+                $filterFactory->getNotFilter(
+                    $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
+                ),
+                $filterFactory->getNotFilter(
+                    $filterFactory->getExistsFilter(self::BONUS_FIELD)
+                ),
+                $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
+            ]),
         ];
     }
 }

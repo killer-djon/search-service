@@ -93,11 +93,6 @@ class CommonSearchService extends AbstractSearchService
                     ]);
                 }
 
-                /*$this->setHighlightQuery([
-                    'description' => [
-                        'term_vector' => 'with_positions_offsets'
-                    ]
-                ]);*/
                 $this->setHighlightQuery($type::getHighlightConditions());
 
                 /**

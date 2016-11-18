@@ -78,7 +78,6 @@ class SearchCityController extends ApiController
                     $cities ?: [])
             );
 
-
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

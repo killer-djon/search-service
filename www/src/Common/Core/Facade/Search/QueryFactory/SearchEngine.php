@@ -308,9 +308,6 @@ class SearchEngine implements SearchEngineInterface
 
             foreach ($elasticQueries as $keyType => $elasticQuery) {
                 $elasticQuery->setSource((bool)$setSource);
-                //$elasticQuery->setSize(self::DEFAULT_SIZE_QUERY);
-                //$elasticQuery->setFrom(self::DEFAULT_SKIP_QUERY);
-
                 $elasticType = $this->_getElasticType($this->searchTypes[$keyType]);
 
                 $searchItem = $elasticType->createSearch($elasticQuery);
@@ -426,10 +423,10 @@ class SearchEngine implements SearchEngineInterface
             $page = intval($skip / $count) + 1;
 
             return [
-                'count' => (int)$totalCount,
+                'count'      => (int)$totalCount,
                 'offset'     => (int)$skip,
                 'limit'      => (int)$count,
-                'page_count'  => (int)$pageCount,
+                'page_count' => (int)$pageCount,
                 'page'       => (int)$page,
             ];
         }
@@ -528,18 +525,18 @@ class SearchEngine implements SearchEngineInterface
                 unset($record[$type]['hit']['fields']);
             }
 
-            if ($this->getOldFormat()) {
+            if ($this->getOldFormat() === true) {
                 $items[$type][] = [
                     'item' => $record[$type],
                     'hit'  => $record[$type]['hit'],
                 ];
+
             } else {
                 $items[$type][] = array_merge($record[$type], [
                     'hit' => $record[$type]['hit'],
                 ]);
             }
         }
-
         $this->_totalResults = $items;
 
         return $this->getTotalResults();

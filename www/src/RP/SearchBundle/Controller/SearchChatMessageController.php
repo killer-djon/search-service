@@ -27,6 +27,8 @@ class SearchChatMessageController extends ApiController
     public function searchChatMessageAction(Request $request)
     {
         try {
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
+
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
 
@@ -47,7 +49,23 @@ class SearchChatMessageController extends ApiController
             $userId = $this->getRequestUserId();
 
             $chatSearchService = $this->getChatMessageSearchService();
+
+            // ужасный костыль после перехода к новому сервису надо убрать
+            if (!is_null($version) && (int)$version == RequestConstant::DEFAULT_VERSION) {
+                $chatSearchService->setOldFormat(true);
+            }
+
             $chatMessages = $chatSearchService->searchByChatMessage($userId, $searchText, $chatId, $this->getSkip(), $this->getCount());
+
+            if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                $oldFormat = $this->getVersioningData($chatSearchService);
+
+                return $this->_handleViewWithData(
+                    $oldFormat['results'],
+                    null,
+                    !self::INCLUDE_IN_CONTEXT
+                );
+            }
 
             return $this->_handleViewWithData(array_merge(
                 [

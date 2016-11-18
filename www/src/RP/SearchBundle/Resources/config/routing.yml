@@ -34,3 +34,8 @@ rp_search_common:
     prefix:   /api/search
     type: rest
 
+# routing поиска по сообщениям
+rp_search_chatMessage:
+    resource: routing/searchChatMessage.yml
+    prefix:   /api/search
+    type: rest

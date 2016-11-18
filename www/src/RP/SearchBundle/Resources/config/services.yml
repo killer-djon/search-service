@@ -73,6 +73,10 @@ services:
         class: RP\SearchBundle\Services\CitySearchService
         parent: rp_search.search_service.base
 
+    rp_search.search_service.chat_message:
+        class: RP\SearchBundle\Services\ChatMessageSearchService
+        parent: rp_search.search_service.base
+
     rp_search.transform_interface.base:
         class: RP\SearchBundle\Services\Transformers\AbstractTransformer
         calls:

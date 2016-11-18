@@ -1,10 +1,4 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: eleshanu
- * Date: 14.11.16
- * Time: 16:36
- */
 namespace RP\SearchBundle\Services\Mapping;
 
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;

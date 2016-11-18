@@ -1,0 +1,69 @@
+<?php
+/**
+ * Сервис поиска сообщений
+ */
+namespace RP\SearchBundle\Services;
+
+use Common\Core\Constants\SortingOrder;
+use RP\SearchBundle\Services\Mapping\ChatMessageMapping;
+use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
+
+class ChatMessageSearchService extends AbstractSearchService
+{
+    /**
+     * Метод осуществляет поиск в еластике
+     * по имени/фамилии пользьвателя в чате
+     * или по тексту в сообщениях чата
+     * если указан chatId то сужаем круг поиск в рамках чата
+     *
+     * @param string $userId ID пользователя который делает запрос к АПИ
+     * @param string $searchText Поисковый запрос
+     * @param string $chatId ID чата по которому будем фильтровать
+     * @param int $skip Кол-во пропускаемых позиций поискового результата
+     * @param int $count Какое кол-во выводим
+     * @return array Массив с найденными результатами
+     */
+    public function searchByChatMessage($userId, $searchText, $chatId = null, $skip = 0, $count = null)
+    {
+        if (!is_null($chatId) && !empty($chatId)) {
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getTermFilter([ChatMessageMapping::CHAT_ID_FIELD => $chatId]),
+            ]);
+        }
+
+        if (!empty($searchText)) {
+            $this->setConditionQueryShould([
+                $this->_queryConditionFactory
+                    ->getMultiMatchQuery()
+                    ->setQuery($searchText)
+                    ->setFields(ChatMessageMapping::getMultiMatchQuerySearchFields()),
+            ]);
+        }
+
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getBoolOrFilter([
+                $this->_queryFilterFactory->getTermFilter([
+                    ChatMessageMapping::AUTHOR_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
+                ]),
+                $this->_queryFilterFactory->getTermFilter([
+                    ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
+                ]),
+            ]),
+        ]);
+
+        $this->setHighlightQuery([
+            ChatMessageMapping::MESSAGE_TEXT_FIELD => [
+                'term_vector' => 'with_positions_offsets',
+            ],
+        ]);
+
+        /**
+         * Получаем сформированный объект запроса
+         * когда запрос многотипный НЕТ необходимости
+         * указывать skip и count
+         */
+        $queryMatchResults = $this->createQuery($skip, $count);
+
+        return $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT);
+    }
+}

@@ -83,6 +83,13 @@ abstract class RequestConstant
     const CITY_SEARCH_PARAM = 'cityId';
 
     /**
+     * Параметр запроса ID чата
+     *
+     * @const string CHAT_ID_PARAM
+     */
+    const CHAT_ID_PARAM = 'chatId';
+
+    /**
      * Параметр поисковой строки
      * кол-во пропускаемых записей поиска
      *

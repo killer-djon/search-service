@@ -678,4 +678,15 @@ abstract class ApiController extends FOSRestController
     {
         return $this->get('rp_search.search_service.city');
     }
+
+    /**
+     * Получаем сервис поиска городов
+     * через еластик
+     *
+     * @return \RP\SearchBundle\Services\ChatMessageSearchService
+     */
+    public function getChatMessageSearchService()
+    {
+        return $this->get('rp_search.search_service.chat_message');
+    }
 }

@@ -28,14 +28,15 @@ rp_search_markers:
     prefix:   /api/search
     type: rest
 
+# routing поиска по сообщениям
+rp_search_messages:
+    resource: routing/searchChatMessage.yml
+    prefix:   /api/search
+    type: rest
+
 # routing поиска мест
 rp_search_common:
     resource: routing/searchCommon.yml
     prefix:   /api/search
     type: rest
 
-# routing поиска по сообщениям
-rp_search_chatMessage:
-    resource: routing/searchChatMessage.yml
-    prefix:   /api/search
-    type: rest

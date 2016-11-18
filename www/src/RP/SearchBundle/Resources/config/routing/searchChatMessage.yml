@@ -1,6 +1,6 @@
 # Routing который формирует запрос поиска сообщений в чате
 # пример запроса /api/search/v1/json/chat/messages
-RPSearchBundle_search_common:
+RPSearchBundle_search_chatmessage:
     path: /v{_version}/{_format}/chat/messages
     defaults:
         _controller: RPSearchBundle:SearchChatMessage:searchChatMessage

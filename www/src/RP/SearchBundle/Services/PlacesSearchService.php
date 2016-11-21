@@ -205,14 +205,7 @@ class PlacesSearchService extends AbstractSearchService
             ]);
         }
 
-        $this->setFilterQuery([
-            $this->_queryFilterFactory->getBoolOrFilter([
-                $this->_queryFilterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 1, 100),
-                $this->_queryFilterFactory->getNotFilter(
-                    $this->_queryFilterFactory->getMissingFilter(PlaceSearchMapping::BONUS_FIELD)
-                ),
-            ]),
-        ]);
+        $this->setFilterDiscounts($userId);
 
         /** добавляем к условию поиска рассчет по совпадению интересов */
         $this->setScriptTagsConditions($currentUser, PlaceSearchMapping::class);
@@ -228,6 +221,41 @@ class PlacesSearchService extends AbstractSearchService
         return $this->searchDocuments($queryMatch, PlaceSearchMapping::CONTEXT);
     }
 
+
+    /**
+     * Установка фильтров для поиска только скидок
+     * которые так же прошли модерацию (т.е. не удалены)
+     *
+     * @param string $userId ID пользователя (автор места)
+     * @return void
+     */
+    private function setFilterDiscounts($userId)
+    {
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getBoolOrFilter([
+                $this->_queryFilterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 1, 100),
+                $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
+            ]),
+            $this->_queryFilterFactory->getBoolOrFilter([
+                $this->_queryFilterFactory->getBoolAndFilter([
+                    $this->_queryFilterFactory->getNotFilter(
+                        $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId])
+                    ),
+                    $this->_queryFilterFactory->getTermFilter([
+                        PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK
+                    ])
+                ]),
+                $this->_queryFilterFactory->getBoolAndFilter([
+                    $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                    $this->_queryFilterFactory->getTermsFilter(PlaceSearchMapping::MODERATION_STATUS_FIELD, [
+                        ModerationStatus::DIRTY,
+                        ModerationStatus::OK
+                    ]),
+                ])
+            ])
+        ]);
+    }
+
     /**
      * Установка фильтров для поиска только мест
      * без бонусов и скидок только места
@@ -238,43 +266,15 @@ class PlacesSearchService extends AbstractSearchService
      */
     private function setFilterPlaces($userId = null)
     {
-        if (!is_null($userId) && !empty($userId)) {
-            $this->setFilterQuery([
-                $this->_queryFilterFactory->getBoolOrFilter([
-                    $this->_queryFilterFactory->getBoolAndFilter([
-                        $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
-                        $this->_queryFilterFactory->getTermsFilter(PlaceSearchMapping::MODERATION_STATUS_FIELD, [
-                            ModerationStatus::OK,
-                            ModerationStatus::DIRTY,
-                            ModerationStatus::RESTORED,
-                            ModerationStatus::REJECTED,
-                        ]),
-                    ]),
-                    $this->_queryFilterFactory->getBoolAndFilter([
-                        $this->_queryFilterFactory->getNotFilter(
-                            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
-                        ),
-                        $this->_queryFilterFactory->getNotFilter(
-                            $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
-                        ),
-                        $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
-                    ]),
-                ]),
-            ]);
-        } else {
-            $this->setFilterQuery([
-                $this->_queryFilterFactory->getBoolAndFilter([
-                    $this->_queryFilterFactory->getNotFilter(
-                        $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
-                    ),
-                    $this->_queryFilterFactory->getNotFilter(
-                        $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
-                    ),
-                    $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
-                ]),
-            ]);
-        }
 
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getBoolAndFilter([
+                $this->_queryFilterFactory->getNotFilter(
+                    $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
+                ),
+                $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
+            ])
+        ]);
     }
 
     /**
@@ -289,6 +289,24 @@ class PlacesSearchService extends AbstractSearchService
     public function getPlaceById($userId, $context, $fieldId, $recordId)
     {
         $this->setFilterPlaces($userId);
+
+        return $this->searchRecordById($context, $fieldId, $recordId);
+    }
+
+
+
+    /**
+     * Поиск скидки по его ID с учетом фильтров
+     *
+     * @param string $userId ID автора места
+     * @param string $context Контекст поиска
+     * @param string $fieldId Название поля идентификатора
+     * @param string $recordId ID записи места которое надо найти
+     * @return array Набор данных найденной записи
+     */
+    public function getDiscountById($userId, $context, $fieldId, $recordId)
+    {
+        $this->setFilterDiscounts($userId);
 
         return $this->searchRecordById($context, $fieldId, $recordId);
     }

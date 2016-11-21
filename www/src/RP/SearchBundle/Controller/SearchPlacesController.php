@@ -163,6 +163,31 @@ class SearchPlacesController extends ApiController
     }
 
     /**
+     * Поиск мест по заданному ID
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @param string $discountId id места скидки
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function searchDiscountByIdAction(Request $request, $discountId)
+    {
+        $placeSearchService = $this->getPlacesSearchService();
+
+        try {
+            /** @var ID пользователя */
+            $userId = $this->getRequestUserId();
+            $place = $placeSearchService->getDiscountById($userId, PlaceSearchMapping::CONTEXT, PlaceSearchMapping::PLACE_ID_FIELD, $discountId);
+
+            return $this->_handleViewWithData($place);
+
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+    }
+
+    /**
      * Поиск типов мест по названию
      *
      * @param \Symfony\Component\HttpFoundation\Request $request

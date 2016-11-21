@@ -25,7 +25,29 @@ abstract class DiscountsSearchMapping extends PlaceSearchMapping
      */
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return self::getMatchSearchFilter($filterFactory, $userId);
+        return [
+            $filterFactory->getBoolOrFilter([
+                $filterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 1, 100),
+                $filterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
+            ]),
+            $filterFactory->getBoolOrFilter([
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getNotFilter(
+                        $filterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId])
+                    ),
+                    $filterFactory->getTermFilter([
+                        PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK
+                    ])
+                ]),
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                    $filterFactory->getTermsFilter(PlaceSearchMapping::MODERATION_STATUS_FIELD, [
+                        ModerationStatus::DIRTY,
+                        ModerationStatus::OK
+                    ]),
+                ])
+            ])
+        ];
     }
 
 
@@ -38,13 +60,7 @@ abstract class DiscountsSearchMapping extends PlaceSearchMapping
      */
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return [
-            $filterFactory->getBoolOrFilter([
-                $filterFactory->getRangeFilter(self::DISCOUNT_FIELD, 1, 100),
-                $filterFactory->getExistsFilter(self::BONUS_FIELD),
-            ]),
-            $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::OK])
-        ];
+        return self::getMarkersSearchFilter($filterFactory, $userId);
     }
 
     /**

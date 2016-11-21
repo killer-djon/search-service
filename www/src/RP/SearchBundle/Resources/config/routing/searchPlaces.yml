@@ -58,6 +58,21 @@ RPSearchBundle_search_places_bydiscount:
         _method: (GET)
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
+
+# Routing который формирует запрос для поиска скидки по ID
+# пример запроса /api/search/v1/json/discount/id/{discountId}
+RPSearchBundle_search_discount_byid:
+    path: /v{_version}/{_format}/discount/id/{discountId}
+    defaults:
+        _controller: RPSearchBundle:SearchPlaces:searchDiscountById
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchPlaces:searchDiscountById.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (OPTIONS|GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        discountId: \w+
                 
 # Routing который формирует запрос для поиска одого места по ID
 # пример запроса /api/search/v1/json/places/id/{placeId}

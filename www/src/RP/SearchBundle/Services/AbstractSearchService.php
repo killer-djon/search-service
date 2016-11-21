@@ -472,8 +472,6 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      */
     public function searchRecordById($context, $fieldId, $recordId)
     {
-        $this->clearQueryFactory();
-
         /** указываем условия запроса */
         $this->setConditionQueryMust([
             $this->_queryConditionFactory->getTermQuery($fieldId, $recordId),

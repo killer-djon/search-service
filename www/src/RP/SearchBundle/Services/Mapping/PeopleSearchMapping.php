@@ -8,6 +8,9 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     /** Контекст поиска */
     const CONTEXT = 'people';
 
+    /** ID системного пользователя RussianPlace */
+    const RP_USER_ID = '4092';
+
     /** Поле фамилии пользователя */
     const SURNAME_FIELD = 'surname'; // полное совпадение фамилии по русски
     const SURNAME_NGRAM_FIELD = 'surname._surnameNgram'; // частичное совпадение фамилии от 3-х сивмолов по русски
@@ -128,7 +131,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             self::ACTIVITY_SPHERE_NAME_FIELD,
             // поля с названием города проживания
             self::LOCATION_CITY_NAME_FIELD,
-            self::LOCATION_CITY_INTERNATIONAL_NAME_FIELD
+            self::LOCATION_CITY_INTERNATIONAL_NAME_FIELD,
 
         ];
     }
@@ -145,7 +148,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
         return [
             $filterFactory->getNotFilter(
                 $filterFactory->getTermsFilter(self::FRIEND_LIST_FIELD, [$userId])
-            )
+            ),
         ];
     }
 

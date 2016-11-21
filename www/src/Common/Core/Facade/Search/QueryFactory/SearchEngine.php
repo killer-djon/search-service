@@ -389,8 +389,11 @@ class SearchEngine implements SearchEngineInterface
             $elasticQuery->setFrom(0);
 
             $resultSet = $elasticType->search($elasticQuery);
+
             if ($resultSet->current() !== false) {
-                return $items = $resultSet->current()->getData();
+                $items = $resultSet->current()->getData();
+
+                return $items;
             }
 
             return null;

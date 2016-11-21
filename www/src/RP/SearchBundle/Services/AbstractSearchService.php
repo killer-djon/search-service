@@ -380,8 +380,9 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         );
 
         $this->clearQueryFactory();
+        $queryFactory = $query->getQueryFactory();
 
-        return $query->getQueryFactory();
+        return $queryFactory;
     }
 
     /**
@@ -391,15 +392,18 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      *
      * @return SearchServiceInterface
      */
-    private function clearQueryFactory()
+    protected function clearQueryFactory()
     {
-        $this->setConditionQueryShould([]);
-        $this->setConditionQueryMust([]);
-        $this->setConditionQueryMustNot([]);
-        $this->setFilterQuery([]);
-        $this->setFieldsQuery([]);
-        $this->setHighlightQuery([]);
-        $this->setAggregationQuery([]);
+        $this->_conditionQueryMustData = [];
+        $this->_conditionQueryShouldData = [];
+        $this->_conditionQueryMustNotData = [];
+        $this->_filterQueryData = [];
+        $this->_fieldsSelected = [];
+        $this->_highlightQueryData = [];
+        $this->_aggregationQueryData = [];
+        $this->_scriptFields = null;
+        $this->_scriptFunctions = null;
+        $this->_sortingQueryData = [];
 
         return $this;
     }
@@ -468,6 +472,8 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      */
     public function searchRecordById($context, $fieldId, $recordId)
     {
+        $this->clearQueryFactory();
+
         /** указываем условия запроса */
         $this->setConditionQueryMust([
             $this->_queryConditionFactory->getTermQuery($fieldId, $recordId),

@@ -77,7 +77,7 @@ class PeopleSearchService extends AbstractSearchService
             $this->_queryConditionFactory->getWildCardQuery(
                 PeopleSearchMapping::FULLNAME_MORPHOLOGY_FIELD,
                 $searchText
-            )
+            ),
         ]);
 
         // Получаем сформированный объект запроса
@@ -229,17 +229,17 @@ class PeopleSearchService extends AbstractSearchService
         if (!is_null($searchText) && !empty($searchText)) {
             $this->setConditionQueryShould([
                 $this->_queryConditionFactory->getMultiMatchQuery()
-                    ->setQuery($searchText)
-                    ->setFields(array_merge(
-                        PeopleSearchMapping::getMultiMatchQuerySearchFields(),
-                        [
-                            PeopleSearchMapping::HELP_OFFERS_NAME_FIELD,
-                            PeopleSearchMapping::HELP_OFFERS_NAME_NGRAM_FIELD,
-                            PeopleSearchMapping::HELP_OFFERS_NAME_TRANSLIT_FIELD,
-                            PeopleSearchMapping::HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD,
-                        ]
-                    )
-                ),
+                                             ->setQuery($searchText)
+                                             ->setFields(array_merge(
+                                                     PeopleSearchMapping::getMultiMatchQuerySearchFields(),
+                                                     [
+                                                         PeopleSearchMapping::HELP_OFFERS_NAME_FIELD,
+                                                         PeopleSearchMapping::HELP_OFFERS_NAME_NGRAM_FIELD,
+                                                         PeopleSearchMapping::HELP_OFFERS_NAME_TRANSLIT_FIELD,
+                                                         PeopleSearchMapping::HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD,
+                                                     ]
+                                                 )
+                                             ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     PeopleSearchMapping::HELP_OFFERS_WORDS_NAME_FIELD,
                     $searchText
@@ -276,23 +276,23 @@ class PeopleSearchService extends AbstractSearchService
 
         $tagsIntersectRange = [
             'category1' => [
-                'min' => 50,
-                'max' => 100,
-                'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MIN
+                'min'      => 50,
+                'max'      => 100,
+                'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MIN,
             ],
             'category2' => [
-                'min' => 30,
-                'max' => 50,
-                'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX
+                'min'      => 30,
+                'max'      => 50,
+                'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX,
             ],
             'category3' => [
-                'min' => 0,
-                'max' => 30,
-                'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX
-            ]
+                'min'      => 0,
+                'max'      => 30,
+                'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX,
+            ],
         ];
 
-        $tags = array_map(function($tag){
+        $tags = array_map(function ($tag) {
             return $tag['id'];
         }, $currentUser->getTags());
 
@@ -320,20 +320,18 @@ class PeopleSearchService extends AbstractSearchService
 
         $resultQuery = [];
 
-        foreach( $tagsIntersectRange as $key => $tagsRange )
-        {
-            $this->clearScriptFields();
-            $this->clearFilter();
+        foreach ($tagsIntersectRange as $key => $tagsRange) {
+            $this->clearQueryFactory();
 
             $this->setFilterQuery([
                 $this->_queryFilterFactory->getScriptFilter(
                     $this->_scriptFactory->getScript($script_string, [
-                        'tagIdField' => PeopleSearchMapping::TAGS_ID_FIELD,
-                        'tagsValue' => $tags,
+                        'tagIdField'     => PeopleSearchMapping::TAGS_ID_FIELD,
+                        'tagsValue'      => $tags,
                         'intersectRange' => [
                             'min' => (int)$tagsRange['min'],
                             'max' => (int)$tagsRange['max'],
-                        ]
+                        ],
                     ])
                 ),
                 $this->_queryFilterFactory->getNotFilter(
@@ -344,14 +342,13 @@ class PeopleSearchService extends AbstractSearchService
                 ),
                 $this->_queryFilterFactory->getNotFilter(
                     $this->_queryFilterFactory->getTermFilter([PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId])
-                )
+                ),
             ]);
 
             $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);
             $this->setGeoPointConditions($point, PeopleSearchMapping::class);
 
-            if( $point->isValid() )
-            {
+            if ($point->isValid()) {
                 $this->setFilterQuery([
                     $this->_queryFilterFactory->getGeoDistanceFilter(
                         PeopleSearchMapping::LOCATION_POINT_FIELD,
@@ -361,7 +358,7 @@ class PeopleSearchService extends AbstractSearchService
                         ],
                         (int)$tagsRange['distance'],
                         'm'
-                    )
+                    ),
                 ]);
             }
 

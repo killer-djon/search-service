@@ -31,7 +31,6 @@ class SearchElasticaAdapter implements AdapterInterface
         $this->query = $query;
     }
 
-
     /**
      * Returns the number of results.
      *
@@ -54,7 +53,10 @@ class SearchElasticaAdapter implements AdapterInterface
      */
     public function getResultSet()
     {
-        return $this->resultSet = $this->searchable->search($this->query);
+        $this->resultSet = $this->searchable->search($this->query);
+        unset($this->query);
+
+        return $this->resultSet;
     }
 
     /**
@@ -62,14 +64,13 @@ class SearchElasticaAdapter implements AdapterInterface
      *
      * @param integer $offset The offset.
      * @param integer $length The length.
-     *
      * @return array|\Traversable The slice.
      */
     public function getSlice($offset, $length)
     {
-        return $this->resultSet = $this->searchable->search($this->query, array(
+        return $this->resultSet = $this->searchable->search($this->query, [
             'from' => $offset,
-            'size' => $length
-        ));
+            'size' => $length,
+        ]);
     }
 }

@@ -132,7 +132,6 @@ class SearchUsersController extends ApiController
                     ? $oldFormat['results'][PeopleSearchMapping::CONTEXT]
                     : []);
 
-
                 if ($simpleList) {
                     return $this->_handleViewWithData(
                         $dataResult,
@@ -246,18 +245,26 @@ class SearchUsersController extends ApiController
                 $this->getCount()
             );
 
+            // исторический костыль из приложения
+            // чтобы на первом месте в массиве был RP_USER
+            $rpUser = $peopleSearchService->searchRecordById(
+                PeopleSearchMapping::CONTEXT,
+                PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
+                PeopleSearchMapping::RP_USER_ID
+            );
+
             $data = [];
 
-            foreach ($possibleFriends as $keyCategory => $possibleFriend)
-            {
-                if( isset($possibleFriend[PeopleSearchMapping::CONTEXT]) )
-                {
+            foreach ($possibleFriends as $keyCategory => $possibleFriend) {
+                if (isset($possibleFriend[PeopleSearchMapping::CONTEXT])) {
                     $data = $data + $possibleFriend[PeopleSearchMapping::CONTEXT];
                 }
             }
 
+            array_unshift($data, $rpUser);
+
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
-                //$oldFormat = $this->getVersioningData($peopleSearchService);
+
                 $this->restructTagsField($data);
                 $this->restructLocationField($data);
                 $data = $this->changeKeysName($data);
@@ -271,8 +278,8 @@ class SearchUsersController extends ApiController
             }
 
             return $this->_handleViewWithData([
-                'info' => $peopleSearchService->getTotalHits(),
-                PeopleSearchMapping::CONTEXT => $data
+                'info'                       => $peopleSearchService->getTotalHits(),
+                PeopleSearchMapping::CONTEXT => $data,
             ]);
 
         } catch (SearchServiceException $e) {

@@ -245,14 +245,6 @@ class SearchUsersController extends ApiController
                 $this->getCount()
             );
 
-            // исторический костыль из приложения
-            // чтобы на первом месте в массиве был RP_USER
-            $rpUser = $peopleSearchService->searchRecordById(
-                PeopleSearchMapping::CONTEXT,
-                PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
-                PeopleSearchMapping::RP_USER_ID
-            );
-
             $data = [];
 
             foreach ($possibleFriends as $keyCategory => $possibleFriend) {
@@ -261,7 +253,20 @@ class SearchUsersController extends ApiController
                 }
             }
 
-            array_unshift($data, $rpUser);
+            $action = $request->get('action');
+
+            if( !is_null($action) && $action == 'registration_tour' )
+            {
+                // исторический костыль из приложения
+                // чтобы на первом месте в массиве был RP_USER
+                $rpUser = $peopleSearchService->searchRecordById(
+                    PeopleSearchMapping::CONTEXT,
+                    PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
+                    PeopleSearchMapping::RP_USER_ID
+                );
+
+                array_unshift($data, $rpUser);
+            }
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
 

@@ -257,6 +257,13 @@ class SearchUsersController extends ApiController
 
             if( !is_null($action) && $action == 'registration_tour' )
             {
+                $peopleSearchService->setFilterQuery([
+                    $peopleSearchService->_queryFilterFactory->getNotFilter(
+                        $peopleSearchService->_queryFilterFactory->getTermsFilter(PeopleSearchMapping::FRIEND_LIST_FIELD, [
+                            $userId
+                        ])
+                    )
+                ]);
                 // исторический костыль из приложения
                 // чтобы на первом месте в массиве был RP_USER
                 $rpUser = $peopleSearchService->searchRecordById(

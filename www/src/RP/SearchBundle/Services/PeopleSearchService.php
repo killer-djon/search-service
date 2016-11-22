@@ -274,7 +274,7 @@ class PeopleSearchService extends AbstractSearchService
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
 
-        $tagsIntersectRange = [
+        /*$tagsIntersectRange = [
             'category1' => [
                 'min'      => 50,
                 'max'      => 100,
@@ -288,6 +288,19 @@ class PeopleSearchService extends AbstractSearchService
             'category3' => [
                 'min'      => 0,
                 'max'      => 30,
+                'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX,
+            ],
+        ];*/
+
+        $tagsIntersectRange = [
+            'category1' => [
+                'min'      => 50,
+                'max'      => 100,
+                'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MIN,
+            ],
+            'category2' => [
+                'min'      => 0,
+                'max'      => 100,
                 'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX,
             ],
         ];
@@ -370,7 +383,8 @@ class PeopleSearchService extends AbstractSearchService
                 )
             );
 
-            $queryMatch = $this->createMatchQuery($searchText, [], $skip, $count);
+            $queryMatch = $this->createMatchQuery($searchText, PeopleSearchMapping::getMultiMatchQuerySearchFields(), $skip, $count);
+
             $resultQuery[$key] = $this->searchDocuments($queryMatch, PeopleSearchMapping::CONTEXT);
         }
 

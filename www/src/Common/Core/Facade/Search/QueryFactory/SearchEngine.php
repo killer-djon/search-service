@@ -154,26 +154,26 @@ class SearchEngine implements SearchEngineInterface
     /**
      * @var \Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface Объект формирования условий запроса
      */
-    protected $_queryConditionFactory;
+    public $_queryConditionFactory;
 
     /**
      * @var \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface Оъект добавляющий фильтры к запросу
      */
-    protected $_queryFilterFactory;
+    public $_queryFilterFactory;
 
     /**
      * @var \Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface Оъект добавляющий аггрегироание к запросу
      */
-    protected $_queryAggregationFactory;
+    public $_queryAggregationFactory;
 
     /**
      * @var \Common\Core\Facade\Search\QueryScripting\QueryScriptFactoryInterface
      */
-    protected $_scriptFactory;
+    public $_scriptFactory;
     /**
      * @var \Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface $_sortingFactory
      */
-    protected $_sortingFactory;
+    public $_sortingFactory;
 
     /**
      * @var \FOS\ElasticaBundle\Transformer\ElasticaToModelTransformerInterface $_transformer

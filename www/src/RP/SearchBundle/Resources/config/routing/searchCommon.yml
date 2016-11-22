@@ -11,7 +11,7 @@ RPSearchBundle_search_common:
         _method: (GET)
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
-        filterType: \w+
+        filterType: ([\w,:;_\- ]+)
 
 # Routing который формирует запрос для вывода интересов
 # (самых популярных)

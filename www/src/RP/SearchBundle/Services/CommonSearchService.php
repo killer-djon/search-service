@@ -115,26 +115,33 @@ class CommonSearchService extends AbstractSearchService
             return $this->searchMultiTypeDocuments($queryMatchResults);
         }
 
-        if (!is_null($cityId) && !empty($cityId) && !is_null($this->filterSearchTypes[$filterType]::LOCATION_CITY_ID_FIELD)) {
-            $this->setFilterQuery([
-                $this->_queryFilterFactory->getTermFilter([
-                    $this->filterSearchTypes[$filterType]::LOCATION_CITY_ID_FIELD => $cityId,
-                ]),
-            ]);
+        $queryMatchResults = [];
+        foreach( $filterType as $key => $type )
+        {
+            if (!is_null($cityId) && !empty($cityId) && !is_null($this->filterSearchTypes[$type]::LOCATION_CITY_ID_FIELD)) {
+                $this->setFilterQuery([
+                    $this->_queryFilterFactory->getTermFilter([
+                        $this->filterSearchTypes[$type]::LOCATION_CITY_ID_FIELD => $cityId,
+                    ]),
+                ]);
+            }
+
+            $this->setFilterQuery($this->filterSearchTypes[$type]::getMatchSearchFilter($this->_queryFilterFactory, $userId));
+            $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$type]);
+            $this->setGeoPointConditions($point, $this->filterSearchTypes[$type]);
+
+            $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
+
+            $queryMatchResults[$type] = $this->createMatchQuery(
+                $searchText,
+                $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),
+                $skip,
+                $count
+            );
+
         }
 
-        $this->setFilterQuery($this->filterSearchTypes[$filterType]::getMatchSearchFilter($this->_queryFilterFactory, $userId));
-        $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$filterType]);
-        $this->setGeoPointConditions($point, $this->filterSearchTypes[$filterType]);
-
-        $queryMatch = $this->createMatchQuery(
-            $searchText,
-            $this->filterSearchTypes[$filterType]::getMultiMatchQuerySearchFields(),
-            $skip,
-            $count
-        );
-
-        return $this->searchDocuments($queryMatch, $this->searchTypes[$filterType], true, $filterType);
+        return $this->searchMultiTypeDocuments($queryMatchResults);
     }
 
     /**

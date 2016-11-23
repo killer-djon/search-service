@@ -174,13 +174,16 @@ class PeopleSearchService extends AbstractSearchService
             ),
         ]);
 
-        /** формируем условия сортировки */
-        $this->setSortingQuery(
-            $this->_sortingFactory->getGeoDistanceSort(
-                PeopleSearchMapping::LOCATION_POINT_FIELD,
-                $point
-            )
-        );
+        if( $point->isValid() )
+        {
+            /** формируем условия сортировки */
+            $this->setSortingQuery(
+                $this->_sortingFactory->getGeoDistanceSort(
+                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                )
+            );
+        }
 
         if (!is_null($searchText) && !empty($searchText)) {
 

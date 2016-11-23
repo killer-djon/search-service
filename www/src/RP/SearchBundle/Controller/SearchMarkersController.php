@@ -47,6 +47,9 @@ class SearchMarkersController extends ApiController
             // получаем сервис многотипного поиска
             $markersSearchService = $this->getCommonSearchService();
 
+            // указываем что класстеры должны быть сгруппированны
+            $markersSearchService->setClusterGrouped();
+
             // выполняем поиск по маркерам
             $markers = $markersSearchService->searchMarkersByFilters(
                 $userId,

@@ -47,6 +47,7 @@ interface QueryAggregationFactoryInterface
      * @param int $radius Целое число определяющее радиус
      * @param string $unit defaults to km
      * @param string $distanceType see DISTANCE_TYPE_* constants for options. Defaults to sloppy_arc.
+     * @return \Elastica\Aggregation\AbstractAggregation
      */
     public function getGeoDistanceAggregation(
         $fieldName,
@@ -73,4 +74,14 @@ interface QueryAggregationFactoryInterface
      * @return \Elastica\Aggregation\AbstractAggregation
      */
     public function getTopHitsAggregation();
+
+    /**
+     * Установка исходных данных в агррегированные данные
+     *
+     * @param string $fieldName Название поля
+     * @param array $fields Набор полей которые нужно выводить
+     * @param int|null $size Сколько объектов указывать
+     * @return \Elastica\Aggregation\TopHits
+     */
+    public function setAggregationSource($fieldName, $fields = [], $size = null);
 }

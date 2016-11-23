@@ -31,7 +31,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
      *
      * @param string $fieldName Название поле аггрегации
      * @param string|\Elastica\Script $script
-     * @return \Elastica\Aggregation\AbstractAggregation
+     * @return \Elastica\Aggregation\AbstractSimpleAggregation
      */
     public function getAvgAggregation($fieldName, $script)
     {
@@ -54,7 +54,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
      * @param int $count Минимальный лимит документов в результате аггрегации
      * @param string $offset Временная метка от которой пропустить результаты
      * @param string $format Формат времени
-     * @return \Elastica\Aggregation\AbstractAggregation
+     * @return \Elastica\Aggregation\AbstractSimpleAggregation
      */
     public function getDateHistogramAggregation($fieldName, $interval, $count = null, $timezone = null, $offset = null, $format = null)
     {
@@ -93,7 +93,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         $startPoint,
         $radius,
         $unit = 'km',
-        $distanceType = \Elastica\Aggregation\GeoDistance::DISTANCE_TYPE_PLANE
+        $distanceType = \Elastica\Aggregation\GeoDistance::DISTANCE_TYPE_SLOPPY_ARC
     ) {
         $geoDistance = new \Elastica\Aggregation\GeoDistance('geo_distance', $fieldName, $startPoint);
         $geoDistance->setUnit($unit);
@@ -108,33 +108,31 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
      *
      * @param string $fieldName Название поля
      * @param string|array $startPoint valid formats are array("lat" => 52.3760, "lon" => 4.894), "52.3760, 4.894", and array(4.894, 52.3760)
-     * @param string|int $precision an integer between 1 and 12, inclusive. Defaults to 5.
+     * @param int $precision an integer between 1 and 12, inclusive. Defaults to 5.
      * @return \Elastica\Aggregation\AbstractAggregation
      */
     public function getGeoHashAggregation($fieldName, $startPoint, $precision = self::DEFAULT_RADIUS_DISTANCE)
     {
         $precision = (int)$precision;
 
-        if($precision > 12)
-        {
+        if ($precision > 12) {
             $precisionPoint = [];
-            foreach($this->geo_hash_precisions as $key => $pointMap)
-            {
+            foreach ($this->geo_hash_precisions as $key => $pointMap) {
                 $min = $pointMap[0];
                 $max = $pointMap[1];
 
-                $x = $min/$precision;
-                $y = $max/$precision;
+                $x = $min / $precision;
+                $y = $max / $precision;
 
                 $precisionPoint[$key] = [
-                    'min'   => (float)$x,
-                    'max'   => (float)$y
+                    'min' => (float)$x,
+                    'max' => (float)$y,
                 ];
             }
 
-            $precisionPoint = array_filter(array_map(function($range){
+            $precisionPoint = array_filter(array_map(function ($range) {
                 return array_sum($range);
-            }, $precisionPoint), function($arValue){
+            }, $precisionPoint), function ($arValue) {
                 return $arValue >= 1;
             });
 
@@ -157,6 +155,26 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
     {
         $topHits = new \Elastica\Aggregation\TopHits('top_hits');
         $topHits->setSize(1);
+
+        return $topHits;
+    }
+
+    /**
+     * Установка исходных данных в агррегированные данные
+     *
+     * @param string $fieldName Название поля
+     * @param array $fields Набор полей которые нужно выводить
+     * @param int|null $size Сколько объектов указывать
+     * @return \Elastica\Aggregation\TopHits
+     */
+    public function setAggregationSource($fieldName, $fields = [], $size = null)
+    {
+        $topHits = new \Elastica\Aggregation\TopHits($fieldName);
+        $topHits->setSource($fields);
+
+        if (!is_null($size)) {
+            $topHits->setSize($size);
+        }
 
         return $topHits;
     }

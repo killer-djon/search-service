@@ -17,6 +17,7 @@ use RP\SearchBundle\Services\Mapping\HelpOffersSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\RusPlaceSearchMapping;
+use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface;
 use Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface;
@@ -370,6 +371,158 @@ class SearchEngine implements SearchEngineInterface
     }
 
     /**
+     * Флаг группировки класстера
+     *
+     * @var bool $clusterGrouped
+     */
+    private $clusterGrouped = false;
+
+    /**
+     * Устанавливаем флак необходимости группировки объектов класстера
+     *
+     * @param bool $grouped Флаг установки
+     * @return void
+     */
+    public function setClusterGrouped($grouped = true)
+    {
+        $this->clusterGrouped = $grouped;
+    }
+
+    /**
+     * Получаем значение флага группировки класстера
+     *
+     * @return bool
+     */
+    public function getClusterGrouped()
+    {
+        return $this->clusterGrouped;
+    }
+
+    /**
+     * Трансформация типов кластера в один класстер объектов
+     * которые будет содержать все группы распределенные по типу
+     *
+     * Преобразование (группировка) проходит в 3 этапа
+     *  1. Вытаскиваем из набора основные данные (и складываем в массив по ключам)
+     *  2. Затем группируем все по ключам класстера
+     *  3. Приводим к виду класстерных групп
+     *
+     * @param array $initBuckets Набор групп класстера
+     * @param string|null $keyField Название поля в класстере
+     * @return array Сгруппированный класстер данных
+     */
+    public function groupClasterBuckets(array $initBuckets = null, $keyField = null)
+    {
+        // 1. Вытаскиваем из набора основные данные (и складываем в массив по ключам)
+        $buckets = [];
+        foreach ($initBuckets as $typeKey => $bucketItem) {
+            $bucketKeys = $this->array_combine_(array_column($bucketItem, 'key'), array_column($bucketItem, $keyField));
+            foreach($bucketKeys as $key =>& $item)
+            {
+                $currentItem = current($item);
+                $docsId = array_fill_keys(array_column($currentItem['hits']['hits'], '_id'), $typeKey);
+
+                $item = [
+                    'doc_count' => $currentItem['hits']['total'],
+                    'type' => $typeKey,
+                    'items' => $docsId
+                ];
+            }
+
+            $buckets[$typeKey] = $bucketKeys;
+        }
+
+        // костыль ужасный
+        if(isset($buckets['people']))
+            unset($buckets['people']);
+
+        // 2. Затем группируем все по ключам класстера
+        $bucketItems = [];
+        // для начала сводим это в единный массив разных типов
+        foreach ($buckets as $typeKey => $bucketItem) {
+            foreach($bucketItem as $key => $item)
+            {
+                $bucketItems[$key][] = $item;
+            }
+        }
+
+        // 3. Приводим к виду класстерных групп
+        $results = [];
+        foreach ($bucketItems as $keyHash => $bucketItem)
+        {
+            $sumDocCount = array_sum(array_column($bucketItem, 'doc_count'));
+            $docTypes = array_unique(array_column($bucketItem, 'type'));
+            $docItems = array_column($bucketItem, 'items');
+
+            $items = [];
+            foreach($docItems as $arItem)
+            {
+                $keys = array_keys($arItem);
+                foreach($keys as $keyDocId)
+                {
+                    $items[] = [
+                        'id' => $keyDocId,
+                        'type' => $arItem[$keyDocId],
+
+                    ];
+                }
+            }
+
+            $results[] = [
+                'key' => $keyHash,
+                'doc_count' => $sumDocCount,
+                'types' => implode(',', $docTypes),
+                'lat' => 'sumLat',
+                'lon' => 'sumLon',
+                'items' => $items
+            ];
+        }
+
+        return $results;
+    }
+    /*public function groupClasterBuckets(array $initBuckets = null, $keyField = null)
+    {
+        $initBuckets = (is_null($initBuckets) ? $this->getAggregations() : $initBuckets);
+        $buckets = $result = [];
+        // для начала сводим это в единный массив разных типов
+        foreach ($initBuckets as $typeKey => $bucketItem) {
+            $buckets = array_merge($buckets, $bucketItem);
+        }
+
+        // далее мы находим сумму кол-ва документов в группе
+        $bucketKeys = $this->array_combine_(array_column($buckets, 'key'), array_column($buckets, $keyField));
+
+        foreach ($buckets as $key => $bucket){
+
+            $item = array_column($bucketKeys[$bucket['key']], 'hits');
+            $type = [];
+            foreach ($item as $hitItem)
+            {
+                $type = array_merge($type, array_column($hitItem['hits'], '_type'));
+            }
+
+            $result[$bucket['key']] = [
+                'key' => $bucket['key'],
+                'types' => implode(',', array_unique($type))
+            ];
+        }
+
+
+        return $bucketKeys;
+    }*/
+
+    public function array_combine_($keys, $values)
+    {
+        $result = [];
+        foreach ($keys as $i => $k) {
+            $result[$k][] = $values[$i];
+        }
+
+        //array_walk($result, create_function('&$v', '$v = (count($v) == 1)? array_pop($v): $v;'));
+        return $result;
+    }
+
+    /**
      * Поиск единственного документа по ID
      *
      * @param \Elastica\Query $elasticQuery An \Elastica\Query object
@@ -461,13 +614,18 @@ class SearchEngine implements SearchEngineInterface
      * Устанавливаем результат аггрегации
      *
      * @param \Elastica\ResultSet $resultSets
-     * @return void
+     * @return array
      */
     private function setAggregationsResult(\Elastica\ResultSet $resultSets)
     {
-        $this->_aggregationsResult = current($resultSets->getAggregations());
+        $aggs = current($resultSets->getAggregations());
+        $buckets = (isset($aggs['buckets']) && !empty($aggs['buckets']) ? $aggs['buckets'] : null);
 
-        return $this->_aggregationsResult['buckets'];
+        if (!is_null($buckets)) {
+            $this->_aggregationsResult = $buckets;
+        }
+
+        return $this->_aggregationsResult;
     }
 
     /**

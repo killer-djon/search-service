@@ -7,6 +7,7 @@ namespace RP\SearchBundle\Services;
 
 use Common\Core\Constants\SortingOrder;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
+use RP\SearchBundle\Services\Mapping\AbstractSearchMapping;
 use RP\SearchBundle\Services\Mapping\TagNameSearchMapping;
 
 class CommonSearchService extends AbstractSearchService
@@ -116,8 +117,7 @@ class CommonSearchService extends AbstractSearchService
         }
 
         $queryMatchResults = [];
-        foreach( $filterType as $key => $type )
-        {
+        foreach ($filterType as $key => $type) {
             if (!is_null($cityId) && !empty($cityId) && !is_null($this->filterSearchTypes[$type]::LOCATION_CITY_ID_FIELD)) {
                 $this->setFilterQuery([
                     $this->_queryFilterFactory->getTermFilter([
@@ -194,7 +194,10 @@ class CommonSearchService extends AbstractSearchService
                             "lon" => $point->getLongitude(),
                         ],
                         $point->getRadius()
-                    ),
+                    )->addAggregation($this->_queryAggregationFactory->setAggregationSource(
+                        AbstractSearchMapping::LOCATION_FIELD,
+                        ['id']
+                    )),
                 ]);
 
                 /** формируем условия сортировки */
@@ -223,7 +226,13 @@ class CommonSearchService extends AbstractSearchService
              * поисков НЕТ необходимости передавать контекст поиска
              * т.е. тип в котором ищем, надо искать везде
              */
-            return $this->searchMultiTypeDocuments($queryMatchResults);
+            $documents = $this->searchMultiTypeDocuments($queryMatchResults);
+
+            if ($this->getClusterGrouped() === true) {
+                $documents['cluster'] = $this->groupClasterBuckets($documents['cluster'], AbstractSearchMapping::LOCATION_FIELD);
+            }
+
+            return $documents;
         }
     }
 

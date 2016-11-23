@@ -30,11 +30,13 @@ abstract class AbstractSearchMapping
     const TAG_WORDS_FIELD    = 'tags._wordsName';
 
     /** Поле идентификатора города */
+    const LOCATION_FIELD = 'location';
     const LOCATION_CITY_ID_FIELD = 'location.city.id';
 
     const LOCATION_POINT_FIELD = 'location.point';
 
     /** Город местоположения */
+
     const LOCATION_CITY_FIELD = 'location.city';
     const LOCATION_CITY_NAME_FIELD = 'location.city.name';
     const LOCATION_CITY_NAME_TRANSLIT_FIELD = 'location.city._translit';

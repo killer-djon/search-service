@@ -361,6 +361,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $matchQuery->setOperator($operator);
             $matchQuery->setType($type);
             $matchQuery->setFields($fields);
+
         }
 
         if (!is_null($this->_scriptFunctions) && !empty($this->_scriptFunctions)) {

@@ -124,6 +124,8 @@ class CommonSearchService extends AbstractSearchService
 
         $queryMatchResults = [];
         foreach ($filterType as $key => $type) {
+            $this->clearQueryFactory();
+
             if (!is_null($cityId) && !empty($cityId) && !is_null($this->filterSearchTypes[$type]::LOCATION_CITY_ID_FIELD)) {
                 $this->setFilterQuery([
                     $this->_queryFilterFactory->getTermFilter([
@@ -133,17 +135,38 @@ class CommonSearchService extends AbstractSearchService
             }
 
             $this->setFilterQuery($this->filterSearchTypes[$type]::getMatchSearchFilter($this->_queryFilterFactory, $userId));
+
             $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$type]);
             $this->setGeoPointConditions($point, $this->filterSearchTypes[$type]);
 
+            $this->setSortingQuery(
+                $this->_sortingFactory->getGeoDistanceSort(
+                    $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
+                    $point
+                )
+            );
+
             $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
 
-            $queryMatchResults[$type] = $this->createMatchQuery(
-                $searchText,
-                $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),
-                $skip,
-                $count
-            );
+            if( !is_null($searchText) && !empty($searchText) )
+            {
+                $this->setConditionQueryShould([
+                    $this->_queryConditionFactory->getMultiMatchQuery()
+                                                 ->setFields($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields())
+                                                 ->setMinimumShouldMatch('50%')
+                                                 ->setQuery($searchText)
+                ]);
+
+                $queryMatchResults[$type] = $this->createQuery($skip, $count);
+            }else
+            {
+                $queryMatchResults[$type] = $this->createMatchQuery(
+                    $searchText,
+                    $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),
+                    $skip,
+                    $count
+                );
+            }
 
         }
 
@@ -256,7 +279,7 @@ class CommonSearchService extends AbstractSearchService
              */
             $documents = $this->searchMultiTypeDocuments($queryMatchResults);
 
-            if ($this->getClusterGrouped() === true) {
+            if ($this->getClusterGrouped() == true) {
                 $documents['cluster'] = $this->groupClasterLocationBuckets($documents['cluster'], AbstractSearchMapping::LOCATION_FIELD);
             }
 

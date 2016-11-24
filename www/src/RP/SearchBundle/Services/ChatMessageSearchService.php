@@ -48,7 +48,7 @@ class ChatMessageSearchService extends AbstractSearchService
                 $this->_queryFilterFactory->getTermFilter([
                     ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
                 ]),
-            ]),
+            ])
         ]);
 
         $this->setHighlightQuery([

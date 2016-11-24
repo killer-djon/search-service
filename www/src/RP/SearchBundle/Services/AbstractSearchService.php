@@ -399,7 +399,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      *
      * @return SearchServiceInterface
      */
-    protected function clearQueryFactory()
+    public function clearQueryFactory()
     {
         $this->_conditionQueryMustData = [];
         $this->_conditionQueryShouldData = [];

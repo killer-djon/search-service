@@ -42,8 +42,12 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
             $avg->setScript($script);
         }
 
-
         return $avg;
+    }
+
+    public function getGeoCentroidAggregation($fieldName)
+    {
+        return new GeoCentroid('centroid', $fieldName);
     }
 
     /**

@@ -62,7 +62,7 @@ RPSearchBundle_search_users_byhelpoffers:
 
 # Routing который формирует запрос для поиска
 # предпологаемых дрезей по совпадению интересов
-# пример запроса /api/search/v1/json/users/helpoffers
+# пример запроса /api/search/v1/json/users/interests/{userId}
 RPSearchBundle_search_users_byinterests:
     path: /v{_version}/{_format}/users/interests/{userId}
     defaults:

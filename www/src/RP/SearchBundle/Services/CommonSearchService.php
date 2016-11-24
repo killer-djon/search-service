@@ -194,10 +194,7 @@ class CommonSearchService extends AbstractSearchService
                             "lon" => $point->getLongitude(),
                         ],
                         $point->getRadius()
-                    )->addAggregation($this->_queryAggregationFactory->setAggregationSource(
-                        AbstractSearchMapping::LOCATION_FIELD,
-                        [AbstractSearchMapping::IDENTIFIER_FIELD, AbstractSearchMapping::LOCATION_POINT_FIELD]
-                    ))
+                    )
                 ]);
 
                 /** формируем условия сортировки */
@@ -219,6 +216,7 @@ class CommonSearchService extends AbstractSearchService
                     (count($searchTypes) == 1 ? $skip : 0),
                     (count($searchTypes) == 1 ? $count : null)
                 );
+
             }
 
             /**

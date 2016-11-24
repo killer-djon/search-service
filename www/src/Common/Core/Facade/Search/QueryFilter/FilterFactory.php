@@ -36,20 +36,20 @@ class FilterFactory implements FilterFactoryInterface
      * @param string $fieldName
      * @param array $point , must be ['lat' => 40.3, 'lon' => 45.2]
      * @param int $precision Meters
+     * @param string $geohash
+     * @param bool $neighbors Используем ли соседние ячейки
      * @return \Elastica\Filter\AbstractFilter
      */
-    public function getGeoHashFilter($fieldName, array $point, $precision, $unit = null)
+    public function getGeoHashFilter($fieldName, array $point, $precision = -1, $geohash = null, $neighbors = false)
     {
-        if (is_null($unit)) {
-            $precision = $this->checkPrecision($precision);
-        } else {
-            $unit = strtolower($unit);
-            if (!in_array($unit, $unitDefinitions)) {
-                throw new \Elastica\Exception\InvalidException('Unit of the precision is incorrect, must me one of ' . implode(',', $unitDefinitions));
-            }
+        $geohashCell = new \Elastica\Filter\GeohashCell($fieldName, $point, $precision, $neighbors);
+        if( !is_null($geohash) && !empty($geohash) )
+        {
+            $geohashCell->setPrecision(-1);
+            $geohashCell->setGeohash($geohash);
         }
 
-        return new \Elastica\Filter\GeohashCell($fieldName, $point, $precision, false);
+        return $geohashCell;
     }
 
     /**

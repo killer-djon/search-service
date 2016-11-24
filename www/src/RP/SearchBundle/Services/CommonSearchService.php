@@ -151,11 +151,13 @@ class CommonSearchService extends AbstractSearchService
      * @param string $userId
      * @param array $filters По каким типам делаем поиск
      * @param \Common\Core\Facade\Service\Geo\GeoPointServiceInterface $point ТОчка координат
+     * @param bool $isCluster (default: false) выводить ли класстерные данные
+     * @param string|null $geoHashCell GeoHash ячайка
      * @param int $skip (default: 0)
      * @param int|null $count Кол-во в результате
      * @return array Массив с найденными результатами
      */
-    public function searchMarkersByFilters($userId, array $filters, GeoPointServiceInterface $point, $skip = 0, $count = null)
+    public function searchMarkersByFilters($userId, array $filters, GeoPointServiceInterface $point, $isCluster = false, $geoHashCell = null, $skip = 0, $count = null)
     {
         $currentUser = $this->getUserById($userId);
 
@@ -184,18 +186,42 @@ class CommonSearchService extends AbstractSearchService
 
                 $this->setFilterQuery($this->filterTypes[$keyType]::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
                 $this->setScriptTagsConditions($currentUser, $this->filterTypes[$keyType]);
+
+                if( mb_strlen($geoHashCell) > 0 )
+                {
+                    $isCluster = false;
+                    $this->setFilterQuery([
+                        $this->_queryFilterFactory->getGeoHashFilter(
+                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
+                            [
+                                "lat" => $point->getLatitude(),
+                                "lon" => $point->getLongitude(),
+                            ],
+                            mb_strlen($geoHashCell),
+                            $geoHashCell
+                        )
+                    ]);
+                }
                 $this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
 
-                $this->setAggregationQuery([
-                    $this->_queryAggregationFactory->getGeoHashAggregation(
-                        $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
-                        [
-                            "lat" => $point->getLatitude(),
-                            "lon" => $point->getLongitude(),
-                        ],
-                        $point->getRadius()
-                    )
-                ]);
+                if( $isCluster == true )
+                {
+                    $this->setAggregationQuery([
+                        $this->_queryAggregationFactory->getGeoHashAggregation(
+                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
+                            [
+                                "lat" => $point->getLatitude(),
+                                "lon" => $point->getLongitude(),
+                            ],
+                            $point->getRadius()
+                        )->addAggregation($this->_queryAggregationFactory->setAggregationSource(
+                            AbstractSearchMapping::LOCATION_FIELD,
+                            [AbstractSearchMapping::IDENTIFIER_FIELD]
+                        ))->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
+                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
+                        )),
+                    ]);
+                }
 
                 /** формируем условия сортировки */
                 $this->setSortingQuery(
@@ -227,7 +253,7 @@ class CommonSearchService extends AbstractSearchService
             $documents = $this->searchMultiTypeDocuments($queryMatchResults);
 
             if ($this->getClusterGrouped() === true) {
-                $documents['cluster'] = $this->groupClasterBuckets($documents['cluster'], AbstractSearchMapping::LOCATION_FIELD);
+                $documents['cluster'] = $this->groupClasterLocationBuckets($documents['cluster'], AbstractSearchMapping::LOCATION_FIELD);
             }
 
             return $documents;

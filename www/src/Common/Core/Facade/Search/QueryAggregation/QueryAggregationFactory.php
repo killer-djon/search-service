@@ -178,7 +178,10 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
     public function setAggregationSource($fieldName, $fields = [], $size = null)
     {
         $topHits = new \Elastica\Aggregation\TopHits($fieldName);
-        $topHits->setSource($fields);
+        if(!empty($fields))
+        {
+            $topHits->setSource($fields);
+        }
         if (!is_null($size)) {
             $topHits->setSize($size);
         }

@@ -4,7 +4,9 @@
  */
 namespace Common\Core\Facade\Search\QueryFactory;
 
+use Common\Core\Constants\Location;
 use Common\Core\Facade\Search\QueryScripting\QueryScriptFactoryInterface;
+use Common\Core\Facade\Service\Geo\GeoPointService;
 use Elastica\Exception\ElasticsearchException;
 use FOS\ElasticaBundle\Elastica\Index;
 use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
@@ -401,7 +403,6 @@ class SearchEngine implements SearchEngineInterface
     /**
      * Трансформация типов кластера в один класстер объектов
      * которые будет содержать все группы распределенные по типу
-     *
      * Преобразование (группировка) проходит в 3 этапа
      *  1. Вытаскиваем из набора основные данные (и складываем в массив по ключам)
      *  2. Затем группируем все по ключам класстера
@@ -411,24 +412,28 @@ class SearchEngine implements SearchEngineInterface
      * @param string|null $keyField Название поля в класстере
      * @return array Сгруппированный класстер данных
      */
-    public function groupClasterBuckets(array $initBuckets = null, $keyField = null)
+    public function groupClasterLocationBuckets(array $initBuckets = null, $keyField = null)
     {
+
         // 1. Вытаскиваем из набора основные данные (и складываем в массив по ключам)
         $buckets = [];
         foreach ($initBuckets as $typeKey => $bucketItem) {
-            $bucketKeys = $this->array_combine_(array_column($bucketItem, 'key'), array_column($bucketItem, $keyField));
-            foreach($bucketKeys as $key =>& $item)
-            {
+            $bucketKeys = $this->array_combine_(array_column($bucketItem, 'key'), $bucketItem);
+            foreach ($bucketKeys as $key => & $item) {
                 $currentItem = current($item);
                 $docs = array_combine(
-                    array_column($currentItem['hits']['hits'], '_id'),
-                    $currentItem['hits']['hits']
+                    array_column($currentItem[$keyField]['hits']['hits'], '_id'),
+                    $currentItem[$keyField]['hits']['hits']
                 );
 
                 $item = [
-                    'doc_count' => $currentItem['hits']['total'],
-                    'type' => $typeKey,
-                    'items' => $docs
+                    'doc_count' => $currentItem[$keyField]['hits']['total'],
+                    'type'      => $typeKey,
+                    $keyField   => [
+                        Location::LONG_LATITUDE  => $currentItem['centroid'][$keyField][Location::LATITUDE],
+                        Location::LONG_LONGITUDE => $currentItem['centroid'][$keyField][Location::LONGITUDE],
+                    ],
+                    'items'     => $docs,
                 ];
             }
 
@@ -436,83 +441,50 @@ class SearchEngine implements SearchEngineInterface
         }
 
         // костыль ужасный
-        if(isset($buckets['people']))
+        if (isset($buckets['people'])) {
             unset($buckets['people']);
+        }
 
         // 2. Затем группируем все по ключам класстера
         $bucketItems = [];
         // для начала сводим это в единный массив разных типов
         foreach ($buckets as $typeKey => $bucketItem) {
-            foreach($bucketItem as $key => $item)
-            {
+            foreach ($bucketItem as $key => $item) {
                 $bucketItems[$key][] = $item;
             }
         }
 
         // 3. Приводим к виду класстерных групп
         $results = [];
-        foreach ($bucketItems as $keyHash => $bucketItem)
-        {
+        foreach ($bucketItems as $keyHash => $bucketItem) {
             $sumDocCount = array_sum(array_column($bucketItem, 'doc_count'));
             $docTypes = array_unique(array_column($bucketItem, 'type'));
             $docItems = array_column($bucketItem, 'items');
+            $location = array_column($bucketItem, 'location');
 
             $items = [];
-            foreach($docItems as $arItem)
-            {
+            foreach ($docItems as $arItem) {
                 $keys = array_keys($arItem);
-                foreach($keys as $keyDocId)
-                {
+                foreach ($keys as $keyDocId) {
                     $items[] = [
-                        'id' => $keyDocId,
-                        'type' => $arItem[$keyDocId],
+                        'id'   => $keyDocId,
+                        'type' => $arItem[$keyDocId]['_type'],
 
                     ];
                 }
-            }
+            }http://search-service.local/app_dev.php/api/search/v1/json/markers/peoples,friends,places,events
 
             $results[] = [
-                'key' => $keyHash,
+                'key'       => $keyHash,
                 'doc_count' => $sumDocCount,
-                'types' => implode(',', $docTypes),
-                'lat' => 'sumLat',
-                'lon' => 'sumLon',
-                'items' => $items
+                'types'     => implode(',', $docTypes),
+                //'items'     => $items,
+                'location'  => GeoPointService::GetCenterFromDegrees($location),
             ];
         }
 
         return $results;
     }
-    /*public function groupClasterBuckets(array $initBuckets = null, $keyField = null)
-    {
-        $initBuckets = (is_null($initBuckets) ? $this->getAggregations() : $initBuckets);
-        $buckets = $result = [];
-        // для начала сводим это в единный массив разных типов
-        foreach ($initBuckets as $typeKey => $bucketItem) {
-            $buckets = array_merge($buckets, $bucketItem);
-        }
-
-        // далее мы находим сумму кол-ва документов в группе
-        $bucketKeys = $this->array_combine_(array_column($buckets, 'key'), array_column($buckets, $keyField));
-
-        foreach ($buckets as $key => $bucket){
-
-            $item = array_column($bucketKeys[$bucket['key']], 'hits');
-            $type = [];
-            foreach ($item as $hitItem)
-            {
-                $type = array_merge($type, array_column($hitItem['hits'], '_type'));
-            }
-
-            $result[$bucket['key']] = [
-                'key' => $bucket['key'],
-                'types' => implode(',', array_unique($type))
-            ];
-        }
-
-
-        return $bucketKeys;
-    }*/
 
     public function array_combine_($keys, $values)
     {
@@ -520,8 +492,6 @@ class SearchEngine implements SearchEngineInterface
         foreach ($keys as $i => $k) {
             $result[$k][] = $values[$i];
         }
-
-        //array_walk($result, create_function('&$v', '$v = (count($v) == 1)? array_pop($v): $v;'));
         return $result;
     }
 

@@ -177,4 +177,58 @@ class GeoPointService implements GeoPointServiceInterface
             throw new \InvalidArgumentException(self::LONGITUDE_MIN_RANGE_VIOLATION);
         }
     }
+
+    /**
+     * Get a center latitude,longitude from an array of like geopoints
+     *
+     * @param array $data 2 dimensional array of latitudes and longitudes
+     * For Example:
+     *
+     * $data = array
+     * (
+     *   0 = > array('latitude' => 45.849382, 'longitude' => 76.322333),
+     *   1 = > array('latitude' => 45.843543, 'longitude' => 75.324143),
+     *   2 = > array('latitude' => 45.765744, 'longitude' => 76.543223),
+     *   3 = > array('latitude' => 45.784234, 'longitude' => 74.542335)
+     * );
+     *
+     * @return array
+     */
+    public static function GetCenterFromDegrees(array $data)
+    {
+        if (!count($data)) return [];
+
+        $num_coords = count($data);
+
+        $X = 0.0;
+        $Y = 0.0;
+        $Z = 0.0;
+
+        foreach ($data as $coord)
+        {
+            $lat = $coord['latitude'] * pi() / 180;
+            $lon = $coord['longitude'] * pi() / 180;
+
+            $a = cos($lat) * cos($lon);
+            $b = cos($lat) * sin($lon);
+            $c = sin($lat);
+
+            $X += $a;
+            $Y += $b;
+            $Z += $c;
+        }
+
+        $X /= $num_coords;
+        $Y /= $num_coords;
+        $Z /= $num_coords;
+
+        $lon = atan2($Y, $X);
+        $hyp = sqrt($X * $X + $Y * $Y);
+        $lat = atan2($Z, $hyp);
+
+        return [
+            'latitude' => $lat * 180 / pi(),
+            'longitude' => $lon * 180 / pi()
+        ];
+    }
 }

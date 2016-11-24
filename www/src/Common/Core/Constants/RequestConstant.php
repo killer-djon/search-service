@@ -4,6 +4,13 @@ namespace Common\Core\Constants;
 abstract class RequestConstant
 {
     /**
+     * Параметр запроса класстерных данных
+     *
+     * @var string IS_CLUSTER_PARAM
+     */
+    const IS_CLUSTER_PARAM = 'isCluster';
+
+    /**
      * Параметр запроса версии
      * необходимо для поддержки старых приложений
      *
@@ -18,7 +25,6 @@ abstract class RequestConstant
      * @var int DEFAULT_VERSION
      */
     const DEFAULT_VERSION = 3;
-
 
     /**
      * Параметр запроса долготы
@@ -111,7 +117,7 @@ abstract class RequestConstant
      *
      * @const NULL NULLED_PARAMS
      */
-    const NULLED_PARAMS = NULL;
+    const NULLED_PARAMS = null;
 
     /**
      * Лимит при поиск в еластике по умолчанию

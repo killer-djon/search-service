@@ -5,6 +5,7 @@
  */
 namespace RP\SearchBundle\Controller;
 
+use Common\Core\Constants\Location;
 use Common\Core\Controller\ApiController;
 use Common\Core\Exceptions\SearchServiceException;
 use Common\Core\Facade\Service\User\UserProfileService;
@@ -35,8 +36,14 @@ class SearchMarkersController extends ApiController
                 return $this->_handleViewWithError(new BadRequestHttpException('Некорректные координаты геопозиции'), Response::HTTP_BAD_REQUEST);
             }
 
-            if (is_null($this->getGeoPoint()->getRadius())) {
-                return $this->_handleViewWithError(new BadRequestHttpException('Радиус должен быть установлен'), Response::HTTP_BAD_REQUEST);
+            // получаем порцию данных из ячайки класстера
+            $geoHashCell = $request->get(Location::GEO_HASH_CELL_PARAM);
+
+            if( mb_strlen($geoHashCell) <= 0 )
+            {
+                if (is_null($this->getGeoPoint()->getRadius())) {
+                    return $this->_handleViewWithError(new BadRequestHttpException('Радиус должен быть установлен'), Response::HTTP_BAD_REQUEST);
+                }
             }
 
             $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
@@ -44,6 +51,10 @@ class SearchMarkersController extends ApiController
             $types = $this->getParseFilters($filterTypes);
 
             $userId = $this->getRequestUserId();
+
+            // Определяем выводить ли нам класстерные данные
+            $isCluster = $request->get(RequestConstant::IS_CLUSTER_PARAM);
+
             // получаем сервис многотипного поиска
             $markersSearchService = $this->getCommonSearchService();
 
@@ -55,6 +66,8 @@ class SearchMarkersController extends ApiController
                 $userId,
                 $types,
                 $this->getGeoPoint(),
+                $isCluster,
+                $geoHashCell,
                 $this->getSkip(),
                 $this->getCount()
             );

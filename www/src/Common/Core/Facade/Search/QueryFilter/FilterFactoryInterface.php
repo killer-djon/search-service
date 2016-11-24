@@ -14,11 +14,13 @@ interface FilterFactoryInterface
      * @https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-geohash-cell-query.html
      * @abstract
      * @param string $fieldName
-     * @param array $point
+     * @param array $point , must be ['lat' => 40.3, 'lon' => 45.2]
      * @param int $precision Meters
+     * @param string $geohash
+     * @param bool $neighbors Используем ли соседние ячейки
      * @return \Elastica\Filter\AbstractFilter
      */
-    public function getGeoHashFilter($fieldName, array $point, $precision);
+    public function getGeoHashFilter($fieldName, array $point, $precision = -1, $geohash = null, $neighbors = false);
 
     /**
      * Возвращает фильтр по условию больше

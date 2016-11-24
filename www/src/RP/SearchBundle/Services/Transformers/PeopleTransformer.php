@@ -25,7 +25,11 @@ class PeopleTransformer extends AbstractTransformer implements TransformerInterf
                 if (!is_null($subContext)) {
                     $result[] = (isset($itemObject['hit']) ? array_merge(
                         [$subContext => $obj],
-                        ['hit' => $itemObject['hit']]
+                        [
+                            'hit' => isset($itemObject['hit']['highlight'])
+                                ? array_merge($itemObject['hit'], ['matchedFields' => $itemObject['hit']['highlight']])
+                                : $itemObject['hit']
+                        ]
                     ) : [$subContext => $obj]);
                 } else {
                     $result[] = $obj;

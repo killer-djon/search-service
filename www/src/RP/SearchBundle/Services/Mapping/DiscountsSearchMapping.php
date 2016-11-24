@@ -28,9 +28,16 @@ abstract class DiscountsSearchMapping extends PlaceSearchMapping
         return [
             $filterFactory->getBoolOrFilter([
                 $filterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 1, 100),
-                $filterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
+                $filterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
             ]),
             $filterFactory->getBoolOrFilter([
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                    $filterFactory->getTermsFilter(PlaceSearchMapping::MODERATION_STATUS_FIELD, [
+                        ModerationStatus::DIRTY,
+                        ModerationStatus::OK
+                    ]),
+                ]),
                 $filterFactory->getBoolAndFilter([
                     $filterFactory->getNotFilter(
                         $filterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId])
@@ -39,13 +46,6 @@ abstract class DiscountsSearchMapping extends PlaceSearchMapping
                         PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK
                     ])
                 ]),
-                $filterFactory->getBoolAndFilter([
-                    $filterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
-                    $filterFactory->getTermsFilter(PlaceSearchMapping::MODERATION_STATUS_FIELD, [
-                        ModerationStatus::DIRTY,
-                        ModerationStatus::OK
-                    ]),
-                ])
             ])
         ];
     }

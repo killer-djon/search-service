@@ -420,12 +420,15 @@ class SearchEngine implements SearchEngineInterface
             foreach($bucketKeys as $key =>& $item)
             {
                 $currentItem = current($item);
-                $docsId = array_fill_keys(array_column($currentItem['hits']['hits'], '_id'), $typeKey);
+                $docs = array_combine(
+                    array_column($currentItem['hits']['hits'], '_id'),
+                    $currentItem['hits']['hits']
+                );
 
                 $item = [
                     'doc_count' => $currentItem['hits']['total'],
                     'type' => $typeKey,
-                    'items' => $docsId
+                    'items' => $docs
                 ];
             }
 

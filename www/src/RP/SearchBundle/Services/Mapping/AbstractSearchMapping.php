@@ -8,7 +8,8 @@ use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 
 abstract class AbstractSearchMapping
 {
-
+    /** Идентификатор записи документа в коллекции */
+    const IDENTIFIER_FIELD = 'id';
 
     /** Поле имени пользователя */
     const NAME_FIELD = 'name'; // полное совпадение имени по русски

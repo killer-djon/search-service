@@ -33,11 +33,15 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
      * @param string|\Elastica\Script $script
      * @return \Elastica\Aggregation\AbstractSimpleAggregation
      */
-    public function getAvgAggregation($fieldName, $script)
+    public function getAvgAggregation($fieldName, $script = null)
     {
-        $avg = new \Elastica\Aggregation\Avg();
+        $avg = new \Elastica\Aggregation\Avg('avg_script');
         $avg->setField($fieldName);
-        $avg->setScript($script);
+        if(!is_null($script))
+        {
+            $avg->setScript($script);
+        }
+
 
         return $avg;
     }
@@ -171,7 +175,6 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
     {
         $topHits = new \Elastica\Aggregation\TopHits($fieldName);
         $topHits->setSource($fields);
-
         if (!is_null($size)) {
             $topHits->setSize($size);
         }

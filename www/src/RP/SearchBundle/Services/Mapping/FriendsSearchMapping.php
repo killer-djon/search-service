@@ -25,7 +25,8 @@ class FriendsSearchMapping extends PeopleSearchMapping
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
         return [
-            $filterFactory->getTermsFilter(self::FRIEND_LIST_FIELD, [$userId])
+            $filterFactory->getTermsFilter(self::FRIEND_LIST_FIELD, [$userId]),
+            $filterFactory->getTermFilter([self::USER_REMOVED_FIELD => false])
         ];
     }
 
@@ -38,6 +39,8 @@ class FriendsSearchMapping extends PeopleSearchMapping
      */
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return [];
+        return [
+            $filterFactory->getTermFilter([self::USER_REMOVED_FIELD => false])
+        ];
     }
 }

@@ -84,12 +84,14 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
     {
         return [
             $filterFactory->getTermFilter([self::IS_RUSSIAN_FIELD => false]),
-            $filterFactory->getTermsFilter(self::MODERATION_STATUS_FIELD, [
-                ModerationStatus::OK,
-                ModerationStatus::DIRTY,
-                ModerationStatus::NOT_IN_PROMO,
-                ModerationStatus::REJECTED,
-                ModerationStatus::RESTORED
+            $filterFactory->getNotFilter(
+                $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
+            ),
+            $filterFactory->getBoolOrFilter([
+                $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
+                $filterFactory->getNotFilter(
+                    $filterFactory->getExistsFilter(self::BONUS_FIELD)
+                )
             ])
         ];
     }
@@ -105,15 +107,15 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
         return [
-            $filterFactory->getBoolAndFilter([
-                $filterFactory->getNotFilter(
-                    $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
-                ),
+            $filterFactory->getNotFilter(
+                $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
+            ),
+            $filterFactory->getBoolOrFilter([
+                $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
                 $filterFactory->getNotFilter(
                     $filterFactory->getExistsFilter(self::BONUS_FIELD)
-                ),
-                $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
-            ]),
+                )
+            ])
         ];
     }
 }

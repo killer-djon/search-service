@@ -269,7 +269,14 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      */
     public function setAggregationQuery(array $aggregations = [])
     {
-        $this->_aggregationQueryData = $aggregations;
+        //$this->_aggregationQueryData = $aggregations;
+        if(!empty($aggregations))
+        {
+            foreach ($aggregations as $key => $aggregation)
+            {
+                $this->_aggregationQueryData[] = $aggregation;
+            }
+        }
     }
 
     /**

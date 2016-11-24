@@ -196,8 +196,8 @@ class CommonSearchService extends AbstractSearchService
                         $point->getRadius()
                     )->addAggregation($this->_queryAggregationFactory->setAggregationSource(
                         AbstractSearchMapping::LOCATION_FIELD,
-                        ['id']
-                    )),
+                        [AbstractSearchMapping::IDENTIFIER_FIELD, AbstractSearchMapping::LOCATION_POINT_FIELD]
+                    ))
                 ]);
 
                 /** формируем условия сортировки */

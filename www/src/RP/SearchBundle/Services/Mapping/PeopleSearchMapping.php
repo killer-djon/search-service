@@ -149,6 +149,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             $filterFactory->getNotFilter(
                 $filterFactory->getTermsFilter(self::FRIEND_LIST_FIELD, [$userId])
             ),
+            $filterFactory->getTermFilter([self::USER_REMOVED_FIELD => false])
         ];
     }
 
@@ -161,7 +162,9 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
      */
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return [];
+        return [
+            $filterFactory->getTermFilter([self::USER_REMOVED_FIELD => false])
+        ];
     }
 
 }

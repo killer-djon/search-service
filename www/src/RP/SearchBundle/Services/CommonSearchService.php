@@ -66,8 +66,7 @@ class CommonSearchService extends AbstractSearchService
              * тогда ищем во всех коллекциях еластика по условиям
              */
             foreach ($this->filterSearchTypes as $keyType => $type) {
-                $this->clearScriptFields();
-                $this->clearFilter();
+                $this->clearQueryFactory();
 
                 $this->setFilterQuery($type::getMatchSearchFilter($this->_queryFilterFactory, $userId));
                 $this->setScriptTagsConditions($currentUser, $type);
@@ -95,6 +94,13 @@ class CommonSearchService extends AbstractSearchService
                 }
 
                 $this->setHighlightQuery($type::getHighlightConditions());
+
+                $this->setSortingQuery(
+                    $this->_sortingFactory->getGeoDistanceSort(
+                        $type::LOCATION_POINT_FIELD,
+                        $point
+                    )
+                );
 
                 /**
                  * Получаем сформированный объект запроса
@@ -181,8 +187,7 @@ class CommonSearchService extends AbstractSearchService
             $queryMatchResults = [];
 
             foreach ($searchTypes as $keyType => $typeFields) {
-                $this->clearScriptFields();
-                $this->clearFilter();
+                $this->clearQueryFactory();
 
                 $this->setFilterQuery($this->filterTypes[$keyType]::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
                 $this->setScriptTagsConditions($currentUser, $this->filterTypes[$keyType]);
@@ -239,10 +244,9 @@ class CommonSearchService extends AbstractSearchService
                 $queryMatchResults[$keyType] = $this->createMatchQuery(
                     null,
                     $typeFields,
-                    (count($searchTypes) == 1 ? $skip : 0),
-                    (count($searchTypes) == 1 ? $count : null)
+                    $skip,
+                    $count
                 );
-
             }
 
             /**

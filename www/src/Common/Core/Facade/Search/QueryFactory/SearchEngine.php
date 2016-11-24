@@ -421,11 +421,6 @@ class SearchEngine implements SearchEngineInterface
             $bucketKeys = $this->array_combine_(array_column($bucketItem, 'key'), $bucketItem);
             foreach ($bucketKeys as $key => & $item) {
                 $currentItem = current($item);
-                $docs = array_combine(
-                    array_column($currentItem[$keyField]['hits']['hits'], '_id'),
-                    $currentItem[$keyField]['hits']['hits']
-                );
-
                 $item = [
                     'doc_count' => $currentItem[$keyField]['hits']['total'],
                     'type'      => $typeKey,
@@ -433,7 +428,6 @@ class SearchEngine implements SearchEngineInterface
                         Location::LONG_LATITUDE  => $currentItem['centroid'][$keyField][Location::LATITUDE],
                         Location::LONG_LONGITUDE => $currentItem['centroid'][$keyField][Location::LONGITUDE],
                     ],
-                    'items'     => $docs,
                 ];
             }
 
@@ -459,26 +453,12 @@ class SearchEngine implements SearchEngineInterface
         foreach ($bucketItems as $keyHash => $bucketItem) {
             $sumDocCount = array_sum(array_column($bucketItem, 'doc_count'));
             $docTypes = array_unique(array_column($bucketItem, 'type'));
-            $docItems = array_column($bucketItem, 'items');
             $location = array_column($bucketItem, 'location');
-
-            $items = [];
-            foreach ($docItems as $arItem) {
-                $keys = array_keys($arItem);
-                foreach ($keys as $keyDocId) {
-                    $items[] = [
-                        'id'   => $keyDocId,
-                        'type' => $arItem[$keyDocId]['_type'],
-
-                    ];
-                }
-            }http://search-service.local/app_dev.php/api/search/v1/json/markers/peoples,friends,places,events
 
             $results[] = [
                 'key'       => $keyHash,
                 'doc_count' => $sumDocCount,
                 'types'     => implode(',', $docTypes),
-                //'items'     => $items,
                 'location'  => GeoPointService::GetCenterFromDegrees($location),
             ];
         }
@@ -492,6 +472,7 @@ class SearchEngine implements SearchEngineInterface
         foreach ($keys as $i => $k) {
             $result[$k][] = $values[$i];
         }
+
         return $result;
     }
 

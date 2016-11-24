@@ -127,6 +127,13 @@ abstract class RequestConstant
     const DEFAULT_SEARCH_LIMIT = 20;
 
     /**
+     * Лимит при поиск в еластике по умолчанию
+     *
+     * @const int DEFAULT_SEARCH_UNLIMIT
+     */
+    const DEFAULT_SEARCH_UNLIMIT = 10000;
+
+    /**
      * Кол-во пропускаем позиций при поиске с лимотом
      *
      * @const int DEFAULT_SEARCH_SKIP

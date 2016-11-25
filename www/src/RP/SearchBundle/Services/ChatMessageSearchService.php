@@ -5,11 +5,19 @@
 namespace RP\SearchBundle\Services;
 
 use Common\Core\Constants\SortingOrder;
+use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Mapping\ChatMessageMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 
 class ChatMessageSearchService extends AbstractSearchService
 {
+    /**
+     * Релевантность поискаовыйх запросов
+     *
+     * @const int _score
+     */
+    const MIN_SEARCH_SCRORE = 3;
+
     /**
      * Метод осуществляет поиск в еластике
      * по имени/фамилии пользьвателя в чате
@@ -25,18 +33,14 @@ class ChatMessageSearchService extends AbstractSearchService
      */
     public function searchByChatMessage($userId, $searchText, $chatId = null, $skip = 0, $count = null)
     {
-        if (!is_null($chatId) && !empty($chatId)) {
-            $this->setFilterQuery([
-                $this->_queryFilterFactory->getTermFilter([ChatMessageMapping::CHAT_ID_FIELD => $chatId]),
-            ]);
-        }
-
         if (!empty($searchText)) {
             $this->setConditionQueryShould([
-                $this->_queryConditionFactory
+                /*$this->_queryConditionFactory
                     ->getMultiMatchQuery()
                     ->setQuery($searchText)
-                    ->setFields(ChatMessageMapping::getMultiMatchQuerySearchFields()),
+                    ->setFields(ChatMessageMapping::getMultiMatchQuerySearchFields())
+                    ->setMinimumShouldMatch('70%')
+                ->setZeroTermsQuery('none'),*/
             ]);
         }
 
@@ -48,8 +52,14 @@ class ChatMessageSearchService extends AbstractSearchService
                 $this->_queryFilterFactory->getTermFilter([
                     ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
                 ]),
-            ])
+            ]),
         ]);
+
+        if (!is_null($chatId) && !empty($chatId)) {
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getTermFilter([ChatMessageMapping::CHAT_ID_FIELD => $chatId]),
+            ]);
+        }
 
         $this->setHighlightQuery([
             ChatMessageMapping::MESSAGE_TEXT_FIELD => [
@@ -62,7 +72,17 @@ class ChatMessageSearchService extends AbstractSearchService
          * когда запрос многотипный НЕТ необходимости
          * указывать skip и count
          */
-        $queryMatchResults = $this->createQuery($skip, $count);
+        //$queryMatchResults = $this->createQuery($skip, $count);
+        $queryMatchResults = $this->createMatchQuery(
+            $searchText,
+            ChatMessageMapping::getMultiMatchQuerySearchFields(),
+            $skip,
+            $count,
+            MultiMatch::OPERATOR_AND,
+            MultiMatch::TYPE_BEST_FIELDS
+        );
+
+        $queryMatchResults->setMinScore(self::MIN_SEARCH_SCRORE);
 
         return $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT);
     }

@@ -145,7 +145,7 @@ class CommonSearchService extends AbstractSearchService
                     $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
                     $point,
                     'asc'
-                )
+                ),
             ]);
 
             $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
@@ -202,8 +202,7 @@ class CommonSearchService extends AbstractSearchService
                 $this->setFilterQuery($this->filterTypes[$keyType]::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
                 $this->setScriptTagsConditions($currentUser, $this->filterTypes[$keyType]);
 
-                if( mb_strlen($geoHashCell) > 0 )
-                {
+                if (mb_strlen($geoHashCell) > 0) {
                     $isCluster = false;
                     $this->setFilterQuery([
                         $this->_queryFilterFactory->getGeoHashFilter(
@@ -214,13 +213,12 @@ class CommonSearchService extends AbstractSearchService
                             ],
                             mb_strlen($geoHashCell),
                             $geoHashCell
-                        )
+                        ),
                     ]);
                 }
                 $this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
 
-                if( $isCluster == true )
-                {
+                if ($isCluster == true) {
                     $this->setAggregationQuery([
                         $this->_queryAggregationFactory->getGeoHashAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,

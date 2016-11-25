@@ -59,9 +59,13 @@ class SearchChatMessageController extends ApiController
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                 $oldFormat = $this->getVersioningData($chatSearchService);
+                $data = $chatSearchService->peopleTransformer->transform(
+                    $oldFormat['results'],
+                    ChatMessageMapping::CONTEXT
+                );
 
                 return $this->_handleViewWithData(
-                    $oldFormat['results'],
+                    $data,
                     null,
                     !self::INCLUDE_IN_CONTEXT
                 );

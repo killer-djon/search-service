@@ -139,16 +139,18 @@ class CommonSearchService extends AbstractSearchService
             $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$type]);
             $this->setGeoPointConditions($point, $this->filterSearchTypes[$type]);
 
-            $this->setSortingQuery(
+            $this->setSortingQuery([
+                $this->_sortingFactory->getFieldSort('_score', SortingOrder::SORTING_DESC),
                 $this->_sortingFactory->getGeoDistanceSort(
                     $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
-                    $point
+                    $point,
+                    'asc'
                 )
-            );
+            ]);
 
             $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
 
-            if( !is_null($searchText) && !empty($searchText) )
+            /*if( !is_null($searchText) && !empty($searchText) )
             {
                 $this->setConditionQueryShould([
                     $this->_queryConditionFactory->getMultiMatchQuery()
@@ -157,7 +159,17 @@ class CommonSearchService extends AbstractSearchService
                                                  ->setQuery($searchText)
                 ]);
 
+                $this->setScriptFunctions([
+                    $this->_scriptFactory->getDistanceScript(
+                        $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
+                        $point
+                    )
+                ]);
+
                 $queryMatchResults[$type] = $this->createQuery($skip, $count);
+                print_r($queryMatchResults[$type]);
+                exit;
+
             }else
             {
                 $queryMatchResults[$type] = $this->createMatchQuery(
@@ -166,8 +178,13 @@ class CommonSearchService extends AbstractSearchService
                     $skip,
                     $count
                 );
-            }
-
+            }*/
+            $queryMatchResults[$type] = $this->createMatchQuery(
+                $searchText,
+                $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),
+                $skip,
+                $count
+            );
         }
 
         return $this->searchMultiTypeDocuments($queryMatchResults);

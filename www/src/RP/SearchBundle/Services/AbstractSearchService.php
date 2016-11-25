@@ -13,6 +13,7 @@ use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Query;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
+use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use RP\SearchBundle\Services\Transformers\CityTransformer;
 use RP\SearchBundle\Services\Transformers\PeopleTransformer;
 use RP\SearchBundle\Services\Transformers\PlaceTypeTransformer;
@@ -270,10 +271,8 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     public function setAggregationQuery(array $aggregations = [])
     {
         //$this->_aggregationQueryData = $aggregations;
-        if(!empty($aggregations))
-        {
-            foreach ($aggregations as $key => $aggregation)
-            {
+        if (!empty($aggregations)) {
+            foreach ($aggregations as $key => $aggregation) {
                 $this->_aggregationQueryData[] = $aggregation;
             }
         }
@@ -287,7 +286,11 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      */
     public function setSortingQuery(array $sortings = [])
     {
-        $this->_sortingQueryData = $sortings;
+        if (AbstractTransformer::is_assoc($sortings)) {
+            $this->_sortingQueryData = [$sortings];
+        } else {
+            $this->_sortingQueryData = $sortings;
+        }
     }
 
     /**

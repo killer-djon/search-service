@@ -24,13 +24,20 @@ class ConditionFactory implements ConditionFactoryInterface
      * Условие запроса поиска всех документов
      *
      * @param string $fieldName
-     * @param string $value
+     * @param string $queryString
+     * @param float $boost
+     * @param int $prefixLength
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html
      * @return \Elastica\Query\Match
      */
-    public function getMatchQuery($fieldName, $value)
+    public function getMatchQuery($fieldName, $queryString, $boost = 1.0, $prefixLength = 3)
     {
-        return new \Elastica\Query\Match($fieldName, $value);
+        $matchQuery = new \Elastica\Query\Match();
+        $matchQuery->setFieldQuery($fieldName, $queryString);
+        $matchQuery->setFieldBoost($fieldName, $boost);
+        $matchQuery->setFieldPrefixLength($fieldName, $prefixLength);
+
+        return $matchQuery;
     }
 
     /**
@@ -181,14 +188,16 @@ class ConditionFactory implements ConditionFactoryInterface
      *
      * @param string $fieldName
      * @param string $value
+     * @param bool $analyzer
+     * @param int $phraseSlop
      * @return mixed
      */
-    public function getFieldQuery($fieldName, $value)
+    public function getFieldQuery($fieldName, $value, $analyzer = true, $phraseSlop = 10)
     {
         $queryString = new \Elastica\Query\QueryString($value);
         $queryString->setDefaultField($fieldName);
-        $queryString->setAnalyzeWildcard(true);
-        $queryString->setPhraseSlop(10);
+        $queryString->setAnalyzeWildcard($analyzer);
+        $queryString->setPhraseSlop((int)$phraseSlop);
 
         return $queryString;
     }

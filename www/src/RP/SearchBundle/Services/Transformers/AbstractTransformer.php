@@ -72,6 +72,27 @@ class AbstractTransformer
     public static $delimiter = '.';
 
     /**
+     * Tests if an array is associative or not.
+     *
+     *     // Returns TRUE
+     *     Arr::is_assoc(array('username' => 'john.doe'));
+     *
+     *     // Returns FALSE
+     *     Arr::is_assoc('foo', 'bar');
+     *
+     * @param   array   $array  array to check
+     * @return  boolean
+     */
+    public static function is_assoc(array $array)
+    {
+        // Keys of the array
+        $keys = array_keys($array);
+        // If the array keys of the keys match the keys, then the array must
+        // not be associative (e.g. the keys array looked like {0:0, 1:1...}).
+        return array_keys($keys) !== $keys;
+    }
+
+    /**
      * Gets a value from an array using a dot separated path.
      *     // Get the value of $array['foo']['bar']
      *     $value = Arr::path($array, 'foo.bar');

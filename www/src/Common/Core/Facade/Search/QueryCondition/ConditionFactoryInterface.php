@@ -24,11 +24,13 @@ interface ConditionFactoryInterface
      * Условие запроса поиска всех документов
      *
      * @param string $fieldName
-     * @param string $value
+     * @param string $queryString
+     * @param float $boost
+     * @param int $prefixLength
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html
      * @return \Elastica\Query\Match
      */
-    public function getMatchQuery($fieldName, $value);
+    public function getMatchQuery($fieldsName, $queryString, $boost = 1.0, $prefixLength = 3);
 
     /**
      * Получаем объект запроса поиска по совпадению в полях
@@ -109,11 +111,13 @@ interface ConditionFactoryInterface
     /**
      * Условаие запроса по совпадению поля (в зависимости от анализатора конкретного поля).
      *
-     * @param string $field
+     * @param string $fieldName
      * @param string $value
+     * @param bool $analyzer
+     * @param int $phraseSlop
      * @return mixed
      */
-    public function getFieldQuery($field, $value);
+    public function getFieldQuery($fieldName, $value, $analyzer = true, $phraseSlop = 10);
 
     /**
      * Типа regexp запроса.

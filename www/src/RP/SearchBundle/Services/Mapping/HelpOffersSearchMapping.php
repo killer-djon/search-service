@@ -18,6 +18,38 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
     /** Контекст поиска */
     const CONTEXT_MARKER = 'help';
 
+    /** "Могу помочь" */
+    const HELP_OFFERS_LIST_FIELD = 'helpOffers';
+
+    const HELP_OFFERS_ID_FIELD = 'helpOffers.id';
+
+    const HELP_OFFERS_NAME_FIELD = 'helpOffers.name';
+
+    const HELP_OFFERS_NAME_TRANSLIT_FIELD = 'helpOffers._translit';
+
+    const HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD = 'helpOffers._translitNgram';
+
+    const HELP_OFFERS_NAME_NGRAM_FIELD = 'helpOffers._nameNgram';
+
+    const HELP_OFFERS_NAME_WORDS_NAME_FIELD = 'helpOffers._wordsName';
+
+    /**
+     * Получаем поля для поиска
+     * сбор полей для формирования объекта запроса
+     * multiMatch - без точных условий с возможностью фильтрации
+     *
+     * @return array
+     */
+    public static function getMultiMatchQuerySearchFields()
+    {
+        return [
+            self::HELP_OFFERS_NAME_FIELD,
+            self::HELP_OFFERS_NAME_NGRAM_FIELD,
+            self::HELP_OFFERS_NAME_TRANSLIT_FIELD,
+            self::HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD,
+        ];
+    }
+
     /**
      * Собираем фильтр для маркеров
      *

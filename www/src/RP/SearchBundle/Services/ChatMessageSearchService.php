@@ -33,17 +33,6 @@ class ChatMessageSearchService extends AbstractSearchService
      */
     public function searchByChatMessage($userId, $searchText, $chatId = null, $skip = 0, $count = null)
     {
-        if (!empty($searchText)) {
-            $this->setConditionQueryShould([
-                /*$this->_queryConditionFactory
-                    ->getMultiMatchQuery()
-                    ->setQuery($searchText)
-                    ->setFields(ChatMessageMapping::getMultiMatchQuerySearchFields())
-                    ->setMinimumShouldMatch('70%')
-                ->setZeroTermsQuery('none'),*/
-            ]);
-        }
-
         $this->setFilterQuery([
             $this->_queryFilterFactory->getBoolOrFilter([
                 $this->_queryFilterFactory->getTermFilter([

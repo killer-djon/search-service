@@ -20,7 +20,7 @@ class QuerySortFactory implements QuerySortFactoryInterface
      * @param string $distanceType Применяемый тип для сортировки по дистанции (sloppy_arc, arc, plane)
      * @return array
      */
-    public function getGeoDistanceSort($pointField, GeoPointServiceInterface $point, $order = 'asc', $unit = 'km', $distanceType = 'sloppy_arc')
+    public function getGeoDistanceSort($pointField, GeoPointServiceInterface $point, $order = 'asc', $unit = 'km', $distanceType = 'plane')
     {
         return [
             '_geo_distance' => [
@@ -30,8 +30,7 @@ class QuerySortFactory implements QuerySortFactoryInterface
                 ],
                 'order'         => $order,
                 'unit'          => $unit,
-                'distance_type' => $distanceType,
-                'mode' => 'min'
+                'distance_type' => $distanceType
             ],
         ];
     }

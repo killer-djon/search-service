@@ -60,8 +60,6 @@ class SearchCityController extends ApiController
             $citySearchService = $this->getCitySearchService();
             $cities = $citySearchService->searchCityByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
 
-
-
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                 $oldFormat = $this->getVersioningData($citySearchService);
 

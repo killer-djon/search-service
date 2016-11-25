@@ -149,36 +149,6 @@ class CommonSearchService extends AbstractSearchService
             ]);
 
             $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
-
-            /*if( !is_null($searchText) && !empty($searchText) )
-            {
-                $this->setConditionQueryShould([
-                    $this->_queryConditionFactory->getMultiMatchQuery()
-                                                 ->setFields($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields())
-                                                 ->setMinimumShouldMatch('50%')
-                                                 ->setQuery($searchText)
-                ]);
-
-                $this->setScriptFunctions([
-                    $this->_scriptFactory->getDistanceScript(
-                        $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
-                        $point
-                    )
-                ]);
-
-                $queryMatchResults[$type] = $this->createQuery($skip, $count);
-                print_r($queryMatchResults[$type]);
-                exit;
-
-            }else
-            {
-                $queryMatchResults[$type] = $this->createMatchQuery(
-                    $searchText,
-                    $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),
-                    $skip,
-                    $count
-                );
-            }*/
             $queryMatchResults[$type] = $this->createMatchQuery(
                 $searchText,
                 $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),

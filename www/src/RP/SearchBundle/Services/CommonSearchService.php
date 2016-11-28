@@ -54,7 +54,6 @@ class CommonSearchService extends AbstractSearchService
         $count = null
     ) {
         $currentUser = $this->getUserById($userId);
-
         if (is_null($filterType)) {
             /**
              * Массив объектов запроса
@@ -104,7 +103,8 @@ class CommonSearchService extends AbstractSearchService
                     ),
                 ]);
 
-                $searchPhrase = explode(" ", $searchText);
+                $searchPhrase = !is_null($searchText) && !empty($searchText) ? explode(" ", $searchText) : 0;
+
                 if (count($searchPhrase) > 1) {
                     $this->setConditionQueryMust([
                         $this->_queryConditionFactory->getMatchPhraseQuery($type::DESCRIPTION_FIELD, $searchText),

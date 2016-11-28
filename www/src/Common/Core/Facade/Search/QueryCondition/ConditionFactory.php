@@ -30,14 +30,35 @@ class ConditionFactory implements ConditionFactoryInterface
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html
      * @return \Elastica\Query\Match
      */
-    public function getMatchQuery($fieldName, $queryString, $boost = 1.0, $prefixLength = 3)
+    public function getMatchQuery($fieldName, $queryString, $boost = 1.0, $prefixLength = null)
     {
         $matchQuery = new \Elastica\Query\Match();
         $matchQuery->setFieldQuery($fieldName, $queryString);
         $matchQuery->setFieldBoost($fieldName, $boost);
-        $matchQuery->setFieldPrefixLength($fieldName, $prefixLength);
+        if( !is_null($prefixLength) && is_int($prefixLength) )
+        {
+            $matchQuery->setFieldPrefixLength($fieldName, $prefixLength);
+        }
 
         return $matchQuery;
+    }
+
+
+    /**
+     * Условие запроса по полной фразе
+     *
+     * @param string $fieldName
+     * @param string $queryString
+     * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html#_phrase
+     * @return \Elastica\Query\MatchPhrase
+     */
+    public function getMatchPhraseQuery($fieldName, $queryString)
+    {
+        $matchPhrase = new \Elastica\Query\MatchPhrase();
+        $matchPhrase->setFieldQuery($fieldName, $queryString);
+        //$matchPhrase->setFieldPrefixLength($fieldName, mb_strlen($queryString));
+
+        return $matchPhrase;
     }
 
     /**

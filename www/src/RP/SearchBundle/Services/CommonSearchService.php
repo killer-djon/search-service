@@ -149,12 +149,20 @@ class CommonSearchService extends AbstractSearchService
             ]);
 
             $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
-            $queryMatchResults[$type] = $this->createMatchQuery(
+
+            /*$queryMatchResults[$type] = $this->createMatchQuery(
                 $searchText,
                 $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),
                 $skip,
                 $count
-            );
+            );*/
+
+            $this->setConditionQueryShould([
+                $this->_queryConditionFactory->getMatchPhraseQuery($this->filterSearchTypes[$type]::DESCRIPTION_FIELD, $searchText)
+            ]);
+
+            $queryMatchResults[$type] = $this->createQuery($skip, $count);
+
         }
 
         return $this->searchMultiTypeDocuments($queryMatchResults);

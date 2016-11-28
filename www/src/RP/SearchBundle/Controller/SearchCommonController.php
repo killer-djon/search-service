@@ -35,7 +35,14 @@ class SearchCommonController extends ApiController
 
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
-            $searchText = (mb_strlen($searchText) <= 2 ? RequestConstant::NULLED_PARAMS : trim($searchText));
+            if( is_null($searchText) || mb_strlen($searchText) < 3 )
+            {
+                if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                    return $this->_handleViewWithData([]);
+                }
+
+                return $this->_handleViewWithData([]);
+            }
 
             // получаем из запроса ID пользователя
             $userId = $this->getRequestUserId();

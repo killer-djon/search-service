@@ -39,7 +39,7 @@ class CitySearchService extends AbstractSearchService
             ]),
         ]);
 
-        $this->setConditionQueryShould([
+        /*$this->setConditionQueryShould([
             $this->_queryConditionFactory->getPrefixQuery(
                 CitySearchMapping::NAME_FIELD,
                 $searchText
@@ -48,6 +48,12 @@ class CitySearchService extends AbstractSearchService
                 CitySearchMapping::INTERNATIONAL_NAME_FIELD,
                 $searchText
             )
+        ]);*/
+        $this->setConditionQueryShould([
+            $this->_queryConditionFactory->getMatchPhraseQuery(CitySearchMapping::NAME_FIELD, $searchText),
+            $this->_queryConditionFactory->getPrefixQuery(CitySearchMapping::NAME_FIELD, $searchText),
+            $this->_queryConditionFactory->getMatchPhraseQuery(CitySearchMapping::NAME_TRANSLIT_FIELD, $searchText),
+            $this->_queryConditionFactory->getPrefixQuery(CitySearchMapping::NAME_TRANSLIT_FIELD, $searchText)
         ]);
 
         $this->setSortingQuery(
@@ -56,7 +62,6 @@ class CitySearchService extends AbstractSearchService
 
         /** Получаем сформированный объект запроса */
         $queryMatchResult = $this->createQuery($skip, $count);
-
 
         /** поиск документа */
         return $this->searchDocuments($queryMatchResult, CitySearchMapping::CONTEXT);

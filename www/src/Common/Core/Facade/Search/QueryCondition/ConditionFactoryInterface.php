@@ -30,7 +30,17 @@ interface ConditionFactoryInterface
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html
      * @return \Elastica\Query\Match
      */
-    public function getMatchQuery($fieldsName, $queryString, $boost = 1.0, $prefixLength = 3);
+    public function getMatchQuery($fieldName, $queryString, $boost = 1.0, $prefixLength = null);
+
+    /**
+     * Условие запроса по полной фразе
+     *
+     * @param string $fieldName
+     * @param string $queryString
+     * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html#_phrase
+     * @return \Elastica\Query\MatchPhrase
+     */
+    public function getMatchPhraseQuery($fieldName, $queryString);
 
     /**
      * Получаем объект запроса поиска по совпадению в полях

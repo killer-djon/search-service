@@ -80,7 +80,7 @@ class ChatMessageSearchService extends AbstractSearchService
                 $count
             );
         }
-        
+
         return $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT);
     }
 }

@@ -102,16 +102,26 @@ class CommonSearchService extends AbstractSearchService
                     )
                 );
 
+                $this->setConditionQueryShould([
+                    $this->_queryConditionFactory->getMatchPhraseQuery($type::DESCRIPTION_FIELD, $searchText),
+                    $this->_queryConditionFactory->getMatchPhraseQuery($type::DESCRIPTION_TRANSLIT_FIELD, $searchText),
+                    $this->_queryConditionFactory->getMultiMatchQuery()
+                                                 ->setFields($type::getMultiMatchQuerySearchFields())
+                                                 ->setQuery($searchText)
+                ]);
+
                 /**
                  * Получаем сформированный объект запроса
                  * когда запрос многотипный НЕТ необходимости
                  * указывать skip и count
                  */
-                $queryMatchResults[$keyType] = $this->createMatchQuery(
+                /*$queryMatchResults[$keyType] = $this->createMatchQuery(
                     $searchText,
                     $type::getMultiMatchQuerySearchFields(),
                     0, self::DEFAULT_SEARCH_BLOCK_SIZE
-                );
+                );*/
+                $queryMatchResults[$keyType] = $this->createQuery(0, self::DEFAULT_SEARCH_BLOCK_SIZE);
+
             }
 
             /**
@@ -150,18 +160,26 @@ class CommonSearchService extends AbstractSearchService
 
             $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
 
+            /**/
+
+            $this->setConditionQueryShould([
+                $this->_queryConditionFactory->getMatchPhraseQuery($this->filterSearchTypes[$type]::DESCRIPTION_FIELD, $searchText),
+                $this->_queryConditionFactory->getMatchPhraseQuery($this->filterSearchTypes[$type]::DESCRIPTION_TRANSLIT_FIELD, $searchText),
+                $this->_queryConditionFactory->getMultiMatchQuery()
+                                             ->setFields($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields())
+                                             ->setQuery($searchText)
+            ]);
+
             /*$queryMatchResults[$type] = $this->createMatchQuery(
                 $searchText,
                 $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),
                 $skip,
                 $count
             );*/
+            print_r($queryMatchResults[$type]);
+            exit;
 
-            $this->setConditionQueryShould([
-                $this->_queryConditionFactory->getMatchPhraseQuery($this->filterSearchTypes[$type]::DESCRIPTION_FIELD, $searchText)
-            ]);
-
-            $queryMatchResults[$type] = $this->createQuery($skip, $count);
+            //$queryMatchResults[$type] = $this->createQuery($skip, $count);
 
         }
 

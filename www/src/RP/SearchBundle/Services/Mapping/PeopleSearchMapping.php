@@ -118,14 +118,14 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
         return [
             // вариации поля имени
             self::NAME_FIELD,
-            self::NAME_NGRAM_FIELD,
+            //self::NAME_NGRAM_FIELD,
             self::NAME_TRANSLIT_FIELD,
-            self::NAME_TRANSLIT_NGRAM_FIELD,
+            //self::NAME_TRANSLIT_NGRAM_FIELD,
             // вариации поля фамилии
             self::SURNAME_FIELD,
-            self::SURNAME_NGRAM_FIELD,
+            //self::SURNAME_NGRAM_FIELD,
             self::SURNAME_TRANSLIT_FIELD,
-            self::SURNAME_TRANSLIT_NGRAM_FIELD,
+            //self::SURNAME_TRANSLIT_NGRAM_FIELD,
 
             // сфера деятельности
             self::ACTIVITY_SPHERE_NAME_FIELD,

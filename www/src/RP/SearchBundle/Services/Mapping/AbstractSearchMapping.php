@@ -21,6 +21,10 @@ abstract class AbstractSearchMapping
     /** поле описания места */
     const DESCRIPTION_FIELD = 'description';
 
+    /** поле описания места */
+    const DESCRIPTION_TRANSLIT_FIELD = 'description._translit';
+
+
     /** Поле с интересами пользователя */
     const TAG_FIELD         = 'tags';
     const TAGS_ID_FIELD      = 'tags.id';

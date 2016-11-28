@@ -55,10 +55,10 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
             self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_TRANSLIT_FIELD,
             self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_TRANSLIT_NGRAM_FIELD,
 
-            self::MESSAGE_TEXT_FIELD,
-            self::MESSAGE_TEXT_NGRAM_FIELD,
-            self::MESSAGE_TEXT_TRANSLIT_FIELD,
-            self::MESSAGE_TEXT_NGRAM_TRANSLIT_FIELD
+            //self::MESSAGE_TEXT_FIELD,
+            //self::MESSAGE_TEXT_NGRAM_FIELD,
+            //self::MESSAGE_TEXT_TRANSLIT_FIELD,
+            //self::MESSAGE_TEXT_NGRAM_TRANSLIT_FIELD
         ];
     }
 

@@ -31,7 +31,7 @@ class ChatMessageSearchService extends AbstractSearchService
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchByChatMessage($userId, $searchText, $chatId = null, $skip = 0, $count = null)
+    public function searchByChatMessage($userId, $searchText = null, $chatId = null, $skip = 0, $count = null)
     {
         $this->setFilterQuery([
             $this->_queryFilterFactory->getBoolOrFilter([
@@ -41,7 +41,7 @@ class ChatMessageSearchService extends AbstractSearchService
                 $this->_queryFilterFactory->getTermFilter([
                     ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
                 ]),
-            ]),
+            ])
         ]);
 
         if (!is_null($chatId) && !empty($chatId)) {
@@ -56,23 +56,31 @@ class ChatMessageSearchService extends AbstractSearchService
             ],
         ]);
 
-        /**
-         * Получаем сформированный объект запроса
-         * когда запрос многотипный НЕТ необходимости
-         * указывать skip и count
-         */
-        //$queryMatchResults = $this->createQuery($skip, $count);
-        $queryMatchResults = $this->createMatchQuery(
-            $searchText,
-            ChatMessageMapping::getMultiMatchQuerySearchFields(),
-            $skip,
-            $count,
-            MultiMatch::OPERATOR_AND,
-            MultiMatch::TYPE_BEST_FIELDS
-        );
+        if (!is_null($searchText) && !empty($searchText)) {
+            $this->setConditionQueryShould([
+                $this->_queryConditionFactory->getMultiMatchQuery()
+                                             ->setQuery($searchText)
+                                             ->setFields(ChatMessageMapping::getMultiMatchQuerySearchFields()),
+                $this->_queryConditionFactory->getPrefixQuery(ChatMessageMapping::MESSAGE_TEXT_FIELD, $searchText),
+                $this->_queryConditionFactory->getPrefixQuery(ChatMessageMapping::MESSAGE_TEXT_TRANSLIT_FIELD, $searchText),
+            ]);
 
-        $queryMatchResults->setMinScore(self::MIN_SEARCH_SCRORE);
-
+            $queryMatchResults = $this->createQuery($skip, $count);
+        }else
+        {
+            /**
+             * Получаем сформированный объект запроса
+             * когда запрос многотипный НЕТ необходимости
+             * указывать skip и count
+             */
+            $queryMatchResults = $this->createMatchQuery(
+                $searchText,
+                ChatMessageMapping::getMultiMatchQuerySearchFields(),
+                $skip,
+                $count
+            );
+        }
+        
         return $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT);
     }
 }

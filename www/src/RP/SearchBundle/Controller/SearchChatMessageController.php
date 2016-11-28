@@ -32,7 +32,7 @@ class SearchChatMessageController extends ApiController
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
 
-            if (is_null($searchText)) {
+            /*if (is_null($searchText)) {
                 return $this->_handleViewWithError(
                     new BadRequestHttpException(
                         'Не указана поисковая строка searchText',
@@ -40,7 +40,7 @@ class SearchChatMessageController extends ApiController
                         Response::HTTP_BAD_REQUEST
                     )
                 );
-            }
+            }*/
 
             /** @var ID чата в котором можем искать */
             $chatId = $request->get(RequestConstant::CHAT_ID_PARAM);

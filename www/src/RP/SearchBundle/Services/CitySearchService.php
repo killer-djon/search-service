@@ -39,16 +39,6 @@ class CitySearchService extends AbstractSearchService
             ]),
         ]);
 
-        /*$this->setConditionQueryShould([
-            $this->_queryConditionFactory->getPrefixQuery(
-                CitySearchMapping::NAME_FIELD,
-                $searchText
-            ),
-            $this->_queryConditionFactory->getPrefixQuery(
-                CitySearchMapping::INTERNATIONAL_NAME_FIELD,
-                $searchText
-            )
-        ]);*/
         $this->setConditionQueryShould([
             $this->_queryConditionFactory->getMatchPhraseQuery(CitySearchMapping::NAME_FIELD, $searchText),
             $this->_queryConditionFactory->getPrefixQuery(CitySearchMapping::NAME_FIELD, $searchText),

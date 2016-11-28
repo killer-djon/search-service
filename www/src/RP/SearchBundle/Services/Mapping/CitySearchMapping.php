@@ -17,7 +17,7 @@ abstract class CitySearchMapping extends AbstractSearchMapping
     const COUNTRY_FIELD = 'Country';
 
     /** Поле названия страны */
-    const COUNTRY_NAME_FIELD = 'Country.name';
+    const COUNTRY_NAME_FIELD = 'Country.Name';
 
     /** Поле названия страны */
     const COUNTRY_SHIRT_NAME_FIELD = 'Country.shortName';

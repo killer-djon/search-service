@@ -52,21 +52,19 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
         return [
             // поля с вариациями названия
             self::NAME_FIELD,
-            self::NAME_NGRAM_FIELD,
+            //self::NAME_NGRAM_FIELD,
             self::NAME_TRANSLIT_FIELD,
-            self::NAME_TRANSLIT_NGRAM_FIELD,
+            //self::NAME_TRANSLIT_NGRAM_FIELD,
             // поля с вариациями типа места
             self::TYPE_NAME_FIELD,
-            self::TYPE_NAME_NGRAM_FIELD,
+            //self::TYPE_NAME_NGRAM_FIELD,
             self::TYPE_NAME_TRANSLIT_FIELD,
-            self::TYPE_NAME_TRANSLIT_NGRAM_FIELD,
+            //self::TYPE_NAME_TRANSLIT_NGRAM_FIELD,
             // поля с вариациями названия тегов
             self::TAG_NAME_FIELD,
-            self::TAG_NAME_NGRAM_FIELD,
+            //self::TAG_NAME_NGRAM_FIELD,
             self::TAG_NAME_TRANSLIT_FIELD,
-            self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
-            //поле описания места
-            self::DESCRIPTION_FIELD,
+            //self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
             // поля с названием города проживания
             self::LOCATION_CITY_NAME_FIELD,
             self::LOCATION_CITY_INTERNATIONAL_NAME_FIELD,

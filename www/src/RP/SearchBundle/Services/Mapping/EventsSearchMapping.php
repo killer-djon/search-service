@@ -77,21 +77,19 @@ class EventsSearchMapping extends AbstractSearchMapping
         return [
             // вариации поля имени
             self::NAME_FIELD,
-            self::NAME_NGRAM_FIELD,
+            //self::NAME_NGRAM_FIELD,
             self::NAME_TRANSLIT_FIELD,
-            self::NAME_TRANSLIT_NGRAM_FIELD,
+            //self::NAME_TRANSLIT_NGRAM_FIELD,
             // по типу
             self::TYPE_NAME_FIELD,
-            self::TYPE_NAME_NGRAM_FIELD,
+            //self::TYPE_NAME_NGRAM_FIELD,
             self::TYPE_NAME_TRANSLIT_FIELD,
-            self::TYPE_NAME_TRANSLIT_NGRAM_FIELD,
+            //self::TYPE_NAME_TRANSLIT_NGRAM_FIELD,
             // по интересам
             self::TAG_NAME_FIELD,
-            self::TAG_NAME_NGRAM_FIELD,
+            //self::TAG_NAME_NGRAM_FIELD,
             self::TAG_NAME_TRANSLIT_FIELD,
-            self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
-            // по описанию события
-            self::DESCRIPTION_FIELD,
+            //self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
         ];
     }
 }

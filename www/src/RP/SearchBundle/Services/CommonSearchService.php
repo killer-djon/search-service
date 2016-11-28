@@ -95,32 +95,41 @@ class CommonSearchService extends AbstractSearchService
 
                 $this->setHighlightQuery($type::getHighlightConditions());
 
-                $this->setSortingQuery(
+                $this->setSortingQuery([
+                    $this->_sortingFactory->getFieldSort('_score', SortingOrder::SORTING_DESC),
                     $this->_sortingFactory->getGeoDistanceSort(
                         $type::LOCATION_POINT_FIELD,
-                        $point
-                    )
-                );
-
-                $this->setConditionQueryShould([
-                    $this->_queryConditionFactory->getMatchPhraseQuery($type::DESCRIPTION_FIELD, $searchText),
-                    $this->_queryConditionFactory->getMatchPhraseQuery($type::DESCRIPTION_TRANSLIT_FIELD, $searchText),
-                    $this->_queryConditionFactory->getMultiMatchQuery()
-                                                 ->setFields($type::getMultiMatchQuerySearchFields())
-                                                 ->setQuery($searchText)
+                        $point,
+                        'asc'
+                    ),
                 ]);
 
-                /**
-                 * Получаем сформированный объект запроса
-                 * когда запрос многотипный НЕТ необходимости
-                 * указывать skip и count
-                 */
-                /*$queryMatchResults[$keyType] = $this->createMatchQuery(
-                    $searchText,
-                    $type::getMultiMatchQuerySearchFields(),
-                    0, self::DEFAULT_SEARCH_BLOCK_SIZE
-                );*/
-                $queryMatchResults[$keyType] = $this->createQuery(0, self::DEFAULT_SEARCH_BLOCK_SIZE);
+                $searchPhrase = explode(" ", $searchText);
+                if (count($searchPhrase) > 1) {
+                    $this->setConditionQueryMust([
+                        $this->_queryConditionFactory->getMatchPhraseQuery($type::DESCRIPTION_FIELD, $searchText),
+                        $this->_queryConditionFactory->getMatchPhraseQuery($type::DESCRIPTION_TRANSLIT_FIELD, $searchText),
+                    ]);
+
+                    $this->setConditionQueryShould([
+                        $this->_queryConditionFactory->getMultiMatchQuery()
+                                                     ->setFields($type::getMultiMatchQuerySearchFields())
+                                                     ->setQuery($searchText),
+                    ]);
+
+                    $queryMatchResults[$keyType] = $this->createQuery(0, self::DEFAULT_SEARCH_BLOCK_SIZE);
+                } else {
+                    /**
+                     * Получаем сформированный объект запроса
+                     * когда запрос многотипный НЕТ необходимости
+                     * указывать skip и count
+                     */
+                    $queryMatchResults[$keyType] = $this->createMatchQuery(
+                        $searchText,
+                        $type::getMultiMatchQuerySearchFields(),
+                        0, self::DEFAULT_SEARCH_BLOCK_SIZE
+                    );
+                }
 
             }
 
@@ -160,26 +169,30 @@ class CommonSearchService extends AbstractSearchService
 
             $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
 
-            /**/
+            $searchPhrase = explode(" ", $searchText);
 
-            $this->setConditionQueryShould([
-                $this->_queryConditionFactory->getMatchPhraseQuery($this->filterSearchTypes[$type]::DESCRIPTION_FIELD, $searchText),
-                $this->_queryConditionFactory->getMatchPhraseQuery($this->filterSearchTypes[$type]::DESCRIPTION_TRANSLIT_FIELD, $searchText),
-                $this->_queryConditionFactory->getMultiMatchQuery()
-                                             ->setFields($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields())
-                                             ->setQuery($searchText)
-            ]);
+            if (count($searchPhrase) > 1) {
+                $this->setConditionQueryMust([
+                    $this->_queryConditionFactory->getMatchPhraseQuery($this->filterSearchTypes[$type]::DESCRIPTION_FIELD, $searchText),
+                    $this->_queryConditionFactory->getMatchPhraseQuery($this->filterSearchTypes[$type]::DESCRIPTION_TRANSLIT_FIELD, $searchText),
+                ]);
 
-            /*$queryMatchResults[$type] = $this->createMatchQuery(
-                $searchText,
-                $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),
-                $skip,
-                $count
-            );*/
-            print_r($queryMatchResults[$type]);
-            exit;
+                $this->setConditionQueryShould([
 
-            //$queryMatchResults[$type] = $this->createQuery($skip, $count);
+                    $this->_queryConditionFactory->getMultiMatchQuery()
+                                                 ->setFields($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields())
+                                                 ->setQuery($searchText),
+                ]);
+
+                $queryMatchResults[$type] = $this->createQuery($skip, $count);
+            } else {
+                $queryMatchResults[$type] = $this->createMatchQuery(
+                    $searchText,
+                    $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),
+                    $skip,
+                    $count
+                );
+            }
 
         }
 

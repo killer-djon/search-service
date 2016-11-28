@@ -42,13 +42,11 @@ class CitySearchService extends AbstractSearchService
         $this->setConditionQueryShould([
             $this->_queryConditionFactory->getPrefixQuery(
                 CitySearchMapping::NAME_FIELD,
-                $searchText,
-                2.0
+                $searchText
             ),
             $this->_queryConditionFactory->getPrefixQuery(
                 CitySearchMapping::INTERNATIONAL_NAME_FIELD,
-                $searchText,
-                1.0
+                $searchText
             )
         ]);
 
@@ -58,6 +56,7 @@ class CitySearchService extends AbstractSearchService
 
         /** Получаем сформированный объект запроса */
         $queryMatchResult = $this->createQuery($skip, $count);
+
 
         /** поиск документа */
         return $this->searchDocuments($queryMatchResult, CitySearchMapping::CONTEXT);

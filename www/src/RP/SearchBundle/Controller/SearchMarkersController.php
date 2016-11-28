@@ -53,13 +53,16 @@ class SearchMarkersController extends ApiController
             $userId = $this->getRequestUserId();
 
             // Определяем выводить ли нам класстерные данные
-            $isCluster = $request->get(RequestConstant::IS_CLUSTER_PARAM);
+            $isCluster = $request->get(RequestConstant::IS_CLUSTER_PARAM, false);
 
             // получаем сервис многотипного поиска
             $markersSearchService = $this->getCommonSearchService();
 
-            // указываем что класстеры должны быть сгруппированны
-            $markersSearchService->setClusterGrouped();
+            if( $isCluster )
+            {
+                // указываем что класстеры должны быть сгруппированны
+                $markersSearchService->setClusterGrouped();
+            }
 
             // выполняем поиск по маркерам
             $markers = $markersSearchService->searchMarkersByFilters(

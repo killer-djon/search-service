@@ -56,12 +56,23 @@ class ChatMessageSearchService extends AbstractSearchService
 
         if (!is_null($searchText) && !empty($searchText)) {
 
-            $this->setConditionQueryShould([
+            /*$this->setConditionQueryShould([
                 $this->_queryConditionFactory->getMultiMatchQuery()
                                              ->setQuery($searchText)
                                              ->setFields(ChatMessageMapping::getMultiMatchQuerySearchFields())
                                              ->setOperator(MultiMatch::OPERATOR_OR)
                                              ->setType(MultiMatch::TYPE_MOST_FIELDS),
+            ]);*/
+
+            $this->setConditionQueryShould([
+                $this->_queryConditionFactory->getMatchPhraseQuery(
+                    ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD . '.' . ChatMessageMapping::NAME_FIELD,
+                    $searchText
+                ),
+                $this->_queryConditionFactory->getMatchPhraseQuery(
+                    ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD . '.' . ChatMessageMapping::NAME_TRANSLIT_FIELD,
+                    $searchText
+                )
             ]);
 
             $queryMatchResults = $this->createQuery($skip, $count);
@@ -80,6 +91,7 @@ class ChatMessageSearchService extends AbstractSearchService
                 $count
             );
         }
+
 
         return $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT);
     }

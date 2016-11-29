@@ -16,6 +16,23 @@ abstract class DiscountsSearchMapping extends PlaceSearchMapping
     /** Контекст поиска */
     const CONTEXT = 'discounts';
 
+
+    /**
+     * Получаем поля для поиска
+     * сбор полей для формирования объекта запроса
+     * multiMatch - без точных условий с возможностью фильтрации
+     *
+     * @return array
+     */
+    public static function getMultiMatchQuerySearchFields()
+    {
+        return array_merge(parent::getMultiMatchQuerySearchFields(), [
+            self::DESCRIPTION_FIELD,
+            self::DESCRIPTION_TRANSLIT_FIELD
+        ]);
+    }
+
+
     /**
      * Собираем фильтр для маркеров
      *

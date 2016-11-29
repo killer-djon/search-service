@@ -103,7 +103,7 @@ class CommonSearchService extends AbstractSearchService
                     ),
                 ]);
 
-                $searchPhrase = !is_null($searchText) && !empty($searchText) ? explode(" ", $searchText) : 0;
+                $searchPhrase = (!is_null($searchText) && !empty($searchText) ? explode(" ", $searchText) : 0);
 
                 if (count($searchPhrase) > 1) {
                     $this->setConditionQueryMust([
@@ -112,6 +112,7 @@ class CommonSearchService extends AbstractSearchService
                     ]);
 
                     $this->setConditionQueryShould([
+
                         $this->_queryConditionFactory->getMultiMatchQuery()
                                                      ->setFields($type::getMultiMatchQuerySearchFields())
                                                      ->setQuery($searchText),
@@ -130,7 +131,6 @@ class CommonSearchService extends AbstractSearchService
                         0, self::DEFAULT_SEARCH_BLOCK_SIZE
                     );
                 }
-
             }
 
             /**
@@ -193,7 +193,6 @@ class CommonSearchService extends AbstractSearchService
                     $count
                 );
             }
-
         }
 
         return $this->searchMultiTypeDocuments($queryMatchResults);

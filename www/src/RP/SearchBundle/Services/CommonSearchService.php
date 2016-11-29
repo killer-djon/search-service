@@ -134,6 +134,7 @@ class CommonSearchService extends AbstractSearchService
                 }
 
             }
+
             /**
              * Так же при вызове метода поиска для многотипных
              * поисков НЕТ необходимости передавать контекст поиска

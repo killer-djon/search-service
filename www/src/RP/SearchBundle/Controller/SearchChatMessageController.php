@@ -30,7 +30,9 @@ class SearchChatMessageController extends ApiController
             $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
 
             /** @var Текст запроса */
+            /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
+            $searchText = !empty($searchText) ? $searchText : RequestConstant::NULLED_PARAMS;
 
             /*if (is_null($searchText)) {
                 return $this->_handleViewWithError(

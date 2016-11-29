@@ -94,6 +94,7 @@ class ConditionFactory implements ConditionFactoryInterface
         $matchPhrase = new \Elastica\Query\MatchPhrase();
         $matchPhrase->setFieldQuery($fieldName, $queryString);
 
+
         return $matchPhrase;
     }
 

@@ -49,19 +49,33 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
         return [
             // вариации поля имени
             self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_FIELD,
-            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_NGRAM_FIELD,
             self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_TRANSLIT_FIELD,
-            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_TRANSLIT_NGRAM_FIELD,
             // вариации поля фамилии
             self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_FIELD,
-            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_NGRAM_FIELD,
             self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_TRANSLIT_FIELD,
-            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_TRANSLIT_NGRAM_FIELD,
 
             //self::MESSAGE_TEXT_FIELD,
             //self::MESSAGE_TEXT_NGRAM_FIELD,
             //self::MESSAGE_TEXT_TRANSLIT_FIELD,
             //self::MESSAGE_TEXT_NGRAM_TRANSLIT_FIELD
+        ];
+    }
+
+    /**
+     * Получаем поля для поиска
+     * буквосочетаний nGram
+     *
+     * @return array
+     */
+    public static function getMultiMatchNgramQuerySearchFields()
+    {
+        return [
+            // вариации поля имени
+            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_NGRAM_FIELD,
+            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_TRANSLIT_NGRAM_FIELD,
+            // вариации поля фамилии
+            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_NGRAM_FIELD,
+            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_TRANSLIT_NGRAM_FIELD,
         ];
     }
 

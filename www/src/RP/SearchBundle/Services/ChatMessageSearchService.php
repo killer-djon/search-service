@@ -43,7 +43,7 @@ class ChatMessageSearchService extends AbstractSearchService
                 $this->_queryFilterFactory->getTermFilter([
                     ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
                 ]),
-            ])
+            ]),
         ]);
 
         if (!is_null($chatId) && !empty($chatId)) {
@@ -58,40 +58,24 @@ class ChatMessageSearchService extends AbstractSearchService
             ],
         ]);
 
-
-        if( is_null($searchText) && empty($searchText) ){
-            /**
-             * Получаем сформированный объект запроса
-             * когда запрос многотипный НЕТ необходимости
-             * указывать skip и count
-             */
+        if (is_null($searchText)) {
             $queryMatchResults = $this->createMatchQuery(
                 $searchText,
                 ChatMessageMapping::getMultiMatchQuerySearchFields(),
                 $skip,
-                $count,
-                'or',
-                MultiMatch::TYPE_BEST_FIELDS
+                $count
             );
-        }else
-        {
-            $prefixFields = [];
-            foreach(ChatMessageMapping::getMultiMatchQuerySearchFields() as $key => $field)
-            {
-                $prefixFields[] = $this->_queryConditionFactory->getPrefixQuery($field, $searchText);
-            }
-
-            $this->setConditionQueryMust($prefixFields);
+        } else {
             $this->setConditionQueryShould([
-                $this->_queryConditionFactory->getMatchPhraseQuery('recipients.fullname', $searchText)
+                $this->_queryConditionFactory->getMultiMatchQuery()
+                ->setFields(ChatMessageMapping::getMultiMatchQuerySearchFields())
+                ->setQuery($searchText)
             ]);
 
             $queryMatchResults = $this->createQuery($skip, $count);
+
+
         }
-        print_r($queryMatchResults);
-        exit;
-
-
 
         return $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT);
     }

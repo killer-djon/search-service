@@ -43,6 +43,28 @@ class ConditionFactory implements ConditionFactoryInterface
         return $matchQuery;
     }
 
+    /**
+     * Условие запроса по полной фразе
+     *
+     * @param string $path
+     * @param AbstractQuery $queryString
+     * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-nested-query.html
+     * @return \Elastica\Query\Nested
+     */
+    public function getNestedQuery($path, AbstractQuery $queryString = null){
+
+        if(is_null($queryString))
+        {
+            $queryString = $this->getMatchAllQuery();
+        }
+
+        $nestedQuery = new \Elastica\Query\Nested();
+        $nestedQuery->setPath($path);
+        $nestedQuery->setQuery($queryString);
+
+        return $nestedQuery;
+    }
+
 
     /**
      * Условие запроса по полной фразе

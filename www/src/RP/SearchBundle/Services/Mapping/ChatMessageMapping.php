@@ -5,6 +5,7 @@
 namespace RP\SearchBundle\Services\Mapping;
 
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
+use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 
 abstract class ChatMessageMapping extends AbstractSearchMapping
 {
@@ -33,6 +34,8 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
     /** ПОле nested объекта участников чата */
     const RECIPIENTS_MESSAGE_FIELD = 'recipients';
 
+    /** ПОле nested объекта участников чата */
+    const RECIPIENTS_PEOPLES_MESSAGE_FIELD = 'peoples';
 
     /**
      * Получаем поля для поиска

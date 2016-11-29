@@ -26,10 +26,7 @@ abstract class DiscountsSearchMapping extends PlaceSearchMapping
      */
     public static function getMultiMatchQuerySearchFields()
     {
-        return array_merge(parent::getMultiMatchQuerySearchFields(), [
-            self::DESCRIPTION_FIELD,
-            self::DESCRIPTION_TRANSLIT_FIELD
-        ]);
+        return parent::getMultiMatchQuerySearchFields();
     }
 
 

@@ -94,16 +94,9 @@ class CommonSearchService extends AbstractSearchService
 
                 $this->setHighlightQuery($type::getHighlightConditions());
 
-                $this->setSortingQuery([
-                    $this->_sortingFactory->getFieldSort('_score', SortingOrder::SORTING_DESC),
-                    $this->_sortingFactory->getGeoDistanceSort(
-                        $type::LOCATION_POINT_FIELD,
-                        $point,
-                        'asc'
-                    ),
-                ]);
 
-                $searchPhrase = (!is_null($searchText) && !empty($searchText) ? explode(" ", $searchText) : 0);
+
+                /*$searchPhrase = (!is_null($searchText) && !empty($searchText) ? explode(" ", $searchText) : 0);
 
                 if (count($searchPhrase) > 1) {
                     $this->setConditionQueryMust([
@@ -120,17 +113,53 @@ class CommonSearchService extends AbstractSearchService
 
                     $queryMatchResults[$keyType] = $this->createQuery(0, self::DEFAULT_SEARCH_BLOCK_SIZE);
                 } else {
-                    /**
-                     * Получаем сформированный объект запроса
-                     * когда запрос многотипный НЕТ необходимости
-                     * указывать skip и count
-                     */
+                    $this->setConditionQueryShould([
+
+                    ]);
+
+                    $queryMatchResults[$keyType] = $this->createMatchQuery(
+                        $searchText,
+                        $type::getMultiMatchQuerySearchFields(),
+                        0, self::DEFAULT_SEARCH_BLOCK_SIZE
+                    );
+                }*/
+
+                if( !is_null($searchText) )
+                {
+                    $queryShouldFields = [];
+                    if( !empty($type::getMultiMatchQuerySearchFields()) )
+                    {
+                        foreach($type::getMultiMatchQuerySearchFields() as $fieldName)
+                        {
+                            $queryShouldFields[] =
+                                $this->_queryConditionFactory->getMatchPhraseQuery($fieldName, $searchText)
+                                                             ->setFieldMaxExpansions($fieldName, 50);
+                        }
+
+                        $this->setConditionQueryShould($queryShouldFields);
+                    }
+
+                    if(!empty($type::getMultiMatchNgramQuerySearchFields()))
+                    {
+
+                        $this->setConditionQueryMust([
+                            $this->_queryConditionFactory->getMultiMatchQuery()
+                                                         ->setFields($type::getMultiMatchNgramQuerySearchFields())
+                                                         ->setQuery($searchText)
+                        ]);
+                    }
+
+
+                    $queryMatchResults[$keyType] = $this->createQuery(0, self::DEFAULT_SEARCH_BLOCK_SIZE);
+                }else
+                {
                     $queryMatchResults[$keyType] = $this->createMatchQuery(
                         $searchText,
                         $type::getMultiMatchQuerySearchFields(),
                         0, self::DEFAULT_SEARCH_BLOCK_SIZE
                     );
                 }
+
             }
 
             /**

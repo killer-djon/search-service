@@ -44,9 +44,9 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
     {
         return [
             self::HELP_OFFERS_NAME_FIELD,
-            self::HELP_OFFERS_NAME_NGRAM_FIELD,
+            //self::HELP_OFFERS_NAME_NGRAM_FIELD,
             self::HELP_OFFERS_NAME_TRANSLIT_FIELD,
-            self::HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD,
+            //self::HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD,
         ];
     }
 

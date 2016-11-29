@@ -137,6 +137,22 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     }
 
     /**
+     * Получаем поля для поиска
+     * буквосочетаний nGram
+     *
+     * @return array
+     */
+    public static function getMultiMatchNgramQuerySearchFields()
+    {
+        return [
+            self::NAME_NGRAM_FIELD,
+            self::NAME_TRANSLIT_NGRAM_FIELD,
+            self::SURNAME_NGRAM_FIELD,
+            self::SURNAME_TRANSLIT_NGRAM_FIELD,
+        ];
+    }
+
+    /**
      * Собираем фильтр для маркеров
      *
      * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации

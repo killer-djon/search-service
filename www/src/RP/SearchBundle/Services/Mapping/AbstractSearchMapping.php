@@ -65,6 +65,17 @@ abstract class AbstractSearchMapping
     abstract public static function getMultiMatchQuerySearchFields();
 
     /**
+     * Получаем поля для поиска
+     * буквосочетаний nGram
+     *
+     * @return array
+     */
+    public static function getMultiMatchNgramQuerySearchFields()
+    {
+        return [];
+    }
+
+    /**
      * Собираем фильтр для поиска
      *
      * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации
@@ -90,5 +101,6 @@ abstract class AbstractSearchMapping
     {
         return [];
     }
+
 
 }

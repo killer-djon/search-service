@@ -43,6 +43,16 @@ interface ConditionFactoryInterface
     public function getMatchPhraseQuery($fieldName, $queryString);
 
     /**
+     * Условие запроса по полной фразе
+     *
+     * @param string $path
+     * @param AbstractQuery $queryString
+     * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-nested-query.html
+     * @return \Elastica\Query\Nested
+     */
+    public function getNestedQuery($path, AbstractQuery $queryString = null);
+
+    /**
      * Получаем объект запроса поиска по совпадению в полях
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-multi-match-query.html

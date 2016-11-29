@@ -215,6 +215,25 @@ class AbstractTransformer
     }
 
     /**
+     * Формирование сложных/длинных названий полей
+     * консистентных
+     *
+     * @param array $fields Набор полей для формирования
+     * @param string $delimiter Разделитель
+     * @return string
+     */
+    public static function createCompleteKey(array $fields, $delimiter = null)
+    {
+        if ( ! $delimiter)
+        {
+            // Use the default delimiter
+            $delimiter = AbstractTransformer::$delimiter;
+        }
+
+        return implode($delimiter, $fields);
+    }
+
+    /**
      * Convert a flat array with parent ID's to a nested tree
      *
      * @link http://blog.tekerson.com/2009/03/03/converting-a-flat-array-with-parent-ids-to-a-nested-tree/

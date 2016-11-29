@@ -5,9 +5,11 @@
 namespace RP\SearchBundle\Services;
 
 use Common\Core\Constants\SortingOrder;
+use Elastica\Filter\MatchAll;
 use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Mapping\ChatMessageMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
+use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 
 class ChatMessageSearchService extends AbstractSearchService
 {
@@ -34,11 +36,13 @@ class ChatMessageSearchService extends AbstractSearchService
     public function searchByChatMessage($userId, $searchText = null, $chatId = null, $skip = 0, $count = null)
     {
         $this->setFilterQuery([
-            $this->_queryFilterFactory->getTermFilter([
-                ChatMessageMapping::AUTHOR_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
-            ]),
-            $this->_queryFilterFactory->getTermFilter([
-                ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
+            $this->_queryFilterFactory->getBoolOrFilter([
+                $this->_queryFilterFactory->getTermFilter([
+                    ChatMessageMapping::AUTHOR_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
+                ]),
+                $this->_queryFilterFactory->getTermFilter([
+                    ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
+                ]),
             ])
         ]);
 
@@ -54,31 +58,8 @@ class ChatMessageSearchService extends AbstractSearchService
             ],
         ]);
 
-        if (!is_null($searchText) && !empty($searchText)) {
 
-            /*$this->setConditionQueryShould([
-                $this->_queryConditionFactory->getMultiMatchQuery()
-                                             ->setQuery($searchText)
-                                             ->setFields(ChatMessageMapping::getMultiMatchQuerySearchFields())
-                                             ->setOperator(MultiMatch::OPERATOR_OR)
-                                             ->setType(MultiMatch::TYPE_MOST_FIELDS),
-            ]);*/
-
-            $this->setConditionQueryShould([
-                $this->_queryConditionFactory->getMatchPhraseQuery(
-                    ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD . '.' . ChatMessageMapping::NAME_FIELD,
-                    $searchText
-                ),
-                $this->_queryConditionFactory->getMatchPhraseQuery(
-                    ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD . '.' . ChatMessageMapping::NAME_TRANSLIT_FIELD,
-                    $searchText
-                )
-            ]);
-
-            $queryMatchResults = $this->createQuery($skip, $count);
-
-
-        } else {
+        if( is_null($searchText) && empty($searchText) ){
             /**
              * Получаем сформированный объект запроса
              * когда запрос многотипный НЕТ необходимости
@@ -88,9 +69,28 @@ class ChatMessageSearchService extends AbstractSearchService
                 $searchText,
                 ChatMessageMapping::getMultiMatchQuerySearchFields(),
                 $skip,
-                $count
+                $count,
+                'or',
+                MultiMatch::TYPE_BEST_FIELDS
             );
+        }else
+        {
+            $prefixFields = [];
+            foreach(ChatMessageMapping::getMultiMatchQuerySearchFields() as $key => $field)
+            {
+                $prefixFields[] = $this->_queryConditionFactory->getPrefixQuery($field, $searchText);
+            }
+
+            $this->setConditionQueryMust($prefixFields);
+            $this->setConditionQueryShould([
+                $this->_queryConditionFactory->getMatchPhraseQuery('recipients.fullname', $searchText)
+            ]);
+
+            $queryMatchResults = $this->createQuery($skip, $count);
         }
+        print_r($queryMatchResults);
+        exit;
+
 
 
         return $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT);

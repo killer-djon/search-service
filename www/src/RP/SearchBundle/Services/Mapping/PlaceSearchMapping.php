@@ -68,6 +68,25 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
             // поля с названием города проживания
             self::LOCATION_CITY_NAME_FIELD,
             self::LOCATION_CITY_INTERNATIONAL_NAME_FIELD,
+
+            self::DESCRIPTION_FIELD,
+
+            self::DESCRIPTION_TRANSLIT_FIELD
+        ];
+    }
+
+    /**
+     * Получаем поля для поиска
+     * буквосочетаний nGram
+     *
+     * @return array
+     */
+    public static function getMultiMatchNgramQuerySearchFields()
+    {
+        return [
+            self::DESCRIPTION_FIELD,
+
+            self::DESCRIPTION_TRANSLIT_FIELD
         ];
     }
 
@@ -113,5 +132,18 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
                 $filterFactory->getExistsFilter(self::BONUS_FIELD)
             )
         ];
+    }
+
+    /**
+     * Статический класс получения условий подсветки при поиске
+     * @return array
+     */
+    public static function getHighlightConditions()
+    {
+        $highlight[self::DESCRIPTION_FIELD] = [
+            'term_vector' => 'with_positions_offsets'
+        ];
+
+        return $highlight;
     }
 }

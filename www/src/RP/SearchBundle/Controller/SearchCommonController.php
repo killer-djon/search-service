@@ -39,13 +39,6 @@ class SearchCommonController extends ApiController
             $cityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
             $cityId = !empty($cityId) ? $cityId : RequestConstant::NULLED_PARAMS;
 
-            if (is_null($cityId) && is_null($searchText)) {
-                /*return $this->_handleViewWithError(new BadRequestHttpException(
-                    'Необходимо указать один из обязательных параметров запроса (cityId или searchText)'
-                ), Response::HTTP_BAD_REQUEST);*/
-                return $this->_handleViewWithData([]);
-            }
-
             $commonSearchService = $this->getCommonSearchService();
             // ужасный костыль после перехода к новому сервису надо убрать
             if (!is_null($version) && (int)$version == RequestConstant::DEFAULT_VERSION) {
@@ -55,6 +48,13 @@ class SearchCommonController extends ApiController
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
             $searchText = !empty($searchText) ? $searchText : RequestConstant::NULLED_PARAMS;
+
+            if (is_null($cityId) && is_null($searchText)) {
+                /*return $this->_handleViewWithError(new BadRequestHttpException(
+                    'Необходимо указать один из обязательных параметров запроса (cityId или searchText)'
+                ), Response::HTTP_BAD_REQUEST);*/
+                return $this->_handleViewWithData([]);
+            }
 
             if( !is_null($searchText) && mb_strlen($searchText) < 3 )
             {

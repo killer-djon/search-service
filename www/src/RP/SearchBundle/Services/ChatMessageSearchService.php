@@ -34,13 +34,11 @@ class ChatMessageSearchService extends AbstractSearchService
     public function searchByChatMessage($userId, $searchText = null, $chatId = null, $skip = 0, $count = null)
     {
         $this->setFilterQuery([
-            $this->_queryFilterFactory->getBoolOrFilter([
-                $this->_queryFilterFactory->getTermFilter([
-                    ChatMessageMapping::AUTHOR_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
-                ]),
-                $this->_queryFilterFactory->getTermFilter([
-                    ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
-                ]),
+            $this->_queryFilterFactory->getTermFilter([
+                ChatMessageMapping::AUTHOR_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
+            ]),
+            $this->_queryFilterFactory->getTermFilter([
+                ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
             ])
         ]);
 
@@ -57,17 +55,19 @@ class ChatMessageSearchService extends AbstractSearchService
         ]);
 
         if (!is_null($searchText) && !empty($searchText)) {
+
             $this->setConditionQueryShould([
                 $this->_queryConditionFactory->getMultiMatchQuery()
                                              ->setQuery($searchText)
-                                             ->setFields(ChatMessageMapping::getMultiMatchQuerySearchFields()),
-                $this->_queryConditionFactory->getPrefixQuery(ChatMessageMapping::MESSAGE_TEXT_FIELD, $searchText),
-                $this->_queryConditionFactory->getPrefixQuery(ChatMessageMapping::MESSAGE_TEXT_TRANSLIT_FIELD, $searchText),
+                                             ->setFields(ChatMessageMapping::getMultiMatchQuerySearchFields())
+                                             ->setOperator(MultiMatch::OPERATOR_OR)
+                                             ->setType(MultiMatch::TYPE_MOST_FIELDS),
             ]);
 
             $queryMatchResults = $this->createQuery($skip, $count);
-        }else
-        {
+
+
+        } else {
             /**
              * Получаем сформированный объект запроса
              * когда запрос многотипный НЕТ необходимости

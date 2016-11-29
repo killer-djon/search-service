@@ -90,6 +90,22 @@ class EventsSearchMapping extends AbstractSearchMapping
             //self::TAG_NAME_NGRAM_FIELD,
             self::TAG_NAME_TRANSLIT_FIELD,
             //self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
+            self::DESCRIPTION_FIELD,
+
+            self::DESCRIPTION_TRANSLIT_FIELD
         ];
+    }
+
+    /**
+     * Статический класс получения условий подсветки при поиске
+     * @return array
+     */
+    public static function getHighlightConditions()
+    {
+        $highlight[self::DESCRIPTION_FIELD] = [
+            'term_vector' => 'with_positions_offsets'
+        ];
+
+        return $highlight;
     }
 }

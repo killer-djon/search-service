@@ -84,6 +84,13 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
     public static function getMultiMatchNgramQuerySearchFields()
     {
         return [
+            self::NAME_NGRAM_FIELD,
+            self::NAME_TRANSLIT_NGRAM_FIELD,
+            self::TYPE_NAME_NGRAM_FIELD,
+            self::TYPE_NAME_TRANSLIT_NGRAM_FIELD,
+            self::TAG_NAME_NGRAM_FIELD,
+            self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
+
             self::DESCRIPTION_FIELD,
 
             self::DESCRIPTION_TRANSLIT_FIELD

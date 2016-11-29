@@ -65,6 +65,21 @@ class ConditionFactory implements ConditionFactoryInterface
         return $nestedQuery;
     }
 
+    /**
+     * Находит все слова на своих местах
+     *
+     * @param string $fieldName
+     * @param string $queryString
+     * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html#_phrase
+     * @return \Elastica\Query\MatchPhrase
+     */
+    public function getMatchPhrasePrefixQuery($fieldName, $queryString){
+        $matchPhrasePrefix = new \Elastica\Query\MatchPhrasePrefix();
+        $matchPhrasePrefix->setFieldQuery($fieldName, $queryString);
+
+        return $matchPhrasePrefix;
+    }
+
 
     /**
      * Условие запроса по полной фразе
@@ -78,7 +93,6 @@ class ConditionFactory implements ConditionFactoryInterface
     {
         $matchPhrase = new \Elastica\Query\MatchPhrase();
         $matchPhrase->setFieldQuery($fieldName, $queryString);
-        //$matchPhrase->setFieldPrefixLength($fieldName, mb_strlen($queryString));
 
         return $matchPhrase;
     }

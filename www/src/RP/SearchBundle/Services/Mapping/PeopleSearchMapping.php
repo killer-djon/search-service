@@ -127,6 +127,9 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             self::SURNAME_TRANSLIT_FIELD,
             //self::SURNAME_TRANSLIT_NGRAM_FIELD,
 
+            self::TAG_NAME_FIELD,
+            self::TAG_NAME_TRANSLIT_FIELD,
+
             // сфера деятельности
             self::ACTIVITY_SPHERE_NAME_FIELD,
             // поля с названием города проживания
@@ -149,6 +152,9 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             self::NAME_TRANSLIT_NGRAM_FIELD,
             self::SURNAME_NGRAM_FIELD,
             self::SURNAME_TRANSLIT_NGRAM_FIELD,
+            self::TAG_NAME_NGRAM_FIELD,
+            self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
+            self::TAG_NAME_TRANSLIT_FIELD
         ];
     }
 

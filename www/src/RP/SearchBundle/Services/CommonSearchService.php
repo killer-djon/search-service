@@ -195,11 +195,12 @@ class CommonSearchService extends AbstractSearchService
             } else {
                 $queryMatchResults[$type] = $this->createMatchQuery(
                     $searchText,
-                    $type::getMultiMatchQuerySearchFields(),
+                    $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),
                     $skip, $count
                 );
             }
         }
+
 
         return $this->searchMultiTypeDocuments($queryMatchResults);
     }

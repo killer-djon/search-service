@@ -35,6 +35,9 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
     const RECIPIENTS_MESSAGE_FIELD = 'recipients';
 
     /** ПОле nested объекта участников чата */
+    const MEMBERS_MESSAGE_FIELD = 'members';
+
+    /** ПОле nested объекта участников чата */
     const RECIPIENTS_PEOPLES_MESSAGE_FIELD = 'peoples';
 
     /**
@@ -48,11 +51,11 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
     {
         return [
             // вариации поля имени
-            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_FIELD,
-            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_TRANSLIT_FIELD,
+            self::MEMBERS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_FIELD,
+            self::MEMBERS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_TRANSLIT_FIELD,
             // вариации поля фамилии
-            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_FIELD,
-            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_TRANSLIT_FIELD,
+            self::MEMBERS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_FIELD,
+            self::MEMBERS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_TRANSLIT_FIELD,
 
             //self::MESSAGE_TEXT_FIELD,
             //self::MESSAGE_TEXT_NGRAM_FIELD,
@@ -71,11 +74,11 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
     {
         return [
             // вариации поля имени
-            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_NGRAM_FIELD,
-            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_TRANSLIT_NGRAM_FIELD,
+            self::MEMBERS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_NGRAM_FIELD,
+            self::MEMBERS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_TRANSLIT_NGRAM_FIELD,
             // вариации поля фамилии
-            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_NGRAM_FIELD,
-            self::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_TRANSLIT_NGRAM_FIELD,
+            self::MEMBERS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_NGRAM_FIELD,
+            self::MEMBERS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_TRANSLIT_NGRAM_FIELD,
         ];
     }
 

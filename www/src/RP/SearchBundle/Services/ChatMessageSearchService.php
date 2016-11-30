@@ -41,7 +41,7 @@ class ChatMessageSearchService extends AbstractSearchService
                     ChatMessageMapping::AUTHOR_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
                 ]),
                 $this->_queryFilterFactory->getTermFilter([
-                    ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
+                    ChatMessageMapping::MEMBERS_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
                 ]),
             ]),
         ]);
@@ -71,7 +71,7 @@ class ChatMessageSearchService extends AbstractSearchService
             $this->setConditionQueryShould([
                 $this->_queryConditionFactory->getWildCardQuery(
                     AbstractTransformer::createCompleteKey([
-                        ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD,
+                        ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
                         PeopleSearchMapping::NAME_FIELD,
                     ]),
                     $searchText,
@@ -79,7 +79,7 @@ class ChatMessageSearchService extends AbstractSearchService
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     AbstractTransformer::createCompleteKey([
-                        ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD,
+                        ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
                         PeopleSearchMapping::SURNAME_FIELD,
                     ]),
                     $searchText,

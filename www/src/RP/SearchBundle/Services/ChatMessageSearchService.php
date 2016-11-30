@@ -69,39 +69,25 @@ class ChatMessageSearchService extends AbstractSearchService
 
             /** Получаем сформированный объект запроса */
             $this->setConditionQueryShould([
-                $this->_queryConditionFactory->getWildCardQuery(
+                $this->_queryConditionFactory->getMatchQuery(
                     AbstractTransformer::createCompleteKey([
                         ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
-                        PeopleSearchMapping::NAME_FIELD,
-                    ]),
-                    $searchText,
-                    3
+                        PeopleSearchMapping::NAME_NGRAM_FIELD
+                    ]), $searchText
                 ),
-                $this->_queryConditionFactory->getWildCardQuery(
+                $this->_queryConditionFactory->getMatchQuery(
                     AbstractTransformer::createCompleteKey([
                         ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
-                        PeopleSearchMapping::SURNAME_FIELD,
-                    ]),
-                    $searchText,
-                    3
+                        PeopleSearchMapping::NAME_TRANSLIT_NGRAM_FIELD
+                    ]), $searchText
                 ),
-                $this->_queryConditionFactory->getWildCardQuery(
-                    AbstractTransformer::createCompleteKey([
-                        ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
-                        PeopleSearchMapping::NAME_TRANSLIT_FIELD
-                    ]),
-                    $searchText
-                ),
-                $this->_queryConditionFactory->getWildCardQuery(
-                    AbstractTransformer::createCompleteKey([
-                        ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
-                        PeopleSearchMapping::SURNAME_TRANSLIT_FIELD
-                    ]),
-                    $searchText
-                ),
-                $this->_queryConditionFactory->getBoolQuery([], [
-                    $this->_queryConditionFactory->getWildCardQuery(ChatMessageMapping::MESSAGE_TEXT_WORDS_NAME_FIELD, $searchText, 2),
-                    $this->_queryConditionFactory->getWildCardQuery(ChatMessageMapping::MESSAGE_TEXT_TRANSLIT_FIELD, $searchText, 1),
+                $this->_queryConditionFactory->getBoolQuery([
+                    $this->_queryConditionFactory->getMatchQuery('text._textLongNgram', $searchText),
+                    $this->_queryConditionFactory->getMatchQuery('text._texttranslitLongNgram', $searchText),
+
+                ], [
+                    $this->_queryConditionFactory->getMatchPhraseQuery(ChatMessageMapping::MESSAGE_TEXT_FIELD, $searchText),
+                    $this->_queryConditionFactory->getMatchPhraseQuery(ChatMessageMapping::MESSAGE_TEXT_TRANSLIT_FIELD, $searchText),
                 ], []),
             ]);
 

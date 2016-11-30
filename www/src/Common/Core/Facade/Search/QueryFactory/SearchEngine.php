@@ -639,9 +639,9 @@ class SearchEngine implements SearchEngineInterface
                 unset($record[$type]['hit']['fields']);
             }
 
-            /*if (isset($record[$type]['hit']['sort'])) {
+            if (isset($record[$type]['hit']['sort'])) {
                 unset($record[$type]['hit']['sort']);
-            }*/
+            }
 
             if ($this->getOldFormat() === true) {
                 $items[$type][] = [
@@ -659,6 +659,7 @@ class SearchEngine implements SearchEngineInterface
 
         return $this->getTotalResults();
     }
+
 
     /**
      * Получить результат аггрегированных данных

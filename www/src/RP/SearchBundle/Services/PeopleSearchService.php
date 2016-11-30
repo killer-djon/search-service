@@ -76,7 +76,7 @@ class PeopleSearchService extends AbstractSearchService
                                          ->setFields(PeopleSearchMapping::getMultiMatchQuerySearchFields()),
             $this->_queryConditionFactory->getWildCardQuery(
                 PeopleSearchMapping::FULLNAME_MORPHOLOGY_FIELD,
-                $searchText
+                "*{$searchText}*"
             ),
         ]);
 

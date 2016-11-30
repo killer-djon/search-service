@@ -58,10 +58,11 @@ interface ConditionFactoryInterface
      *
      * @param string $path
      * @param AbstractQuery $queryString
+     * @param string $scoreMode (max, min, avg, sum)
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-nested-query.html
      * @return \Elastica\Query\Nested
      */
-    public function getNestedQuery($path, AbstractQuery $queryString = null);
+    public function getNestedQuery($path, AbstractQuery $queryString = null, $scoreMode = null);
 
     /**
      * Получаем объект запроса поиска по совпадению в полях
@@ -145,18 +146,20 @@ interface ConditionFactoryInterface
      * @param string $fieldName
      * @param string $value
      * @param bool $analyzer
+     * @param float $boost Бустинг запроса
      * @param int $phraseSlop
      * @return mixed
      */
-    public function getFieldQuery($fieldName, $value, $analyzer = true, $phraseSlop = 10);
+    public function getFieldQuery($fieldName, $value, $analyzer = true, $boost = 1.0, $phraseSlop = 0);
 
     /**
      * Типа regexp запроса.
      *
      * @param string $fieldName
      * @param string $value
+     * @param float $boost Бустинг запроса
      * @return mixed
      */
-    public function getWildCardQuery($fieldName, $value);
+    public function getWildCardQuery($fieldName, $value, $boost = 1.0);
 
 }

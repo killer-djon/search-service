@@ -48,10 +48,11 @@ class ConditionFactory implements ConditionFactoryInterface
      *
      * @param string $path
      * @param AbstractQuery $queryString
+     * @param string $scoreMode (max, min, avg, sum)
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-nested-query.html
      * @return \Elastica\Query\Nested
      */
-    public function getNestedQuery($path, AbstractQuery $queryString = null){
+    public function getNestedQuery($path, AbstractQuery $queryString = null, $scoreMode = null){
 
         if(is_null($queryString))
         {
@@ -61,6 +62,10 @@ class ConditionFactory implements ConditionFactoryInterface
         $nestedQuery = new \Elastica\Query\Nested();
         $nestedQuery->setPath($path);
         $nestedQuery->setQuery($queryString);
+        if(!is_null($scoreMode))
+        {
+            $nestedQuery->setScoreMode($scoreMode);
+        }
 
         return $nestedQuery;
     }
@@ -247,15 +252,17 @@ class ConditionFactory implements ConditionFactoryInterface
      * @param string $fieldName
      * @param string $value
      * @param bool $analyzer
+     * @param float $boost Бустинг запроса
      * @param int $phraseSlop
      * @return mixed
      */
-    public function getFieldQuery($fieldName, $value, $analyzer = true, $phraseSlop = 10)
+    public function getFieldQuery($fieldName, $value, $analyzer = true, $boost = 1.0, $phraseSlop = 0)
     {
         $queryString = new \Elastica\Query\QueryString($value);
         $queryString->setDefaultField($fieldName);
         $queryString->setAnalyzeWildcard($analyzer);
         $queryString->setPhraseSlop((int)$phraseSlop);
+        $queryString->setBoost((float)$boost);
 
         return $queryString;
     }
@@ -265,11 +272,16 @@ class ConditionFactory implements ConditionFactoryInterface
      *
      * @param string $fieldName
      * @param string $value
+     * @param float $boost Бустинг запроса
      * @return mixed
      */
-    public function getWildCardQuery($fieldName, $value)
+    public function getWildCardQuery($fieldName, $value, $boost = 1.0)
     {
-        $queryString = new \Elastica\Query\Wildcard($fieldName, $value);
+        if(!preg_match('/^\*.*\*$/is', $value))
+        {
+            $value = "*$value*";
+        }
+        $queryString = new \Elastica\Query\Wildcard($fieldName, $value, (float)$boost);
 
         return $queryString;
     }

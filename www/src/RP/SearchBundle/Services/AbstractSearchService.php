@@ -45,7 +45,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      *
      * @var \Elastica\Script[]
      */
-    protected $_scriptFunctions;
+    protected $_scriptFunctions = [];
 
     /**
      * Набор условий запроса

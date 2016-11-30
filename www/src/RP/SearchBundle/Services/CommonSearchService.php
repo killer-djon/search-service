@@ -60,6 +60,7 @@ class CommonSearchService extends AbstractSearchService
              * ключами в массиве служит тип поиска (в какой коллекции искать надо)
              */
             $queryMatchResults = [];
+
             /**
              * Если не задана категория поиска
              * тогда ищем во всех коллекциях еластика по условиям
@@ -112,8 +113,9 @@ class CommonSearchService extends AbstractSearchService
                 ]);
 
                 if (!is_null($searchText)) {
-                    $queryShouldFields = $must = [];
-                    if (!empty($type::getMultiMatchQuerySearchFields())) {
+                    $queryShouldFields = $must = $should = [];
+
+                    /*if (!empty($type::getMultiMatchQuerySearchFields())) {
                         foreach ($type::getMultiMatchQuerySearchFields() as $fieldName) {
                             $queryShouldFields[] = $this->_queryConditionFactory
                                 ->getMatchPhrasePrefixQuery($fieldName, $searchText)
@@ -130,9 +132,47 @@ class CommonSearchService extends AbstractSearchService
                     }
 
                     $this->setConditionQueryShould(array_merge($must, $queryShouldFields));
+                    */
+                    /** Получаем сформированный объект запроса */
+                    if (!empty($type::getMultiMatchQuerySearchFields())) {
+                        foreach ($type::getMultiMatchQuerySearchFields() as $fieldName) {
+                            $queryShouldFields[] = $this->_queryConditionFactory->getMatchQuery(
+                                $fieldName,
+                                $searchText
+                            );
+
+                            $should[] = $this->_queryConditionFactory->getMatchPhraseQuery(
+                                $fieldName,
+                                $searchText
+                            );
+                        }
+
+                    }
+
+                    if (!empty($type::getMultiMatchNgramQuerySearchFields())) {
+
+                        foreach ($type::getMultiMatchNgramQuerySearchFields() as $fieldName)
+                        {
+                            $must[] = $this->_queryConditionFactory->getMatchQuery($fieldName, $searchText);
+                        }
+                    }
+
+                    $this->setConditionQueryShould(array_merge($queryShouldFields, [
+                        $this->_queryConditionFactory->getBoolQuery($must, array_merge($should, [
+                            $this->_queryConditionFactory->getMatchPhraseQuery($type::DESCRIPTION_FIELD, $searchText),
+                            $this->_queryConditionFactory->getMatchPhraseQuery($type::DESCRIPTION_TRANSLIT_FIELD, $searchText)
+                        ]), [])
+                    ]));
 
                     $queryMatchResults[$keyType] = $this->createQuery(0, self::DEFAULT_SEARCH_BLOCK_SIZE);
+
                 } else {
+                    $this->setSortingQuery([
+                        $this->_sortingFactory->getGeoDistanceSort(
+                            $type::LOCATION_POINT_FIELD,
+                            $point
+                        )
+                    ]);
                     $queryMatchResults[$keyType] = $this->createMatchQuery(
                         $searchText,
                         $type::getMultiMatchQuerySearchFields(),
@@ -187,7 +227,7 @@ class CommonSearchService extends AbstractSearchService
                     $this->_sortingFactory->getFieldSort('_score')
                 ]);
 
-                $queryShouldFields = $must = [];
+                /*$queryShouldFields = $must = [];
                 if (!empty($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields())) {
                     foreach ($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields() as $fieldName) {
                         $queryShouldFields[] = $this->_queryConditionFactory
@@ -205,10 +245,47 @@ class CommonSearchService extends AbstractSearchService
                 }
 
                 $this->setConditionQueryShould(array_merge($must, $queryShouldFields));
+                */
+                if (!empty($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields())) {
+                    foreach ($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields() as $fieldName) {
+                        $queryShouldFields[] = $this->_queryConditionFactory->getMatchQuery(
+                            $fieldName,
+                            $searchText
+                        );
+
+                        $should[] = $this->_queryConditionFactory->getMatchPhraseQuery(
+                            $fieldName,
+                            $searchText
+                        );
+                    }
+
+                }
+
+                if (!empty($this->filterSearchTypes[$type]::getMultiMatchNgramQuerySearchFields())) {
+
+                    foreach ($this->filterSearchTypes[$type]::getMultiMatchNgramQuerySearchFields() as $fieldName)
+                    {
+                        $must[] = $this->_queryConditionFactory->getMatchQuery($fieldName, $searchText);
+                    }
+                }
+
+                $this->setConditionQueryShould(array_merge($queryShouldFields, [
+                    $this->_queryConditionFactory->getBoolQuery($must, array_merge($should, [
+                        $this->_queryConditionFactory->getMatchPhraseQuery($this->filterSearchTypes[$type]::DESCRIPTION_FIELD, $searchText),
+                        $this->_queryConditionFactory->getMatchPhraseQuery($this->filterSearchTypes[$type]::DESCRIPTION_TRANSLIT_FIELD, $searchText)
+                    ]), [])
+                ]));
 
                 $queryMatchResults[$type] = $this->createQuery($skip, $count);
 
             } else {
+                $this->setSortingQuery([
+                    $this->_sortingFactory->getGeoDistanceSort(
+                        $type::LOCATION_POINT_FIELD,
+                        $point
+                    )
+                ]);
+                
                 $queryMatchResults[$type] = $this->createMatchQuery(
                     $searchText,
                     $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),

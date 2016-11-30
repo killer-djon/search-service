@@ -94,13 +94,21 @@ class CommonSearchService extends AbstractSearchService
 
                 $this->setHighlightQuery($type::getHighlightConditions());
 
+                $this->setScriptFunctions([
+                    $this->_scriptFactory->getScript("
+                    scoreSorting = _score * doc[locationField].distanceInKm(lat, lon)
+                ", [
+                        'lat' => $point->getLatitude(),
+                        'lon' => $point->getLongitude(),
+                        'locationField' => $type::LOCATION_POINT_FIELD
+                    ])
+                ], [
+                    'scoreMode' => 'min',
+                    'boostMode' => 'replace'
+                ]);
+
                 $this->setSortingQuery([
-                    $this->_sortingFactory->getFieldSort('_score', SortingOrder::SORTING_DESC),
-                    $this->_sortingFactory->getGeoDistanceSort(
-                        $type::LOCATION_POINT_FIELD,
-                        $point,
-                        'asc'
-                    ),
+                    $this->_sortingFactory->getFieldSort('_score')
                 ]);
 
                 if (!is_null($searchText)) {

@@ -85,6 +85,20 @@ class ChatMessageSearchService extends AbstractSearchService
                     $searchText,
                     3
                 ),
+                $this->_queryConditionFactory->getWildCardQuery(
+                    AbstractTransformer::createCompleteKey([
+                        ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
+                        PeopleSearchMapping::NAME_TRANSLIT_FIELD
+                    ]),
+                    $searchText
+                ),
+                $this->_queryConditionFactory->getWildCardQuery(
+                    AbstractTransformer::createCompleteKey([
+                        ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
+                        PeopleSearchMapping::SURNAME_TRANSLIT_FIELD
+                    ]),
+                    $searchText
+                ),
                 $this->_queryConditionFactory->getBoolQuery([], [
                     $this->_queryConditionFactory->getWildCardQuery(ChatMessageMapping::MESSAGE_TEXT_WORDS_NAME_FIELD, $searchText, 2),
                     $this->_queryConditionFactory->getWildCardQuery(ChatMessageMapping::MESSAGE_TEXT_TRANSLIT_FIELD, $searchText, 1),
@@ -92,6 +106,7 @@ class ChatMessageSearchService extends AbstractSearchService
             ]);
 
             $queryMatchResults = $this->createQuery($skip, $count);
+
         }
 
         return $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT);

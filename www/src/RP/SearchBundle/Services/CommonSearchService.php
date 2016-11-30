@@ -109,17 +109,16 @@ class CommonSearchService extends AbstractSearchService
                         foreach ($type::getMultiMatchQuerySearchFields() as $fieldName) {
                             $queryShouldFields[] = $this->_queryConditionFactory
                                 ->getMatchPhrasePrefixQuery($fieldName, $searchText)
-                            ->setFieldBoost($fieldName, 2);
+                                ->setFieldBoost($fieldName, 2);
                         }
-
 
                     }
 
                     if (!empty($type::getMultiMatchNgramQuerySearchFields())) {
 
                         $must[] = $this->_queryConditionFactory->getMultiMatchQuery()
-                                                     ->setFields($type::getMultiMatchNgramQuerySearchFields())
-                                                     ->setQuery($searchText);
+                                                               ->setFields($type::getMultiMatchNgramQuerySearchFields())
+                                                               ->setQuery($searchText);
                     }
 
                     $this->setConditionQueryShould(array_merge($must, $queryShouldFields));
@@ -180,7 +179,6 @@ class CommonSearchService extends AbstractSearchService
                             ->setFieldBoost($fieldName, 2);
                     }
 
-
                 }
 
                 if (!empty($this->filterSearchTypes[$type]::getMultiMatchNgramQuerySearchFields())) {
@@ -201,7 +199,6 @@ class CommonSearchService extends AbstractSearchService
                 );
             }
         }
-
 
         return $this->searchMultiTypeDocuments($queryMatchResults);
     }

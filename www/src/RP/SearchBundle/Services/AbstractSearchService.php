@@ -24,6 +24,15 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     use SearchServiceTrait;
 
     /**
+     * Дополнительные опции скрипт-функции
+     * которые устанавливаются для достижения цели
+     * манипуляции ранжированием
+     *
+     * @var array $_scriptFunctionOptions
+     */
+    private $_scriptFunctionOptions = [];
+
+    /**
      * Набор полей со скриптами
      * т.е. inline скрипты например
      *
@@ -194,6 +203,11 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         return $this;
     }
 
+    public function setScriptFunctionOption(array $options)
+    {
+        $this->_scriptFunctionOptions = $options;
+    }
+
     /**
      * Устанавливаем набор полей со скриптами
      * для определения custom значений в рассчете
@@ -319,6 +333,26 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $this->_conditionQueryShouldData,
             $this->_conditionQueryMustNotData
         );
+
+        if (!is_null($this->_scriptFunctions) && !empty($this->_scriptFunctions)) {
+            $customScore = new \Elastica\Query\FunctionScore();
+            $customScore->setQuery($searchQuery);
+
+            if (!is_null($this->_scriptFunctionOptions) && !empty($this->_scriptFunctionOptions)) {
+                foreach ($this->_scriptFunctionOptions as $key => $scriptFunctionOptionValue) {
+                    $methodSetterName = 'set' . ucfirst($key);
+                    if (method_exists($customScore, $methodSetterName)) {
+                        $customScore->{$methodSetterName}($scriptFunctionOptionValue);
+                    }
+                }
+            }
+
+            foreach ($this->_scriptFunctions as $scriptFunction) {
+                $customScore->addScriptScoreFunction($scriptFunction);
+            }
+
+            $searchQuery = $customScore;
+        }
         // Применить набор фильтров
         if (sizeof($this->_filterQueryData) > 0) {
             $filter = $this->_queryFilterFactory->getBoolAndFilter($this->_filterQueryData);
@@ -370,6 +404,15 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         if (!is_null($this->_scriptFunctions) && !empty($this->_scriptFunctions)) {
             $customScore = new \Elastica\Query\FunctionScore();
             $customScore->setQuery($matchQuery);
+
+            if (!is_null($this->_scriptFunctionOptions) && !empty($this->_scriptFunctionOptions)) {
+                foreach ($this->_scriptFunctionOptions as $key => $scriptFunctionOptionValue) {
+                    $methodSetterName = 'set' . ucfirst($key);
+                    if (method_exists($customScore, $methodSetterName)) {
+                        $customScore->{$methodSetterName}($scriptFunctionOptionValue);
+                    }
+                }
+            }
 
             foreach ($this->_scriptFunctions as $scriptFunction) {
                 $customScore->addScriptScoreFunction($scriptFunction);
@@ -443,14 +486,19 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * Формируем скриптовый запрос для рассчета разных фишек
      *
      * @param \Elastica\Script[] $scripts
+     * @param array $scriptOptions
      * @return \Elastica\Query\AbstractQuery
      */
-    public function setScriptFunctions(array $scripts)
+    public function setScriptFunctions(array $scripts, array $scriptOptions = null)
     {
         foreach ($scripts as $script) {
             if ($script instanceof \Elastica\Script) {
                 $this->_scriptFunctions[] = $script;
             }
+        }
+
+        if (!is_null($scriptOptions) && !empty($scriptOptions)) {
+            $this->setScriptFunctionOption($scriptOptions);
         }
     }
 

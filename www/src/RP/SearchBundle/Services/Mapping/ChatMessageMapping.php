@@ -35,7 +35,7 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
     const RECIPIENTS_MESSAGE_FIELD = 'recipients';
 
     /** ПОле nested объекта участников чата */
-    const MEMBERS_MESSAGE_FIELD = 'members';
+    const MEMBERS_MESSAGE_FIELD = 'chatMembers';
 
     /** ПОле nested объекта участников чата */
     const RECIPIENTS_PEOPLES_MESSAGE_FIELD = 'peoples';

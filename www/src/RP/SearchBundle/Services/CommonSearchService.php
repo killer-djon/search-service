@@ -159,18 +159,26 @@ class CommonSearchService extends AbstractSearchService
             $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$type]);
             $this->setGeoPointConditions($point, $this->filterSearchTypes[$type]);
 
-            $this->setSortingQuery([
-                $this->_sortingFactory->getFieldSort('_score', SortingOrder::SORTING_DESC),
-                $this->_sortingFactory->getGeoDistanceSort(
-                    $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
-                    $point,
-                    'asc'
-                ),
-            ]);
-
             $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
 
             if (!is_null($searchText)) {
+                $this->setScriptFunctions([
+                    $this->_scriptFactory->getScript("
+                    scoreSorting = _score * doc[locationField].distanceInKm(lat, lon)
+                ", [
+                        'lat' => $point->getLatitude(),
+                        'lon' => $point->getLongitude(),
+                        'locationField' => $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD
+                    ])
+                ], [
+                    'scoreMode' => 'min',
+                    'boostMode' => 'replace'
+                ]);
+
+                $this->setSortingQuery([
+                    $this->_sortingFactory->getFieldSort('_score')
+                ]);
+
                 $queryShouldFields = $must = [];
                 if (!empty($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields())) {
                     foreach ($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields() as $fieldName) {
@@ -191,6 +199,7 @@ class CommonSearchService extends AbstractSearchService
                 $this->setConditionQueryShould(array_merge($must, $queryShouldFields));
 
                 $queryMatchResults[$type] = $this->createQuery($skip, $count);
+
             } else {
                 $queryMatchResults[$type] = $this->createMatchQuery(
                     $searchText,

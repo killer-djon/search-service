@@ -246,7 +246,7 @@ class CommonSearchService extends AbstractSearchService
 
                     $this->setConditionQueryShould($queryShouldFields);
 
-                    $queryMatchResults[$type] = $this->createQuery(0, self::DEFAULT_SEARCH_BLOCK_SIZE);
+                    $queryMatchResults[$type] = $this->createQuery($skip, $count);
                 }else
                 {
                     if (!empty($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields())) {
@@ -279,7 +279,7 @@ class CommonSearchService extends AbstractSearchService
                         ]), [])
                     ]));
 
-                    $queryMatchResults[$type] = $this->createQuery(0, self::DEFAULT_SEARCH_BLOCK_SIZE);
+                    $queryMatchResults[$type] = $this->createQuery($skip, $count);
                 }
 
             } else {

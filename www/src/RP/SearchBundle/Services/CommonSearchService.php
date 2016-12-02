@@ -99,26 +99,24 @@ class CommonSearchService extends AbstractSearchService
                     $this->_scriptFactory->getScript("
                     scoreSorting = _score * doc[locationField].distanceInKm(lat, lon)
                 ", [
-                        'lat' => $point->getLatitude(),
-                        'lon' => $point->getLongitude(),
-                        'locationField' => $type::LOCATION_POINT_FIELD
-                    ])
+                        'lat'           => $point->getLatitude(),
+                        'lon'           => $point->getLongitude(),
+                        'locationField' => $type::LOCATION_POINT_FIELD,
+                    ]),
                 ], [
                     'scoreMode' => 'min',
-                    'boostMode' => 'replace'
+                    'boostMode' => 'replace',
                 ]);
 
                 $this->setSortingQuery([
-                    $this->_sortingFactory->getFieldSort('_score')
+                    $this->_sortingFactory->getFieldSort('_score'),
                 ]);
 
                 if (!is_null($searchText)) {
                     $slopPhrase = explode(" ", $searchText);
                     $queryShouldFields = $must = $should = [];
 
-
-                    if( count($slopPhrase) > 1 )
-                    {
+                    if (count($slopPhrase) > 1) {
                         // значит ищем по схождению словосочетания
                         if (!empty($type::getMultiMatchQuerySearchFields())) {
                             foreach ($type::getMultiMatchQuerySearchFields() as $fieldName) {
@@ -128,12 +126,10 @@ class CommonSearchService extends AbstractSearchService
 
                         }
 
-
                         $this->setConditionQueryShould($queryShouldFields);
 
                         $queryMatchResults[$keyType] = $this->createQuery(0, self::DEFAULT_SEARCH_BLOCK_SIZE);
-                    }else
-                    {
+                    } else {
                         if (!empty($type::getMultiMatchQuerySearchFields())) {
                             foreach ($type::getMultiMatchQuerySearchFields() as $fieldName) {
                                 $queryShouldFields[] = $this->_queryConditionFactory->getMatchQuery(
@@ -151,8 +147,7 @@ class CommonSearchService extends AbstractSearchService
 
                         if (!empty($type::getMultiMatchNgramQuerySearchFields())) {
 
-                            foreach ($type::getMultiMatchNgramQuerySearchFields() as $fieldName)
-                            {
+                            foreach ($type::getMultiMatchNgramQuerySearchFields() as $fieldName) {
                                 $must[] = $this->_queryConditionFactory->getMatchQuery($fieldName, $searchText);
                             }
                         }
@@ -160,8 +155,8 @@ class CommonSearchService extends AbstractSearchService
                         $this->setConditionQueryShould(array_merge($queryShouldFields, [
                             $this->_queryConditionFactory->getBoolQuery($must, array_merge($should, [
                                 $this->_queryConditionFactory->getMatchPhraseQuery($type::DESCRIPTION_FIELD, $searchText),
-                                $this->_queryConditionFactory->getMatchPhraseQuery($type::DESCRIPTION_TRANSLIT_FIELD, $searchText)
-                            ]), [])
+                                $this->_queryConditionFactory->getMatchPhraseQuery($type::DESCRIPTION_TRANSLIT_FIELD, $searchText),
+                            ]), []),
                         ]));
 
                         $queryMatchResults[$keyType] = $this->createQuery(0, self::DEFAULT_SEARCH_BLOCK_SIZE);
@@ -172,7 +167,7 @@ class CommonSearchService extends AbstractSearchService
                         $this->_sortingFactory->getGeoDistanceSort(
                             $type::LOCATION_POINT_FIELD,
                             $point
-                        )
+                        ),
                     ]);
                     $queryMatchResults[$keyType] = $this->createMatchQuery(
                         $searchText,
@@ -215,25 +210,23 @@ class CommonSearchService extends AbstractSearchService
                     $this->_scriptFactory->getScript("
                     scoreSorting = _score * doc[locationField].distanceInKm(lat, lon)
                 ", [
-                        'lat' => $point->getLatitude(),
-                        'lon' => $point->getLongitude(),
-                        'locationField' => $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD
-                    ])
+                        'lat'           => $point->getLatitude(),
+                        'lon'           => $point->getLongitude(),
+                        'locationField' => $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
+                    ]),
                 ], [
                     'scoreMode' => 'min',
-                    'boostMode' => 'replace'
+                    'boostMode' => 'replace',
                 ]);
 
                 $this->setSortingQuery([
-                    $this->_sortingFactory->getFieldSort('_score')
+                    $this->_sortingFactory->getFieldSort('_score'),
                 ]);
 
                 $slopPhrase = explode(" ", $searchText);
                 $queryShouldFields = $must = $should = [];
 
-
-                if( count($slopPhrase) > 1 )
-                {
+                if (count($slopPhrase) > 1) {
                     // значит ищем по схождению словосочетания
                     if (!empty($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields())) {
                         foreach ($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields() as $fieldName) {
@@ -243,12 +236,10 @@ class CommonSearchService extends AbstractSearchService
 
                     }
 
-
                     $this->setConditionQueryShould($queryShouldFields);
 
                     $queryMatchResults[$type] = $this->createQuery($skip, $count);
-                }else
-                {
+                } else {
                     if (!empty($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields())) {
                         foreach ($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields() as $fieldName) {
                             $queryShouldFields[] = $this->_queryConditionFactory->getMatchQuery(
@@ -266,8 +257,7 @@ class CommonSearchService extends AbstractSearchService
 
                     if (!empty($this->filterSearchTypes[$type]::getMultiMatchNgramQuerySearchFields())) {
 
-                        foreach ($this->filterSearchTypes[$type]::getMultiMatchNgramQuerySearchFields() as $fieldName)
-                        {
+                        foreach ($this->filterSearchTypes[$type]::getMultiMatchNgramQuerySearchFields() as $fieldName) {
                             $must[] = $this->_queryConditionFactory->getMatchQuery($fieldName, $searchText);
                         }
                     }
@@ -275,8 +265,8 @@ class CommonSearchService extends AbstractSearchService
                     $this->setConditionQueryShould(array_merge($queryShouldFields, [
                         $this->_queryConditionFactory->getBoolQuery($must, array_merge($should, [
                             $this->_queryConditionFactory->getMatchPhraseQuery($this->filterSearchTypes[$type]::DESCRIPTION_FIELD, $searchText),
-                            $this->_queryConditionFactory->getMatchPhraseQuery($this->filterSearchTypes[$type]::DESCRIPTION_TRANSLIT_FIELD, $searchText)
-                        ]), [])
+                            $this->_queryConditionFactory->getMatchPhraseQuery($this->filterSearchTypes[$type]::DESCRIPTION_TRANSLIT_FIELD, $searchText),
+                        ]), []),
                     ]));
 
                     $queryMatchResults[$type] = $this->createQuery($skip, $count);
@@ -285,9 +275,9 @@ class CommonSearchService extends AbstractSearchService
             } else {
                 $this->setSortingQuery([
                     $this->_sortingFactory->getGeoDistanceSort(
-                        $type::LOCATION_POINT_FIELD,
+                        $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
                         $point
-                    )
+                    ),
                 ]);
 
                 $queryMatchResults[$type] = $this->createMatchQuery(
@@ -295,6 +285,7 @@ class CommonSearchService extends AbstractSearchService
                     $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),
                     $skip, $count
                 );
+
             }
         }
 

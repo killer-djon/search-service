@@ -97,12 +97,18 @@ class CommonSearchService extends AbstractSearchService
 
                 $this->setScriptFunctions([
                     $this->_scriptFactory->getScript("
-                    scoreSorting = _score * doc[locationField].distanceInKm(lat, lon)
+                    double scoreSorting = 0.0
+                    if(!doc[locationField].empty){
+                        scoreSorting = _score * doc[locationField].distanceInKm(lat, lon);
+                    }else{
+                        scoreSorting = _score * 100;
+                    }
+                    return scoreSorting;
                 ", [
                         'lat'           => $point->getLatitude(),
                         'lon'           => $point->getLongitude(),
                         'locationField' => $type::LOCATION_POINT_FIELD,
-                    ]),
+                    ], \Elastica\Script::LANG_GROOVY),
                 ], [
                     'scoreMode' => 'min',
                     'boostMode' => 'replace',
@@ -208,12 +214,18 @@ class CommonSearchService extends AbstractSearchService
             if (!is_null($searchText)) {
                 $this->setScriptFunctions([
                     $this->_scriptFactory->getScript("
-                    scoreSorting = _score * doc[locationField].distanceInKm(lat, lon)
+                    double scoreSorting = 0.0
+                    if(!doc[locationField].empty){
+                        scoreSorting = _score * doc[locationField].distanceInKm(lat, lon);
+                    }else{
+                        scoreSorting = _score * 100;
+                    }
+                    return scoreSorting;
                 ", [
                         'lat'           => $point->getLatitude(),
                         'lon'           => $point->getLongitude(),
-                        'locationField' => $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
-                    ]),
+                        'locationField' => $type::LOCATION_POINT_FIELD,
+                    ], \Elastica\Script::LANG_GROOVY),
                 ], [
                     'scoreMode' => 'min',
                     'boostMode' => 'replace',

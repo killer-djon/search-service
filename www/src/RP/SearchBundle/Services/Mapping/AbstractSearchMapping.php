@@ -17,6 +17,8 @@ abstract class AbstractSearchMapping
     const NAME_TRANSLIT_FIELD = 'name._translit'; // полное совпадение имени в транслите
     const NAME_TRANSLIT_NGRAM_FIELD = 'name._translitNgram'; // частичное совпадение имени от 3-х сивмолов в транслите
     const NAME_WORDS_NAME_FIELD = 'name._wordsName'; // частичное совпадение имени от 3-х сивмолов в транслите
+    const NAME_LONG_NGRAM_FIELD = 'name._nameLongNgram';
+    const NAME_TRANSLIT_LONG_NGRAM_FIELD = 'name._translitLongNgram';
 
     /** поле описания места */
     const DESCRIPTION_FIELD = 'description';

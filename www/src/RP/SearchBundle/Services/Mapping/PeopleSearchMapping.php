@@ -14,8 +14,10 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     /** Поле фамилии пользователя */
     const SURNAME_FIELD = 'surname'; // полное совпадение фамилии по русски
     const SURNAME_NGRAM_FIELD = 'surname._surnameNgram'; // частичное совпадение фамилии от 3-х сивмолов по русски
+    const SURNAME_LONG_NGRAM_FIELD = 'surname._nameLongNgram';
     const SURNAME_TRANSLIT_FIELD = 'surname._translit'; // полное совпадение имени в транслите
     const SURNAME_TRANSLIT_NGRAM_FIELD = 'surname._translitNgram'; // частичное совпадение имени от 3-х сивмолов в транслите
+    const SURNAME_TRANSLIT_LONG_NGRAM_FIELD = 'surname._translitLongNgram';
 
     // Морфологический разбор поля полного имени
     const FULLNAME_MORPHOLOGY_FIELD = 'fullname';
@@ -126,16 +128,28 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             //self::SURNAME_NGRAM_FIELD,
             self::SURNAME_TRANSLIT_FIELD,
             //self::SURNAME_TRANSLIT_NGRAM_FIELD,
+        ];
+    }
 
+    /**
+     * Получаем поля для поиска
+     * сбор полей для формирования объекта запроса
+     * multiMatch - без точных условий с возможностью фильтрации
+     *
+     * @return array
+     */
+    public static function getMultiSubMatchQuerySearchFields()
+    {
+        return [
             self::TAG_NAME_FIELD,
             self::TAG_NAME_TRANSLIT_FIELD,
+            self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
 
             // сфера деятельности
             self::ACTIVITY_SPHERE_NAME_FIELD,
             // поля с названием города проживания
             self::LOCATION_CITY_NAME_FIELD,
             self::LOCATION_CITY_INTERNATIONAL_NAME_FIELD,
-
         ];
     }
 
@@ -152,6 +166,14 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             self::NAME_TRANSLIT_NGRAM_FIELD,
             self::SURNAME_NGRAM_FIELD,
             self::SURNAME_TRANSLIT_NGRAM_FIELD,
+            /*self::NAME_LONG_NGRAM_FIELD,
+            self::NAME_TRANSLIT_LONG_NGRAM_FIELD,
+            self::SURNAME_LONG_NGRAM_FIELD,
+            self::SURNAME_TRANSLIT_LONG_NGRAM_FIELD,*/
+
+            // сфера деятельности
+            self::ACTIVITY_SPHERE_NAME_FIELD,
+
             self::TAG_NAME_NGRAM_FIELD,
             self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
             self::TAG_NAME_TRANSLIT_FIELD

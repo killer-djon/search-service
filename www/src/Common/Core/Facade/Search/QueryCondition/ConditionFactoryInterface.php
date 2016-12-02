@@ -143,14 +143,14 @@ interface ConditionFactoryInterface
     /**
      * Условаие запроса по совпадению поля (в зависимости от анализатора конкретного поля).
      *
-     * @param string $fieldName
+     * @param string|array $fieldsName
      * @param string $value
      * @param bool $analyzer
      * @param float $boost Бустинг запроса
      * @param int $phraseSlop
-     * @return mixed
+     * @return \Elastica\Query\QueryString
      */
-    public function getFieldQuery($fieldName, $value, $analyzer = true, $boost = 1.0, $phraseSlop = 0);
+    public function getFieldQuery($fieldsName, $value, $analyzer = true, $boost = 1.0, $phraseSlop = 0);
 
     /**
      * Типа regexp запроса.

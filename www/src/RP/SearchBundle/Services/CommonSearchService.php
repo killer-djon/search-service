@@ -7,6 +7,7 @@ namespace RP\SearchBundle\Services;
 
 use Common\Core\Constants\SortingOrder;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
+use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Mapping\AbstractSearchMapping;
 use RP\SearchBundle\Services\Mapping\TagNameSearchMapping;
 
@@ -123,50 +124,32 @@ class CommonSearchService extends AbstractSearchService
                     $queryShouldFields = $must = $should = [];
 
                     if (count($slopPhrase) > 1) {
-                        // значит ищем по схождению словосочетания
-                        if (!empty($type::getMultiMatchQuerySearchFields())) {
-                            foreach ($type::getMultiMatchQuerySearchFields() as $fieldName) {
-                                $queryShouldFields[] = $this->_queryConditionFactory
-                                    ->getMatchPhrasePrefixQuery($fieldName, $searchText);
-                            }
 
+                        /**
+                         * Поиск по точному воспадению искомого словосочетания
+                         */
+                        $queryMust = $type::getSearchConditionQueryMust($this->_queryConditionFactory, $searchText);
+
+                        if(!empty($queryMust))
+                        {
+                            $this->setConditionQueryMust($queryMust);
                         }
 
-                        $this->setConditionQueryShould($queryShouldFields);
-
-                        $queryMatchResults[$keyType] = $this->createQuery(0, self::DEFAULT_SEARCH_BLOCK_SIZE);
                     } else {
-                        if (!empty($type::getMultiMatchQuerySearchFields())) {
-                            foreach ($type::getMultiMatchQuerySearchFields() as $fieldName) {
-                                $queryShouldFields[] = $this->_queryConditionFactory->getMatchQuery(
-                                    $fieldName,
-                                    $searchText
-                                );
+                        $queryShould = $type::getSearchConditionQueryShould(
+                            $this->_queryConditionFactory, $searchText
+                        );
 
-                                $should[] = $this->_queryConditionFactory->getMatchPhraseQuery(
-                                    $fieldName,
-                                    $searchText
-                                );
-                            }
-
+                        if(!empty($queryShould))
+                        {
+                            /**
+                             * Ищем по частичному совпадению поисковой фразы
+                             */
+                            $this->setConditionQueryShould($queryShould);
                         }
-
-                        if (!empty($type::getMultiMatchNgramQuerySearchFields())) {
-
-                            foreach ($type::getMultiMatchNgramQuerySearchFields() as $fieldName) {
-                                $must[] = $this->_queryConditionFactory->getMatchQuery($fieldName, $searchText);
-                            }
-                        }
-
-                        $this->setConditionQueryShould(array_merge($queryShouldFields, [
-                            $this->_queryConditionFactory->getBoolQuery($must, array_merge($should, [
-                                $this->_queryConditionFactory->getMatchPhraseQuery($type::DESCRIPTION_FIELD, $searchText),
-                                $this->_queryConditionFactory->getMatchPhraseQuery($type::DESCRIPTION_TRANSLIT_FIELD, $searchText),
-                            ]), []),
-                        ]));
-
-                        $queryMatchResults[$keyType] = $this->createQuery(0, self::DEFAULT_SEARCH_BLOCK_SIZE);
                     }
+
+                    $queryMatchResults[$keyType] = $this->createQuery(0, self::DEFAULT_SEARCH_BLOCK_SIZE);
 
                 } else {
                     $this->setSortingQuery([
@@ -224,11 +207,11 @@ class CommonSearchService extends AbstractSearchService
                 ", [
                         'lat'           => $point->getLatitude(),
                         'lon'           => $point->getLongitude(),
-                        'locationField' => $type::LOCATION_POINT_FIELD,
+                        'locationField' => $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
                     ], \Elastica\Script::LANG_GROOVY),
                 ], [
                     'scoreMode' => 'min',
-                    'boostMode' => 'replace',
+                    'boostMode' => 'replace'
                 ]);
 
                 $this->setSortingQuery([
@@ -236,60 +219,42 @@ class CommonSearchService extends AbstractSearchService
                 ]);
 
                 $slopPhrase = explode(" ", $searchText);
-                $queryShouldFields = $must = $should = [];
+                $queryShouldFields = $must = $should = $subShould = [];
 
                 if (count($slopPhrase) > 1) {
-                    // значит ищем по схождению словосочетания
-                    if (!empty($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields())) {
-                        foreach ($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields() as $fieldName) {
-                            $queryShouldFields[] = $this->_queryConditionFactory
-                                ->getMatchPhrasePrefixQuery($fieldName, $searchText);
-                        }
 
+                    /**
+                     * Поиск по точному воспадению искомого словосочетания
+                     */
+                    $queryMust = $this->filterSearchTypes[$type]::getSearchConditionQueryMust($this->_queryConditionFactory, $searchText);
+
+                    if(!empty($queryMust))
+                    {
+                        $this->setConditionQueryMust($queryMust);
                     }
 
-                    $this->setConditionQueryShould($queryShouldFields);
-
-                    $queryMatchResults[$type] = $this->createQuery($skip, $count);
                 } else {
-                    if (!empty($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields())) {
-                        foreach ($this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields() as $fieldName) {
-                            $queryShouldFields[] = $this->_queryConditionFactory->getMatchQuery(
-                                $fieldName,
-                                $searchText
-                            );
+                    $queryShould = $this->filterSearchTypes[$type]::getSearchConditionQueryShould(
+                        $this->_queryConditionFactory, $searchText
+                    );
 
-                            $should[] = $this->_queryConditionFactory->getMatchPhraseQuery(
-                                $fieldName,
-                                $searchText
-                            );
-                        }
-
+                    if(!empty($queryShould))
+                    {
+                        /**
+                         * Ищем по частичному совпадению поисковой фразы
+                         */
+                        $this->setConditionQueryShould($queryShould);
                     }
-
-                    if (!empty($this->filterSearchTypes[$type]::getMultiMatchNgramQuerySearchFields())) {
-
-                        foreach ($this->filterSearchTypes[$type]::getMultiMatchNgramQuerySearchFields() as $fieldName) {
-                            $must[] = $this->_queryConditionFactory->getMatchQuery($fieldName, $searchText);
-                        }
-                    }
-
-                    $this->setConditionQueryShould(array_merge($queryShouldFields, [
-                        $this->_queryConditionFactory->getBoolQuery($must, array_merge($should, [
-                            $this->_queryConditionFactory->getMatchPhraseQuery($this->filterSearchTypes[$type]::DESCRIPTION_FIELD, $searchText),
-                            $this->_queryConditionFactory->getMatchPhraseQuery($this->filterSearchTypes[$type]::DESCRIPTION_TRANSLIT_FIELD, $searchText),
-                        ]), []),
-                    ]));
-
-                    $queryMatchResults[$type] = $this->createQuery($skip, $count);
                 }
+
+                $queryMatchResults[$type] = $this->createQuery($skip, $count);
 
             } else {
                 $this->setSortingQuery([
                     $this->_sortingFactory->getGeoDistanceSort(
                         $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
                         $point
-                    ),
+                    )
                 ]);
 
                 $queryMatchResults[$type] = $this->createMatchQuery(

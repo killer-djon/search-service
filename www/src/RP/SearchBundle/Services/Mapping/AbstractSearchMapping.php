@@ -4,6 +4,7 @@
  */
 namespace RP\SearchBundle\Services\Mapping;
 
+use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 
 abstract class AbstractSearchMapping
@@ -104,5 +105,44 @@ abstract class AbstractSearchMapping
         return [];
     }
 
+
+    /**
+     * Метод собирает условие построенные для глобального поиска
+     * обязательное условие при запросе
+     *
+     * @param ConditionFactoryInterface $conditionFactory Объект класса билдера условий
+     * @param string $queryString Строка запроса
+     * @return array
+     */
+    public static function getSearchConditionQueryMust(ConditionFactoryInterface $conditionFactory, $queryString)
+    {
+        return [];
+    }
+
+    /**
+     * Метод собирает условие построенные для глобального поиска
+     * обязательно не должно попадать в выборку
+     *
+     * @param ConditionFactoryInterface $conditionFactory Объект класса билдера условий
+     * @param string $queryString Строка запроса
+     * @return array
+     */
+    public static function getSearchConditionQueryMustNot(ConditionFactoryInterface $conditionFactory, $queryString)
+    {
+        return [];
+    }
+
+    /**
+     * Метод собирает условие построенные для глобального поиска
+     * может попасть или может учитыватся при выборке
+     *
+     * @param ConditionFactoryInterface $conditionFactory Объект класса билдера условий
+     * @param string $queryString Строка запроса
+     * @return array
+     */
+    public static function getSearchConditionQueryShould(ConditionFactoryInterface $conditionFactory, $queryString)
+    {
+        return [];
+    }
 
 }

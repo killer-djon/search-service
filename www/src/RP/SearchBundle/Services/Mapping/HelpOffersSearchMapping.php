@@ -8,7 +8,9 @@
 
 namespace RP\SearchBundle\Services\Mapping;
 
+use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
+use Elastica\Query\MultiMatch;
 
 class HelpOffersSearchMapping extends PeopleSearchMapping
 {
@@ -47,6 +49,49 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
             //self::HELP_OFFERS_NAME_NGRAM_FIELD,
             self::HELP_OFFERS_NAME_TRANSLIT_FIELD,
             //self::HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD,
+        ];
+    }
+
+    /**
+     * Метод собирает условие построенные для глобального поиска
+     * обязательное условие при запросе
+     *
+     * @param ConditionFactoryInterface $conditionFactory Объект класса билдера условий
+     * @param string $queryString Строка запроса
+     * @return array
+     */
+    public static function getSearchConditionQueryMust(ConditionFactoryInterface $conditionFactory, $queryString)
+    {
+        return [
+            $conditionFactory
+                ->getFieldQuery(self::getMultiMatchQuerySearchFields(), $queryString)
+                ->setDefaultOperator(MultiMatch::OPERATOR_AND),
+        ];
+    }
+
+
+    /**
+     * Метод собирает условие построенные для глобального поиска
+     * может попасть или может учитыватся при выборке
+     *
+     * @param ConditionFactoryInterface $conditionFactory Объект класса билдера условий
+     * @param string $queryString Строка запроса
+     * @return array
+     */
+    public static function getSearchConditionQueryShould(ConditionFactoryInterface $conditionFactory, $queryString)
+    {
+        $should = [];
+        $allSearchFields = self::getMultiMatchQuerySearchFields();
+
+        foreach ($allSearchFields as $field) {
+            $should[] = $conditionFactory->getMatchPhrasePrefixQuery($field, $queryString);
+        }
+
+        return [
+            $conditionFactory->getMultiMatchQuery()
+                             ->setFields(self::getMultiMatchQuerySearchFields())
+                             ->setQuery($queryString),
+            $conditionFactory->getBoolQuery([], $should, []),
         ];
     }
 

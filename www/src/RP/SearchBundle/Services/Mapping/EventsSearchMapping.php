@@ -5,7 +5,9 @@
 
 namespace RP\SearchBundle\Services\Mapping;
 
+use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
+use Elastica\Query\MultiMatch;
 
 class EventsSearchMapping extends AbstractSearchMapping
 {
@@ -79,6 +81,22 @@ class EventsSearchMapping extends AbstractSearchMapping
             self::NAME_FIELD,
             //self::NAME_NGRAM_FIELD,
             self::NAME_TRANSLIT_FIELD,
+
+            self::DESCRIPTION_FIELD,
+
+            self::DESCRIPTION_TRANSLIT_FIELD
+        ];
+    }
+
+    /**
+     * Получаем поля для поиска
+     * сбор полей для формирования объекта запроса
+     * multiMatch - без точных условий с возможностью фильтрации
+     *
+     * @return array
+     */
+    public static function getMultiSubMatchQuerySearchFields(){
+        return [
             //self::NAME_TRANSLIT_NGRAM_FIELD,
             // по типу
             self::TYPE_NAME_FIELD,
@@ -89,10 +107,54 @@ class EventsSearchMapping extends AbstractSearchMapping
             self::TAG_NAME_FIELD,
             //self::TAG_NAME_NGRAM_FIELD,
             self::TAG_NAME_TRANSLIT_FIELD,
-            //self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
-            self::DESCRIPTION_FIELD,
+        ];
+    }
 
-            self::DESCRIPTION_TRANSLIT_FIELD
+    /**
+     * Метод собирает условие построенные для глобального поиска
+     * обязательное условие при запросе
+     *
+     * @param ConditionFactoryInterface $conditionFactory Объект класса билдера условий
+     * @param string $queryString Строка запроса
+     * @return array
+     */
+    public static function getSearchConditionQueryMust(ConditionFactoryInterface $conditionFactory, $queryString)
+    {
+        return [
+            $conditionFactory
+                ->getFieldQuery(array_merge(
+                    self::getMultiMatchQuerySearchFields(),
+                    self::getMultiSubMatchQuerySearchFields()
+                ), $queryString)
+                ->setDefaultOperator(MultiMatch::OPERATOR_AND)
+        ];
+    }
+
+    /**
+     * Метод собирает условие построенные для глобального поиска
+     * может попасть или может учитыватся при выборке
+     *
+     * @param ConditionFactoryInterface $conditionFactory Объект класса билдера условий
+     * @param string $queryString Строка запроса
+     * @return array
+     */
+    public static function getSearchConditionQueryShould(ConditionFactoryInterface $conditionFactory, $queryString)
+    {
+        $should = [];
+        $allSearchFields = array_merge(
+            self::getMultiSubMatchQuerySearchFields(),
+            self::getMultiMatchQuerySearchFields()
+        );
+
+        foreach ($allSearchFields as $field) {
+            $should[] = $conditionFactory->getMatchPhrasePrefixQuery($field, $queryString);
+        }
+
+        return [
+            $conditionFactory->getMultiMatchQuery()
+                             ->setFields(self::getMultiMatchQuerySearchFields())
+                             ->setQuery($queryString),
+            $conditionFactory->getBoolQuery([], $should, []),
         ];
     }
 

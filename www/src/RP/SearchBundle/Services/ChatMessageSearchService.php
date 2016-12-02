@@ -20,6 +20,7 @@ class ChatMessageSearchService extends AbstractSearchService
      */
     const MIN_SEARCH_SCRORE = 3;
 
+
     /**
      * Метод осуществляет поиск в еластике
      * по имени/фамилии пользьвателя в чате

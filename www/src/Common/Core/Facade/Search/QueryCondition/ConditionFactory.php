@@ -35,8 +35,7 @@ class ConditionFactory implements ConditionFactoryInterface
         $matchQuery = new \Elastica\Query\Match();
         $matchQuery->setFieldQuery($fieldName, $queryString);
         $matchQuery->setFieldBoost($fieldName, $boost);
-        if( !is_null($prefixLength) && is_int($prefixLength) )
-        {
+        if (!is_null($prefixLength) && is_int($prefixLength)) {
             $matchQuery->setFieldPrefixLength($fieldName, $prefixLength);
         }
 
@@ -52,18 +51,17 @@ class ConditionFactory implements ConditionFactoryInterface
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-nested-query.html
      * @return \Elastica\Query\Nested
      */
-    public function getNestedQuery($path, AbstractQuery $queryString = null, $scoreMode = null){
+    public function getNestedQuery($path, AbstractQuery $queryString = null, $scoreMode = null)
+    {
 
-        if(is_null($queryString))
-        {
+        if (is_null($queryString)) {
             $queryString = $this->getMatchAllQuery();
         }
 
         $nestedQuery = new \Elastica\Query\Nested();
         $nestedQuery->setPath($path);
         $nestedQuery->setQuery($queryString);
-        if(!is_null($scoreMode))
-        {
+        if (!is_null($scoreMode)) {
             $nestedQuery->setScoreMode($scoreMode);
         }
 
@@ -78,13 +76,13 @@ class ConditionFactory implements ConditionFactoryInterface
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html#_phrase
      * @return \Elastica\Query\MatchPhrase
      */
-    public function getMatchPhrasePrefixQuery($fieldName, $queryString){
+    public function getMatchPhrasePrefixQuery($fieldName, $queryString)
+    {
         $matchPhrasePrefix = new \Elastica\Query\MatchPhrasePrefix();
         $matchPhrasePrefix->setFieldQuery($fieldName, $queryString);
 
         return $matchPhrasePrefix;
     }
-
 
     /**
      * Условие запроса по полной фразе
@@ -98,7 +96,6 @@ class ConditionFactory implements ConditionFactoryInterface
     {
         $matchPhrase = new \Elastica\Query\MatchPhrase();
         $matchPhrase->setFieldQuery($fieldName, $queryString);
-
 
         return $matchPhrase;
     }
@@ -249,17 +246,19 @@ class ConditionFactory implements ConditionFactoryInterface
     /**
      * Условаие запроса по совпадению поля (в зависимости от анализатора конкретного поля).
      *
-     * @param string $fieldName
+     * @param string|array $fieldsName
      * @param string $value
      * @param bool $analyzer
      * @param float $boost Бустинг запроса
      * @param int $phraseSlop
-     * @return mixed
+     * @return \Elastica\Query\QueryString
      */
-    public function getFieldQuery($fieldName, $value, $analyzer = true, $boost = 1.0, $phraseSlop = 0)
+    public function getFieldQuery($fieldsName, $value, $analyzer = true, $boost = 1.0, $phraseSlop = 0)
     {
+        $fields = (is_string($fieldsName) ? [$fieldsName] : $fieldsName);
+
         $queryString = new \Elastica\Query\QueryString($value);
-        $queryString->setDefaultField($fieldName);
+        $queryString->setFields($fields);
         $queryString->setAnalyzeWildcard($analyzer);
         $queryString->setPhraseSlop((int)$phraseSlop);
         $queryString->setBoost((float)$boost);
@@ -277,8 +276,7 @@ class ConditionFactory implements ConditionFactoryInterface
      */
     public function getWildCardQuery($fieldName, $value, $boost = 1.0)
     {
-        if(!preg_match('/^\*.*\*$/is', $value))
-        {
+        if (!preg_match('/^\*.*\*$/is', $value)) {
             $value = "*$value*";
         }
         $queryString = new \Elastica\Query\Wildcard($fieldName, $value, (float)$boost);

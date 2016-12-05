@@ -98,21 +98,22 @@ class CommonSearchService extends AbstractSearchService
 
                 $this->setScriptFunctions([
                     $this->_scriptFactory->getScript("
-                    double scoreSorting = 0.0
+                    double scoreSorting = 0.0;
                     if(!doc[locationField].empty){
                         scoreSorting = _score * doc[locationField].distanceInKm(lat, lon);
                     }else{
-                        scoreSorting = _score * 100;
+                        scoreSorting = _score * constant;
                     }
                     return scoreSorting;
                 ", [
                         'lat'           => $point->getLatitude(),
                         'lon'           => $point->getLongitude(),
                         'locationField' => $type::LOCATION_POINT_FIELD,
+                        'constant' => 1000000.1
                     ], \Elastica\Script::LANG_GROOVY),
                 ], [
                     'scoreMode' => 'min',
-                    'boostMode' => 'replace',
+                    'boostMode' => 'replace'
                 ]);
 
                 $this->setSortingQuery([
@@ -197,17 +198,18 @@ class CommonSearchService extends AbstractSearchService
             if (!is_null($searchText)) {
                 $this->setScriptFunctions([
                     $this->_scriptFactory->getScript("
-                    double scoreSorting = 0.0
+                    double scoreSorting = 0.0;
                     if(!doc[locationField].empty){
                         scoreSorting = _score * doc[locationField].distanceInKm(lat, lon);
                     }else{
-                        scoreSorting = _score * 100;
+                        scoreSorting = _score * constant;
                     }
                     return scoreSorting;
                 ", [
                         'lat'           => $point->getLatitude(),
                         'lon'           => $point->getLongitude(),
                         'locationField' => $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
+                        'constant' => 1000000.1
                     ], \Elastica\Script::LANG_GROOVY),
                 ], [
                     'scoreMode' => 'min',

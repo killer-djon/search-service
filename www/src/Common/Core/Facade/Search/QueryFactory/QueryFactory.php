@@ -129,10 +129,11 @@ class QueryFactory implements QueryFactoryInterface
     public function setHighlight(array $highlightArgs = [])
     {
         $highlight = [
-            "pre_tags"  => ["<em>"],
-            "post_tags" => ["</em>"],
+            "pre_tags"            => ["<em>"],
+            "post_tags"           => ["</em>"],
             "require_field_match" => false,
-            "fields"    => [],
+            "encoder"             => 'default',
+            "fields"              => [],
         ];
 
         if (!empty($highlightArgs)) {
@@ -158,7 +159,6 @@ class QueryFactory implements QueryFactoryInterface
 
         return $this;
     }
-
 
     /**
      * Allows filtering of documents based on a minimum score.

@@ -16,30 +16,28 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
 
     const AUTHOR_ID_FIELD = 'author.id';
 
-
     /** Тип места */
-    const TYPE_FIELD        = 'type';
-    const TYPE_ID_FIELD     = 'type.id';
-    const TYPE_NAME_FIELD   = 'type.name';
-    const TYPE_NAME_NGRAM_FIELD   = 'type._nameNgram';
-    const TYPE_NAME_TRANSLIT_FIELD   = 'type._translit';
-    const TYPE_NAME_TRANSLIT_NGRAM_FIELD   = 'type._translitNgram';
-    const TYPE_WORDS_FIELD  = 'type._wordsName';
+    const TYPE_FIELD = 'type';
+    const TYPE_ID_FIELD = 'type.id';
+    const TYPE_NAME_FIELD = 'type.name';
+    const TYPE_NAME_NGRAM_FIELD = 'type._nameNgram';
+    const TYPE_NAME_TRANSLIT_FIELD = 'type._translit';
+    const TYPE_NAME_TRANSLIT_NGRAM_FIELD = 'type._translitNgram';
+    const TYPE_WORDS_FIELD = 'type._wordsName';
 
-
-    const ADDRESS_FIELD             = 'address';
-    const ADDRESS_TRANSLIT_FIELD    = 'address._translit';
-    const ADDRESS_PREFIX_FIELD      = 'address._prefix';
-    const ADDRESS_NGRAM_FIELD       = 'address._ngram';
+    const ADDRESS_FIELD = 'address';
+    const ADDRESS_TRANSLIT_FIELD = 'address._translit';
+    const ADDRESS_PREFIX_FIELD = 'address._prefix';
+    const ADDRESS_NGRAM_FIELD = 'address._ngram';
 
     /** Дополнительные поля */
-    const IS_RUSSIAN_FIELD  = 'isRussian';
-    const DISCOUNT_FIELD    = 'discount';
-    const BONUS_FIELD       = 'bonus';
-    const REMOVED_FIELD     = 'isRemoved';
+    const IS_RUSSIAN_FIELD = 'isRussian';
+    const DISCOUNT_FIELD = 'discount';
+    const BONUS_FIELD = 'bonus';
+    const REMOVED_FIELD = 'isRemoved';
 
     /** Статус модерации */
-    const MODERATION_STATUS_FIELD   = 'moderationStatus';
+    const MODERATION_STATUS_FIELD = 'moderationStatus';
     const VISIBLE_FIELD = 'visible';
 
     /**
@@ -61,10 +59,8 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
 
             self::DESCRIPTION_TRANSLIT_FIELD,
 
-
         ];
     }
-
 
     /**
      * Получаем поля для поиска
@@ -73,7 +69,8 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
      *
      * @return array
      */
-    public static function getMultiSubMatchQuerySearchFields(){
+    public static function getMultiSubMatchQuerySearchFields()
+    {
         return [
             // поля с вариациями типа места
             self::TYPE_NAME_FIELD,
@@ -102,14 +99,15 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
         return [
             self::NAME_NGRAM_FIELD,
             self::NAME_TRANSLIT_NGRAM_FIELD,
+
             self::TYPE_NAME_NGRAM_FIELD,
             self::TYPE_NAME_TRANSLIT_NGRAM_FIELD,
+
             self::TAG_NAME_NGRAM_FIELD,
             self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
 
             self::DESCRIPTION_FIELD,
-
-            self::DESCRIPTION_TRANSLIT_FIELD
+            self::DESCRIPTION_TRANSLIT_FIELD,
         ];
     }
 
@@ -131,11 +129,10 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
                 $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
                 $filterFactory->getNotFilter(
                     $filterFactory->getExistsFilter(self::BONUS_FIELD)
-                )
-            ])
+                ),
+            ]),
         ];
     }
-
 
     /**
      * Собираем фильтр для поиска
@@ -153,7 +150,7 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
             $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
             $filterFactory->getNotFilter(
                 $filterFactory->getExistsFilter(self::BONUS_FIELD)
-            )
+            ),
         ];
     }
 
@@ -173,7 +170,7 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
                     self::getMultiMatchQuerySearchFields(),
                     self::getMultiSubMatchQuerySearchFields()
                 ), $queryString)
-                ->setDefaultOperator(MultiMatch::OPERATOR_AND)
+                ->setDefaultOperator(MultiMatch::OPERATOR_AND),
         ];
     }
 
@@ -207,12 +204,25 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
 
     /**
      * Статический класс получения условий подсветки при поиске
+     *
      * @return array
      */
     public static function getHighlightConditions()
     {
-        $highlight[self::DESCRIPTION_FIELD] = [
-            'term_vector' => 'with_positions_offsets'
+        $highlight = [
+            self::DESCRIPTION_FIELD => [
+                'term_vector'   => 'with_positions_offsets',
+                'no_match_size' => 150,
+                'fragment_size' => 150,
+            ],
+            self::TAG_NAME_FIELD    => [
+                'term_vector'   => 'with_positions_offsets',
+                'fragment_size' => 150,
+            ],
+            self::TYPE_NAME_FIELD   => [
+                'term_vector'   => 'with_positions_offsets',
+                'fragment_size' => 150,
+            ],
         ];
 
         return $highlight;

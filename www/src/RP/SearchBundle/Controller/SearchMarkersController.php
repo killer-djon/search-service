@@ -39,8 +39,7 @@ class SearchMarkersController extends ApiController
             // получаем порцию данных из ячайки класстера
             $geoHashCell = $request->get(Location::GEO_HASH_CELL_PARAM);
 
-            if( mb_strlen($geoHashCell) <= 0 )
-            {
+            if (mb_strlen($geoHashCell) <= 0) {
                 if (is_null($this->getGeoPoint()->getRadius())) {
                     return $this->_handleViewWithError(new BadRequestHttpException('Радиус должен быть установлен'), Response::HTTP_BAD_REQUEST);
                 }
@@ -58,8 +57,7 @@ class SearchMarkersController extends ApiController
             // получаем сервис многотипного поиска
             $markersSearchService = $this->getCommonSearchService();
 
-            if( $isCluster )
-            {
+            if ($isCluster) {
                 // указываем что класстеры должны быть сгруппированны
                 $markersSearchService->setClusterGrouped();
             }
@@ -90,11 +88,9 @@ class SearchMarkersController extends ApiController
                     $oldFormat['results'] = AbstractTransformer::array_filter_recursive($oldFormat['results']);
                 }
 
-                if( $isCluster )
-                {
+                if ($isCluster) {
                     $oldFormat['cluster'] = $markers['cluster'];
                 }
-
 
                 return $this->_handleViewWithData(
                     $oldFormat,

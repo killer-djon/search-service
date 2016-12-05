@@ -90,6 +90,7 @@ class SearchMarkersController extends ApiController
 
                 if ($isCluster) {
                     $oldFormat['cluster'] = $markers['cluster'];
+                    unset($oldFormat['results']);
                 }
 
                 return $this->_handleViewWithData(

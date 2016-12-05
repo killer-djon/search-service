@@ -90,6 +90,12 @@ class SearchMarkersController extends ApiController
                     $oldFormat['results'] = AbstractTransformer::array_filter_recursive($oldFormat['results']);
                 }
 
+                if( $isCluster )
+                {
+                    $oldFormat['cluster'] = $markers['cluster'];
+                }
+
+
                 return $this->_handleViewWithData(
                     $oldFormat,
                     null,

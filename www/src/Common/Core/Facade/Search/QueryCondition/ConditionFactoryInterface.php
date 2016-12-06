@@ -162,4 +162,14 @@ interface ConditionFactoryInterface
      */
     public function getWildCardQuery($fieldName, $value, $boost = 1.0);
 
+    /**
+     * Объединяющий несколько условий для UNION результата
+     *
+     * @param \Elastica\Query\AbstractQuery|array $query Query
+     * @param float $boost
+     * @param float $tieBreaker
+     * @return \Elastica\Query\DisMax
+     */
+    public function getDisMaxQuery($query, $boost = 1.0, $tieBreaker = 0.0);
+
 }

@@ -270,7 +270,7 @@ class ConditionFactory implements ConditionFactoryInterface
      * @param string $fieldName
      * @param string $value
      * @param float $boost Бустинг запроса
-     * @return mixed
+     * @return \Elastica\Query\Wildcard
      */
     public function getWildCardQuery($fieldName, $value, $boost = 1.0)
     {
@@ -280,5 +280,28 @@ class ConditionFactory implements ConditionFactoryInterface
         $queryString = new \Elastica\Query\Wildcard($fieldName, $value, (float)$boost);
 
         return $queryString;
+    }
+
+    /**
+     * Объединяющий несколько условий для UNION результата
+     *
+     * @param \Elastica\Query\AbstractQuery|array $queries Query
+     * @param float $boost
+     * @param float $tieBreaker
+     * @return \Elastica\Query\DisMax
+     */
+    public function getDisMaxQuery($queries, $boost = 1.0, $tieBreaker = 0.0)
+    {
+        $disMax = new \Elastica\Query\DisMax();
+        if(is_array($queries))
+        {
+            foreach($queries as $query){
+                $disMax->addQuery($query);
+            }
+        }
+        $disMax->setBoost($boost);
+        $disMax->setTieBreaker($tieBreaker);
+
+        return $disMax;
     }
 }

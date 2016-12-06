@@ -196,7 +196,7 @@ class CommonSearchService extends AbstractSearchService
             $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
 
             if (!is_null($searchText)) {
-                $this->setScriptFunctions([
+                /*$this->setScriptFunctions([
                     $this->_scriptFactory->getScript("
                     double scoreSorting = 0.0;
                     if(!doc[locationField].empty){
@@ -219,6 +219,7 @@ class CommonSearchService extends AbstractSearchService
                 $this->setSortingQuery([
                     $this->_sortingFactory->getFieldSort('_score'),
                 ]);
+                */
 
                 $slopPhrase = explode(" ", $searchText);
                 $queryShouldFields = $must = $should = $subShould = [];
@@ -250,6 +251,7 @@ class CommonSearchService extends AbstractSearchService
                 }
 
                 $queryMatchResults[$type] = $this->createQuery($skip, $count);
+
 
             } else {
                 $this->setSortingQuery([

@@ -233,7 +233,6 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
         ];
     }
 
-
     /**
      * Метод собирает условие построенные для глобального поиска
      * может попасть или может учитыватся при выборке
@@ -244,21 +243,23 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
      */
     public static function getSearchConditionQueryShould(ConditionFactoryInterface $conditionFactory, $queryString)
     {
-        $should = [];
-        $allSearchFields = array_merge(
-            self::getMultiSubMatchQuerySearchFields(),
-            self::getMultiMatchQuerySearchFields()
-        );
-
-        foreach ($allSearchFields as $field) {
-            $should[] = $conditionFactory->getMatchPhrasePrefixQuery($field, $queryString);
+        $prefixShouldQuery = $subShould = [];
+        foreach (self::getMultiMatchQuerySearchFields() as $field)
+        {
+            $prefixShouldQuery[] = $conditionFactory->getMatchPhrasePrefixQuery($field, $queryString);
         }
 
+        foreach (self::getMultiSubMatchQuerySearchFields() as $field){
+            $subShould[] = $conditionFactory->getWildCardQuery($field, $queryString);
+        }
         return [
-            $conditionFactory->getMultiMatchQuery()
-                             ->setFields(self::getMultiMatchQuerySearchFields())
-                             ->setQuery($queryString),
-            $conditionFactory->getBoolQuery([], $should, []),
+            $conditionFactory->getFieldQuery([
+                'name._exactName',
+                'surname._exactName'
+            ], $queryString, false, 2),
+            $conditionFactory->getBoolQuery([], array_merge($prefixShouldQuery, [
+                $conditionFactory->getBoolQuery([], $subShould, [])
+            ]), [])
         ];
     }
 

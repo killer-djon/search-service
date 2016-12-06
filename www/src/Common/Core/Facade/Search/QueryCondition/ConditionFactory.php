@@ -135,12 +135,10 @@ class ConditionFactory implements ConditionFactoryInterface
      */
     public function getPrefixQuery($fieldName, $value, $boost = 1.0)
     {
-        return new \Elastica\Query\Prefix([
-            $fieldName => [
-                'value' => $value,
-                'boost' => $boost,
-            ],
-        ]);
+        $prefixQuery = new \Elastica\Query\Prefix();
+        $prefixQuery->setPrefix($fieldName, $value, $boost);
+
+        return $prefixQuery;
     }
 
     /**

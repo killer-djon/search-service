@@ -339,7 +339,7 @@ class CommonSearchService extends AbstractSearchService
                                 "lat" => $point->getLatitude(),
                                 "lon" => $point->getLongitude(),
                             ],
-                            5
+                            8
                         )->addAggregation($this->_queryAggregationFactory->setAggregationSource(
                             AbstractSearchMapping::LOCATION_FIELD,
                             []

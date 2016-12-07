@@ -183,4 +183,13 @@ interface ConditionFactoryInterface
      */
     public function getSimpleStringQuery($queryString, array $fields = [], $operator = MultiMatch::OPERATOR_AND, $shouldMatch = '50%');
 
+    /**
+     * Условие запроса с регулярным выражением
+     * @param string $fieldName Название поля
+     * @param string $query Строка запроса
+     * @param float $boost
+     * @return \Elastica\Query\Regexp
+     */
+    public function getRegexpQuery($fieldName, $query, $boost = 1.0);
+
 }

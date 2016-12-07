@@ -100,16 +100,17 @@ class CommonSearchService extends AbstractSearchService
                     $this->_scriptFactory->getScript("
                     double scoreSorting = 0.0;
                     if(!doc[locationField].empty){
-                        scoreSorting = _score * doc[locationField].distanceInKm(lat, lon);
+                        scoreSorting = doc[locationField].distanceInKm(lat, lon);
                     }else{
-                        scoreSorting = _score * constant;
+                        scoreSorting = constant
                     }
-                    return scoreSorting;
+                    
+                    return scoreSorting * _score;
                 ", [
                         'lat'           => $point->getLatitude(),
                         'lon'           => $point->getLongitude(),
                         'locationField' => $type::LOCATION_POINT_FIELD,
-                        'constant' => 1000000.1
+                        'constant' => 100000.1
                     ], \Elastica\Script::LANG_GROOVY),
                 ], [
                     'scoreMode' => 'min',
@@ -200,16 +201,17 @@ class CommonSearchService extends AbstractSearchService
                     $this->_scriptFactory->getScript("
                     double scoreSorting = 0.0;
                     if(!doc[locationField].empty){
-                        scoreSorting = _score * doc[locationField].distanceInKm(lat, lon);
+                        scoreSorting = doc[locationField].distanceInKm(lat, lon);
                     }else{
-                        scoreSorting = _score * constant;
+                        scoreSorting = constant
                     }
-                    return scoreSorting;
+                    
+                    return scoreSorting * _score;
                 ", [
                         'lat'           => $point->getLatitude(),
                         'lon'           => $point->getLongitude(),
                         'locationField' => $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
-                        'constant' => 1000000.1
+                        'constant' => 100000.1
                     ], \Elastica\Script::LANG_GROOVY),
                 ], [
                     'scoreMode' => 'min',
@@ -246,12 +248,12 @@ class CommonSearchService extends AbstractSearchService
                         /**
                          * Ищем по частичному совпадению поисковой фразы
                          */
+
                         $this->setConditionQueryShould($queryShould);
                     }
                 }
 
                 $queryMatchResults[$type] = $this->createQuery($skip, $count);
-
 
             } else {
                 $this->setSortingQuery([
@@ -339,7 +341,7 @@ class CommonSearchService extends AbstractSearchService
                                 "lat" => $point->getLatitude(),
                                 "lon" => $point->getLongitude(),
                             ],
-                            $point->getRadius()
+                            6
                         )->addAggregation($this->_queryAggregationFactory->setAggregationSource(
                             AbstractSearchMapping::LOCATION_FIELD,
                             [], 1

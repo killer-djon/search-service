@@ -250,14 +250,17 @@ class ConditionFactory implements ConditionFactoryInterface
      * @param bool $analyzer
      * @param float $boost Бустинг запроса
      * @param int $phraseSlop
+     * @param string $defaultField Default field name (default: _all)
      * @return \Elastica\Query\QueryString
      */
-    public function getFieldQuery($fieldsName, $value, $analyzer = true, $boost = 1.0, $phraseSlop = 0)
+    public function getFieldQuery($fieldsName, $value, $analyzer = true, $boost = 1.0, $phraseSlop = 0, $defaultField = null)
     {
         $fields = (is_string($fieldsName) ? [$fieldsName] : $fieldsName);
+        $defaultField = is_null($defaultField) ? $fields[0] : $defaultField;
 
         $queryString = new \Elastica\Query\QueryString($value);
         $queryString->setFields($fields);
+        $queryString->setDefaultField($defaultField);
         $queryString->setAnalyzeWildcard($analyzer);
         $queryString->setPhraseSlop((int)$phraseSlop);
         $queryString->setBoost((float)$boost);
@@ -294,9 +297,8 @@ class ConditionFactory implements ConditionFactoryInterface
     public function getDisMaxQuery($queries, $boost = 1.0, $tieBreaker = 0.0)
     {
         $disMax = new \Elastica\Query\DisMax();
-        if(is_array($queries))
-        {
-            foreach($queries as $query){
+        if (is_array($queries)) {
+            foreach ($queries as $query) {
                 $disMax->addQuery($query);
             }
         }
@@ -306,9 +308,22 @@ class ConditionFactory implements ConditionFactoryInterface
         return $disMax;
     }
 
+
     /**
-     * Типа regexp запроса.
-     *
+     * Условие запроса с регулярным выражением
+     * @param string $fieldName Название поля
+     * @param string $query Строка запроса
+     * @param float $boost
+     * @return \Elastica\Query\Regexp
+     */
+    public function getRegexpQuery($fieldName, $query, $boost = 1.0)
+    {
+        $regExpQuery = new \Elastica\Query\Regexp($fieldName, $query, $boost);
+
+        return $regExpQuery;
+    }
+
+    /**
      * @param string $queryString Поисковый запрос
      * @param array $fields Массив полей
      * @param string $operator ( 'or' 'and' )
@@ -323,4 +338,5 @@ class ConditionFactory implements ConditionFactoryInterface
 
         return $queryString;
     }
+
 }

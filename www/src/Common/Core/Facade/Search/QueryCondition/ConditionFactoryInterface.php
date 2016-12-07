@@ -172,4 +172,15 @@ interface ConditionFactoryInterface
      */
     public function getDisMaxQuery($query, $boost = 1.0, $tieBreaker = 0.0);
 
+    /**
+     * Типа regexp запроса.
+     *
+     * @param string $queryString Поисковый запрос
+     * @param array $fields Массив полей
+     * @param string $operator ( 'or' 'and' )
+     * @param string|int $shouldMatch Процент совпадения
+     * @return \Elastica\Query\SimpleQueryString
+     */
+    public function getSimpleStringQuery($queryString, array $fields = [], $operator = MultiMatch::OPERATOR_AND, $shouldMatch = '50%');
+
 }

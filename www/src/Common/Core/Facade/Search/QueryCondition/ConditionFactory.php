@@ -6,6 +6,7 @@ namespace Common\Core\Facade\Search\QueryCondition;
 
 use Elastica\Filter\AbstractFilter;
 use Elastica\Query\AbstractQuery;
+use Elastica\Query\MultiMatch;
 
 class ConditionFactory implements ConditionFactoryInterface
 {
@@ -303,5 +304,23 @@ class ConditionFactory implements ConditionFactoryInterface
         $disMax->setTieBreaker($tieBreaker);
 
         return $disMax;
+    }
+
+    /**
+     * Типа regexp запроса.
+     *
+     * @param string $queryString Поисковый запрос
+     * @param array $fields Массив полей
+     * @param string $operator ( 'or' 'and' )
+     * @param string|int $shouldMatch Процент совпадения
+     * @return \Elastica\Query\SimpleQueryString
+     */
+    public function getSimpleStringQuery($queryString, array $fields = [], $operator = MultiMatch::OPERATOR_AND, $shouldMatch = '50%')
+    {
+        $queryString = new \Elastica\Query\SimpleQueryString($queryString, $fields);
+        $queryString->setDefaultOperator($operator);
+        $queryString->setMinimumShouldMatch($shouldMatch);
+
+        return $queryString;
     }
 }

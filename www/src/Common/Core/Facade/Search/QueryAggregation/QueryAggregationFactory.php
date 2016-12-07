@@ -123,7 +123,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
     {
         $precision = (int)$precision;
 
-        if ($precision > 12) {
+        if ($precision > 12 || $precision < 1) {
             $precisionPoint = [];
             foreach ($this->geo_hash_precisions as $key => $pointMap) {
                 $min = $pointMap[0];
@@ -149,6 +149,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
 
         $geoHash = new \Elastica\Aggregation\GeohashGrid('geohash_grid', $fieldName);
         $geoHash->setPrecision($precision);
+        $geoHash->setShardSize(3);
 
         return $geoHash;
     }

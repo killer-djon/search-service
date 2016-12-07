@@ -421,14 +421,25 @@ class SearchEngine implements SearchEngineInterface
             $bucketKeys = $this->array_combine_(array_column($bucketItem, 'key'), $bucketItem);
             foreach ($bucketKeys as $key => & $item) {
                 $currentItem = current($item);
+                $docCount = $currentItem[$keyField]['hits']['total'];
+
                 $item = [
-                    'doc_count' => $currentItem[$keyField]['hits']['total'],
+                    'doc_count' => $docCount,
                     'type'      => $typeKey,
                     $keyField   => [
                         Location::LONG_LATITUDE  => $currentItem['centroid'][$keyField][Location::LATITUDE],
                         Location::LONG_LONGITUDE => $currentItem['centroid'][$keyField][Location::LONGITUDE],
                     ],
                 ];
+
+                if ($docCount == 1) {
+                    $docs = array_combine(
+                        array_column($currentItem[$keyField]['hits']['hits'], '_id'),
+                        $currentItem[$keyField]['hits']['hits']
+                    );
+
+                    $item['items'] = $docs;
+                }
             }
 
             $buckets[$typeKey] = $bucketKeys;
@@ -455,12 +466,23 @@ class SearchEngine implements SearchEngineInterface
             $docTypes = array_unique(array_column($bucketItem, 'type'));
             $location = array_column($bucketItem, 'location');
 
-            $results[] = [
+            $resultItem = [
                 'key'       => $keyHash,
                 'doc_count' => $sumDocCount,
                 'types'     => implode(',', $docTypes),
                 'location'  => GeoPointService::GetCenterFromDegrees($location),
             ];
+
+            if( $sumDocCount == 1 ){
+                $docItems = array_column($bucketItem, 'items');
+                $docItemValues = array_map(function ($item){
+                    return $item['_source'];
+                }, array_values(current($docItems)));
+
+                $resultItem['items'] = $docItemValues;
+            }
+
+            $results[] = $resultItem;
         }
 
         return $results;
@@ -659,7 +681,6 @@ class SearchEngine implements SearchEngineInterface
 
         return $this->getTotalResults();
     }
-
 
     /**
      * Получить результат аггрегированных данных

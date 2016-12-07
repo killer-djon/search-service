@@ -339,10 +339,10 @@ class CommonSearchService extends AbstractSearchService
                                 "lat" => $point->getLatitude(),
                                 "lon" => $point->getLongitude(),
                             ],
-                            $point->getRadius()
+                            5
                         )->addAggregation($this->_queryAggregationFactory->setAggregationSource(
                             AbstractSearchMapping::LOCATION_FIELD,
-                            [AbstractSearchMapping::IDENTIFIER_FIELD]
+                            []
                         ))->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
                         )),
@@ -377,8 +377,15 @@ class CommonSearchService extends AbstractSearchService
              */
             $documents = $this->searchMultiTypeDocuments($queryMatchResults);
 
-            if ($this->getClusterGrouped() == true) {
-                $documents['cluster'] = $this->groupClasterLocationBuckets($documents['cluster'], AbstractSearchMapping::LOCATION_FIELD);
+            if( $isCluster == true )
+            {
+                if ($this->getClusterGrouped() == true) {
+                    $documents['cluster'] = $this->groupClasterLocationBuckets($documents['cluster'], AbstractSearchMapping::LOCATION_FIELD);
+                    unset($documents['items']);
+                }
+            }else
+            {
+                unset($documents['cluster']);
             }
 
             return $documents;

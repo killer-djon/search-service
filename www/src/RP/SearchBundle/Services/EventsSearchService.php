@@ -40,15 +40,15 @@ class EventsSearchService extends AbstractSearchService
 
             $this->_queryConditionFactory->getWildCardQuery(
                 EventsSearchMapping::NAME_WORDS_NAME_FIELD,
-                $searchText
+                "{$searchText}*"
             ),
             $this->_queryConditionFactory->getWildCardQuery(
                 EventsSearchMapping::TYPE_WORDS_FIELD,
-                $searchText
+                "{$searchText}*"
             ),
             $this->_queryConditionFactory->getWildCardQuery(
                 EventsSearchMapping::TAG_WORDS_FIELD,
-                $searchText
+                "{$searchText}*"
             ),
         ]);
 
@@ -98,15 +98,15 @@ class EventsSearchService extends AbstractSearchService
                                              ->setFields(EventsSearchMapping::getMultiMatchQuerySearchFields()),
                 $this->_queryConditionFactory->getWildCardQuery(
                     EventsSearchMapping::NAME_WORDS_NAME_FIELD,
-                    $searchText
+                    "{$searchText}*"
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     EventsSearchMapping::TYPE_WORDS_FIELD,
-                    $searchText
+                    "{$searchText}*"
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     EventsSearchMapping::TAG_WORDS_FIELD,
-                    $searchText
+                    "{$searchText}*"
                 ),
             ]);
         }
@@ -176,15 +176,15 @@ class EventsSearchService extends AbstractSearchService
                                              ->setFields(EventsSearchMapping::getMultiMatchQuerySearchFields()),
                 $this->_queryConditionFactory->getWildCardQuery(
                     EventsSearchMapping::NAME_WORDS_NAME_FIELD,
-                    $searchText
+                    "{$searchText}*"
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     EventsSearchMapping::TYPE_WORDS_FIELD,
-                    $searchText
+                    "{$searchText}*"
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     EventsSearchMapping::TAG_WORDS_FIELD,
-                    $searchText
+                    "{$searchText}*"
                 ),
             ]);
         }

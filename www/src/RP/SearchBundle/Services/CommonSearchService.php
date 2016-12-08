@@ -205,7 +205,7 @@ class CommonSearchService extends AbstractSearchService
                     }else{
                         scoreSorting = constant
                     }
-                    
+
                     return scoreSorting * _score;
                 ", [
                         'lat'           => $point->getLatitude(),
@@ -254,6 +254,7 @@ class CommonSearchService extends AbstractSearchService
                 }
 
                 $queryMatchResults[$type] = $this->createQuery($skip, $count);
+
 
             } else {
                 $this->setSortingQuery([

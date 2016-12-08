@@ -22,6 +22,10 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     const SURNAME_TRANSLIT_NGRAM_FIELD = 'surname._translitNgram'; // частичное совпадение имени от 3-х сивмолов в транслите
     const SURNAME_TRANSLIT_LONG_NGRAM_FIELD = 'surname._translitLongNgram';
 
+    const SURNAME_PREFIX_FIELD = 'surname._prefix';
+    const SURNAME_PREFIX_TRANSLIT_FIELD = 'surname._prefixTranslit';
+    const SURNAME_STANDARD_FIELD = 'surname._standard';
+
     // Морфологический разбор поля полного имени
     const FULLNAME_MORPHOLOGY_FIELD = 'fullname';
 
@@ -35,15 +39,16 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
 
     const HELP_OFFERS_NAME_FIELD = 'helpOffers.name';
 
-    const HELP_OFFERS_NAME_TRANSLIT_FIELD = 'helpOffers._translit';
+    const HELP_OFFERS_NAME_TRANSLIT_FIELD = 'helpOffers.name._translit';
 
-    const HELP_OFFERS_NAME_NGRAM_FIELD = 'helpOffers._nameNgram';
+    const HELP_OFFERS_NAME_NGRAM_FIELD = 'helpOffers.name._nameNgram';
 
-    const HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD = 'helpOffers._translitNgram';
+    const HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD = 'helpOffers.name._translitNgram';
 
-    const HELP_OFFERS_WORDS_NAME_FIELD = 'helpOffers._wordsName';
+    const HELP_OFFERS_WORDS_NAME_FIELD = 'helpOffers.name._wordsName';
 
-    const HELP_OFFERS_NAME_PREFIX_FIELD = 'helpOffers._prefix';
+    const HELP_OFFERS_NAME_PREFIX_FIELD = 'helpOffers.name._prefix';
+    const HELP_OFFERS_NAME_PREFIX_TRANSLIT_FIELD = 'helpOffers.name._prefixTranslit';
 
     /** Поле точки местоположения пользователя */
     const LOCATION_POINT_FIELD = 'location.point';
@@ -70,6 +75,17 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
 
     /** Название сферы деятельности пользователя */
     const ACTIVITY_SPHERE_NAME_FIELD = 'activitySphere.name';
+    const ACTIVITY_SPHERE_NAME_NGRAM_FIELD = 'activitySphere.name._nameNgram';
+
+    const ACTIVITY_SPHERE_NAME_TRANSLIT_FIELD = 'activitySphere.name._translit';
+    const ACTIVITY_SPHERE_NAME_TRANSLIT_NGRAM_FIELD = 'activitySphere.name._translitNgram';
+    const ACTIVITY_SPHERE_WORDS_NAME_FIELD = 'activitySphere.name._wordsName';
+    const ACTIVITY_SPHERE_WORDS_TRANSLIT_NAME_FIELD = 'activitySphere.name._wordsName';
+    const ACTIVITY_SPHERE_EXACT_NAME_FIELD = 'activitySphere.name._exactName';
+
+    const ACTIVITY_SPHERE_PREFIX_NAME_FIELD = 'activitySphere.name._prefix';
+    const ACTIVITY_SPHERE_PREFIX_TRANSLIT_NAME_FIELD = 'activitySphere.name._prefixTranslit';
+    const ACTIVITY_SPHERE_STANDARD_NAME_FIELD = 'activitySphere.name._standard';
 
     /**
      * Сфера деятельности пользователя
@@ -146,9 +162,9 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
         return [
             self::TAG_NAME_FIELD,
             self::TAG_NAME_TRANSLIT_FIELD,
-
             // сфера деятельности
             self::ACTIVITY_SPHERE_NAME_FIELD,
+            self::ACTIVITY_SPHERE_NAME_TRANSLIT_FIELD,
             // поля с названием города проживания
             self::LOCATION_CITY_NAME_FIELD,
             self::LOCATION_CITY_INTERNATIONAL_NAME_FIELD,
@@ -179,6 +195,49 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             self::TAG_NAME_NGRAM_FIELD,
             self::TAG_NAME_TRANSLIT_NGRAM_FIELD,
             self::TAG_NAME_TRANSLIT_FIELD,
+        ];
+    }
+
+    /**
+     * ВОзвращаем набор полей для префиксного поиска
+     *
+     * @return array
+     */
+    public static function getPrefixedQuerySearchFields()
+    {
+        return [
+            self::NAME_PREFIX_FIELD,
+            self::NAME_PREFIX_TRANSLIT_FIELD,
+            self::SURNAME_PREFIX_FIELD,
+            self::SURNAME_PREFIX_TRANSLIT_FIELD,
+
+            self::ACTIVITY_SPHERE_PREFIX_NAME_FIELD,
+            self::ACTIVITY_SPHERE_PREFIX_TRANSLIT_NAME_FIELD,
+
+            self::TAG_PREFIX_FIELD,
+            self::TAG_PREFIX_TRANSLIT_FIELD,
+
+            self::LOCATION_CITY_NAME_PREFIX_FIELD,
+            self::LOCATION_CITY_NAME_PREFIX_TRANSLIT_FIELD,
+        ];
+    }
+
+    /**
+     * ВОзвращаем набор полей для префиксного поиска
+     *
+     * @return array
+     */
+    public static function getMorphologyQuerySearchFields()
+    {
+        return [
+            self::TAG_WORDS_FIELD,
+            self::TAG_WORDS_TRANSLIT_FIELD,
+
+            self::ACTIVITY_SPHERE_WORDS_NAME_FIELD,
+            self::ACTIVITY_SPHERE_WORDS_TRANSLIT_NAME_FIELD,
+
+            self::LOCATION_CITY_WORDS_FIELD,
+            self::LOCATION_CITY_WORDS_TRANSLIT_FIELD,
         ];
     }
 
@@ -243,23 +302,29 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
      */
     public static function getSearchConditionQueryShould(ConditionFactoryInterface $conditionFactory, $queryString)
     {
-        $prefixShouldQuery = $subShould = [];
-        foreach (self::getMultiMatchQuerySearchFields() as $field)
-        {
-            $prefixShouldQuery[] = $conditionFactory->getMatchPhrasePrefixQuery($field, $queryString);
+        $prefixWildCard = [];
+        $subMorphologyField = [];
+
+        foreach (self::getMorphologyQuerySearchFields() as $field) {
+            $subMorphologyField[] = $conditionFactory->getFieldQuery($field, $queryString);
         }
 
-        foreach (self::getMultiSubMatchQuerySearchFields() as $field){
-            $subShould[] = $conditionFactory->getWildCardQuery($field, $queryString);
+        foreach (self::getPrefixedQuerySearchFields() as $field) {
+            $prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
         }
+
         return [
-            $conditionFactory->getFieldQuery([
-                'name._exactName',
-                'surname._exactName'
-            ], $queryString, false, 2),
-            $conditionFactory->getBoolQuery([], array_merge($prefixShouldQuery, [
-                $conditionFactory->getBoolQuery([], $subShould, [])
-            ]), [])
+            $conditionFactory->getMultiMatchQuery()
+                             ->setFields(array_merge(
+                                 self::getMultiMatchQuerySearchFields(),
+                                 self::getMultiSubMatchQuerySearchFields()
+                             ))
+                             ->setQuery($queryString)
+                             ->setOperator(MultiMatch::OPERATOR_OR)
+                             ->setType(MultiMatch::TYPE_BEST_FIELDS),
+            $conditionFactory->getBoolQuery([], array_merge($prefixWildCard, [
+                $conditionFactory->getBoolQuery([], $subMorphologyField, []),
+            ]), []),
         ];
     }
 

@@ -245,11 +245,11 @@ class PeopleSearchService extends AbstractSearchService
                                              ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     PeopleSearchMapping::HELP_OFFERS_WORDS_NAME_FIELD,
-                    $searchText
+                    "{$searchText}*"
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     PeopleSearchMapping::FULLNAME_MORPHOLOGY_FIELD,
-                    $searchText
+                    "{$searchText}*"
                 ),
             ]);
         }

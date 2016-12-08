@@ -278,10 +278,7 @@ class ConditionFactory implements ConditionFactoryInterface
      */
     public function getWildCardQuery($fieldName, $value, $boost = 1.0)
     {
-        if (!preg_match('/^\*.*\*$/is', $value)) {
-            $value = "*$value*";
-        }
-        $queryString = new \Elastica\Query\Wildcard($fieldName, $value, (float)$boost);
+        $queryString = new \Elastica\Query\Wildcard($fieldName, mb_strtolower($value), (float)$boost);
 
         return $queryString;
     }
@@ -308,9 +305,9 @@ class ConditionFactory implements ConditionFactoryInterface
         return $disMax;
     }
 
-
     /**
      * Условие запроса с регулярным выражением
+     *
      * @param string $fieldName Название поля
      * @param string $query Строка запроса
      * @param float $boost

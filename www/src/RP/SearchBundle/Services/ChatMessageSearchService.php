@@ -78,25 +78,25 @@ class ChatMessageSearchService extends AbstractSearchService
                     AbstractTransformer::createCompleteKey([
                         ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
                         PeopleSearchMapping::NAME_NGRAM_FIELD
-                    ]), $searchText
+                    ]), "{$searchText}*"
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     AbstractTransformer::createCompleteKey([
                         ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
                         PeopleSearchMapping::NAME_TRANSLIT_NGRAM_FIELD
-                    ]), $searchText
+                    ]), "{$searchText}*"
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     AbstractTransformer::createCompleteKey([
                         ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
                         PeopleSearchMapping::SURNAME_NGRAM_FIELD
-                    ]), $searchText
+                    ]), "{$searchText}*"
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     AbstractTransformer::createCompleteKey([
                         ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
                         PeopleSearchMapping::SURNAME_TRANSLIT_NGRAM_FIELD
-                    ]), $searchText
+                    ]), "{$searchText}*"
                 ),
                 $this->_queryConditionFactory->getBoolQuery([], array_merge(
                     [
@@ -108,8 +108,8 @@ class ChatMessageSearchService extends AbstractSearchService
                             $this->_queryConditionFactory->getMatchPhrasePrefixQuery(ChatMessageMapping::MESSAGE_TEXT_TRANSLIT_FIELD, $searchText),
                         ], [
                             $this->_queryConditionFactory->getBoolQuery([], [
-                                $this->_queryConditionFactory->getWildCardQuery(ChatMessageMapping::MESSAGE_TEXT_FIELD, $searchText),
-                                $this->_queryConditionFactory->getWildCardQuery(ChatMessageMapping::MESSAGE_TEXT_TRANSLIT_FIELD, $searchText),
+                                $this->_queryConditionFactory->getWildCardQuery(ChatMessageMapping::MESSAGE_TEXT_FIELD, "{$searchText}*"),
+                                $this->_queryConditionFactory->getWildCardQuery(ChatMessageMapping::MESSAGE_TEXT_TRANSLIT_FIELD, "{$searchText}*"),
                             ], [])
                         ]), [])
                     ]

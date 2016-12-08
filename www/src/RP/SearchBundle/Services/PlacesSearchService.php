@@ -42,19 +42,19 @@ class PlacesSearchService extends AbstractSearchService
                                          ->setFields(PlaceSearchMapping::getMultiMatchQuerySearchFields()),
             $this->_queryConditionFactory->getWildCardQuery(
                 PlaceSearchMapping::DESCRIPTION_FIELD,
-                $searchText
+                "{$searchText}*"
             ),
             $this->_queryConditionFactory->getWildCardQuery(
                 PlaceSearchMapping::NAME_WORDS_NAME_FIELD,
-                $searchText
+                "{$searchText}*"
             ),
             $this->_queryConditionFactory->getWildCardQuery(
                 PlaceSearchMapping::TYPE_WORDS_FIELD,
-                $searchText
+                "{$searchText}*"
             ),
             $this->_queryConditionFactory->getWildCardQuery(
                 PlaceSearchMapping::TAG_WORDS_FIELD,
-                $searchText
+                "{$searchText}*"
             ),
         ]);
 
@@ -125,19 +125,19 @@ class PlacesSearchService extends AbstractSearchService
                                              ->setFields(PlaceSearchMapping::getMultiMatchQuerySearchFields()),
                 $this->_queryConditionFactory->getWildCardQuery(
                     PlaceSearchMapping::DESCRIPTION_FIELD,
-                    $searchText
+                    "{$searchText}*"
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     PlaceSearchMapping::NAME_WORDS_NAME_FIELD,
-                    $searchText
+                    "{$searchText}*"
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     PlaceSearchMapping::TYPE_WORDS_FIELD,
-                    $searchText
+                    "{$searchText}*"
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     PlaceSearchMapping::TAG_WORDS_FIELD,
-                    $searchText
+                    "{$searchText}*"
                 ),
             ]);
         }
@@ -185,15 +185,15 @@ class PlacesSearchService extends AbstractSearchService
                                              ->setFields(PlaceSearchMapping::getMultiMatchQuerySearchFields()),
                 $this->_queryConditionFactory->getWildCardQuery(
                     PlaceSearchMapping::NAME_WORDS_NAME_FIELD,
-                    $searchText
+                    "{$searchText}*"
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     PlaceSearchMapping::DESCRIPTION_FIELD,
-                    $searchText
+                    "{$searchText}*"
                 ),
                 $this->_queryConditionFactory->getWildCardQuery(
                     PlaceSearchMapping::BONUS_FIELD,
-                    $searchText
+                    "{$searchText}*"
                 ),
             ]);
         }

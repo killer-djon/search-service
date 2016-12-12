@@ -51,8 +51,8 @@ abstract class CitySearchMapping extends AbstractSearchMapping
     {
         return [
             self::NAME_FIELD,
+            self::TRANSLIT_NAME_FIELD,
             self::INTERNATIONAL_NAME_FIELD,
-            self::TRANSLIT_NAME_FIELD
         ];
     }
 

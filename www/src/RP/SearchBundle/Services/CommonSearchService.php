@@ -129,11 +129,16 @@ class CommonSearchService extends AbstractSearchService
                                 'lat' => $point->getLatitude(),
                                 'lon' => $point->getLongitude(),
                             ],
-                            'scale' => '0.2km',
+                            'scale' => '1km',
                             'offset' => '0km',
-                            'decay' => 0.33
+                            'decay' => 0.1
                         ]
                     ]
+                ]);
+
+                $this->setScriptFunctionOption([
+                    'scoreMode' => 'min',
+                    'boostMode' => 'min'
                 ]);
 
                 if (!is_null($searchText)) {

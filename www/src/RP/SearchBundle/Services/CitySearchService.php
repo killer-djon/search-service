@@ -12,6 +12,7 @@ use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Exception\ElasticsearchException;
 use Common\Core\Facade\Service\Geo\GeoPointService;
+use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Mapping\CitySearchMapping;
 
 class CitySearchService extends AbstractSearchService
@@ -39,11 +40,18 @@ class CitySearchService extends AbstractSearchService
             ]),
         ]);
 
-        $this->setConditionQueryShould([
+        /*$this->setConditionQueryShould([
             $this->_queryConditionFactory->getMatchPhraseQuery(CitySearchMapping::NAME_FIELD, $searchText),
             $this->_queryConditionFactory->getPrefixQuery(CitySearchMapping::NAME_FIELD, $searchText),
             $this->_queryConditionFactory->getMatchPhraseQuery(CitySearchMapping::NAME_TRANSLIT_FIELD, $searchText),
             $this->_queryConditionFactory->getPrefixQuery(CitySearchMapping::NAME_TRANSLIT_FIELD, $searchText)
+        ]);*/
+        $this->setConditionQueryShould([
+            $this->_queryConditionFactory->getMultiMatchQuery()
+                                         ->setFields(CitySearchMapping::getMultiMatchQuerySearchFields())
+                                         ->setQuery($searchText)
+                                         ->setOperator(MultiMatch::OPERATOR_OR)
+                                         ->setType(MultiMatch::TYPE_BEST_FIELDS)
         ]);
 
         $this->setSortingQuery(

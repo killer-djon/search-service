@@ -414,7 +414,10 @@ class SearchEngine implements SearchEngineInterface
      */
     public function groupClasterLocationBuckets(array $initBuckets = null, $keyField = null)
     {
-
+        if( is_null($keyField) )
+        {
+            return $initBuckets;
+        }
         // 1. Вытаскиваем из набора основные данные (и складываем в массив по ключам)
         $buckets = [];
         foreach ($initBuckets as $typeKey => $bucketItem) {

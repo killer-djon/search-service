@@ -24,6 +24,26 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     use SearchServiceTrait;
 
     /**
+     * Ключ обозначающий название скрипта
+     * рассчета скорринга
+     *
+     * @const string FUNCTION_SCRIPT_SCORE
+     */
+    const FUNCTION_SCRIPT_SCORE = 'script_score';
+
+    /**
+     * Возможные значения скриптов
+     *
+     * @const array
+     */
+    private $_allowedScriptFunctions = [
+        Query\FunctionScore::DECAY_EXPONENTIAL,
+        Query\FunctionScore::DECAY_GAUSS,
+        Query\FunctionScore::DECAY_LINEAR,
+        self::FUNCTION_SCRIPT_SCORE,
+    ];
+
+    /**
      * Дополнительные опции скрипт-функции
      * которые устанавливаются для достижения цели
      * манипуляции ранжированием
@@ -347,8 +367,9 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
                 }
             }
 
-            foreach ($this->_scriptFunctions as $scriptFunction) {
-                $customScore->addScriptScoreFunction($scriptFunction);
+            foreach ($this->_scriptFunctions as $key => $scriptFunction) {
+                $key = (is_int($key) || !in_array($key, $this->_allowedScriptFunctions) ? self::FUNCTION_SCRIPT_SCORE : $key);
+                $customScore->addFunction($key, $scriptFunction);
             }
 
             $searchQuery = $customScore;
@@ -414,8 +435,9 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
                 }
             }
 
-            foreach ($this->_scriptFunctions as $scriptFunction) {
-                $customScore->addScriptScoreFunction($scriptFunction);
+            foreach ($this->_scriptFunctions as $key => $scriptFunction) {
+                $key = (is_int($key) || !in_array($key, $this->_allowedScriptFunctions) ? self::FUNCTION_SCRIPT_SCORE : $key);
+                $customScore->addFunction($key, $scriptFunction);
             }
 
             $matchQuery = $customScore;
@@ -491,10 +513,8 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      */
     public function setScriptFunctions(array $scripts, array $scriptOptions = null)
     {
-        foreach ($scripts as $script) {
-            if ($script instanceof \Elastica\Script) {
-                $this->_scriptFunctions[] = $script;
-            }
+        foreach ($scripts as $scriptKey  => $script) {
+            $this->_scriptFunctions[$scriptKey] = $script;
         }
 
         if (!is_null($scriptOptions) && !empty($scriptOptions)) {

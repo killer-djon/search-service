@@ -7,6 +7,8 @@ namespace RP\SearchBundle\Services;
 
 use Common\Core\Constants\SortingOrder;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
+use Elastica\Aggregation\GeoDistance;
+use Elastica\Query\FunctionScore;
 use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Mapping\AbstractSearchMapping;
 use RP\SearchBundle\Services\Mapping\TagNameSearchMapping;
@@ -96,7 +98,7 @@ class CommonSearchService extends AbstractSearchService
 
                 $this->setHighlightQuery($type::getHighlightConditions());
 
-                $this->setScriptFunctions([
+                /*$this->setScriptFunctions([
                     $this->_scriptFactory->getScript("
                     double scoreSorting = 0.0;
                     if(!doc[locationField].empty){
@@ -119,6 +121,19 @@ class CommonSearchService extends AbstractSearchService
 
                 $this->setSortingQuery([
                     $this->_sortingFactory->getFieldSort('_score'),
+                ]);*/
+                $this->setScriptFunctions([
+                    FunctionScore::DECAY_GAUSS => [
+                        $type::LOCATION_POINT_FIELD => [
+                            'origin' => [
+                                'lat' => $point->getLatitude(),
+                                'lon' => $point->getLongitude(),
+                            ],
+                            'scale' => '0.2km',
+                            'offset' => '0km',
+                            'decay' => 0.33
+                        ]
+                    ]
                 ]);
 
                 if (!is_null($searchText)) {
@@ -197,7 +212,7 @@ class CommonSearchService extends AbstractSearchService
             $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
 
             if (!is_null($searchText)) {
-                $this->setScriptFunctions([
+                /*$this->setScriptFunctions([
                     $this->_scriptFactory->getScript("
                     double scoreSorting = 0.0;
                     if(!doc[locationField].empty){
@@ -216,12 +231,28 @@ class CommonSearchService extends AbstractSearchService
                 ], [
                     'scoreMode' => 'min',
                     'boostMode' => 'replace'
+                ]);*/
+
+
+
+                $this->setScriptFunctions([
+                    FunctionScore::DECAY_GAUSS => [
+                        $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD => [
+                            'origin' => [
+                                'lat' => $point->getLatitude(),
+                                'lon' => $point->getLongitude(),
+                            ],
+                            'scale' => '1km',
+                            'offset' => '0km',
+                            'decay' => 0.1
+                        ]
+                    ]
                 ]);
 
-                $this->setSortingQuery([
-                    $this->_sortingFactory->getFieldSort('_score'),
+                $this->setScriptFunctionOption([
+                    'scoreMode' => 'min',
+                    'boostMode' => 'min'
                 ]);
-
 
                 $slopPhrase = explode(" ", $searchText);
                 $queryShouldFields = $must = $should = $subShould = [];
@@ -304,6 +335,7 @@ class CommonSearchService extends AbstractSearchService
                 array_key_exists($filter, $this->filterTypes) && $searchTypes[$filter] = $this->filterTypes[$filter]::getMultiMatchQuerySearchFields();
             } else {
                 foreach ($this->getFilterTypes() as $key => $class) {
+                    if($key == 'people') $key = 'peoples';
                     $searchTypes[$key] = $class::getMultiMatchQuerySearchFields();
                 }
             }
@@ -336,7 +368,7 @@ class CommonSearchService extends AbstractSearchService
 
                 if ($isCluster == true) {
                     $this->setAggregationQuery([
-                        $this->_queryAggregationFactory->getGeoHashAggregation(
+                        /*$this->_queryAggregationFactory->getGeoHashAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
                             [
                                 "lat" => $point->getLatitude(),
@@ -348,7 +380,20 @@ class CommonSearchService extends AbstractSearchService
                             [], 1
                         ))->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
-                        )),
+                        )),*/
+                        $this->_queryAggregationFactory->getGeoDistanceAggregation(
+                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
+                            [
+                                "lat" => $point->getLatitude(),
+                                "lon" => $point->getLongitude(),
+                            ],
+                            $point->getRadius()
+                        )->addAggregation($this->_queryAggregationFactory->setAggregationSource(
+                            AbstractSearchMapping::LOCATION_FIELD,
+                            [], 1
+                        ))->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
+                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
+                        ))
                     ]);
                 }
 
@@ -371,6 +416,7 @@ class CommonSearchService extends AbstractSearchService
                     $skip,
                     $count
                 );
+
             }
 
             /**

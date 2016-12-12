@@ -148,7 +148,6 @@ abstract class ApiController extends FOSRestController
         $filtered = array_filter(explode(self::MARKER_FILTER_DELIMITER, $types), function ($type) {
             return !empty($type);
         });
-
         return array_values($filtered);
     }
 

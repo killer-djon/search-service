@@ -28,9 +28,10 @@ abstract class AbstractSearchMapping
 
     /** поле описания места */
     const DESCRIPTION_FIELD = 'description';
-
     /** поле описания места */
     const DESCRIPTION_TRANSLIT_FIELD = 'description._translit';
+    const DESCRIPTION_WORDS_NAME_FIELD = 'description._wordsName'; // частичное совпадение имени от 3-х сивмолов в транслите
+    const DESCRIPTION_WORDS_TRANSLIT_NAME_FIELD = 'description._wordsTranslitName'; // частичное совпадение имени от 3-х сивмолов в транслите
 
 
     /** Поле с интересами пользователя */
@@ -42,7 +43,7 @@ abstract class AbstractSearchMapping
     const TAG_NAME_TRANSLIT_FIELD    = 'tags.name._translit';
     const TAG_NAME_TRANSLIT_NGRAM_FIELD    = 'tags.name._translitNgram';
     const TAG_WORDS_FIELD    = 'tags.name._wordsName';
-    const TAG_WORDS_TRANSLIT_FIELD = 'name._wordsTranslitName'; // частичное совпадение имени от 3-х сивмолов в транслите
+    const TAG_WORDS_TRANSLIT_FIELD = 'tags.name._wordsTranslitName'; // частичное совпадение имени от 3-х сивмолов в транслите
 
     const TAG_PREFIX_FIELD = 'tags.name._prefix';
     const TAG_PREFIX_TRANSLIT_FIELD = 'tags.name._prefixTranslit';

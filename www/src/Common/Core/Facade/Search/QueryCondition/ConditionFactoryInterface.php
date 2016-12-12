@@ -37,11 +37,11 @@ interface ConditionFactoryInterface
      *
      * @param string $fieldName
      * @param string $queryString
-     * @param int $slopPhrase
+     * @param float $boost
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-match-query.html#_phrase
      * @return \Elastica\Query\MatchPhrase
      */
-    public function getMatchPhraseQuery($fieldName, $queryString);
+    public function getMatchPhraseQuery($fieldName, $queryString, $boost = 1.0);
 
     /**
      * Находит все слова на своих местах

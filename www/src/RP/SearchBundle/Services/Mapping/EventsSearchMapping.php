@@ -17,12 +17,14 @@ class EventsSearchMapping extends AbstractSearchMapping
     const EVENT_ID_FIELD = 'id';
 
     /** Тип события */
-    const TYPE_ID_FIELD     = 'type.id';
-    const TYPE_NAME_FIELD   = 'type.name';
-    const TYPE_NAME_NGRAM_FIELD   = 'type._nameNgram';
-    const TYPE_NAME_TRANSLIT_FIELD   = 'type._translit';
-    const TYPE_NAME_TRANSLIT_NGRAM_FIELD   = 'type._translitNgram';
-    const TYPE_WORDS_FIELD    = 'type._wordsName';
+    const TYPE_FIELD = 'type';
+    const TYPE_ID_FIELD = 'type.id';
+    const TYPE_NAME_FIELD = 'type.name';
+    const TYPE_NAME_NGRAM_FIELD = 'type.name._nameNgram';
+    const TYPE_NAME_TRANSLIT_FIELD = 'type.name._translit';
+    const TYPE_NAME_TRANSLIT_NGRAM_FIELD = 'type.name._translitNgram';
+    const TYPE_WORDS_FIELD    = 'type.name._wordsName';
+    const TYPE_WORDS_TRANSLIT_FIELD = 'type.name._wordsTranslitName'; // частичное совпадение имени от 3-х сивмолов в транслите
 
     /** Помечено ли на уделание событие */
     const IS_REMOVED = 'isRemoved';
@@ -141,20 +143,34 @@ class EventsSearchMapping extends AbstractSearchMapping
     public static function getSearchConditionQueryShould(ConditionFactoryInterface $conditionFactory, $queryString)
     {
         $should = [];
-        $allSearchFields = array_merge(
+        $allFields = array_merge(
             self::getMultiSubMatchQuerySearchFields(),
             self::getMultiMatchQuerySearchFields()
         );
 
-        foreach ($allSearchFields as $field) {
+        foreach (self::getMultiMatchQuerySearchFields() as $field) {
             $should[] = $conditionFactory->getMatchPhrasePrefixQuery($field, $queryString);
         }
 
-        return [
+        /*return [
             $conditionFactory->getMultiMatchQuery()
                              ->setFields(self::getMultiMatchQuerySearchFields())
                              ->setQuery($queryString),
             $conditionFactory->getBoolQuery([], $should, []),
+        ];*/
+        return [
+            $conditionFactory->getMultiMatchQuery()
+                ->setFields(array_merge(self::getMultiSubMatchQuerySearchFields(), self::getMultiMatchQuerySearchFields()))
+                ->setQuery($queryString)
+                ->setOperator(MultiMatch::OPERATOR_OR)
+                ->setType(MultiMatch::TYPE_CROSS_FIELDS),
+            $conditionFactory->getBoolQuery([], [
+                $conditionFactory->getFieldQuery(
+                    array_merge(self::getMultiSubMatchQuerySearchFields(), self::getMultiMatchQuerySearchFields()),
+                    $queryString
+                ),
+                $conditionFactory->getBoolQuery([], $should, [])
+            ], [])
         ];
     }
 

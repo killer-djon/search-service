@@ -46,6 +46,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     const HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD = 'helpOffers.name._translitNgram';
 
     const HELP_OFFERS_WORDS_NAME_FIELD = 'helpOffers.name._wordsName';
+    const HELP_OFFERS_WORDS_NAME_TRANSLIT_FIELD = 'helpOffers.name._wordsTranslitName';
 
     const HELP_OFFERS_NAME_PREFIX_FIELD = 'helpOffers.name._prefix';
     const HELP_OFFERS_NAME_PREFIX_TRANSLIT_FIELD = 'helpOffers.name._prefixTranslit';
@@ -164,10 +165,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             self::TAG_NAME_TRANSLIT_FIELD,
             // сфера деятельности
             self::ACTIVITY_SPHERE_NAME_FIELD,
-            self::ACTIVITY_SPHERE_NAME_TRANSLIT_FIELD,
-            // поля с названием города проживания
-            self::LOCATION_CITY_NAME_FIELD,
-            self::LOCATION_CITY_INTERNATIONAL_NAME_FIELD,
+            self::ACTIVITY_SPHERE_NAME_TRANSLIT_FIELD
         ];
     }
 
@@ -215,10 +213,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             self::ACTIVITY_SPHERE_PREFIX_TRANSLIT_NAME_FIELD,
 
             self::TAG_PREFIX_FIELD,
-            self::TAG_PREFIX_TRANSLIT_FIELD,
-
-            self::LOCATION_CITY_NAME_PREFIX_FIELD,
-            self::LOCATION_CITY_NAME_PREFIX_TRANSLIT_FIELD,
+            self::TAG_PREFIX_TRANSLIT_FIELD
         ];
     }
 
@@ -323,9 +318,32 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
                              ->setOperator(MultiMatch::OPERATOR_OR)
                              ->setType(MultiMatch::TYPE_BEST_FIELDS),
             $conditionFactory->getBoolQuery([], array_merge($prefixWildCard, [
-                $conditionFactory->getBoolQuery([], $subMorphologyField, []),
+                $conditionFactory->getBoolQuery([], [
+                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString)
+                ], []),
             ]), []),
         ];
+    }
+
+    /**
+     * Статический класс получения условий подсветки при поиске
+     *
+     * @return array
+     */
+    public static function getHighlightConditions()
+    {
+        $highlight = [
+            self::TAG_NAME_FIELD    => [
+                'term_vector'   => 'with_positions_offsets',
+                'fragment_size' => 150
+            ],
+            self::ACTIVITY_SPHERE_NAME_FIELD    => [
+                'term_vector'   => 'with_positions_offsets',
+                'fragment_size' => 150,
+            ],
+        ];
+
+        return $highlight;
     }
 
 }

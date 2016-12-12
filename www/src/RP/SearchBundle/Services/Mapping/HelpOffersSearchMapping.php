@@ -69,6 +69,19 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
         ];
     }
 
+    /**
+     * ВОзвращаем набор полей для префиксного поиска
+     *
+     * @return array
+     */
+    public static function getMorphologyQuerySearchFields()
+    {
+        return [
+            self::HELP_OFFERS_WORDS_NAME_FIELD,
+            self::HELP_OFFERS_WORDS_NAME_TRANSLIT_FIELD
+        ];
+    }
+
 
     /**
      * Метод собирает условие построенные для глобального поиска
@@ -80,18 +93,24 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
      */
     public static function getSearchConditionQueryShould(ConditionFactoryInterface $conditionFactory, $queryString)
     {
-        $should = [];
-        $allSearchFields = self::getMultiMatchQuerySearchFields();
+        $prefixWildCard = [];
+        $subMorphologyField = [];
 
-        foreach ($allSearchFields as $field) {
-            $should[] = $conditionFactory->getMatchPhrasePrefixQuery($field, $queryString);
+        foreach (self::getPrefixedQuerySearchFields() as $field) {
+            $prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
         }
 
         return [
             $conditionFactory->getMultiMatchQuery()
                              ->setFields(self::getMultiMatchQuerySearchFields())
-                             ->setQuery($queryString),
-            $conditionFactory->getBoolQuery([], $should, []),
+                             ->setQuery($queryString)
+                             ->setOperator(MultiMatch::OPERATOR_OR)
+                             ->setType(MultiMatch::TYPE_BEST_FIELDS),
+            $conditionFactory->getBoolQuery([], array_merge($prefixWildCard, [
+                $conditionFactory->getBoolQuery([], [
+                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString)
+                ], []),
+            ]), []),
         ];
     }
 
@@ -122,6 +141,8 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
             $filterFactory->getExistsFilter(self::HELP_OFFERS_LIST_FIELD)
         ];
     }
+
+
 
     /**
      * Статический класс получения условий подсветки при поиске

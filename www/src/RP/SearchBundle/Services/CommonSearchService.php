@@ -241,7 +241,7 @@ class CommonSearchService extends AbstractSearchService
 
 
                 $this->setScriptFunctions([
-                    FunctionScore::DECAY_GAUSS => [
+                    FunctionScore::DECAY_LINEAR => [
                         $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD => [
                             'origin' => [
                                 'lat' => $point->getLatitude(),
@@ -249,7 +249,7 @@ class CommonSearchService extends AbstractSearchService
                             ],
                             'scale' => '1km',
                             'offset' => '0km',
-                            'decay' => 0.1
+                            'decay' => 0.33
                         ]
                     ]
                 ]);
@@ -290,7 +290,6 @@ class CommonSearchService extends AbstractSearchService
                 }
 
                 $queryMatchResults[$type] = $this->createQuery($skip, $count);
-
 
             } else {
                 $this->setSortingQuery([

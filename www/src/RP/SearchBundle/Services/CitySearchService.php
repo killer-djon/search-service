@@ -40,18 +40,24 @@ class CitySearchService extends AbstractSearchService
             ]),
         ]);
 
-        /*$this->setConditionQueryShould([
-            $this->_queryConditionFactory->getMatchPhraseQuery(CitySearchMapping::NAME_FIELD, $searchText),
-            $this->_queryConditionFactory->getPrefixQuery(CitySearchMapping::NAME_FIELD, $searchText),
-            $this->_queryConditionFactory->getMatchPhraseQuery(CitySearchMapping::NAME_TRANSLIT_FIELD, $searchText),
-            $this->_queryConditionFactory->getPrefixQuery(CitySearchMapping::NAME_TRANSLIT_FIELD, $searchText)
-        ]);*/
+        $searchText = mb_strtolower($searchText);
+        $wildCardQuery = [];
+        foreach (CitySearchMapping::getMultiMatchQuerySearchFields() as $field) {
+            $wildCardQuery[] = $this->_queryConditionFactory->getWildCardQuery($field, "{$searchText}*");
+        }
+
         $this->setConditionQueryShould([
             $this->_queryConditionFactory->getMultiMatchQuery()
                                          ->setFields(CitySearchMapping::getMultiMatchQuerySearchFields())
                                          ->setQuery($searchText)
                                          ->setOperator(MultiMatch::OPERATOR_OR)
-                                         ->setType(MultiMatch::TYPE_BEST_FIELDS)
+                                         ->setType(MultiMatch::TYPE_BEST_FIELDS),
+            $this->_queryConditionFactory->getBoolQuery([], array_merge($wildCardQuery, [
+                $this->_queryConditionFactory->getFieldQuery(
+                    CitySearchMapping::getMultiMatchQuerySearchFields(),
+                    $searchText
+                ),
+            ]), []),
         ]);
 
         $this->setSortingQuery(

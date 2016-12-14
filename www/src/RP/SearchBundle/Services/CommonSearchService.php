@@ -368,30 +368,19 @@ class CommonSearchService extends AbstractSearchService
                         ),
                     ]);
                 }
+
                 $this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
 
                 if ($isCluster == true) {
                     $this->setAggregationQuery([
-                        /*$this->_queryAggregationFactory->getGeoHashAggregation(
-                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
-                            [
-                                "lat" => $point->getLatitude(),
-                                "lon" => $point->getLongitude(),
-                            ],
-                            6
-                        )->addAggregation($this->_queryAggregationFactory->setAggregationSource(
-                            AbstractSearchMapping::LOCATION_FIELD,
-                            [], 1
-                        ))->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
-                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
-                        )),*/
                         $this->_queryAggregationFactory->getGeoDistanceAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
                             [
                                 "lat" => $point->getLatitude(),
                                 "lon" => $point->getLongitude(),
                             ],
-                            $point->getRadius()
+                            $point->getRadius(),
+                            'm'
                         )->addAggregation($this->_queryAggregationFactory->setAggregationSource(
                             AbstractSearchMapping::LOCATION_FIELD,
                             [], 1
@@ -420,7 +409,6 @@ class CommonSearchService extends AbstractSearchService
                     $skip,
                     $count
                 );
-
             }
 
             /**

@@ -4,6 +4,8 @@
  */
 namespace Common\Core\Facade\Search\QueryAggregation;
 
+use Common\Core\Facade\Service\RangeIterator;
+
 class QueryAggregationFactory implements QueryAggregationFactoryInterface
 {
     /**
@@ -27,6 +29,19 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
     ];
 
     /**
+     * Срезы для расстояний
+     * применяется для аггрегирования данных
+     *
+     * @var array
+     */
+    private $radiusRanges = [
+        [200 => [200, 3000]],
+        [300 => [3001, 5000]],
+        [500 => [5001, 7000]],
+        [1000 => [7001, 15000]],
+    ];
+
+    /**
      * Получаем аггрегированный скрипт AVG
      *
      * @param string $fieldName Название поле аггрегации
@@ -37,8 +52,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
     {
         $avg = new \Elastica\Aggregation\Avg('avg_script');
         $avg->setField($fieldName);
-        if(!is_null($script))
-        {
+        if (!is_null($script)) {
             $avg->setScript($script);
         }
 
@@ -103,10 +117,29 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         $unit = 'km',
         $distanceType = \Elastica\Aggregation\GeoDistance::DISTANCE_TYPE_SLOPPY_ARC
     ) {
+
+        $skip = 1000;
+        foreach ($this->radiusRanges as $range) {
+            foreach ($range as $skipKey => $ranges) {
+                if ((int)$radius >= $ranges[0] && (int)$radius <= $ranges[1]) {
+                    $skip = $skipKey;
+                }
+            }
+        }
+
+        $rangesArray = array_map(function ($n) {
+            return $n;
+        }, range(0, (int)$radius, $skip));
+
+        $newRange = new RangeIterator($rangesArray);
+
         $geoDistance = new \Elastica\Aggregation\GeoDistance('geo_distance', $fieldName, $startPoint);
         $geoDistance->setUnit($unit);
         $geoDistance->setDistanceType($distanceType);
-        $geoDistance->addRange(0, $radius);
+
+        foreach ($newRange->getRange() as $range) {
+            $geoDistance->addRange($range[0], $range[1]);
+        }
 
         return $geoDistance;
     }
@@ -179,8 +212,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
     public function setAggregationSource($fieldName, $fields = [], $size = null)
     {
         $topHits = new \Elastica\Aggregation\TopHits($fieldName);
-        if(!empty($fields))
-        {
+        if (!empty($fields)) {
             $topHits->setSource($fields);
         }
         if (!is_null($size)) {

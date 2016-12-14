@@ -152,12 +152,6 @@ class EventsSearchMapping extends AbstractSearchMapping
             $should[] = $conditionFactory->getMatchPhrasePrefixQuery($field, $queryString);
         }
 
-        /*return [
-            $conditionFactory->getMultiMatchQuery()
-                             ->setFields(self::getMultiMatchQuerySearchFields())
-                             ->setQuery($queryString),
-            $conditionFactory->getBoolQuery([], $should, []),
-        ];*/
         return [
             $conditionFactory->getMultiMatchQuery()
                 ->setFields(array_merge(self::getMultiSubMatchQuerySearchFields(), self::getMultiMatchQuerySearchFields()))

@@ -222,6 +222,7 @@ class SearchEngine implements SearchEngineInterface
         $this->_queryAggregationFactory = $aggregationFactory;
         $this->_scriptFactory = $scriptFactory;
         $this->_sortingFactory = $querySorting;
+
     }
 
     public function getFilterTypes()
@@ -418,6 +419,7 @@ class SearchEngine implements SearchEngineInterface
         {
             return $initBuckets;
         }
+
         // 1. Вытаскиваем из набора основные данные (и складываем в массив по ключам)
         $buckets = [];
         foreach ($initBuckets as $typeKey => $bucketItem) {
@@ -426,23 +428,27 @@ class SearchEngine implements SearchEngineInterface
                 $currentItem = current($item);
                 $docCount = $currentItem[$keyField]['hits']['total'];
 
-                $item = [
-                    'doc_count' => $docCount,
-                    'type'      => $typeKey,
-                    $keyField   => [
-                        Location::LONG_LATITUDE  => $currentItem['centroid'][$keyField][Location::LATITUDE],
-                        Location::LONG_LONGITUDE => $currentItem['centroid'][$keyField][Location::LONGITUDE],
-                    ],
-                ];
+                if( $docCount > 0 )
+                {
+                    $item = [
+                        'doc_count' => $docCount,
+                        'type'      => $typeKey,
+                        $keyField   => [
+                            Location::LONG_LATITUDE  => $currentItem['centroid'][$keyField][Location::LATITUDE],
+                            Location::LONG_LONGITUDE => $currentItem['centroid'][$keyField][Location::LONGITUDE],
+                        ],
+                    ];
 
-                if ($docCount == 1) {
-                    $docs = array_combine(
-                        array_column($currentItem[$keyField]['hits']['hits'], '_id'),
-                        $currentItem[$keyField]['hits']['hits']
-                    );
+                    if ($docCount == 1) {
+                        $docs = array_combine(
+                            array_column($currentItem[$keyField]['hits']['hits'], '_id'),
+                            $currentItem[$keyField]['hits']['hits']
+                        );
 
-                    $item['items'] = $docs;
+                        $item['items'] = $docs;
+                    }
                 }
+
             }
 
             $buckets[$typeKey] = $bucketKeys;

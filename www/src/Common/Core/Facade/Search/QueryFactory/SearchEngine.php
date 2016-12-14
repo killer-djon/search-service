@@ -328,10 +328,6 @@ class SearchEngine implements SearchEngineInterface
                 }
                 $search->addSearch($searchItem, $keyType);
             }
-
-            print_r($search->getSearches());
-            exit;
-
             return $this->multiTransformResult($search->search());
         } catch (ElasticsearchException $e) {
             throw new ElasticsearchException($e);

@@ -136,7 +136,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
 
         $rangesArray = array_map(function ($n) {
             return $n;
-        }, range(0, (int)$radius, $skip));
+        }, range(0, (int)$radius, 10));
 
         $newRange = new RangeIterator($rangesArray);
 

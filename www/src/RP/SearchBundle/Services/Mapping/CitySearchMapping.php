@@ -5,6 +5,9 @@ use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 
 abstract class CitySearchMapping extends AbstractSearchMapping
 {
+    /** Индекс еластика по умолчанию */
+    const DEFAULT_INDEX = 'russianplace_private';
+
     /** Контекст поиска */
     const CONTEXT = 'city';
 

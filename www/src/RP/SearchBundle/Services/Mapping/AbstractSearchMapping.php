@@ -12,6 +12,9 @@ abstract class AbstractSearchMapping
     /** Идентификатор записи документа в коллекции */
     const IDENTIFIER_FIELD = 'id';
 
+    /** Индекс еластика по умолчанию */
+    const DEFAULT_INDEX = 'russianplace';
+
     /** Поле имени пользователя */
     const NAME_FIELD = 'name'; // полное совпадение имени по русски
     const NAME_NGRAM_FIELD = 'name._nameNgram'; // частичное совпадение имени от 3-х сивмолов по русски

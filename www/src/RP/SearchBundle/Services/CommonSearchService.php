@@ -238,8 +238,6 @@ class CommonSearchService extends AbstractSearchService
                     'boostMode' => 'replace'
                 ]);*/
 
-
-
                 $this->setScriptFunctions([
                     FunctionScore::DECAY_LINEAR => [
                         $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD => [

@@ -12,6 +12,7 @@ use FOS\ElasticaBundle\Elastica\Index;
 use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Psr\Log\LoggerInterface;
+use RP\SearchBundle\Services\Mapping\CitySearchMapping;
 use RP\SearchBundle\Services\Mapping\DiscountsSearchMapping;
 use RP\SearchBundle\Services\Mapping\EventsSearchMapping;
 use RP\SearchBundle\Services\Mapping\FriendsSearchMapping;
@@ -95,6 +96,10 @@ class SearchEngine implements SearchEngineInterface
         HelpOffersSearchMapping::CONTEXT_MARKER => HelpOffersSearchMapping::class,
         DiscountsSearchMapping::CONTEXT         => DiscountsSearchMapping::class,
         EventsSearchMapping::CONTEXT            => EventsSearchMapping::class,
+    ];
+
+    protected $availableTypesSearch = [
+        CitySearchMapping::CONTEXT => CitySearchMapping::class,
     ];
 
     /**
@@ -223,6 +228,8 @@ class SearchEngine implements SearchEngineInterface
         $this->_scriptFactory = $scriptFactory;
         $this->_sortingFactory = $querySorting;
 
+        $this->availableTypesSearch += array_merge($this->filterSearchTypes, $this->filterTypes);
+
     }
 
     public function getFilterTypes()
@@ -284,7 +291,9 @@ class SearchEngine implements SearchEngineInterface
             /** устанавливаем все поля по умолчанию */
             $elasticQuery->setSource((bool)$setSource);
             $elasticType = $this->_getElasticType($context);
+
             $this->_paginator = new SearchElasticaAdapter($elasticType, $elasticQuery);
+            $this->_paginator->setIndex($this->availableTypesSearch[$context]::DEFAULT_INDEX);
 
             return $this->transformResult($this->_paginator->getResultSet(), $keyField);
 
@@ -309,15 +318,19 @@ class SearchEngine implements SearchEngineInterface
     {
         try {
             $search = new \Elastica\Multi\Search($this->_elasticaIndex->getClient());
-
             foreach ($elasticQueries as $keyType => $elasticQuery) {
                 $elasticQuery->setSource((bool)$setSource);
                 $elasticType = $this->_getElasticType($this->searchTypes[$keyType]);
 
                 $searchItem = $elasticType->createSearch($elasticQuery);
-
+                if (!$searchItem->hasIndex($this->availableTypesSearch[$this->searchTypes[$keyType]]::DEFAULT_INDEX)) {
+                    $searchItem->addIndex($this->availableTypesSearch[$this->searchTypes[$keyType]]::DEFAULT_INDEX);
+                }
                 $search->addSearch($searchItem, $keyType);
             }
+
+            print_r($search->getSearches());
+            exit;
 
             return $this->multiTransformResult($search->search());
         } catch (ElasticsearchException $e) {
@@ -415,8 +428,7 @@ class SearchEngine implements SearchEngineInterface
      */
     public function groupClasterLocationBuckets(array $initBuckets = null, $keyField = null)
     {
-        if( is_null($keyField) )
-        {
+        if (is_null($keyField)) {
             return $initBuckets;
         }
 
@@ -428,8 +440,7 @@ class SearchEngine implements SearchEngineInterface
                 $currentItem = current($item);
                 $docCount = $currentItem[$keyField]['hits']['total'];
 
-                if( (int)$docCount > 0 )
-                {
+                if ((int)$docCount > 0) {
                     $item = [
                         'doc_count' => $docCount,
                         'type'      => $typeKey,
@@ -474,8 +485,7 @@ class SearchEngine implements SearchEngineInterface
             $docTypes = array_unique(array_column($bucketItem, 'type'));
             $location = array_column($bucketItem, 'location');
 
-            if( $sumDocCount > 0 )
-            {
+            if ($sumDocCount > 0) {
                 $resultItem = [
                     'key'       => $keyHash,
                     'doc_count' => $sumDocCount,
@@ -483,9 +493,9 @@ class SearchEngine implements SearchEngineInterface
                     'location'  => GeoPointService::GetCenterFromDegrees($location),
                 ];
 
-                if( $sumDocCount == 1 ){
+                if ($sumDocCount == 1) {
                     $docItems = array_column($bucketItem, 'items');
-                    $docItemValues = array_map(function ($item){
+                    $docItemValues = array_map(function ($item) {
                         return $item['_source'];
                     }, array_values(current($docItems)));
 

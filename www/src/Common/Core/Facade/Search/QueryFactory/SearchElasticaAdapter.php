@@ -29,6 +29,7 @@ class SearchElasticaAdapter implements AdapterInterface
     {
         $this->searchable = $searchable;
         $this->query = $query;
+
     }
 
     /**
@@ -46,6 +47,31 @@ class SearchElasticaAdapter implements AdapterInterface
     }
 
     /**
+     * Указанный индекс для поиска
+     *
+     * @var string|\Elastica\Index
+     */
+    private $_index = null;
+
+    public function setIndex($indexName = null)
+    {
+        if (!is_null($indexName)) {
+            $this->_index = $indexName;
+        }
+    }
+
+    /**
+     * Получаем значение индекса в котором еще надоискать
+     * многоиндексовый поиск
+     *
+     * @return string|\Elastica\Index
+     */
+    public function getIndex()
+    {
+        return $this->_index;
+    }
+
+    /**
      * Returns the Elastica ResultSet. Will return null if getSlice has not yet been
      * called.
      *
@@ -53,7 +79,13 @@ class SearchElasticaAdapter implements AdapterInterface
      */
     public function getResultSet()
     {
-        $this->resultSet = $this->searchable->search($this->query);
+        $ElasticaQuery = $this->searchable->createSearch($this->query);
+
+        if (!is_null($this->getIndex()) && !$ElasticaQuery->hasIndex($this->getIndex())) {
+            $ElasticaQuery->addIndex($this->getIndex());
+        }
+
+        $this->resultSet = $ElasticaQuery->search();
         unset($this->query);
 
         return $this->resultSet;

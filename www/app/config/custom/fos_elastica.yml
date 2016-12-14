@@ -12,3 +12,6 @@ fos_elastica:
         russianplace:
             client: default
             finder: ~
+        russianplace_private:
+            client: default
+            finder: ~

@@ -42,10 +42,10 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         [3000 => [15001, 30000]],
         [5000 => [30001, 60000]],
         [7000 => [60001, 100000]],
-        [10000 => [100001, 300000]],
-        [20000 => [300001, 500000]],
-        [30000 => [500001, 700000]],
-        [50000 => [700001, 1000000]],
+        [50000 => [100001, 300000]],
+        [60000 => [300001, 500000]],
+        [70000 => [500001, 700000]],
+        [100000 => [700001, 1000000]],
     ];
 
     /**
@@ -136,7 +136,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
 
         $rangesArray = array_map(function ($n) {
             return $n;
-        }, range(0, (int)$radius, 10));
+        }, range(0, (int)$radius, $skip));
 
         $newRange = new RangeIterator($rangesArray);
 

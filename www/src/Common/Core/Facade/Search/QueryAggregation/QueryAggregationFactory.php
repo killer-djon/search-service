@@ -41,9 +41,10 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         [1000 => [7001, 15000]],
         [3000 => [15001, 30000]],
         [5000 => [30001, 60000]],
-        [7000 => [60001, 100000]],
-        [50000 => [100001, 300000]],
-        [60000 => [300001, 500000]],
+        [7000 => [60001, 80000]],
+        [10000 => [80001, 100000]],
+        [20000 => [100001, 300000]],
+        [40000 => [300001, 500000]],
         [70000 => [500001, 700000]],
         [100000 => [700001, 1000000]],
     ];
@@ -130,6 +131,8 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
             foreach ($range as $skipKey => $ranges) {
                 if ((int)$radius >= $ranges[0] && (int)$radius <= $ranges[1]) {
                     $skip = $skipKey;
+                }else if( (int)$radius > $ranges[1] ){
+                    $skip = $ranges[1]/100;
                 }
             }
         }

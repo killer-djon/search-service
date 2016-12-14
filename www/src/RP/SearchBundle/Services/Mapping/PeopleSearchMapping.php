@@ -22,6 +22,9 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     const SURNAME_TRANSLIT_NGRAM_FIELD = 'surname._translitNgram'; // частичное совпадение имени от 3-х сивмолов в транслите
     const SURNAME_TRANSLIT_LONG_NGRAM_FIELD = 'surname._translitLongNgram';
 
+    const SURNAME_WORDS_NAME_FIELD = 'surname._wordsName'; // частичное совпадение имени от 3-х сивмолов в транслите
+    const SURNAME_WORDS_TRANSLIT_NAME_FIELD = 'surname._wordsTranslitName'; // частичное совпадение имени от 3-х сивмолов в транслите
+
     const SURNAME_PREFIX_FIELD = 'surname._prefix';
     const SURNAME_PREFIX_TRANSLIT_FIELD = 'surname._prefixTranslit';
     const SURNAME_STANDARD_FIELD = 'surname._standard';
@@ -206,6 +209,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
         return [
             self::NAME_PREFIX_FIELD,
             self::NAME_PREFIX_TRANSLIT_FIELD,
+
             self::SURNAME_PREFIX_FIELD,
             self::SURNAME_PREFIX_TRANSLIT_FIELD,
 
@@ -225,14 +229,17 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     public static function getMorphologyQuerySearchFields()
     {
         return [
+            /*self::NAME_WORDS_NAME_FIELD,
+            self::NAME_WORDS_TRANSLIT_NAME_FIELD,
+
+            self::SURNAME_WORDS_NAME_FIELD,
+            self::SURNAME_WORDS_TRANSLIT_NAME_FIELD,*/
+
             self::TAG_WORDS_FIELD,
             self::TAG_WORDS_TRANSLIT_FIELD,
 
             self::ACTIVITY_SPHERE_WORDS_NAME_FIELD,
-            self::ACTIVITY_SPHERE_WORDS_TRANSLIT_NAME_FIELD,
-
-            self::LOCATION_CITY_WORDS_FIELD,
-            self::LOCATION_CITY_WORDS_TRANSLIT_FIELD,
+            self::ACTIVITY_SPHERE_WORDS_TRANSLIT_NAME_FIELD
         ];
     }
 
@@ -300,12 +307,14 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
         $prefixWildCard = [];
         $subMorphologyField = [];
 
-        foreach (self::getMorphologyQuerySearchFields() as $field) {
-            $subMorphologyField[] = $conditionFactory->getFieldQuery($field, $queryString);
-        }
+        $allFieldsQuery = array_merge(
+            self::getMultiMatchQuerySearchFields(),
+            self::getMultiSubMatchQuerySearchFields()
+        );
 
-        foreach (self::getPrefixedQuerySearchFields() as $field) {
-            $prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
+        foreach ($allFieldsQuery as $field) {
+            //$prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
+            $prefixWildCard[] = $conditionFactory->getPrefixQuery($field, $queryString, 0.5);
         }
 
         return [
@@ -341,6 +350,14 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
                 'term_vector'   => 'with_positions_offsets',
                 'fragment_size' => 150,
             ],
+            self::NAME_FIELD => [
+                'term_vector'   => 'with_positions_offsets',
+                'fragment_size' => 150,
+            ],
+            self::SURNAME_FIELD => [
+                'term_vector'   => 'with_positions_offsets',
+                'fragment_size' => 150,
+            ]
         ];
 
         return $highlight;

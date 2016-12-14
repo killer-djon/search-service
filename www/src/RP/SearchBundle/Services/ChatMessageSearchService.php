@@ -74,25 +74,25 @@ class ChatMessageSearchService extends AbstractSearchService
 
             /** Получаем сформированный объект запроса */
             $this->setConditionQueryShould([
-                $this->_queryConditionFactory->getWildCardQuery(
+                $this->_queryConditionFactory->getPrefixQuery(
                     AbstractTransformer::createCompleteKey([
                         ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
                         PeopleSearchMapping::NAME_NGRAM_FIELD
                     ]), "{$searchText}*"
                 ),
-                $this->_queryConditionFactory->getWildCardQuery(
+                $this->_queryConditionFactory->getPrefixQuery(
                     AbstractTransformer::createCompleteKey([
                         ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
                         PeopleSearchMapping::NAME_TRANSLIT_NGRAM_FIELD
                     ]), "{$searchText}*"
                 ),
-                $this->_queryConditionFactory->getWildCardQuery(
+                $this->_queryConditionFactory->getPrefixQuery(
                     AbstractTransformer::createCompleteKey([
                         ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
                         PeopleSearchMapping::SURNAME_NGRAM_FIELD
                     ]), "{$searchText}*"
                 ),
-                $this->_queryConditionFactory->getWildCardQuery(
+                $this->_queryConditionFactory->getPrefixQuery(
                     AbstractTransformer::createCompleteKey([
                         ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
                         PeopleSearchMapping::SURNAME_TRANSLIT_NGRAM_FIELD

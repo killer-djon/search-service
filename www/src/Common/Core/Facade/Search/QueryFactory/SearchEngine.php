@@ -12,6 +12,7 @@ use FOS\ElasticaBundle\Elastica\Index;
 use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Psr\Log\LoggerInterface;
+use RP\SearchBundle\Services\Mapping\ChatMessageMapping;
 use RP\SearchBundle\Services\Mapping\CitySearchMapping;
 use RP\SearchBundle\Services\Mapping\DiscountsSearchMapping;
 use RP\SearchBundle\Services\Mapping\EventsSearchMapping;
@@ -100,6 +101,7 @@ class SearchEngine implements SearchEngineInterface
 
     protected $availableTypesSearch = [
         CitySearchMapping::CONTEXT => CitySearchMapping::class,
+        ChatMessageMapping::CONTEXT => ChatMessageMapping::class
     ];
 
     /**

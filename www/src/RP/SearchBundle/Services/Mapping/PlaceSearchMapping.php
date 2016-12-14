@@ -252,7 +252,8 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
         }
 
         foreach (self::getPrefixedQuerySearchFields() as $field) {
-            $prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
+            //$prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
+            $prefixWildCard[] = $conditionFactory->getPrefixQuery($field, $queryString);
         }
 
         return [

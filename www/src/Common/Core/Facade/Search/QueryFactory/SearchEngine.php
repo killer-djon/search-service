@@ -428,7 +428,7 @@ class SearchEngine implements SearchEngineInterface
                 $currentItem = current($item);
                 $docCount = $currentItem[$keyField]['hits']['total'];
 
-                if( $docCount > 0 )
+                if( (int)$docCount > 0 )
                 {
                     $item = [
                         'doc_count' => $docCount,
@@ -449,9 +449,8 @@ class SearchEngine implements SearchEngineInterface
                     }
                 }
 
+                $buckets[$typeKey] = $bucketKeys;
             }
-
-            $buckets[$typeKey] = $bucketKeys;
         }
 
         // костыль ужасный
@@ -475,23 +474,26 @@ class SearchEngine implements SearchEngineInterface
             $docTypes = array_unique(array_column($bucketItem, 'type'));
             $location = array_column($bucketItem, 'location');
 
-            $resultItem = [
-                'key'       => $keyHash,
-                'doc_count' => $sumDocCount,
-                'types'     => implode(',', $docTypes),
-                'location'  => GeoPointService::GetCenterFromDegrees($location),
-            ];
+            if( $sumDocCount > 0 )
+            {
+                $resultItem = [
+                    'key'       => $keyHash,
+                    'doc_count' => $sumDocCount,
+                    'types'     => implode(',', $docTypes),
+                    'location'  => GeoPointService::GetCenterFromDegrees($location),
+                ];
 
-            if( $sumDocCount == 1 ){
-                $docItems = array_column($bucketItem, 'items');
-                $docItemValues = array_map(function ($item){
-                    return $item['_source'];
-                }, array_values(current($docItems)));
+                if( $sumDocCount == 1 ){
+                    $docItems = array_column($bucketItem, 'items');
+                    $docItemValues = array_map(function ($item){
+                        return $item['_source'];
+                    }, array_values(current($docItems)));
 
-                $resultItem['items'] = $docItemValues;
+                    $resultItem['items'] = $docItemValues;
+                }
+
+                $results[] = $resultItem;
             }
-
-            $results[] = $resultItem;
         }
 
         return $results;

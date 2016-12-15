@@ -324,6 +324,7 @@ class SearchEngine implements SearchEngineInterface
     {
         try {
             $search = new \Elastica\Multi\Search($this->_elasticaIndex->getClient());
+
             foreach ($elasticQueries as $keyType => $elasticQuery) {
                 $elasticQuery->setSource((bool)$setSource);
                 $elasticType = $this->_getElasticType($this->searchTypes[$keyType]);

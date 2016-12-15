@@ -72,8 +72,37 @@ class ChatMessageSearchService extends AbstractSearchService
             );
         } else {
 
-            /** Получаем сформированный объект запроса */
-            $this->setConditionQueryShould([
+            $searchText = strtolower($searchText);
+            $slopPhrase = explode(" ", $searchText);
+            $queryShouldFields = $must = $should = [];
+
+            if (count($slopPhrase) > 1) {
+
+                /**
+                 * Поиск по точному воспадению искомого словосочетания
+                 */
+                $queryMust = ChatMessageMapping::getSearchConditionQueryMust($this->_queryConditionFactory, $searchText);
+
+                if(!empty($queryMust))
+                {
+                    $this->setConditionQueryMust($queryMust);
+                }
+
+            } else {
+                $queryShould = ChatMessageMapping::getSearchConditionQueryShould(
+                    $this->_queryConditionFactory, $searchText
+                );
+
+                if(!empty($queryShould))
+                {
+                    /**
+                     * Ищем по частичному совпадению поисковой фразы
+                     */
+                    $this->setConditionQueryShould($queryShould);
+                }
+            }
+
+            /*$this->setConditionQueryShould([
                 $this->_queryConditionFactory->getPrefixQuery(
                     AbstractTransformer::createCompleteKey([
                         ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
@@ -114,7 +143,8 @@ class ChatMessageSearchService extends AbstractSearchService
                         ]), [])
                     ]
                 ), []),
-            ]);
+            ]);*/
+
 
             $queryMatchResults = $this->createQuery($skip, $count);
         }

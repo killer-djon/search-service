@@ -205,18 +205,6 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
      */
     public static function getSearchConditionQueryMust(ConditionFactoryInterface $conditionFactory, $queryString)
     {
-        /*$fieldQuery[] = $conditionFactory
-            ->getFieldQuery(array_merge(
-                self::getMultiMatchQuerySearchFields(),
-                self::getMultiSubMatchQuerySearchFields()
-            ), $queryString)
-            ->setDefaultOperator(MultiMatch::OPERATOR_AND);
-        return array_merge($fieldQuery, [
-            $conditionFactory->getBoolQuery([], [
-                $conditionFactory->getFieldQuery('description._exactDescription', $queryString)
-            ], [])
-        ]);*/
-
         $allFields = array_merge(
             self::getMultiMatchQuerySearchFields(),
             self::getMultiSubMatchQuerySearchFields()

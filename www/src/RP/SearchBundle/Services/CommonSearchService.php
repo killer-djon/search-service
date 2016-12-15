@@ -98,30 +98,6 @@ class CommonSearchService extends AbstractSearchService
 
                 $this->setHighlightQuery($type::getHighlightConditions());
 
-                /*$this->setScriptFunctions([
-                    $this->_scriptFactory->getScript("
-                    double scoreSorting = 0.0;
-                    if(!doc[locationField].empty){
-                        scoreSorting = doc[locationField].distanceInKm(lat, lon);
-                    }else{
-                        scoreSorting = constant
-                    }
-                    
-                    return scoreSorting * _score;
-                ", [
-                        'lat'           => $point->getLatitude(),
-                        'lon'           => $point->getLongitude(),
-                        'locationField' => $type::LOCATION_POINT_FIELD,
-                        'constant' => 100000.1
-                    ], \Elastica\Script::LANG_GROOVY),
-                ], [
-                    'scoreMode' => 'min',
-                    'boostMode' => 'replace'
-                ]);
-
-                $this->setSortingQuery([
-                    $this->_sortingFactory->getFieldSort('_score'),
-                ]);*/
                 $this->setScriptFunctions([
                     FunctionScore::DECAY_GAUSS => [
                         $type::LOCATION_POINT_FIELD => [
@@ -142,8 +118,10 @@ class CommonSearchService extends AbstractSearchService
                 ]);
 
                 if (!is_null($searchText)) {
+                    $searchText = strtolower($searchText);
                     $slopPhrase = explode(" ", $searchText);
                     $queryShouldFields = $must = $should = [];
+
 
                     if (count($slopPhrase) > 1) {
 
@@ -173,6 +151,7 @@ class CommonSearchService extends AbstractSearchService
 
                     $queryMatchResults[$keyType] = $this->createQuery($skip, (is_null($count)?self::DEFAULT_SEARCH_BLOCK_SIZE:$count));
 
+
                 } else {
                     $this->setSortingQuery([
                         $this->_sortingFactory->getGeoDistanceSort(
@@ -183,7 +162,7 @@ class CommonSearchService extends AbstractSearchService
                     $queryMatchResults[$keyType] = $this->createMatchQuery(
                         $searchText,
                         $type::getMultiMatchQuerySearchFields(),
-                        0, self::DEFAULT_SEARCH_BLOCK_SIZE
+                        $skip, (is_null($count)?self::DEFAULT_SEARCH_BLOCK_SIZE:$count)
                     );
                 }
 
@@ -217,26 +196,7 @@ class CommonSearchService extends AbstractSearchService
             $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
 
             if (!is_null($searchText)) {
-                /*$this->setScriptFunctions([
-                    $this->_scriptFactory->getScript("
-                    double scoreSorting = 0.0;
-                    if(!doc[locationField].empty){
-                        scoreSorting = doc[locationField].distanceInKm(lat, lon);
-                    }else{
-                        scoreSorting = constant
-                    }
-
-                    return scoreSorting * _score;
-                ", [
-                        'lat'           => $point->getLatitude(),
-                        'lon'           => $point->getLongitude(),
-                        'locationField' => $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
-                        'constant' => 100000.1
-                    ], \Elastica\Script::LANG_GROOVY),
-                ], [
-                    'scoreMode' => 'min',
-                    'boostMode' => 'replace'
-                ]);*/
+                $searchText = strtolower($searchText);
 
                 $this->setScriptFunctions([
                     FunctionScore::DECAY_LINEAR => [
@@ -300,7 +260,7 @@ class CommonSearchService extends AbstractSearchService
                 $queryMatchResults[$type] = $this->createMatchQuery(
                     $searchText,
                     $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),
-                    $skip, $count
+                    $skip, (is_null($count)?self::DEFAULT_SEARCH_BLOCK_SIZE:$count)
                 );
 
             }

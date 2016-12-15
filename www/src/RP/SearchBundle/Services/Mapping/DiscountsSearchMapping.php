@@ -77,4 +77,5 @@ abstract class DiscountsSearchMapping extends PlaceSearchMapping
         return self::getMarkersSearchFilter($filterFactory, $userId);
     }
 
+
 }

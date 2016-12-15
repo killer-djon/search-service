@@ -60,6 +60,8 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
             //self::NAME_NGRAM_FIELD,
             self::NAME_TRANSLIT_FIELD,
             //self::NAME_TRANSLIT_NGRAM_FIELD,
+            self::DESCRIPTION_FIELD,
+            self::DESCRIPTION_TRANSLIT_FIELD
         ];
     }
 
@@ -203,7 +205,7 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
      */
     public static function getSearchConditionQueryMust(ConditionFactoryInterface $conditionFactory, $queryString)
     {
-        $fieldQuery[] = $conditionFactory
+        /*$fieldQuery[] = $conditionFactory
             ->getFieldQuery(array_merge(
                 self::getMultiMatchQuerySearchFields(),
                 self::getMultiSubMatchQuerySearchFields()
@@ -213,7 +215,21 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
             $conditionFactory->getBoolQuery([], [
                 $conditionFactory->getFieldQuery('description._exactDescription', $queryString)
             ], [])
-        ]);
+        ]);*/
+
+        $allFields = array_merge(
+            self::getMultiMatchQuerySearchFields(),
+            self::getMultiSubMatchQuerySearchFields()
+        );
+
+        $queryMatchPhrase = [];
+        foreach (self::getMorphologyQuerySearchFields() as $field) {
+            $queryMatchPhrase[] = $conditionFactory->getMatchPhraseQuery($field, $queryString);
+        }
+
+        return [
+            $conditionFactory->getDisMaxQuery($queryMatchPhrase)
+        ];
     }
 
 
@@ -228,42 +244,39 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
      */
     public static function getSearchConditionQueryShould(ConditionFactoryInterface $conditionFactory, $queryString)
     {
-        /*$should = [];
-        $allSearchFields = array_merge(
-            self::getMultiSubMatchQuerySearchFields(),
-            self::getMultiMatchQuerySearchFields()
-        );
+        $prefixWildCard = [];
+        $subMorphologyField = [];
+        $subStringQuery = [];
 
-        foreach ($allSearchFields as $field) {
-            $should[] = $conditionFactory->getMatchPhrasePrefixQuery($field, $queryString);
+        foreach (self::getMorphologyQuerySearchFields() as $field) {
+            $subStringQuery[] = $conditionFactory->getMatchQuery($field, $queryString);
+            $subMorphologyField[] = $conditionFactory->getMatchPhrasePrefixQuery($field, $queryString);
+        }
+
+        foreach (self::getPrefixedQuerySearchFields() as $field) {
+            $prefixWildCard[] = $conditionFactory->getPrefixQuery($field, $queryString, 0.5);
+            //$prefixWildCard[] = $conditionFactory->getPrefixQuery($field, $queryString);
         }
 
         return [
             $conditionFactory->getMultiMatchQuery()
-                             ->setFields(self::getMultiMatchQuerySearchFields())
-                             ->setQuery($queryString),
-            $conditionFactory->getBoolQuery([], $should, []),
-        ];*/
-        $prefixWildCard = [];
-        $subMorphologyField = [];
-
-        foreach (self::getMorphologyQuerySearchFields() as $field) {
-            $subMorphologyField[] = $conditionFactory->getFieldQuery($field, $queryString);
-        }
-
-        foreach (self::getPrefixedQuerySearchFields() as $field) {
-            //$prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
-            $prefixWildCard[] = $conditionFactory->getPrefixQuery($field, $queryString);
-        }
-
-        return [
-            $conditionFactory->getFieldQuery(self::getMultiMatchQuerySearchFields(), $queryString),
-            $conditionFactory->getBoolQuery([], [
-                $conditionFactory->getFieldQuery(self::getMultiSubMatchQuerySearchFields(), $queryString),
+                             ->setFields(array_merge(
+                                 self::getMultiMatchQuerySearchFields(),
+                                 self::getMultiSubMatchQuerySearchFields()
+                             ))
+                             ->setQuery($queryString)
+                             ->setOperator(MultiMatch::OPERATOR_OR)
+                             ->setType(MultiMatch::TYPE_BEST_FIELDS),
+            $conditionFactory->getBoolQuery([], array_merge($prefixWildCard, [
                 $conditionFactory->getBoolQuery([], [
-                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString)
-                ], [])
-            ], [])
+                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString),
+                    $conditionFactory->getBoolQuery([], array_merge(
+                        $subMorphologyField, [
+                            $conditionFactory->getBoolQuery([], $subStringQuery, [])
+                        ]
+                    ), [])
+                ], []),
+            ]), []),
         ];
     }
 
@@ -278,13 +291,26 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
             self::DESCRIPTION_FIELD => [
                 'term_vector'   => 'with_positions_offsets',
                 'no_match_size' => 150,
-                'fragment_size' => 150,
+                'fragment_size' => 150
             ],
-            self::TAG_NAME_FIELD    => [
+            self::TAG_NAME_FIELD => [
+                'term_vector'   => 'with_positions_offsets',
+                'fragment_size' => 150
+            ],
+            self::TYPE_NAME_FIELD => [
+                'term_vector'   => 'with_positions_offsets',
+                'fragment_size' => 150
+            ],
+            self::DESCRIPTION_WORDS_NAME_FIELD => [
+                'term_vector'   => 'with_positions_offsets',
+                'no_match_size' => 150,
+                'fragment_size' => 150
+            ],
+            self::TAG_WORDS_FIELD    => [
                 'term_vector'   => 'with_positions_offsets',
                 'fragment_size' => 150,
             ],
-            self::TYPE_NAME_FIELD   => [
+            self::TYPE_WORDS_FIELD   => [
                 'term_vector'   => 'with_positions_offsets',
                 'fragment_size' => 150,
             ],

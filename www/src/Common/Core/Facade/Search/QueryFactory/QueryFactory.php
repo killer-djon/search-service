@@ -133,7 +133,7 @@ class QueryFactory implements QueryFactoryInterface
             "post_tags"           => ["</em>"],
             "require_field_match" => false,
             "encoder"             => 'default',
-            "fields"              => [],
+            "fields"              => []
         ];
 
         if (!empty($highlightArgs)) {

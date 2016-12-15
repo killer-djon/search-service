@@ -8,6 +8,7 @@ use Common\Core\Controller\ApiController;
 use Common\Core\Exceptions\SearchServiceException;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceTypeSearchMapping;
+use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\HttpFoundation\Request;
 use Common\Core\Constants\RequestConstant;
 use Symfony\Component\HttpFoundation\Response;
@@ -211,27 +212,24 @@ class SearchPlacesController extends ApiController
                 $searchText
             );
 
-            if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
-                $oldFormat = $this->getVersioningData($placeSearchService);
-                $oldFormat = $placeSearchService->placeTypeTransformer->transform($oldFormat['results'], PlaceTypeSearchMapping::CONTEXT);
-                $data = [];
 
-                if (!empty($oldFormat)) {
-                    foreach ($oldFormat as $key => $item) {
-                        if (isset($item['children']) && !empty($item['children'])) {
-                            $data[] = $item;
-                        }
-                    }
+
+            if( !is_null($placesType) && !empty($placesType) ){
+                if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                    $oldFormat = $this->getVersioningData($placeSearchService);
+
+                    $oldFormat = $placeSearchService->placeTypeTransformer->transform($oldFormat['results'], PlaceTypeSearchMapping::CONTEXT);
+
+                    return $this->_handleViewWithData(
+                        $oldFormat,
+                        null,
+                        !self::INCLUDE_IN_CONTEXT
+                    );
                 }
-
-                return $this->_handleViewWithData(
-                    $data,
-                    null,
-                    !self::INCLUDE_IN_CONTEXT
-                );
+                return $this->_handleViewWithData($placesType);
             }
 
-            return $this->_handleViewWithData($placesType);
+            return $this->_handleViewWithData([]);
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);

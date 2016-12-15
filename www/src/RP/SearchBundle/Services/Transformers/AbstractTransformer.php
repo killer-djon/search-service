@@ -253,6 +253,8 @@ class AbstractTransformer
             ],
         ], $flat);
         $indexed = [];
+
+
         // first pass - get the array indexed by the primary id
         foreach ($flat as $row) {
             $indexed[$row[$idField]] = $row;

@@ -8,6 +8,7 @@ use Common\Core\Constants\ModerationStatus;
 use Common\Core\Constants\Visible;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Elastica\Exception\ElasticsearchException;
+use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceTypeSearchMapping;
 
@@ -87,16 +88,37 @@ class PlacesSearchService extends AbstractSearchService
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
 
-        $queryMatch = $this->createMatchQuery(
+        /*$queryMatch = $this->createMatchQuery(
             $searchText,
             [
                 PlaceTypeSearchMapping::NAME_FIELD,
-                PlaceTypeSearchMapping::NAME_NGRAM_FIELD,
-                PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD,
-                PlaceTypeSearchMapping::NAME_TRANSLIT_NGRAM_FIELD
+                PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD
             ],
             $skip, $count
-        );
+        );*/
+
+        if( !is_null($searchText) && !empty($searchText) ){
+            $this->setConditionQueryShould([
+                $this->_queryConditionFactory->getDisMaxQuery([
+                    $this->_queryConditionFactory->getFieldQuery([
+                        PlaceTypeSearchMapping::NAME_FIELD,
+                        PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD,
+                        PlaceTypeSearchMapping::NAME_WORDS_NAME_FIELD,
+                        PlaceTypeSearchMapping::NAME_WORDS_TRANSLIT_NAME_FIELD
+                    ], $searchText),
+                    $this->_queryConditionFactory->getPrefixQuery(PlaceTypeSearchMapping::NAME_FIELD, $searchText),
+                    $this->_queryConditionFactory->getPrefixQuery(PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD, $searchText),
+                    $this->_queryConditionFactory->getFieldQuery(PlaceTypeSearchMapping::NAME_WORDS_NAME_FIELD, $searchText),
+                    $this->_queryConditionFactory->getFieldQuery(PlaceTypeSearchMapping::NAME_WORDS_TRANSLIT_NAME_FIELD, $searchText)
+                ])
+            ]);
+
+            $queryMatch = $this->createQuery($skip, $count);
+        }else{
+            $queryMatch = $this->createMatchQuery(
+                null, [], $skip, $count
+            );
+        }
 
         return $this->searchDocuments($queryMatch, PlaceTypeSearchMapping::CONTEXT);
     }

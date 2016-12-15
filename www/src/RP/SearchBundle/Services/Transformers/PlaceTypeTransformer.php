@@ -23,6 +23,7 @@ class PlaceTypeTransformer extends AbstractTransformer implements TransformerInt
     public function transform(array $dataResult, $context, $subContext = null)
     {
         $listArray = $this->getPlaceTypeData($dataResult[$context]);
+
         $data = AbstractTransformer::convertToTree($listArray);
 
         $this->removeParentField($data);
@@ -40,6 +41,10 @@ class PlaceTypeTransformer extends AbstractTransformer implements TransformerInt
 
                 if (isset($value['parentId'])) {
                     unset($value['parentId']);
+                }
+
+                if (isset($value['children']) && empty($value['children'])) {
+                    unset($value['children']);
                 }
             }
         }

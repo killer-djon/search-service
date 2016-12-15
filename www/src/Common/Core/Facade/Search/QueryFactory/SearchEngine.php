@@ -20,7 +20,9 @@ use RP\SearchBundle\Services\Mapping\FriendsSearchMapping;
 use RP\SearchBundle\Services\Mapping\HelpOffersSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
+use RP\SearchBundle\Services\Mapping\PlaceTypeSearchMapping;
 use RP\SearchBundle\Services\Mapping\RusPlaceSearchMapping;
+use RP\SearchBundle\Services\Mapping\TagNameSearchMapping;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface;
@@ -101,7 +103,9 @@ class SearchEngine implements SearchEngineInterface
 
     protected $availableTypesSearch = [
         CitySearchMapping::CONTEXT => CitySearchMapping::class,
-        ChatMessageMapping::CONTEXT => ChatMessageMapping::class
+        ChatMessageMapping::CONTEXT => ChatMessageMapping::class,
+        TagNameSearchMapping::CONTEXT => TagNameSearchMapping::class,
+        PlaceTypeSearchMapping::CONTEXT => PlaceTypeSearchMapping::class
     ];
 
     /**

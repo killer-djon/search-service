@@ -100,14 +100,17 @@ class PlacesSearchService extends AbstractSearchService
         if( !is_null($searchText) && !empty($searchText) ){
             $this->setConditionQueryShould([
                 $this->_queryConditionFactory->getDisMaxQuery([
-                    $this->_queryConditionFactory->getFieldQuery([
-                        PlaceTypeSearchMapping::NAME_FIELD,
-                        PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD,
-                        PlaceTypeSearchMapping::NAME_WORDS_NAME_FIELD,
-                        PlaceTypeSearchMapping::NAME_WORDS_TRANSLIT_NAME_FIELD
-                    ], $searchText),
+                    $this->_queryConditionFactory->getMultiMatchQuery()
+                        ->setQuery($searchText)
+                        ->setFields([
+                            PlaceTypeSearchMapping::NAME_FIELD,
+                            PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD,
+                        ])
+                        ->setOperator(MultiMatch::OPERATOR_OR)
+                        ->setType(MultiMatch::TYPE_BEST_FIELDS),
                     $this->_queryConditionFactory->getPrefixQuery(PlaceTypeSearchMapping::NAME_FIELD, $searchText),
                     $this->_queryConditionFactory->getPrefixQuery(PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD, $searchText),
+
                     $this->_queryConditionFactory->getFieldQuery(PlaceTypeSearchMapping::NAME_WORDS_NAME_FIELD, $searchText),
                     $this->_queryConditionFactory->getFieldQuery(PlaceTypeSearchMapping::NAME_WORDS_TRANSLIT_NAME_FIELD, $searchText)
                 ])

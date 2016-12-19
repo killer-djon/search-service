@@ -113,7 +113,7 @@ class CommonSearchService extends AbstractSearchService
 
                 $this->setScriptFunctionOption([
                     'scoreMode' => 'min',
-                    'boostMode' => 'multiply'
+                    'boostMode' => 'min'
                 ]);
 
                 if (!is_null($searchText)) {
@@ -195,7 +195,7 @@ class CommonSearchService extends AbstractSearchService
 
             if (!is_null($searchText)) {
                 $searchText = mb_strtolower($searchText);
-                
+
                 $this->setScriptFunctions([
                     FunctionScore::DECAY_GAUSS => [
                         $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD => [
@@ -211,7 +211,7 @@ class CommonSearchService extends AbstractSearchService
 
                 $this->setScriptFunctionOption([
                     'scoreMode' => 'min',
-                    'boostMode' => 'multiply'
+                    'boostMode' => 'min'
                 ]);
 
                 $slopPhrase = explode(" ", $searchText);

@@ -286,7 +286,7 @@ class AbstractTransformer
             if (is_array($value)) {
                 return empty($value);
             }
-            return ($value === null);
+            return ($value == null);
         });
 
     }

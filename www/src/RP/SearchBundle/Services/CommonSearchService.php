@@ -117,10 +117,9 @@ class CommonSearchService extends AbstractSearchService
                 ]);
 
                 if (!is_null($searchText)) {
-                    $searchText = strtolower($searchText);
+                    $searchText = mb_strtolower($searchText);
                     $slopPhrase = explode(" ", $searchText);
                     $queryShouldFields = $must = $should = [];
-
 
                     if (count($slopPhrase) > 1) {
 
@@ -195,8 +194,8 @@ class CommonSearchService extends AbstractSearchService
             $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
 
             if (!is_null($searchText)) {
-                $searchText = strtolower($searchText);
-
+                $searchText = mb_strtolower($searchText);
+                
                 $this->setScriptFunctions([
                     FunctionScore::DECAY_GAUSS => [
                         $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD => [

@@ -304,7 +304,8 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
      */
     public static function getSearchConditionQueryShould(ConditionFactoryInterface $conditionFactory, $queryString)
     {
-        $prefixWildCard = [];
+        $prefixWildCardByName = [];
+        $prefixWildCardByTags = [];
         $subMorphologyField = [];
 
         $allFieldsQuery = array_merge(
@@ -312,11 +313,17 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             self::getMultiSubMatchQuerySearchFields()
         );
 
-        foreach ($allFieldsQuery as $field) {
+        foreach (self::getMultiMatchQuerySearchFields() as $field) {
             //$prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
-            $prefixWildCard[] = $conditionFactory->getPrefixQuery($field, $queryString, 0.5);
+            $prefixWildCardByName[] = $conditionFactory->getPrefixQuery($field, $queryString, 0.5);
         }
 
+        foreach (self::getMultiSubMatchQuerySearchFields() as $field) {
+            //$prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
+            $prefixWildCardByTags[] = $conditionFactory->getPrefixQuery($field, $queryString, 0.2);
+        }
+
+        /*
         return [
             $conditionFactory->getMultiMatchQuery()
                              ->setFields(array_merge(
@@ -331,6 +338,21 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
                     $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString)
                 ], []),
             ]), []),
+        ];*/
+        return [
+            $conditionFactory->getDisMaxQuery(array_merge([
+                    $conditionFactory->getMultiMatchQuery()
+                                     ->setFields(array_merge(
+                                         self::getMultiMatchQuerySearchFields(),
+                                         self::getMultiSubMatchQuerySearchFields()
+                                     ))
+                                     ->setQuery($queryString)
+                                     ->setOperator(MultiMatch::OPERATOR_OR)
+                                     ->setType(MultiMatch::TYPE_BEST_FIELDS)
+                ],$prefixWildCardByTags, $prefixWildCardByName,[
+                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString, true, 0.5)
+                ]
+            ))
         ];
     }
 

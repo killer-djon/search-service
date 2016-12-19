@@ -198,10 +198,11 @@ class CommonSearchService extends AbstractSearchService
                 $this->setScriptFunctions([
                     FunctionScore::DECAY_GAUSS => [
                         $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD => [
-                            'origin' => [
+                            /*'origin' => [
                                 'lat' => $point->getLatitude(),
                                 'lon' => $point->getLongitude(),
-                            ],
+                            ],*/
+                            'origin' => "{$point->getLongitude()}, {$point->getLatitude()}",
                             'scale'  => '1km',
                             'offset' => '0km',
                             'decay'  => 0.33,
@@ -213,6 +214,13 @@ class CommonSearchService extends AbstractSearchService
                     'scoreMode' => 'multiply',
                     'boostMode' => 'multiply',
                     'maxBoost'  => 10,
+                ]);
+
+                $this->setSortingQuery([
+                    $this->_sortingFactory->getGeoDistanceSort(
+                        $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
+                        $point
+                    )
                 ]);
 
                 $slopPhrase = explode(" ", $searchText);

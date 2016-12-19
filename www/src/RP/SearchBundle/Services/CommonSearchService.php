@@ -105,15 +105,17 @@ class CommonSearchService extends AbstractSearchService
                                 'lat' => $point->getLatitude(),
                                 'lon' => $point->getLongitude(),
                             ],
-                            'scale' => '1km',
+                            'scale'  => '1km',
                             'offset' => '0km',
-                        ]
-                    ]
+                            'decay'  => 0.33,
+                        ],
+                    ],
                 ]);
 
                 $this->setScriptFunctionOption([
-                    'scoreMode' => 'min',
-                    'boostMode' => 'min'
+                    'scoreMode' => 'multiply',
+                    'boostMode' => 'multiply',
+                    'maxBoost'  => 10,
                 ]);
 
                 if (!is_null($searchText)) {
@@ -128,8 +130,7 @@ class CommonSearchService extends AbstractSearchService
                          */
                         $queryMust = $type::getSearchConditionQueryMust($this->_queryConditionFactory, $searchText);
 
-                        if(!empty($queryMust))
-                        {
+                        if (!empty($queryMust)) {
                             $this->setConditionQueryMust($queryMust);
                         }
 
@@ -138,8 +139,7 @@ class CommonSearchService extends AbstractSearchService
                             $this->_queryConditionFactory, $searchText
                         );
 
-                        if(!empty($queryShould))
-                        {
+                        if (!empty($queryShould)) {
                             /**
                              * Ищем по частичному совпадению поисковой фразы
                              */
@@ -147,8 +147,7 @@ class CommonSearchService extends AbstractSearchService
                         }
                     }
 
-                    $queryMatchResults[$keyType] = $this->createQuery($skip, (is_null($count)?self::DEFAULT_SEARCH_BLOCK_SIZE:$count));
-
+                    $queryMatchResults[$keyType] = $this->createQuery($skip, (is_null($count) ? self::DEFAULT_SEARCH_BLOCK_SIZE : $count));
 
                 } else {
                     $this->setSortingQuery([
@@ -160,7 +159,7 @@ class CommonSearchService extends AbstractSearchService
                     $queryMatchResults[$keyType] = $this->createMatchQuery(
                         $searchText,
                         $type::getMultiMatchQuerySearchFields(),
-                        $skip, (is_null($count)?self::DEFAULT_SEARCH_BLOCK_SIZE:$count)
+                        $skip, (is_null($count) ? self::DEFAULT_SEARCH_BLOCK_SIZE : $count)
                     );
                 }
 
@@ -203,15 +202,17 @@ class CommonSearchService extends AbstractSearchService
                                 'lat' => $point->getLatitude(),
                                 'lon' => $point->getLongitude(),
                             ],
-                            'scale' => '1km',
+                            'scale'  => '1km',
                             'offset' => '0km',
-                        ]
-                    ]
+                            'decay'  => 0.33,
+                        ],
+                    ],
                 ]);
 
                 $this->setScriptFunctionOption([
-                    'scoreMode' => 'min',
-                    'boostMode' => 'min'
+                    'scoreMode' => 'multiply',
+                    'boostMode' => 'multiply',
+                    'maxBoost'  => 10,
                 ]);
 
                 $slopPhrase = explode(" ", $searchText);
@@ -224,8 +225,7 @@ class CommonSearchService extends AbstractSearchService
                      */
                     $queryMust = $this->filterSearchTypes[$type]::getSearchConditionQueryMust($this->_queryConditionFactory, $searchText);
 
-                    if(!empty($queryMust))
-                    {
+                    if (!empty($queryMust)) {
                         $this->setConditionQueryMust($queryMust);
                     }
 
@@ -234,8 +234,7 @@ class CommonSearchService extends AbstractSearchService
                         $this->_queryConditionFactory, $searchText
                     );
 
-                    if(!empty($queryShould))
-                    {
+                    if (!empty($queryShould)) {
                         /**
                          * Ищем по частичному совпадению поисковой фразы
                          */
@@ -251,13 +250,13 @@ class CommonSearchService extends AbstractSearchService
                     $this->_sortingFactory->getGeoDistanceSort(
                         $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
                         $point
-                    )
+                    ),
                 ]);
 
                 $queryMatchResults[$type] = $this->createMatchQuery(
                     $searchText,
                     $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),
-                    $skip, (is_null($count)?self::DEFAULT_SEARCH_BLOCK_SIZE:$count)
+                    $skip, (is_null($count) ? self::DEFAULT_SEARCH_BLOCK_SIZE : $count)
                 );
 
             }
@@ -294,7 +293,9 @@ class CommonSearchService extends AbstractSearchService
                 array_key_exists($filter, $this->filterTypes) && $searchTypes[$filter] = $this->filterTypes[$filter]::getMultiMatchQuerySearchFields();
             } else {
                 foreach ($this->getFilterTypes() as $key => $class) {
-                    if($key == 'people') $key = 'peoples';
+                    if ($key == 'people') {
+                        $key = 'peoples';
+                    }
                     $searchTypes[$key] = $class::getMultiMatchQuerySearchFields();
                 }
             }
@@ -341,7 +342,7 @@ class CommonSearchService extends AbstractSearchService
                             [], 1
                         ))->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
-                        ))
+                        )),
                     ]);
                 }
 
@@ -373,14 +374,12 @@ class CommonSearchService extends AbstractSearchService
              */
             $documents = $this->searchMultiTypeDocuments($queryMatchResults);
 
-            if( $isCluster == true )
-            {
+            if ($isCluster == true) {
                 if ($this->getClusterGrouped() == true) {
                     $documents['cluster'] = $this->groupClasterLocationBuckets($documents['cluster'], AbstractSearchMapping::LOCATION_FIELD);
                     unset($documents['items']);
                 }
-            }else
-            {
+            } else {
                 unset($documents['cluster']);
             }
 

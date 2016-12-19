@@ -107,14 +107,13 @@ class CommonSearchService extends AbstractSearchService
                             ],
                             'scale' => '1km',
                             'offset' => '0km',
-                            'decay' => 0.1
                         ]
                     ]
                 ]);
 
                 $this->setScriptFunctionOption([
                     'scoreMode' => 'min',
-                    'boostMode' => 'min'
+                    'boostMode' => 'multiply'
                 ]);
 
                 if (!is_null($searchText)) {
@@ -199,7 +198,7 @@ class CommonSearchService extends AbstractSearchService
                 $searchText = strtolower($searchText);
 
                 $this->setScriptFunctions([
-                    FunctionScore::DECAY_LINEAR => [
+                    FunctionScore::DECAY_GAUSS => [
                         $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD => [
                             'origin' => [
                                 'lat' => $point->getLatitude(),
@@ -207,14 +206,13 @@ class CommonSearchService extends AbstractSearchService
                             ],
                             'scale' => '1km',
                             'offset' => '0km',
-                            'decay' => 0.33
                         ]
                     ]
                 ]);
 
                 $this->setScriptFunctionOption([
                     'scoreMode' => 'min',
-                    'boostMode' => 'min'
+                    'boostMode' => 'multiply'
                 ]);
 
                 $slopPhrase = explode(" ", $searchText);

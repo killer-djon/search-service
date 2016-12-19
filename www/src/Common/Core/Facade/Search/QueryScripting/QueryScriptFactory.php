@@ -66,11 +66,9 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
             ]);
 
             $script = "
+            var distance = 0.0;
             if (!doc[pointField].empty) {
                 distance = doc[pointField].distanceInKm(lat, lon);
-            }else
-            {
-                distance = -1
             }
             
             distance = parseFloat(Number(distance).toFixed(2))

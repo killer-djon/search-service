@@ -113,6 +113,7 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
         return [
             // вариации поля имени
             self::CHAT_MEMBERS_PREFIX_NAME_FIELD,
+            self::CHAT_MEMBERS_PREFIX_NAME_FIELD,
             self::CHAT_MEMBERS_PREFIX_NAME_TRANSLIT_FIELD,
 
             self::CHAT_MEMBERS_PREFIX_SURNAME_FIELD,
@@ -120,24 +121,6 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
         ];
     }
 
-
-    /**
-     * Получаем поля для поиска
-     * буквосочетаний nGram
-     *
-     * @return array
-     */
-    public static function getMultiMatchNgramQuerySearchFields()
-    {
-        return [
-            // вариации поля имени
-            self::MEMBERS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_NGRAM_FIELD,
-            self::MEMBERS_MESSAGE_FIELD . '.' . PeopleSearchMapping::NAME_TRANSLIT_NGRAM_FIELD,
-            // вариации поля фамилии
-            self::MEMBERS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_NGRAM_FIELD,
-            self::MEMBERS_MESSAGE_FIELD . '.' . PeopleSearchMapping::SURNAME_TRANSLIT_NGRAM_FIELD,
-        ];
-    }
 
     /**
      * Собираем фильтр для маркеров
@@ -194,6 +177,7 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
         $prefixWildCard = [];
         $subMorphologyField = [];
         $subStringQuery = [];
+        $wildCardField = [];
 
         foreach (self::getMorphologyQuerySearchFields() as $field) {
             $subStringQuery[] = $conditionFactory->getMatchQuery($field, $queryString);
@@ -201,7 +185,8 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
         }
 
         foreach (self::getPrefixedQuerySearchFields() as $field) {
-            $prefixWildCard[] = $conditionFactory->getPrefixQuery($field, $queryString, 0.5);
+            $prefixWildCard[] = $conditionFactory->getPrefixQuery($field, $queryString, 2);
+            $wildCardField[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*", 1.5);
         }
 
         return [
@@ -215,7 +200,11 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
                     $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString),
                     $conditionFactory->getBoolQuery([], array_merge(
                         $subMorphologyField, [
-                            $conditionFactory->getBoolQuery([], $subStringQuery, [])
+                            $conditionFactory->getBoolQuery([], array_merge(
+                                $subStringQuery, [
+                                    $conditionFactory->getBoolQuery([], [$wildCardField], [])
+                                ]
+                            ), [])
                         ]
                     ), [])
                 ], []),

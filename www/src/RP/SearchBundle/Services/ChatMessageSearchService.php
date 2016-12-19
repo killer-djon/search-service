@@ -102,50 +102,6 @@ class ChatMessageSearchService extends AbstractSearchService
                 }
             }
 
-            /*$this->setConditionQueryShould([
-                $this->_queryConditionFactory->getPrefixQuery(
-                    AbstractTransformer::createCompleteKey([
-                        ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
-                        PeopleSearchMapping::NAME_NGRAM_FIELD
-                    ]), $searchText
-                ),
-                $this->_queryConditionFactory->getPrefixQuery(
-                    AbstractTransformer::createCompleteKey([
-                        ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
-                        PeopleSearchMapping::NAME_TRANSLIT_NGRAM_FIELD
-                    ]), $searchText
-                ),
-                $this->_queryConditionFactory->getPrefixQuery(
-                    AbstractTransformer::createCompleteKey([
-                        ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
-                        PeopleSearchMapping::SURNAME_NGRAM_FIELD
-                    ]), $searchText
-                ),
-                $this->_queryConditionFactory->getPrefixQuery(
-                    AbstractTransformer::createCompleteKey([
-                        ChatMessageMapping::MEMBERS_MESSAGE_FIELD,
-                        PeopleSearchMapping::SURNAME_TRANSLIT_NGRAM_FIELD
-                    ]), $searchText
-                ),
-                $this->_queryConditionFactory->getBoolQuery([], array_merge(
-                    [
-                        $this->_queryConditionFactory->getMatchPhraseQuery(ChatMessageMapping::MESSAGE_TEXT_FIELD, $searchText),
-                        $this->_queryConditionFactory->getMatchPhraseQuery(ChatMessageMapping::MESSAGE_TEXT_TRANSLIT_FIELD, $searchText),
-                    ],[
-                        $this->_queryConditionFactory->getBoolQuery([], array_merge([
-                            $this->_queryConditionFactory->getMatchPhrasePrefixQuery(ChatMessageMapping::MESSAGE_TEXT_FIELD, $searchText),
-                            $this->_queryConditionFactory->getMatchPhrasePrefixQuery(ChatMessageMapping::MESSAGE_TEXT_TRANSLIT_FIELD, $searchText),
-                        ], [
-                            $this->_queryConditionFactory->getBoolQuery([], [
-                                $this->_queryConditionFactory->getWildCardQuery(ChatMessageMapping::MESSAGE_TEXT_FIELD, "*{$searchText}*"),
-                                $this->_queryConditionFactory->getWildCardQuery(ChatMessageMapping::MESSAGE_TEXT_TRANSLIT_FIELD, "*{$searchText}*"),
-                            ], [])
-                        ]), [])
-                    ]
-                ), []),
-            ]);*/
-
-
             $queryMatchResults = $this->createQuery($skip, $count);
         }
 

@@ -71,7 +71,7 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                 distance = doc[pointField].distanceInKm(lat, lon);
             }
             
-            distance = Number(distance).toFixed(2)
+            distance = parseFloat(Number(distance).toFixed(2))
             ";
 
             return new \Elastica\Script(
@@ -112,8 +112,7 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
             }else{
                 distanceInPercent = 0;
             }
-            
-            distanceInPercent = distanceInPercent.toFixed()
+            distanceInPercent = parseInt(distanceInPercent)
             ";
 
             return new \Elastica\Script(

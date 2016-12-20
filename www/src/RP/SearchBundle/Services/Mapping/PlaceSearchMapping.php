@@ -232,39 +232,42 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
      */
     public static function getSearchConditionQueryShould(ConditionFactoryInterface $conditionFactory, $queryString)
     {
-        $prefixWildCard = [];
-        $subMorphologyField = [];
-        $subStringQuery = [];
 
-        foreach (self::getMorphologyQuerySearchFields() as $field) {
-            $subStringQuery[] = $conditionFactory->getMatchQuery($field, $queryString);
-            $subMorphologyField[] = $conditionFactory->getMatchPhrasePrefixQuery($field, $queryString);
+        $prefixWildCardByName = [];
+        $prefixWildCardByTags = [];
+        $subMorphologyField = [];
+
+        $allFieldsQuery = array_merge(
+            self::getMultiMatchQuerySearchFields(),
+            self::getMultiSubMatchQuerySearchFields()
+        );
+
+        foreach (self::getMultiMatchQuerySearchFields() as $field) {
+            //$prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
+            $prefixWildCardByName[] = $conditionFactory->getPrefixQuery($field, $queryString, 0.5);
         }
 
-        foreach (self::getPrefixedQuerySearchFields() as $field) {
-            $prefixWildCard[] = $conditionFactory->getPrefixQuery($field, $queryString, 0.5);
-            //$prefixWildCard[] = $conditionFactory->getPrefixQuery($field, $queryString);
+        foreach (self::getMultiSubMatchQuerySearchFields() as $field) {
+            //$prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
+            $prefixWildCardByTags[] = $conditionFactory->getPrefixQuery($field, $queryString, 0.2);
         }
 
         return [
-            $conditionFactory->getMultiMatchQuery()
-                             ->setFields(array_merge(
-                                 self::getMultiMatchQuerySearchFields(),
-                                 self::getMultiSubMatchQuerySearchFields()
-                             ))
-                             ->setQuery($queryString)
-                             ->setOperator(MultiMatch::OPERATOR_OR)
-                             ->setType(MultiMatch::TYPE_BEST_FIELDS),
-            $conditionFactory->getBoolQuery([], array_merge($prefixWildCard, [
-                $conditionFactory->getBoolQuery([], [
-                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString),
-                    $conditionFactory->getBoolQuery([], array_merge(
-                        $subMorphologyField, [
-                            $conditionFactory->getBoolQuery([], $subStringQuery, [])
-                        ]
-                    ), [])
-                ], []),
-            ]), []),
+            $conditionFactory->getDisMaxQuery(array_merge([
+                $conditionFactory->getMultiMatchQuery()
+                                 ->setFields(array_merge(
+                                     self::getMultiMatchQuerySearchFields(),
+                                     self::getMultiSubMatchQuerySearchFields()
+                                 ))
+                                 ->setQuery($queryString)
+                                 ->setOperator(MultiMatch::OPERATOR_OR)
+                                 ->setType(MultiMatch::TYPE_CROSS_FIELDS)
+            ],$prefixWildCardByTags, $prefixWildCardByName,[
+                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString, true, 0.5),
+                    $conditionFactory->getMatchPhrasePrefixQuery(self::DESCRIPTION_WORDS_NAME_FIELD, $queryString),
+                    $conditionFactory->getMatchPhrasePrefixQuery(self::DESCRIPTION_WORDS_TRANSLIT_NAME_FIELD, $queryString)
+                ]
+            ))
         ];
     }
 
@@ -281,27 +284,9 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
                 'no_match_size' => 150,
                 'fragment_size' => 150
             ],
-            self::TAG_NAME_FIELD => [
-                'term_vector'   => 'with_positions_offsets',
-                'fragment_size' => 150
-            ],
-            self::TYPE_NAME_FIELD => [
-                'term_vector'   => 'with_positions_offsets',
-                'fragment_size' => 150
-            ],
-            self::DESCRIPTION_WORDS_NAME_FIELD => [
-                'term_vector'   => 'with_positions_offsets',
-                'no_match_size' => 150,
-                'fragment_size' => 150
-            ],
-            self::TAG_WORDS_FIELD    => [
-                'term_vector'   => 'with_positions_offsets',
-                'fragment_size' => 150,
-            ],
-            self::TYPE_WORDS_FIELD   => [
-                'term_vector'   => 'with_positions_offsets',
-                'fragment_size' => 150,
-            ],
+            '*' => [
+                'term_vector' => 'with_positions_offsets'
+            ]
         ];
 
         return $highlight;

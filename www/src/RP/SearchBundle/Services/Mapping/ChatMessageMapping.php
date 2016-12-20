@@ -202,7 +202,10 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
                         $subMorphologyField, [
                             $conditionFactory->getBoolQuery([], array_merge(
                                 $subStringQuery, [
-                                    $conditionFactory->getBoolQuery([], [$wildCardField], [])
+                                    $conditionFactory->getBoolQuery([], array_merge($wildCardField, [
+                                        $conditionFactory->getMatchPhrasePrefixQuery(self::MESSAGE_TEXT_FIELD, $queryString),
+                                        $conditionFactory->getMatchPhrasePrefixQuery(self::MESSAGE_TEXT_TRANSLIT_FIELD, $queryString)
+                                    ]), [])
                                 ]
                             ), [])
                         ]
@@ -220,7 +223,7 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
     public static function getHighlightConditions()
     {
         $highlight = [
-            '_all' => [
+            '*' => [
                 'term_vector'   => 'with_positions_offsets',
                 'fragment_size' => 150,
             ]

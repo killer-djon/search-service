@@ -99,22 +99,18 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
      */
     public static function getSearchConditionQueryShould(ConditionFactoryInterface $conditionFactory, $queryString)
     {
-        $prefixWildCard = [];
+        $should = [];
+        $allSearchFields = self::getMultiMatchQuerySearchFields();
 
-        foreach (self::getPrefixedQuerySearchFields() as $field) {
-            $prefixWildCard[] = $conditionFactory->getMatchPhraseQuery($field, $queryString);
+        foreach ($allSearchFields as $field) {
+            $should[] = $conditionFactory->getMatchPhrasePrefixQuery($field, $queryString);
         }
 
         return [
-            $conditionFactory->getDisMaxQuery(array_merge([
-                $conditionFactory->getMultiMatchQuery()
-                                 ->setFields(self::getMultiMatchQuerySearchFields())
-                                 ->setQuery($queryString)
-                                 ->setOperator(MultiMatch::OPERATOR_OR)
-                                 ->setType(MultiMatch::TYPE_BEST_FIELDS),
-            ], $prefixWildCard, [
-                $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString),
-            ])),
+            $conditionFactory->getMultiMatchQuery()
+                             ->setFields(self::getMultiMatchQuerySearchFields())
+                             ->setQuery($queryString),
+            $conditionFactory->getBoolQuery([], $should, []),
         ];
     }
 

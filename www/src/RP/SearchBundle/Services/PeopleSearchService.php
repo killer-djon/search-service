@@ -9,6 +9,7 @@ use Common\Core\Constants\Visible;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Exception\ElasticsearchException;
+use Elastica\Query\FunctionScore;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use Common\Core\Facade\Service\Geo\GeoPointService;
 
@@ -379,12 +380,35 @@ class PeopleSearchService extends AbstractSearchService
             }
 
             /** формируем условия сортировки по удаленности */
-            $this->setSortingQuery(
+            /*$this->setSortingQuery(
                 $this->_sortingFactory->getGeoDistanceSort(
                     PeopleSearchMapping::LOCATION_POINT_FIELD,
                     $point
                 )
-            );
+            );*/
+            $this->setScriptFunctions([
+                FunctionScore::DECAY_GAUSS => [
+                    PeopleSearchMapping::LOCATION_POINT_FIELD => [
+                        'origin' => "{$point->getLongitude()}, {$point->getLatitude()}",
+                        'scale'  => '1km',
+                        'offset' => '0km',
+                        'decay'  => 0.33,
+                    ],
+                ],
+            ]);
+
+            $this->setScriptFunctionOption([
+                'scoreMode' => 'multiply',
+                'boostMode' => 'multiply',
+                'maxBoost'  => 10,
+            ]);
+
+            $this->setSortingQuery([
+                $this->_sortingFactory->getGeoDistanceSort(
+                    PeopleSearchMapping::LOCATION_POINT_FIELD,
+                    $point
+                )
+            ]);
 
             $queryMatch = $this->createMatchQuery($searchText, PeopleSearchMapping::getMultiMatchQuerySearchFields(), $skip, $count);
 

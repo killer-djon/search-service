@@ -49,6 +49,15 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         [100000 => [700001, 1000000]],
     ];
 
+    public function getTermsAggregation($fieldName){
+        $geo = new \Elastica\Aggregation\Terms('distance-hashes');
+        $geo->setField($fieldName);
+        $geo->setMinimumDocumentCount(1);
+
+
+        return $geo;
+    }
+
     /**
      * Получаем аггрегированный скрипт AVG
      *

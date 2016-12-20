@@ -329,23 +329,31 @@ class CommonSearchService extends AbstractSearchService
 
                 if (mb_strlen($geoHashCell) > 0) {
                     $isCluster = false;
+
+                    $geoDistanceRange = array_map(function($itemDistance){
+                        return (int)$itemDistance;
+                    }, explode('-', $geoHashCell));
+
+
                     $this->setFilterQuery([
-                        $this->_queryFilterFactory->getGeoHashFilter(
+                        $this->_queryFilterFactory->getGeoDistanceRangeFilter(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
                             [
                                 "lat" => $point->getLatitude(),
                                 "lon" => $point->getLongitude(),
                             ],
-                            mb_strlen($geoHashCell),
-                            $geoHashCell
-                        ),
+                            [
+                                'from' => "{$geoDistanceRange[0]}m",
+                                'to' => "{$geoDistanceRange[1]}m"
+                            ]
+                        )
                     ]);
                 }
 
                 $this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
 
                 if ($isCluster == true) {
-                    /*$this->setAggregationQuery([
+                    $this->setAggregationQuery([
                         $this->_queryAggregationFactory->getGeoDistanceAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
                             [
@@ -354,20 +362,6 @@ class CommonSearchService extends AbstractSearchService
                             ],
                             $point->getRadius(),
                             'm'
-                        )->addAggregation($this->_queryAggregationFactory->setAggregationSource(
-                            AbstractSearchMapping::LOCATION_FIELD,
-                            [], 1
-                        ))->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
-                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
-                        )),
-                    ]);*/
-                    $this->setAggregationQuery([
-                        $this->_queryAggregationFactory->getGeoHashAggregation(
-                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
-                            [
-                                "lat" => $point->getLatitude(),
-                                "lon" => $point->getLongitude(),
-                            ], $point->getRadius()
                         )->addAggregation($this->_queryAggregationFactory->setAggregationSource(
                             AbstractSearchMapping::LOCATION_FIELD,
                             [], 1

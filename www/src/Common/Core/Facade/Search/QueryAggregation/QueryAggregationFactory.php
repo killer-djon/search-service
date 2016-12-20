@@ -153,8 +153,6 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         $newRange = new RangeIterator($rangesArray);
         $newRange->setRadius($radius);
 
-        print_r($newRange->getRange());
-        exit;
         $geoDistance = new \Elastica\Aggregation\GeoDistance('geo_distance', $fieldName, $startPoint);
         $geoDistance->setUnit($unit);
         $geoDistance->setDistanceType($distanceType);

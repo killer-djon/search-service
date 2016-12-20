@@ -123,7 +123,7 @@ class CommonSearchService extends AbstractSearchService
                     $this->_sortingFactory->getGeoDistanceSort(
                         $type::LOCATION_POINT_FIELD,
                         $point
-                    )
+                    ),
                 ]);
 
                 if (!is_null($searchText)) {
@@ -156,7 +156,6 @@ class CommonSearchService extends AbstractSearchService
                     }
 
                     $queryMatchResults[$keyType] = $this->createQuery($skip, (is_null($count) ? self::DEFAULT_SEARCH_BLOCK_SIZE : $count));
-
 
                 } else {
                     $this->setSortingQuery([
@@ -229,7 +228,7 @@ class CommonSearchService extends AbstractSearchService
                     $this->_sortingFactory->getGeoDistanceSort(
                         $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
                         $point
-                    )
+                    ),
                 ]);
 
                 $slopPhrase = explode(" ", $searchText);
@@ -330,10 +329,9 @@ class CommonSearchService extends AbstractSearchService
                 if (mb_strlen($geoHashCell) > 0) {
                     $isCluster = false;
 
-                    $geoDistanceRange = array_map(function($itemDistance){
+                    $geoDistanceRange = array_map(function ($itemDistance) {
                         return (int)$itemDistance;
                     }, explode('-', $geoHashCell));
-
 
                     $this->setFilterQuery([
                         $this->_queryFilterFactory->getGeoDistanceRangeFilter(
@@ -344,9 +342,9 @@ class CommonSearchService extends AbstractSearchService
                             ],
                             [
                                 'from' => "{$geoDistanceRange[0]}m",
-                                'to' => "{$geoDistanceRange[1]}m"
+                                'to'   => "{$geoDistanceRange[1]}m",
                             ]
-                        )
+                        ),
                     ]);
                 }
 
@@ -367,7 +365,7 @@ class CommonSearchService extends AbstractSearchService
                             [], 1
                         ))->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
-                        ))
+                        )),
                     ]);
                 }
 
@@ -401,7 +399,10 @@ class CommonSearchService extends AbstractSearchService
 
             if ($isCluster == true) {
                 if ($this->getClusterGrouped() == true) {
-                    $documents['cluster'] = $this->groupClasterLocationBuckets($documents['cluster'], AbstractSearchMapping::LOCATION_FIELD);
+                    $documents['cluster'] = $this->groupClasterLocationBuckets(
+                        $documents['cluster'],
+                        AbstractSearchMapping::LOCATION_FIELD
+                    );
                     unset($documents['items']);
                 }
             } else {

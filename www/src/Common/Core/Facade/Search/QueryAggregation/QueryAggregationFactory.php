@@ -28,26 +28,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         [0.037, 0.019],
     ];
 
-    /**
-     * Срезы для расстояний
-     * применяется для аггрегирования данных
-     *
-     * @var array
-     */
-    private $radiusRanges = [
-        [200 => [200, 3000]],
-        [300 => [3001, 5000]],
-        [500 => [5001, 7000]],
-        [1000 => [7001, 15000]],
-        [3000 => [15001, 30000]],
-        [5000 => [30001, 60000]],
-        [7000 => [60001, 80000]],
-        [10000 => [80001, 100000]],
-        [20000 => [100001, 300000]],
-        [40000 => [300001, 500000]],
-        [70000 => [500001, 700000]],
-        [100000 => [700001, 1000000]],
-    ];
+
 
     public function getTermsAggregation($fieldName){
         $geo = new \Elastica\Aggregation\Terms('distance-hashes');
@@ -118,6 +99,28 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
     }
 
     /**
+     * Срезы для расстояний
+     * применяется для аггрегирования данных
+     *
+     * @var array
+     */
+    private $radiusRanges = [
+        [200 => [300, 1000]],
+        [250 => [1001, 3000]],
+        [500 => [3001, 5000]],
+        [750 => [5001, 7000]],
+        [1000 => [7001, 10000]],
+        [2500 => [10001, 25000]],
+        [5000 => [25001, 50000]],
+        [7500 => [50001, 75000]],
+        [10000 => [75001, 100000]],
+        [25000 => [100001, 250000]],
+        [50000 => [250001, 500000]],
+        [75000 => [500001, 750000]],
+        [100000 => [750001, 1000000]],
+    ];
+
+    /**
      * Аггрегируем дистацию геопозиции
      *
      * @param string $fieldName Название поля
@@ -174,8 +177,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
     public function getGeoHashAggregation($fieldName, $startPoint, $precision = self::DEFAULT_RADIUS_DISTANCE)
     {
         $precision = (int)$precision;
-
-        /*if ($precision > 12 || $precision < 1) {
+        if ($precision > 12 || $precision < 1) {
             $precisionPoint = [];
             foreach ($this->geo_hash_precisions as $key => $pointMap) {
                 $min = $pointMap[0];
@@ -197,30 +199,10 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
             });
 
             $precision = current(array_keys($precisionPoint, min($precisionPoint))) + 1;
-        }*/
-        $ranges = [
-            12  => [500, 3000],
-            11 => [ 3001, 7000 ],
-            10 => [ 7001, 10000 ],
-            9 => [ 10001, 25000 ],
-            8 => [ 25001, 50000 ],
-            7 => [ 50001, 75000 ],
-            6 => [ 75001, 100000 ],
-            5 => [ 100001, 250000 ],
-            3 => [ 250001, 500000 ],
-            2 => [ 500001, 7500000 ],
-            1 => [ 7500001, 1000000 ],
-        ];
-
-
-        $keyPrecision = 11;
-        foreach($ranges as $key => $range){
-            if($precision >= $range[0] && $precision <= $range[1])
-                $keyPrecision = (int)$key;
         }
 
         $geoHash = new \Elastica\Aggregation\GeohashGrid('geohash_grid', $fieldName);
-        $geoHash->setPrecision($keyPrecision);
+        $geoHash->setPrecision($precision);
 
         return $geoHash;
     }

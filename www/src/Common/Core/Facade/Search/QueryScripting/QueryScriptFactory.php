@@ -71,7 +71,6 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                 distance = doc[pointField].distanceInKm(lat, lon);
             }
             
-            //distance = parseFloat(Number(distance).toFixed(2));
             distance = Number(distance).toFixed(2)
             ";
 
@@ -106,12 +105,10 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
             ]);
 
             $script = "
+            var distanceInPercent = 0;
             if (!doc[pointField].empty && radius) {
                 var distance = doc[pointField].distanceInKm(lat, lon);
                 distanceInPercent = distance * 100 / (radius / 1000);
-            }else
-            {
-                distanceInPercent = 100
             }
             
             distanceInPercent = parseInt(distanceInPercent)

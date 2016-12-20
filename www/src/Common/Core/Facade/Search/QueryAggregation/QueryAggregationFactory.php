@@ -166,7 +166,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
     {
         $precision = (int)$precision;
 
-        if ($precision > 12 || $precision < 1) {
+        /*if ($precision > 12 || $precision < 1) {
             $precisionPoint = [];
             foreach ($this->geo_hash_precisions as $key => $pointMap) {
                 $min = $pointMap[0];
@@ -188,11 +188,30 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
             });
 
             $precision = current(array_keys($precisionPoint, min($precisionPoint))) + 1;
+        }*/
+        $ranges = [
+            12  => [500, 3000],
+            11 => [ 3001, 7000 ],
+            10 => [ 7001, 10000 ],
+            9 => [ 10001, 25000 ],
+            8 => [ 25001, 50000 ],
+            7 => [ 50001, 75000 ],
+            6 => [ 75001, 100000 ],
+            5 => [ 100001, 250000 ],
+            3 => [ 250001, 500000 ],
+            2 => [ 500001, 7500000 ],
+            1 => [ 7500001, 1000000 ],
+        ];
+
+
+        $keyPrecision = 11;
+        foreach($ranges as $key => $range){
+            if($precision >= $range[0] && $precision <= $range[1])
+                $keyPrecision = (int)$key;
         }
 
         $geoHash = new \Elastica\Aggregation\GeohashGrid('geohash_grid', $fieldName);
-        $geoHash->setPrecision($precision);
-        $geoHash->setShardSize(3);
+        $geoHash->setPrecision($keyPrecision);
 
         return $geoHash;
     }

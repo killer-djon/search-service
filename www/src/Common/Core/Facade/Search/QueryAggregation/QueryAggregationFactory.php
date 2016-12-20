@@ -9,7 +9,7 @@ use Common\Core\Facade\Service\RangeIterator;
 class QueryAggregationFactory implements QueryAggregationFactoryInterface
 {
 
-    const KOEFFICIENT_BOUUNDING_BOX = 12;
+    const KOEFFICIENT_BOUUNDING_BOX = 15;
 
     /**
      * Определение точности кластеризации по геоточкам
@@ -145,29 +145,16 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         $unit = 'km',
         $distanceType = \Elastica\Aggregation\GeoDistance::DISTANCE_TYPE_SLOPPY_ARC
     ) {
-
-        /*$skip = 1000;
-        foreach ($this->radiusRanges as $range) {
-            foreach ($range as $skipKey => $ranges) {
-                if ((int)$radius >= $ranges[0] && (int)$radius <= $ranges[1]) {
-                    $skip = $skipKey;
-                }else if( (int)$radius > $ranges[1] ){
-                    $skip = $ranges[1]/100;
-                }
-            }
-        }
-
-        $rangesArray = array_map(function ($n) {
-            return $n;
-        }, range(0, (int)$radius, $skip));
-        */
         $skip = (int)$radius / self::KOEFFICIENT_BOUUNDING_BOX;
         $rangesArray = array_map(function ($n) {
             return $n;
         }, range(0, (int)$radius, ceil($skip)));
 
         $newRange = new RangeIterator($rangesArray);
+        $newRange->setRadius($radius);
 
+        print_r($newRange->getRange());
+        exit;
         $geoDistance = new \Elastica\Aggregation\GeoDistance('geo_distance', $fieldName, $startPoint);
         $geoDistance->setUnit($unit);
         $geoDistance->setDistanceType($distanceType);

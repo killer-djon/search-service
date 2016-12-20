@@ -14,10 +14,16 @@ class RangeIterator implements \Iterator
 
     private $array = [];
 
+    private $radius;
+
     public function __construct(array $array)
     {
         $this->array = $array;
         $this->position = 0;
+    }
+
+    public function setRadius($radius){
+        $this->radius = $radius;
     }
 
     public function rewind()
@@ -58,6 +64,10 @@ class RangeIterator implements \Iterator
             }
 
             $this->next();
+        }
+
+        if( max($this->array) < $this->radius ){
+            array_push($ranges, [max($this->array), $this->radius]);
         }
 
         return $ranges;

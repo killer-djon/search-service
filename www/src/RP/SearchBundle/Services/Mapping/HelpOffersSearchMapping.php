@@ -25,16 +25,6 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
 
     const HELP_OFFERS_ID_FIELD = 'helpOffers.id';
 
-    const HELP_OFFERS_NAME_FIELD = 'helpOffers.name';
-
-    const HELP_OFFERS_NAME_TRANSLIT_FIELD = 'helpOffers._translit';
-
-    const HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD = 'helpOffers._translitNgram';
-
-    const HELP_OFFERS_NAME_NGRAM_FIELD = 'helpOffers._nameNgram';
-
-    const HELP_OFFERS_NAME_WORDS_NAME_FIELD = 'helpOffers._wordsName';
-
     /**
      * Получаем поля для поиска
      * сбор полей для формирования объекта запроса
@@ -46,9 +36,7 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
     {
         return [
             self::HELP_OFFERS_NAME_FIELD,
-            //self::HELP_OFFERS_NAME_NGRAM_FIELD,
             self::HELP_OFFERS_NAME_TRANSLIT_FIELD,
-            //self::HELP_OFFERS_NAME_TRANSLIT_NGRAM_FIELD,
         ];
     }
 
@@ -63,9 +51,15 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
     public static function getSearchConditionQueryMust(ConditionFactoryInterface $conditionFactory, $queryString)
     {
         return [
-            $conditionFactory
-                ->getFieldQuery(self::getMultiMatchQuerySearchFields(), $queryString)
-                ->setDefaultOperator(MultiMatch::OPERATOR_AND),
+            $conditionFactory->getMultiMatchQuery()
+                             ->setFields(array_merge(
+                                 self::getMorphologyQuerySearchFields(),
+                                 self::getMultiMatchQuerySearchFields()
+                             ))
+                             ->setQuery($queryString)
+                             ->setOperator(MultiMatch::OPERATOR_OR)
+                             ->setType(MultiMatch::TYPE_BEST_FIELDS)
+                             ->setMinimumShouldMatch('100%'),
         ];
     }
 
@@ -78,10 +72,22 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
     {
         return [
             self::HELP_OFFERS_WORDS_NAME_FIELD,
-            self::HELP_OFFERS_WORDS_NAME_TRANSLIT_FIELD
+            self::HELP_OFFERS_WORDS_NAME_TRANSLIT_FIELD,
         ];
     }
 
+    /**
+     * ВОзвращаем набор полей для префиксного поиска
+     *
+     * @return array
+     */
+    public static function getPrefixedQuerySearchFields()
+    {
+        return [
+            self::HELP_OFFERS_NAME_PREFIX_FIELD,
+            self::HELP_OFFERS_NAME_PREFIX_TRANSLIT_FIELD,
+        ];
+    }
 
     /**
      * Метод собирает условие построенные для глобального поиска
@@ -94,23 +100,21 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
     public static function getSearchConditionQueryShould(ConditionFactoryInterface $conditionFactory, $queryString)
     {
         $prefixWildCard = [];
-        $subMorphologyField = [];
 
         foreach (self::getPrefixedQuerySearchFields() as $field) {
-            $prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
+            $prefixWildCard[] = $conditionFactory->getMatchPhraseQuery($field, $queryString);
         }
 
         return [
-            $conditionFactory->getMultiMatchQuery()
-                             ->setFields(self::getMultiMatchQuerySearchFields())
-                             ->setQuery($queryString)
-                             ->setOperator(MultiMatch::OPERATOR_OR)
-                             ->setType(MultiMatch::TYPE_BEST_FIELDS),
-            $conditionFactory->getBoolQuery([], array_merge($prefixWildCard, [
-                $conditionFactory->getBoolQuery([], [
-                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString)
-                ], []),
-            ]), []),
+            $conditionFactory->getDisMaxQuery(array_merge([
+                $conditionFactory->getMultiMatchQuery()
+                                 ->setFields(self::getMultiMatchQuerySearchFields())
+                                 ->setQuery($queryString)
+                                 ->setOperator(MultiMatch::OPERATOR_OR)
+                                 ->setType(MultiMatch::TYPE_BEST_FIELDS),
+            ], $prefixWildCard, [
+                $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString),
+            ])),
         ];
     }
 
@@ -124,7 +128,7 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
         return [
-            $filterFactory->getExistsFilter(self::HELP_OFFERS_LIST_FIELD)
+            $filterFactory->getExistsFilter(self::HELP_OFFERS_LIST_FIELD),
         ];
     }
 
@@ -138,20 +142,22 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
         return [
-            $filterFactory->getExistsFilter(self::HELP_OFFERS_LIST_FIELD)
+            $filterFactory->getExistsFilter(self::HELP_OFFERS_LIST_FIELD),
         ];
     }
 
-
-
     /**
      * Статический класс получения условий подсветки при поиске
+     *
      * @return array
      */
     public static function getHighlightConditions()
     {
-        $highlight[self::HELP_OFFERS_NAME_FIELD] = [
-            'term_vector' => 'with_positions_offsets'
+        $highlight = [
+            '*' => [
+                'term_vector'   => 'with_positions_offsets',
+                'fragment_size' => 150,
+            ],
         ];
 
         return $highlight;

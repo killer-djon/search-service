@@ -323,22 +323,6 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             $prefixWildCardByTags[] = $conditionFactory->getPrefixQuery($field, $queryString, 0.2);
         }
 
-        /*
-        return [
-            $conditionFactory->getMultiMatchQuery()
-                             ->setFields(array_merge(
-                                 self::getMultiMatchQuerySearchFields(),
-                                 self::getMultiSubMatchQuerySearchFields()
-                             ))
-                             ->setQuery($queryString)
-                             ->setOperator(MultiMatch::OPERATOR_OR)
-                             ->setType(MultiMatch::TYPE_BEST_FIELDS),
-            $conditionFactory->getBoolQuery([], array_merge($prefixWildCard, [
-                $conditionFactory->getBoolQuery([], [
-                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString)
-                ], []),
-            ]), []),
-        ];*/
         return [
             $conditionFactory->getDisMaxQuery(array_merge([
                     $conditionFactory->getMultiMatchQuery()

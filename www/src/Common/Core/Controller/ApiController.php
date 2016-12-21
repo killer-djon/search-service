@@ -435,7 +435,7 @@ abstract class ApiController extends FOSRestController
             if( $key == 'text' && empty($value) ){
 	            $value = ' ';
             }*/
-            if( in_array($key, $this->neededKeys) && empty($value) ){
+            if( array_key_exists($key, $this->neededKeys) && empty($value) ){
 	            $value = $this->neededKeys[$key];
             }
 

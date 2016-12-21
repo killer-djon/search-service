@@ -404,8 +404,8 @@ abstract class ApiController extends FOSRestController
 	private $neededKeys = [
 		'surname' => ' ',
 		'text' => ' ',
-		'distance' => 0,
-		'distanceInPercent' => 0
+		'distance' => '0',
+		'distanceInPercent' => '0'
 	];
 
     /**

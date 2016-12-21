@@ -401,6 +401,13 @@ abstract class ApiController extends FOSRestController
         'distanceInPercent' => 'distancePct',
     ];
 
+	private $neededKeys = [
+		'surname' => ' ',
+		'text' => ' ',
+		'distance' => 0,
+		'distanceInPercent' => 0
+	];
+
     /**
      * Временный метод
      * предназначен для замены имени ключа в объектах ответа
@@ -419,12 +426,17 @@ abstract class ApiController extends FOSRestController
             if (is_array($value)) {
                 $value = $this->changeKeysName($value);
             }
-            if( $key == 'surname' && empty($value) ){
+            
+            
+            /*if( $key == 'surname' && empty($value) ){
                 $value = ' ';
             }
             
             if( $key == 'text' && empty($value) ){
 	            $value = ' ';
+            }*/
+            if( in_array($key, $this->neededKeys) && empty($value) ){
+	            $value = $this->neededKeys[$key];
             }
 
             $return[$key] = $value;

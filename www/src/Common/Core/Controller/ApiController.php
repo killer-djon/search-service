@@ -420,7 +420,11 @@ abstract class ApiController extends FOSRestController
                 $value = $this->changeKeysName($value);
             }
             if( $key == 'surname' && empty($value) ){
-                $value = " ";
+                $value = ' ';
+            }
+            
+            if( $key == 'text' && empty($value) ){
+	            $value = ' ';
             }
 
             $return[$key] = $value;

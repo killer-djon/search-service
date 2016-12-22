@@ -148,6 +148,7 @@ abstract class ApiController extends FOSRestController
         $filtered = array_filter(explode(self::MARKER_FILTER_DELIMITER, $types), function ($type) {
             return !empty($type);
         });
+
         return array_values($filtered);
     }
 
@@ -345,7 +346,6 @@ abstract class ApiController extends FOSRestController
         );
     }
 
-
     /**
      * Временный метод который добавляет ключ tagNames
      * во все массивы где есть tags
@@ -387,13 +387,18 @@ abstract class ApiController extends FOSRestController
             isset($item['lon']) && $item['longitude'] = $item['lon'];
         });
 
-        foreach($inputArray as $key => & $arItem)
-        {
+        foreach ($inputArray as $key => & $arItem) {
             isset($arItem['location']['point']) && $arItem['latitude'] =& $arItem['location']['point']['lat'];
             isset($arItem['location']['point']) && $arItem['longitude'] =& $arItem['location']['point']['lon'];
         }
     }
 
+    /**
+     * Набор полей для преобразования
+     * поддержка старых приложений
+     *
+     * @var array
+     */
     protected $fieldsMap = [
         'fullname'          => 'fullName',
         'tagsInPercent'     => 'matchingInterestsInPercents',
@@ -401,12 +406,19 @@ abstract class ApiController extends FOSRestController
         'distanceInPercent' => 'distancePct',
     ];
 
-	private $neededKeys = [
-		'surname' => ' ',
-		'text' => ' ',
-		'distance' => '0',
-		'distanceInPercent' => '0'
-	];
+    /**
+     * Набор полей которые не нужно исключать из набора данных
+     * по общим правилам мы исключаем поля пустые или массивы пустые
+     * а это исключать не надо иначе выводятся NULL значения
+     *
+     * @var array
+     */
+    private $neededKeys = [
+        'surname'           => ' ',
+        'text'              => ' ',
+        'distance'          => 0,
+        'distanceInPercent' => 0,
+    ];
 
     /**
      * Временный метод
@@ -426,17 +438,9 @@ abstract class ApiController extends FOSRestController
             if (is_array($value)) {
                 $value = $this->changeKeysName($value);
             }
-            
-            
-            /*if( $key == 'surname' && empty($value) ){
-                $value = ' ';
-            }
-            
-            if( $key == 'text' && empty($value) ){
-	            $value = ' ';
-            }*/
-            if( array_key_exists($key, $this->neededKeys) && empty($value) ){
-	            $value = $this->neededKeys[$key];
+
+            if (array_key_exists($key, $this->neededKeys) && empty($value)) {
+                $value = $this->neededKeys[$key];
             }
 
             $return[$key] = $value;

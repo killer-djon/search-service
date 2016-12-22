@@ -109,8 +109,6 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
             if (!doc[pointField].empty && radius) {
                 var distance = doc[pointField].distanceInKm(lat, lon);
                 distanceInPercent = distance * 100 / (radius / 1000);
-            }else{
-                distanceInPercent = 0;
             }
             distanceInPercent = parseInt(distanceInPercent)
             ";

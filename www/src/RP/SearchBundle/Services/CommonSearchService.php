@@ -128,7 +128,9 @@ class CommonSearchService extends AbstractSearchService
 
                 if (!is_null($searchText)) {
                     $searchText = mb_strtolower($searchText);
-                    $slopPhrase = explode(" ", $searchText);
+                    $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
+
+                    $slopPhrase = array_filter(explode(" ", $searchText));
                     $queryShouldFields = $must = $should = [];
 
                     if (count($slopPhrase) > 1) {
@@ -201,7 +203,6 @@ class CommonSearchService extends AbstractSearchService
             $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
 
             if (!is_null($searchText)) {
-                $searchText = mb_strtolower($searchText);
 
                 $this->setScriptFunctions([
                     FunctionScore::DECAY_GAUSS => [
@@ -231,7 +232,10 @@ class CommonSearchService extends AbstractSearchService
                     ),
                 ]);
 
-                $slopPhrase = explode(" ", $searchText);
+                $searchText = mb_strtolower($searchText);
+                $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
+
+                $slopPhrase = array_filter(explode(" ", $searchText));
                 $queryShouldFields = $must = $should = $subShould = [];
 
                 if (count($slopPhrase) > 1) {

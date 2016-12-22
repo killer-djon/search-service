@@ -10,6 +10,8 @@ use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Exception\ElasticsearchException;
 use Elastica\Query\FunctionScore;
+use Elastica\Query\MultiMatch;
+use RP\SearchBundle\Services\Mapping\HelpOffersSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use Common\Core\Facade\Service\Geo\GeoPointService;
 
@@ -143,6 +145,8 @@ class PeopleSearchService extends AbstractSearchService
             $query = $this->createQuery($skip, $count);
         }
 
+
+
         return $this->searchDocuments($query, PeopleSearchMapping::CONTEXT);
     }
 
@@ -231,7 +235,8 @@ class PeopleSearchService extends AbstractSearchService
         ]);
 
         if (!is_null($searchText) && !empty($searchText)) {
-            $this->setConditionQueryShould([
+
+            /*$this->setConditionQueryShould([
                 $this->_queryConditionFactory->getMultiMatchQuery()
                                              ->setQuery($searchText)
                                              ->setFields(array_merge(
@@ -252,10 +257,61 @@ class PeopleSearchService extends AbstractSearchService
                     PeopleSearchMapping::FULLNAME_MORPHOLOGY_FIELD,
                     "{$searchText}*"
                 ),
-            ]);
-        }
+            ]);*/
+            $searchText = mb_strtolower($searchText);
+            $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
 
-        $queryMatch = $this->createQuery($skip, $count);
+            $slopPhrase = array_filter(explode(" ", $searchText));
+            $queryShouldFields = $must = $should = [];
+
+            $this->setHighlightQuery([
+                HelpOffersSearchMapping::getHighlightConditions()
+            ]);
+
+            if( count($slopPhrase) > 1 ){
+                // поиск по словосочетанию
+                $this->setConditionQueryMust([
+                    $this->_queryConditionFactory->getDisMaxQuery([
+                        $this->_queryConditionFactory->getMatchPhraseQuery(
+                            HelpOffersSearchMapping::HELP_OFFERS_NAME_FIELD, $searchText
+                        ),
+                        $this->_queryConditionFactory->getMatchPhraseQuery(
+                            HelpOffersSearchMapping::HELP_OFFERS_NAME_TRANSLIT_FIELD, $searchText
+                        )
+                    ])
+                ]);
+            }else{
+                // ищем по одному слову, с учетом словоформы, с учетом вхождения морфологии
+                $this->setConditionQueryShould([
+                    $this->_queryConditionFactory->getDisMaxQuery([
+                        $this->_queryConditionFactory->getMultiMatchQuery()
+                                                     ->setFields([
+                                                         HelpOffersSearchMapping::HELP_OFFERS_NAME_FIELD,
+                                                         HelpOffersSearchMapping::HELP_OFFERS_NAME_TRANSLIT_FIELD,
+                                                     ])
+                                                     ->setQuery($searchText)
+                                                     ->setOperator(MultiMatch::OPERATOR_OR),
+                        $this->_queryConditionFactory->getFieldQuery([
+                            HelpOffersSearchMapping::HELP_OFFERS_WORDS_NAME_FIELD,
+                            HelpOffersSearchMapping::HELP_OFFERS_WORDS_NAME_TRANSLIT_FIELD
+                        ], $searchText),
+                        $this->_queryConditionFactory->getMatchPhrasePrefixQuery(
+                            HelpOffersSearchMapping::HELP_OFFERS_WORDS_NAME_FIELD, $searchText
+                        ),
+                        $this->_queryConditionFactory->getMatchPhrasePrefixQuery(
+                            HelpOffersSearchMapping::HELP_OFFERS_WORDS_NAME_TRANSLIT_FIELD, $searchText
+                        )
+                    ])
+                ]);
+
+            }
+
+            $queryMatch = $this->createQuery($skip, $count);
+        }else{
+            $queryMatch = $this->createMatchQuery(
+                null, [], $skip, $count
+            );
+        }
 
         /** поиск документа */
         return $this->searchDocuments($queryMatch, PeopleSearchMapping::CONTEXT);
@@ -277,24 +333,6 @@ class PeopleSearchService extends AbstractSearchService
     {
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
-
-        /*$tagsIntersectRange = [
-            'category1' => [
-                'min'      => 50,
-                'max'      => 100,
-                'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MIN,
-            ],
-            'category2' => [
-                'min'      => 30,
-                'max'      => 50,
-                'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX,
-            ],
-            'category3' => [
-                'min'      => 0,
-                'max'      => 30,
-                'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX,
-            ],
-        ];*/
 
         $tagsIntersectRange = [
             'category1' => [
@@ -373,8 +411,7 @@ class PeopleSearchService extends AbstractSearchService
                             'lat' => $point->getLatitude(),
                             'lon' => $point->getLongitude(),
                         ],
-                        (int)$tagsRange['distance'],
-                        'm'
+                        $tagsRange['distance']/1000
                     ),
                 ]);
             }
@@ -399,8 +436,7 @@ class PeopleSearchService extends AbstractSearchService
 
             $this->setScriptFunctionOption([
                 'scoreMode' => 'multiply',
-                'boostMode' => 'multiply',
-                'maxBoost'  => 10,
+                'boostMode' => 'multiply'
             ]);
 
             $this->setSortingQuery([

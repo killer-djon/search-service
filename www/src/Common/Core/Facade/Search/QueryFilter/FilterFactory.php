@@ -134,7 +134,7 @@ class FilterFactory implements FilterFactoryInterface
     {
         $distance = (int)$distance . $unit;
         $geoDistanceFilter = new \Elastica\Filter\GeoDistance($fieldName, $point, $distance);
-        $geoDistanceFilter->setParam('ignore_malformed', false);
+        $geoDistanceFilter->setParam('ignore_malformed', true);
 
         return $geoDistanceFilter;
     }

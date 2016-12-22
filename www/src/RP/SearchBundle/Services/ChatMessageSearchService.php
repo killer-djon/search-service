@@ -72,8 +72,10 @@ class ChatMessageSearchService extends AbstractSearchService
             );
         } else {
 
-            $searchText = strtolower($searchText);
-            $slopPhrase = explode(" ", $searchText);
+            $searchText = mb_strtolower($searchText);
+            $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
+
+            $slopPhrase = array_filter(explode(" ", $searchText));
             $queryShouldFields = $must = $should = [];
 
             if (count($slopPhrase) > 1) {

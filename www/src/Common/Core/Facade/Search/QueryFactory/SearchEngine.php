@@ -541,7 +541,13 @@ class SearchEngine implements SearchEngineInterface
             $elasticQuery->setSize(1);
             $elasticQuery->setFrom(0);
 
-            $resultSet = $elasticType->search($elasticQuery);
+            //$resultSet = $elasticType->search($elasticQuery);
+            $searchQuery = $elasticType->createSearch($elasticQuery);
+            if( !$searchQuery->hasIndex( $this->availableTypesSearch[$context]::DEFAULT_INDEX ) ){
+                $searchQuery->addIndex($this->availableTypesSearch[$context]::DEFAULT_INDEX);
+            }
+
+            $resultSet = $searchQuery->search();
 
             if ($resultSet->current() !== false) {
                 $items = $resultSet->current()->getData();

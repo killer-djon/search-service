@@ -95,6 +95,8 @@ class SearchCityController extends ApiController
      */
     public function searchCityByIdAction(Request $request, $cityId)
     {
+        $data = null;
+
         try {
             $citySearchService = $this->getCitySearchService();
             $city = $citySearchService->searchRecordById(
@@ -103,16 +105,13 @@ class SearchCityController extends ApiController
                 $cityId
             );
 
-            if (!is_null($city)) {
-                return $this->_handleViewWithData($city);
-            }
-
+            $data = $city;
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {
             return $this->_handleViewWithError($e);
         }
 
-        return null;
+        return $this->_handleViewWithData($data);
     }
 }

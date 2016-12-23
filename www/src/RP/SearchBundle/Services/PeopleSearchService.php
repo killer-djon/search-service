@@ -443,12 +443,6 @@ class PeopleSearchService extends AbstractSearchService
                 $this->_sortingFactory->getGeoDistanceSort(
                     PeopleSearchMapping::LOCATION_POINT_FIELD,
                     $point
-                ),
-                $this->_sortingFactory->getScriptingSort(
-                    $this->_scriptFactory->getTagsIntersectInPercentScript(
-                        PeopleSearchMapping::TAGS_ID_FIELD,
-                        $currentUser->getTags()
-                    )
                 )
             ]);
 

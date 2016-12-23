@@ -401,7 +401,7 @@ class CommonSearchService extends AbstractSearchService
              */
             $documents = $this->searchMultiTypeDocuments($queryMatchResults);
 
-            if ($isCluster == true) {
+            /*if ($isCluster == true) {
                 if ($this->getClusterGrouped() == true) {
                     $documents['cluster'] = $this->groupClasterLocationBuckets(
                         $documents['cluster'],
@@ -411,7 +411,7 @@ class CommonSearchService extends AbstractSearchService
                 }
             } else {
                 unset($documents['cluster']);
-            }
+            }*/
 
             return $documents;
         }

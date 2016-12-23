@@ -352,25 +352,24 @@ class PeopleSearchService extends AbstractSearchService
         }, $currentUser->getTags());
 
         $script_string = "
-            count = 0;
-            tagsCount = 0;
-            tagInPercent = 0;
-
+            int count = 0;
+            int tagsCount = 0;
+            int tagInPercent = 0;
+            
             if(tagsValue.size() > 0 && doc[tagIdField].values.size() > 0){
-                for(var i = 0, len = tagsValue.size(); i < len; i++){
-                    ++tagsCount;
-                    for(var j = 0, lenJ = doc[tagIdField].values.size(); j < lenJ; j++){
+                for(i = 0; i < tagsValue.size(); i++){
+                    tagsCount++;
+                    for(j = 0; j < doc[tagIdField].values.size(); j++){
                         if( tagsValue[i] == doc[tagIdField][j] ){
-                            ++count;
+                            count++;
                         }
                     }
                 }
-
                 tagInPercent = count/tagsCount*100;
-                tagInPercent = Math.round(tagInPercent)
+                tagInPercent = Math.round(tagInPercent);
             }
-
-            (tagInPercent >= intersectRange.min && tagInPercent <= intersectRange.max)
+            
+            return (tagInPercent >= intersectRange.min && tagInPercent <= intersectRange.max);
         ";
 
         $resultQuery = [];
@@ -387,7 +386,7 @@ class PeopleSearchService extends AbstractSearchService
                             'min' => (int)$tagsRange['min'],
                             'max' => (int)$tagsRange['max'],
                         ],
-                    ])
+                    ], \Elastica\Script::LANG_GROOVY)
                 ),
                 $this->_queryFilterFactory->getNotFilter(
                     $this->_queryFilterFactory->getTermsFilter(

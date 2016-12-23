@@ -358,10 +358,10 @@ class PeopleSearchService extends AbstractSearchService
             
             if(tagsValue.size() > 0 && doc[tagIdField].values.size() > 0){
                 for(i = 0; i < tagsValue.size(); i++){
-                    tagsCount++;
+                    ++tagsCount;
                     for(j = 0; j < doc[tagIdField].values.size(); j++){
                         if( tagsValue[i] == doc[tagIdField][j] ){
-                            count++;
+                            ++count;
                         }
                     }
                 }
@@ -369,7 +369,7 @@ class PeopleSearchService extends AbstractSearchService
                 tagInPercent = Math.round(tagInPercent);
             }
             
-            return (tagInPercent >= intersectRange.min && tagInPercent <= intersectRange.max);
+            return (tagInPercent <= intersectRange.max && tagInPercent >= intersectRange.min);
         ";
 
         $resultQuery = [];
@@ -410,7 +410,8 @@ class PeopleSearchService extends AbstractSearchService
                             'lat' => $point->getLatitude(),
                             'lon' => $point->getLongitude(),
                         ],
-                        $tagsRange['distance']/1000
+                        $tagsRange['distance'],
+                        'm'
                     ),
                 ]);
             }

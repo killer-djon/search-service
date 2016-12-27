@@ -6,6 +6,13 @@ namespace Common\Core\Facade\Service\Geo;
  */
 class GeoPointService implements GeoPointServiceInterface
 {
+
+    /**
+     * Радиус сферы земного шара
+     *
+     * @const int
+     */
+    const EARTH_RADIUS = 6378137;
     /* ----------------- Constraint parameters ----------------- */
 
     /** Минимальное значение для широты координаты */
@@ -97,7 +104,7 @@ class GeoPointService implements GeoPointServiceInterface
      */
     public function getRadius()
     {
-        return $this->_radius ?: NULL;
+        return $this->_radius ?: null;
     }
 
     /**
@@ -131,7 +138,7 @@ class GeoPointService implements GeoPointServiceInterface
      */
     private function _setRadius($radius)
     {
-	    $this->_radius = $radius;
+        $this->_radius = $radius;
     }
 
     /**
@@ -183,7 +190,6 @@ class GeoPointService implements GeoPointServiceInterface
      *
      * @param array $data 2 dimensional array of latitudes and longitudes
      * For Example:
-     *
      * $data = array
      * (
      *   0 = > array('latitude' => 45.849382, 'longitude' => 76.322333),
@@ -191,12 +197,13 @@ class GeoPointService implements GeoPointServiceInterface
      *   2 = > array('latitude' => 45.765744, 'longitude' => 76.543223),
      *   3 = > array('latitude' => 45.784234, 'longitude' => 74.542335)
      * );
-     *
      * @return array
      */
     public static function GetCenterFromDegrees(array $data)
     {
-        if (!count($data)) return [];
+        if (!count($data)) {
+            return [];
+        }
 
         $num_coords = count($data);
 
@@ -204,8 +211,7 @@ class GeoPointService implements GeoPointServiceInterface
         $Y = 0.0;
         $Z = 0.0;
 
-        foreach ($data as $coord)
-        {
+        foreach ($data as $coord) {
             $lat = $coord['latitude'] * pi() / 180;
             $lon = $coord['longitude'] * pi() / 180;
 
@@ -227,8 +233,68 @@ class GeoPointService implements GeoPointServiceInterface
         $lat = atan2($Z, $hyp);
 
         return [
-            'latitude' => $lat * 180 / pi(),
-            'longitude' => $lon * 180 / pi()
+            'latitude'  => $lat * 180 / pi(),
+            'longitude' => $lon * 180 / pi(),
         ];
     }
+
+    /**
+     * Добавляем метры/киллометры к координате широты
+     *
+     * @param float $lat Широта
+     * @param int $meters Сколько метров прибавляем
+     * @return float Новое значение координаты широты
+     */
+    public static function addDistanceToLat($lat, $meters = 0)
+    {
+         $newLat = $meters/self::EARTH_RADIUS;
+
+         return $lat + $newLat * self::LONGITUDE_MAX / pi();
+    }
+
+    /**
+     * Добавляем метры/киллометры к координате долготы
+     *
+     * @param float $lat Широта
+     * @param float $lon Долгота
+     * @param int $meters Сколько метров прибавляем
+     * @return float Новое значение координаты долготы
+     */
+    public static function addDistanceToLon($lat, $lon, $meters = 0)
+    {
+        $newLon = $meters / (self::EARTH_RADIUS * cos(pi() * $lat / self::LONGITUDE_MAX));
+
+        return $lon + $newLon * self::LONGITUDE_MAX / pi();
+    }
+
+
+    /**
+     * Добавляем метры/киллометры к координате широты
+     *
+     * @param float $lat Широта
+     * @param int $meters Сколько метров прибавляем
+     * @return float Новое значение координаты широты
+     */
+    public static function removeDistanceFromLat($lat, $meters = 0)
+    {
+        $newLat = $meters/self::EARTH_RADIUS;
+
+        return $lat - $newLat * self::LONGITUDE_MAX / pi();
+    }
+
+    /**
+     * Добавляем метры/киллометры к координате долготы
+     *
+     * @param float $lat Широта
+     * @param float $lon Долгота
+     * @param int $meters Сколько метров прибавляем
+     * @return float Новое значение координаты долготы
+     */
+    public static function removeDistanceFromLon($lat, $lon, $meters = 0)
+    {
+        $newLon = $meters / (self::EARTH_RADIUS * cos(pi() * $lat / self::LONGITUDE_MAX));
+
+        return $lon - $newLon * self::LONGITUDE_MAX / pi();
+    }
+
 }

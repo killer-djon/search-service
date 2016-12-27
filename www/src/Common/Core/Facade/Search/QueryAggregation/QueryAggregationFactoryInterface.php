@@ -14,6 +14,18 @@ interface QueryAggregationFactoryInterface
      */
     const DEFAULT_RADIUS_DISTANCE = 3;
 
+
+    public function getGeoCentroidAggregation($fieldName);
+
+    /**
+     * Формирование сетки для аггрегирования данных
+     *
+     * @param string $fieldName Названиние поля
+     * @param bool $setWrapLon
+     * @return \Elastica\Aggregation\AbstractAggregation
+     */
+    public function getGeoBoundBoxAggregation($fieldName, $setWrapLon = true);
+
     /**
      * Получаем аггрегированный скрипт AVG
      *

@@ -4,12 +4,13 @@
  */
 namespace Common\Core\Facade\Search\QueryAggregation;
 
+use Common\Core\Facade\Service\Geo\GeoPointService;
 use Common\Core\Facade\Service\RangeIterator;
 
 class QueryAggregationFactory implements QueryAggregationFactoryInterface
 {
 
-    const KOEFFICIENT_BOUUNDING_BOX = 15;
+    const KOEFFICIENT_BOUNDING_BOX = 15;
 
     /**
      * Определение точности кластеризации по геоточкам
@@ -31,13 +32,32 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         [0.037, 0.019],
     ];
 
+    /**
+     * Формирование сетки для аггрегирования данных
+     *
+     * @param string $fieldName Названиние поля
+     * @param bool $setWrapLon
+     * @return \Elastica\Aggregation\AbstractAggregation
+     */
+    public function getGeoBoundBoxAggregation($fieldName, $setWrapLon = true)
+    {
+        $geoBound = new GeoBounds($fieldName);
+        $geoBound->setWrapLongitude($setWrapLon);
+        return $geoBound;
+    }
 
-
-    public function getTermsAggregation($fieldName){
+    /**
+     * Аггрегирование по значению
+     * т.е. развернуть bucket документы
+     *
+     * @param string $fieldName Название поля
+     * @return \Elastica\Aggregation\Terms
+     */
+    public function getTermsAggregation($fieldName)
+    {
         $geo = new \Elastica\Aggregation\Terms('distance-hashes');
         $geo->setField($fieldName);
         $geo->setMinimumDocumentCount(1);
-
 
         return $geo;
     }
@@ -114,7 +134,6 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         [500 => [3001, 5000]],
         [750 => [5001, 7000]],
 
-
         [1000 => [7001, 10000]],
         [2500 => [10001, 25000]],
         [5000 => [25001, 50000]],
@@ -145,7 +164,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         $unit = 'km',
         $distanceType = \Elastica\Aggregation\GeoDistance::DISTANCE_TYPE_SLOPPY_ARC
     ) {
-        $skip = (int)$radius / self::KOEFFICIENT_BOUUNDING_BOX;
+        $skip = (int)$radius / self::KOEFFICIENT_BOUNDING_BOX;
         $rangesArray = array_map(function ($n) {
             return $n;
         }, range(0, (int)$radius, ceil($skip)));
@@ -199,7 +218,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
             $precision = current(array_keys($precisionPoint, min($precisionPoint))) + 1;
         }
 
-        $geoHash = new \Elastica\Aggregation\GeohashGrid('geohash_grid', $fieldName);
+        $geoHash = new \Elastica\Aggregation\GeohashGrid('geohash', $fieldName);
         $geoHash->setPrecision($precision);
 
         return $geoHash;

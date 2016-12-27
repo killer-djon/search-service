@@ -1,7 +1,9 @@
 <?php
 namespace Common\Core\Facade\Search\QueryFilter;
 
+use Common\Core\Facade\Service\Geo\GeoPointService;
 use Elastica\Filter\AbstractFilter;
+use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 
 class FilterFactory implements FilterFactoryInterface
 {
@@ -43,8 +45,7 @@ class FilterFactory implements FilterFactoryInterface
     public function getGeoHashFilter($fieldName, array $point, $precision = -1, $geohash = null, $neighbors = false)
     {
         $geohashCell = new \Elastica\Filter\GeohashCell($fieldName, $point, $precision, $neighbors);
-        if( !is_null($geohash) && !empty($geohash) )
-        {
+        if (!is_null($geohash) && !empty($geohash)) {
             $geohashCell->setPrecision(-1);
             $geohashCell->setGeohash($geohash);
         }
@@ -272,6 +273,7 @@ class FilterFactory implements FilterFactoryInterface
     public function getMissingFilter($fieldName)
     {
         $missingFilter = new \Elastica\Filter\Missing($fieldName);
+
         return $missingFilter;
     }
 
@@ -304,6 +306,29 @@ class FilterFactory implements FilterFactoryInterface
     public function getTypeFilter($type)
     {
         return new \Elastica\Filter\Type($type);
+    }
+
+    /**
+     * Фильтр который позволяет получить объекты в квадрате карты
+     *
+     * @param string $fieldName Название поля
+     * @param array $coordinates Координаты
+     * @param int $radius Радиус в метрах
+     * @return array
+     */
+    public function getBoundingBoxFilter($fieldName, array $coordinates, $radius)
+    {
+        $startPoints = [
+            'lat' => GeoPointService::addDistanceToLat($coordinates['lat'], $radius/2),
+            'lon' => GeoPointService::removeDistanceFromLon($coordinates['lat'], $coordinates['lon'], $radius/2),
+        ];
+
+        $endPoints = [
+            'lat' => GeoPointService::removeDistanceFromLat($coordinates['lat'], $radius/2),
+            'lon' => GeoPointService::addDistanceToLon($coordinates['lat'], $coordinates['lon'], $radius/2),
+        ];
+
+        return new \Elastica\Filter\GeoBoundingBox($fieldName, [$startPoints, $endPoints]);
     }
 
 }

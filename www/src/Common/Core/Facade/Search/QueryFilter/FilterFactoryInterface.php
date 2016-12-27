@@ -195,4 +195,14 @@ interface FilterFactoryInterface
      * @return \Elastica\Filter\BoolFilter
      */
     public function getBoolFilter(array $must, array $should, array $mustNot);
+
+    /**
+     * Фильтр который позволяет получить объекты в квадрате карты
+     *
+     * @param string $fieldName Название поля
+     * @param array $coordinates Координаты
+     * @param int $radius Радиус в метрах
+     * @return array
+     */
+    public function getBoundingBoxFilter($fieldName, array $coordinates, $radius);
 }

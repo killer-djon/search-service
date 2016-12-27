@@ -327,14 +327,15 @@ class SearchEngine implements SearchEngineInterface
 
             foreach ($elasticQueries as $keyType => $elasticQuery) {
                 $elasticQuery->setSource((bool)$setSource);
-                $elasticType = $this->_getElasticType($this->searchTypes[$keyType]);
 
+                $elasticType = $this->_getElasticType($this->searchTypes[$keyType]);
                 $searchItem = $elasticType->createSearch($elasticQuery);
                 if (!$searchItem->hasIndex($this->availableTypesSearch[$this->searchTypes[$keyType]]::DEFAULT_INDEX)) {
                     $searchItem->addIndex($this->availableTypesSearch[$this->searchTypes[$keyType]]::DEFAULT_INDEX);
                 }
                 $search->addSearch($searchItem, $keyType);
             }
+
             return $this->multiTransformResult($search->search());
         } catch (ElasticsearchException $e) {
             throw new ElasticsearchException($e);
@@ -352,7 +353,6 @@ class SearchEngine implements SearchEngineInterface
     public function multiTransformResult(\Elastica\Multi\ResultSet $resultSets)
     {
         $resultIterator = $resultSets->getResultSets();
-
         if (!empty($resultIterator)) {
             $results = $info = $items = [];
             $aggs = [];
@@ -493,6 +493,7 @@ class SearchEngine implements SearchEngineInterface
                     'key'       => $keyHash,
                     'doc_count' => $sumDocCount,
                     'types'     => implode(',', $docTypes),
+                    //'location' => $location
                     'location'  => GeoPointService::GetCenterFromDegrees($location),
                 ];
 

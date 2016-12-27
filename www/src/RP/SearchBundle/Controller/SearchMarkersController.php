@@ -38,6 +38,7 @@ class SearchMarkersController extends ApiController
 
             // получаем порцию данных из ячайки класстера
             $geoHashCell = $request->get(Location::GEO_HASH_CELL_PARAM);
+            $geoHashCell = mb_strtolower($geoHashCell);
 
             if (mb_strlen($geoHashCell) <= 0) {
                 if (is_null($this->getGeoPoint()->getRadius())) {

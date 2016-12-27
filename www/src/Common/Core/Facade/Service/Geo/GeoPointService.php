@@ -247,9 +247,9 @@ class GeoPointService implements GeoPointServiceInterface
      */
     public static function addDistanceToLat($lat, $meters = 0)
     {
-         $newLat = $meters/self::EARTH_RADIUS;
+        $newLat = $meters / self::EARTH_RADIUS;
 
-         return $lat + $newLat * self::LONGITUDE_MAX / pi();
+        return $lat + $newLat * self::LONGITUDE_MAX / pi();
     }
 
     /**
@@ -267,7 +267,6 @@ class GeoPointService implements GeoPointServiceInterface
         return $lon + $newLon * self::LONGITUDE_MAX / pi();
     }
 
-
     /**
      * Добавляем метры/киллометры к координате широты
      *
@@ -277,7 +276,7 @@ class GeoPointService implements GeoPointServiceInterface
      */
     public static function removeDistanceFromLat($lat, $meters = 0)
     {
-        $newLat = $meters/self::EARTH_RADIUS;
+        $newLat = $meters / self::EARTH_RADIUS;
 
         return $lat - $newLat * self::LONGITUDE_MAX / pi();
     }

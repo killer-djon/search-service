@@ -5,6 +5,7 @@
 namespace Common\Core\Facade\Search\QueryFactory;
 
 use Common\Core\Constants\Location;
+use Common\Core\Controller\ControllerTrait;
 use Common\Core\Facade\Search\QueryScripting\QueryScriptFactoryInterface;
 use Common\Core\Facade\Service\Geo\GeoPointService;
 use Elastica\Exception\ElasticsearchException;
@@ -30,6 +31,7 @@ use Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface;
 
 class SearchEngine implements SearchEngineInterface
 {
+    use ControllerTrait;
     /**
      * Устанавливаем флаг формата данных для старых версий
      *
@@ -502,6 +504,8 @@ class SearchEngine implements SearchEngineInterface
                     $docItemValues = array_map(function ($item) {
                         return $item['_source'];
                     }, array_values(current($docItems)));
+
+                    $this->restructLocationField($docItemValues);
 
                     $resultItem['items'] = $docItemValues;
                 }

@@ -386,10 +386,12 @@ class CommonSearchService extends AbstractSearchService
                     $this->setAggregationQuery([
                         $this->_queryAggregationFactory->getGeoHashAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
-                            $point, 5
-                        )->addAggregation($this->_queryAggregationFactory->getGeoBoundBoxAggregation(
-                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
-                        ))->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
+                            [
+                                "lat" => $point->getLatitude(),
+                                "lon" => $point->getLongitude(),
+                            ],
+                            $point->getRadius()
+                        )->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
                         ))->addAggregation($this->_queryAggregationFactory->setAggregationSource(
                             AbstractSearchMapping::LOCATION_FIELD,

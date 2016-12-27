@@ -356,23 +356,6 @@ class CommonSearchService extends AbstractSearchService
                 //$this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
 
                 if ($isCluster == true) {
-                    /*$this->setAggregationQuery([
-                        $this->_queryAggregationFactory->getGeoDistanceAggregation(
-                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
-                            [
-                                "lat" => $point->getLatitude(),
-                                "lon" => $point->getLongitude(),
-                            ],
-                            $point->getRadius(),
-                            'm'
-                        )->addAggregation($this->_queryAggregationFactory->setAggregationSource(
-                            AbstractSearchMapping::LOCATION_FIELD,
-                            [], 1
-                        ))->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
-                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
-                        )),
-                    ]);*/
-
                     $this->setFilterQuery([
                         $this->_queryFilterFactory->getBoundingBoxFilter(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
@@ -384,31 +367,21 @@ class CommonSearchService extends AbstractSearchService
                     ]);
 
                     $this->setAggregationQuery([
-                        $this->_queryAggregationFactory->getGeoHashAggregation(
+                        $this->_queryAggregationFactory->getGeoDistanceAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
                             [
                                 "lat" => $point->getLatitude(),
                                 "lon" => $point->getLongitude(),
                             ],
-                            $point->getRadius()
+                            $point->getRadius(),
+                            'm'
                         )->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
                         ))->addAggregation($this->_queryAggregationFactory->setAggregationSource(
-                            AbstractSearchMapping::LOCATION_FIELD,
+                            $this->filterTypes[$keyType]::LOCATION_FIELD,
                             [], 1
                         ))
                     ]);
-
-                    /*
-                    $this->setAggregationQuery([
-                        $this->_queryAggregationFactory->getGeoBoundBoxAggregation(
-                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
-                            [
-                                "lat" => $point->getLatitude(),
-                                "lon" => $point->getLongitude(),
-                            ], $point->getRadius()
-                        )
-                    ]);*/
                 }
 
                 /** формируем условия сортировки */
@@ -430,7 +403,6 @@ class CommonSearchService extends AbstractSearchService
                     $skip,
                     $count
                 );
-
             }
 
             /**

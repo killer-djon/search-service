@@ -6,6 +6,7 @@ namespace Common\Core\Facade\Search\QueryAggregation;
 
 use Common\Core\Facade\Service\Geo\GeoPointService;
 use Common\Core\Facade\Service\RangeIterator;
+use Elastica\Filter\AbstractFilter;
 
 class QueryAggregationFactory implements QueryAggregationFactoryInterface
 {
@@ -43,6 +44,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
     {
         $geoBound = new GeoBounds($fieldName);
         $geoBound->setWrapLongitude($setWrapLon);
+
         return $geoBound;
     }
 
@@ -222,6 +224,24 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         $geoHash->setPrecision($precision);
 
         return $geoHash;
+    }
+
+    /**
+     * Применение фильтра для аггрегирования данных
+     * как правило применимо для geohash
+     *
+     * @param string $name Название объекта аггрегирования
+     * @param AbstractFilter $filter ОБъект фильтра
+     * @return \Elastica\Aggregation\AbstractAggregation
+     */
+    public function getFilterAggregation($name, AbstractFilter $filter = null)
+    {
+        $filterAggs = new \Elastica\Aggregation\Filter($name);
+        if( !is_null($filter) && $filter instanceof AbstractFilter){
+            $filterAggs->setFilter($filter);
+        }
+
+        return $filterAggs;
     }
 
     /**

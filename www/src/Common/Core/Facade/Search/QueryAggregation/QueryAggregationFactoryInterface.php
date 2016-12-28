@@ -4,6 +4,8 @@
  */
 namespace Common\Core\Facade\Search\QueryAggregation;
 
+use Elastica\Filter\AbstractFilter;
+
 interface QueryAggregationFactoryInterface
 {
     /**
@@ -16,6 +18,16 @@ interface QueryAggregationFactoryInterface
 
 
     public function getGeoCentroidAggregation($fieldName);
+
+    /**
+     * Применение фильтра для аггрегирования данных
+     * как правило применимо для geohash
+     *
+     * @param string $name Название объекта аггрегирования
+     * @param AbstractFilter $filter ОБъект фильтра
+     * @return \Elastica\Aggregation\AbstractAggregation
+     */
+    public function getFilterAggregation($name, AbstractFilter $filter = null);
 
     /**
      * Формирование сетки для аггрегирования данных

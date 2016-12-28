@@ -331,7 +331,7 @@ class CommonSearchService extends AbstractSearchService
                 $this->setFilterQuery($this->filterTypes[$keyType]::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
                 $this->setScriptTagsConditions($currentUser, $this->filterTypes[$keyType]);
 
-                if (mb_strlen($geoHashCell) > 0) {
+                if (!is_null($geoHashCell) && !empty($geoHashCell)) {
                     $isCluster = false;
 
                     $geoDistanceRange = array_map(function ($itemDistance) {
@@ -353,19 +353,9 @@ class CommonSearchService extends AbstractSearchService
                     ]);
                 }
 
-                //$this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
+                $this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
 
                 if ($isCluster == true) {
-                    $this->setFilterQuery([
-                        $this->_queryFilterFactory->getBoundingBoxFilter(
-                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
-                            [
-                                "lat" => $point->getLatitude(),
-                                "lon" => $point->getLongitude(),
-                            ], $point->getRadius()
-                        )
-                    ]);
-
                     $this->setAggregationQuery([
                         $this->_queryAggregationFactory->getGeoDistanceAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,

@@ -54,6 +54,10 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
     const CHAT_MEMBERS_PREFIX_NAME_TRANSLIT_FIELD = 'chatMembers.name._prefixTranslit';
     const CHAT_MEMBERS_STANDARD_NAME_FIELD = 'chatMembers.name._standard';
 
+    # Русский транслит поля name
+    const CHAT_MEMBERS_RUS_NAME_FIELD = 'chatMembers.rusName';
+
+
     const CHAT_MEMBERS_SURNAME_FIELD = 'chatMembers.surname';
     const CHAT_MEMBERS_SURNAME_NGRAM_FIELD = 'chatMembers.surname._nameNgram';
     const CHAT_MEMBERS_SURNAME_TRANSLIT_FIELD = 'chatMembers.surname._translit';
@@ -64,6 +68,9 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
     const CHAT_MEMBERS_PREFIX_SURNAME_FIELD = 'chatMembers.surname._prefix';
     const CHAT_MEMBERS_PREFIX_SURNAME_TRANSLIT_FIELD = 'chatMembers.surname._prefixTranslit';
     const CHAT_MEMBERS_STANDARD_SURNAME_FIELD = 'chatMembers.surname._standard';
+
+    # Русский транслит поля surname
+    const CHAT_MEMBERS_RUS_SURNAME_FIELD = 'chatMembers.rusSurname';
 
     /**
      * Получаем поля для поиска
@@ -78,13 +85,14 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
             // вариации поля имени
             self::CHAT_MEMBERS_NAME_FIELD,
             self::CHAT_MEMBERS_NAME_TRANSLIT_FIELD,
+            self::CHAT_MEMBERS_RUS_NAME_FIELD,
 
             self::CHAT_MEMBERS_SURNAME_FIELD,
             self::CHAT_MEMBERS_SURNAME_TRANSLIT_FIELD,
+            self::CHAT_MEMBERS_RUS_SURNAME_FIELD,
 
             self::MESSAGE_TEXT_FIELD,
             self::MESSAGE_TEXT_TRANSLIT_FIELD
-
         ];
     }
 
@@ -116,8 +124,12 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
             self::CHAT_MEMBERS_PREFIX_NAME_FIELD,
             self::CHAT_MEMBERS_PREFIX_NAME_TRANSLIT_FIELD,
 
+            self::CHAT_MEMBERS_RUS_NAME_FIELD,
+
             self::CHAT_MEMBERS_PREFIX_SURNAME_FIELD,
             self::CHAT_MEMBERS_PREFIX_SURNAME_TRANSLIT_FIELD,
+
+            self::CHAT_MEMBERS_RUS_SURNAME_FIELD,
         ];
     }
 

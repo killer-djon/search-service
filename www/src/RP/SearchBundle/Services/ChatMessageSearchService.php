@@ -105,6 +105,7 @@ class ChatMessageSearchService extends AbstractSearchService
             }
 
             $queryMatchResults = $this->createQuery($skip, $count);
+
         }
 
         return $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT);

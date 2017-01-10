@@ -24,6 +24,7 @@ abstract class AbstractSearchMapping
     const NAME_WORDS_TRANSLIT_NAME_FIELD = 'name._wordsTranslitName'; // частичное совпадение имени от 3-х сивмолов в транслите
     const NAME_LONG_NGRAM_FIELD = 'name._nameLongNgram';
     const NAME_TRANSLIT_LONG_NGRAM_FIELD = 'name._translitLongNgram';
+    const RUS_TRANSLITERATE_NAME = 'rusName';
 
     const NAME_PREFIX_FIELD = 'name._prefix';
     const NAME_PREFIX_TRANSLIT_FIELD = 'name._prefixTranslit';

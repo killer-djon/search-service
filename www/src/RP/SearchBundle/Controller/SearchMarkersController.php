@@ -87,10 +87,11 @@ class SearchMarkersController extends ApiController
                         }
                     }
 
-                    $oldFormat['results'] = AbstractTransformer::array_filter_recursive($oldFormat['results']);
+                    //$oldFormat['results'] = AbstractTransformer::array_filter_recursive($oldFormat['results']);
+
                 }
 
-                if ($isCluster) {
+                if ($isCluster && isset($markers['cluster'])) {
                     $oldFormat['cluster'] = $markers['cluster'];
                     unset($oldFormat['results']);
                 }

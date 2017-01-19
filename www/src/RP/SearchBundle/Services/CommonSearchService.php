@@ -388,6 +388,7 @@ class CommonSearchService extends AbstractSearchService
                     $skip,
                     $count
                 );
+
             }
 
             /**

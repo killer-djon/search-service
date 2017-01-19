@@ -71,7 +71,7 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                 distance = doc[pointField].distanceInKm(lat, lon);
             }
             
-            distance = Number(distance).toFixed(2)
+            distance = distance.toFixed(2)
             ";
 
             return new \Elastica\Script(

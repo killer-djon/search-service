@@ -25,12 +25,7 @@ class CommonSearchService extends AbstractSearchService
      */
     const DEFAULT_SEARCH_BLOCK_SIZE = 3;
 
-    /**
-     * Кол-во выводимых интересов по умолчанию
-     *
-     * @const int DEFAULT_INTERESTS_COUNT
-     */
-    const DEFAULT_INTERESTS_COUNT = 5;
+
 
     /**
      * Глобальный (общий поиск) в системе
@@ -370,7 +365,7 @@ class CommonSearchService extends AbstractSearchService
                         ))->addAggregation($this->_queryAggregationFactory->setAggregationSource(
                             $this->filterTypes[$keyType]::LOCATION_FIELD,
                             [], 1
-                        ))
+                        )),
                     ]);
                 }
 
@@ -425,15 +420,12 @@ class CommonSearchService extends AbstractSearchService
      * 3. либо поиск интересов по запросу
      *
      * @param string $userId
-     * @param string|null $searchText Поисковый запрос
      * @param int $skip (default: 0)
      * @param int|null $count Кол-во в результате
      * @return array Массив с найденными результатами
      */
-    public function searchCountInterests($userId, $searchText = null, $skip = 0, $count = null)
+    public function searchCountInterests($userId, $skip = 0, $count = null)
     {
-        $count = is_null($searchText) && empty($searchText) ? self::DEFAULT_INTERESTS_COUNT : $count;
-
         $this->setFilterQuery([
             $this->_queryFilterFactory->getGtFilter(TagNameSearchMapping::USERS_COUNT_FIELD, 0),
         ]);
@@ -452,13 +444,74 @@ class CommonSearchService extends AbstractSearchService
         ]);
 
         $queryMatchAll = $this->createMatchQuery(
-            $searchText,
+            null,
             TagNameSearchMapping::getMultiMatchQuerySearchFields(),
             $skip,
             $count
         );
 
-        return $this->searchDocuments($queryMatchAll, TagNameSearchMapping::CONTEXT);
+        return $this->getInterests($queryMatchAll);
+    }
+
+    /**
+     * Поиск интересов по названию
+     *
+     * @param string $userId
+     * @param string|null $searchText Поисковый запрос
+     * @param int $skip (default: 0)
+     * @param int|null $count Кол-во в результате
+     * @return array Массив с найденными результатами
+     */
+    public function searchInterestsByName($userId, $searchText, $skip = 0, $count = null)
+    {
+        $this->setSortingQuery(
+            $this->_sortingFactory->getFieldSort(
+                TagNameSearchMapping::USERS_COUNT_FIELD,
+                SortingOrder::SORTING_DESC
+            )
+        );
+
+        $script_string = "doc['usersCount'].value + doc['placeCount'].value + doc['eventsCount'].value";
+
+        $this->setScriptFields([
+            'sumCount' => $this->_scriptFactory->getScript($script_string),
+        ]);
+
+        $this->setConditionQueryMust([
+            $this->_queryConditionFactory->getDisMaxQuery([
+                $this->_queryConditionFactory->getMultiMatchQuery()
+                                             ->setFields([
+                                                 TagNameSearchMapping::NAME_FIELD,
+                                                 TagNameSearchMapping::NAME_TRANSLIT_FIELD,
+                                                 TagNameSearchMapping::RUS_TRANSLITERATE_NAME
+                                             ])
+                                             ->setOperator(MultiMatch::OPERATOR_OR)
+                                             ->setQuery($searchText),
+                $this->_queryConditionFactory->getFieldQuery([
+                    TagNameSearchMapping::NAME_FIELD,
+                    TagNameSearchMapping::NAME_TRANSLIT_FIELD,
+                    TagNameSearchMapping::RUS_TRANSLITERATE_NAME
+                ], $searchText),
+                $this->_queryConditionFactory->getPrefixQuery(TagNameSearchMapping::NAME_FIELD, $searchText),
+                $this->_queryConditionFactory->getPrefixQuery(TagNameSearchMapping::NAME_TRANSLIT_FIELD, $searchText),
+                $this->_queryConditionFactory->getPrefixQuery(TagNameSearchMapping::RUS_TRANSLITERATE_NAME, $searchText)
+            ])
+        ]);
+
+        $queryMatch = $this->createQuery($skip, $count);
+
+        return $this->getInterests($queryMatch);
+    }
+
+    /**
+     * Прокси метод который возвращает найденные данные
+     * по заданным условиям поиска
+     * @param \Elastica\Query $query Объект запроса
+     * @return array набора найденных данных
+     */
+    private function getInterests(\Elastica\Query $query)
+    {
+        return $this->searchDocuments($query, TagNameSearchMapping::CONTEXT);
     }
 
 }

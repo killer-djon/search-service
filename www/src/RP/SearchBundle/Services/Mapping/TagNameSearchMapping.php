@@ -41,9 +41,7 @@ abstract class TagNameSearchMapping extends AbstractSearchMapping
         return [
             // вариации поля имени
             self::NAME_FIELD,
-            self::NAME_NGRAM_FIELD,
             self::NAME_TRANSLIT_FIELD,
-            self::NAME_TRANSLIT_NGRAM_FIELD,
             self::RUS_TRANSLITERATE_NAME
         ];
     }

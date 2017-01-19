@@ -19,6 +19,13 @@ class SearchCommonController extends ApiController
 {
 
     /**
+     * Кол-во выводимых интересов по умолчанию
+     *
+     * @const int DEFAULT_INTERESTS_COUNT
+     */
+    const DEFAULT_INTERESTS_COUNT = 5;
+
+    /**
      * Метод осуществляющий глобальный поиск
      * в контексте всех имеющихся типов в базе еластика
      *
@@ -133,7 +140,7 @@ class SearchCommonController extends ApiController
             $userId = $this->getRequestUserId();
 
             $commonSearchService = $this->getCommonSearchService();
-            $interests = $commonSearchService->searchCountInterests($userId, null, $this->getSkip(), $this->getCount());
+            $interests = $commonSearchService->searchCountInterests($userId, 0, self::DEFAULT_INTERESTS_COUNT);
 
             $resultInterests = $commonSearchService->tagNamesTransformer->transform($interests, TagNameSearchMapping::CONTEXT);
 
@@ -171,10 +178,29 @@ class SearchCommonController extends ApiController
 
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
-            $searchText = (mb_strlen($searchText) <= 2 ? RequestConstant::NULLED_PARAMS : trim($searchText));
+
+            if (is_null($searchText)) {
+                return $this->_handleViewWithError(
+                    new BadRequestHttpException(
+                        'Не указана поисковая строка searchText',
+                        null,
+                        Response::HTTP_BAD_REQUEST
+                    )
+                );
+            }
+
+            if (mb_strlen($searchText) <= 2) {
+                return $this->_handleViewWithError(
+                    new BadRequestHttpException(
+                        'Поисковая строка должны быть больше двух символов',
+                        null,
+                        Response::HTTP_BAD_REQUEST
+                    )
+                );
+            }
 
             $commonSearchService = $this->getCommonSearchService();
-            $interests = $commonSearchService->searchCountInterests($userId, $searchText, $this->getSkip(), $this->getCount());
+            $interests = $commonSearchService->searchInterestsByName($userId, $searchText, $this->getSkip(), $this->getCount());
 
             $resultInterests = $commonSearchService->tagNamesTransformer->transform($interests, TagNameSearchMapping::CONTEXT);
 

@@ -413,7 +413,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     ) {
         $matchQuery = $this->_queryConditionFactory->getMatchAllQuery();
 
-        if (!is_null($searchText) || !empty($searchText)) {
+        if (!is_null($searchText) && !empty($searchText)) {
             $matchQuery = $this->_queryConditionFactory->getMultiMatchQuery();
             $matchQuery->setQuery($searchText);
             $matchQuery->setOperator($operator);

@@ -238,6 +238,14 @@ class SearchUsersController extends ApiController
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
+            $peopleSearchService->setFilterQuery([
+                $peopleSearchService->_queryFilterFactory->getNotFilter(
+                    $peopleSearchService->_queryFilterFactory->getTermsFilter(PeopleSearchMapping::FRIEND_LIST_FIELD, [
+                        $userId
+                    ])
+                )
+            ]);
+
             $possibleFriends = $peopleSearchService->searchPossibleFriendsForUser(
                 $userId,
                 $this->getGeoPoint(),
@@ -253,14 +261,6 @@ class SearchUsersController extends ApiController
                     $data = $data + $possibleFriend[PeopleSearchMapping::CONTEXT];
                 }
             }
-
-            $peopleSearchService->setFilterQuery([
-                $peopleSearchService->_queryFilterFactory->getNotFilter(
-                    $peopleSearchService->_queryFilterFactory->getTermsFilter(PeopleSearchMapping::FRIEND_LIST_FIELD, [
-                        $userId
-                    ])
-                )
-            ]);
 
             $action = $request->get('action');
 

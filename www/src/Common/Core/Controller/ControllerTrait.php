@@ -184,6 +184,46 @@ trait ControllerTrait
     }
 
     /**
+     * Набор полей динамических
+     * которые надо преобразовать в скалярные типы для клиента
+     * это некий костыль для совместимости
+     *
+     * @param array
+     */
+    private $tagsMatchFields = [
+        'tagsInPercent'               => 'intval',
+        'matchingInterestsInPercents' => 'intval',
+        'tagsCount'                   => 'intval',
+        'tagsPct'                     => 'intval',
+        'distanceInPercent'           => 'intval',
+        'distancePct'                 => 'intval',
+        'distance'                    => 'floatval',
+    ];
+
+    /**
+     * Метод выполняющий преобразование строкового значения поля
+     * в скалярный вид (для совместимости)
+     *
+     * @param array $inputArray Массив исходный
+     * @return array Результат обработки массива
+     */
+    public function revertToScalarTagsMatchFields(& $inputArray)
+    {
+        foreach ($inputArray as $key => & $item) {
+            if (is_array($item) && !empty($item)) {
+                $item = $this->revertToScalarTagsMatchFields($item);
+            }
+
+            if (array_key_exists($key, $this->tagsMatchFields)) {
+                //$item = ($this->tagsMatchFields[$key])$item;
+                $item = call_user_func($this->tagsMatchFields[$key], $item);
+            }
+        }
+
+        return $inputArray;
+    }
+
+    /**
      * Временный метод
      * убриаем из объектов пустые значения
      * необходимо для совместимости старых приложений
@@ -193,6 +233,8 @@ trait ControllerTrait
      */
     public function excludeEmptyValue($inputArray)
     {
-        return AbstractTransformer::array_filter_recursive($inputArray);
+        $filtered = AbstractTransformer::array_filter_recursive($inputArray);
+
+        return $this->revertToScalarTagsMatchFields($filtered);
     }
 }

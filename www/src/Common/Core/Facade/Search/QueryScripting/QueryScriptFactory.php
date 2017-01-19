@@ -71,7 +71,7 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                 distance = doc[pointField].distanceInKm(lat, lon);
             }
             
-            distance = parseFloat(Number(distance).toFixed(2))
+            distance = Number(distance).toFixed(2)
             ";
 
             return new \Elastica\Script(
@@ -110,7 +110,7 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                 var distance = doc[pointField].distanceInKm(lat, lon);
                 distanceInPercent = distance * 100 / (radius / 1000);
             }
-            distanceInPercent = parseInt(distanceInPercent)
+            distanceInPercent = distanceInPercent.toFixed()
             ";
 
             return new \Elastica\Script(
@@ -160,7 +160,7 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                         }
                     }
                 }
-                totalCount = parseInt(count)
+                totalCount = count.toFixed()
             ";
 
                 return new \Elastica\Script($script, [
@@ -212,7 +212,7 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                     tagInPercent = count/tagsCount*100;
                 }
                 
-                tagInPercent = parseInt(tagInPercent)
+                tagInPercent = tagInPercent.toFixed()
             ";
 
                 return new \Elastica\Script($script, [

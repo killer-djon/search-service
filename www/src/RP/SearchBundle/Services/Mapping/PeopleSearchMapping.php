@@ -364,7 +364,8 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
                              ->setFields(self::getMultiMatchQuerySearchFields())
                              ->setQuery($queryString)
                              ->setOperator(MultiMatch::OPERATOR_OR)
-                             ->setType(MultiMatch::TYPE_BEST_FIELDS)
+                             ->setType(MultiMatch::TYPE_BEST_FIELDS),
+            $conditionFactory->getBoolQuery([], $prefixWildCardByName, [])
         ];
     }
 

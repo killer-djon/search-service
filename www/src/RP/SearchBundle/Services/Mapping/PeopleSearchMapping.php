@@ -324,19 +324,57 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
         }
 
         return [
-            $conditionFactory->getDisMaxQuery(array_merge([
+            /*$conditionFactory->getDisMaxQuery(array_merge([
+                    $conditionFactory->getMultiMatchQuery()
+                                     ->setFields(array_merge(
+                                         self::getMultiMatchQuerySearchFields(),
+                                         self::getMultiSubMatchQuerySearchFields()
+                                     ))
+                                     ->setQuery($queryString)
+                                     ->setOperator(MultiMatch::OPERATOR_OR)
+                                     ->setType(MultiMatch::TYPE_BEST_FIELDS)
+                ],$prefixWildCardByTags, $prefixWildCardByName,[
+                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString, true, 0.5)
+                ]
+            ))*/
+
+
+            /*$conditionFactory->getDisMaxQuery(array_merge(
+                [
+                    $conditionFactory->getMultiMatchQuery()
+                                     ->setFields(self::getMultiMatchQuerySearchFields())
+                                     ->setQuery($queryString)
+                                     ->setOperator(MultiMatch::OPERATOR_OR)
+                                     ->setType(MultiMatch::TYPE_BEST_FIELDS)
+                ],
+                [
+                    $conditionFactory->getMultiMatchQuery()
+                                     ->setFields(self::getMultiSubMatchQuerySearchFields())
+                                     ->setQuery($queryString)
+                                     ->setOperator(MultiMatch::OPERATOR_OR)
+                                     ->setType(MultiMatch::TYPE_BEST_FIELDS)
+                ],
+                $prefixWildCardByName,
+                [
+                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString, true, 0.5)
+                ],
+                $prefixWildCardByTags
+            ))*/
+            $conditionFactory->getMultiMatchQuery()
+                             ->setFields(self::getMultiMatchQuerySearchFields())
+                             ->setQuery($queryString)
+                             ->setOperator(MultiMatch::OPERATOR_OR)
+                             ->setType(MultiMatch::TYPE_BEST_FIELDS),
+            $conditionFactory->getBoolQuery([], array_merge($prefixWildCardByName, [
                 $conditionFactory->getMultiMatchQuery()
-                                 ->setFields(array_merge(
-                                     self::getMultiMatchQuerySearchFields(),
-                                     self::getMultiSubMatchQuerySearchFields()
-                                 ))
+                                 ->setFields(self::getMultiSubMatchQuerySearchFields())
                                  ->setQuery($queryString)
                                  ->setOperator(MultiMatch::OPERATOR_OR)
-                                 ->setType(MultiMatch::TYPE_BEST_FIELDS)
-            ],$prefixWildCardByTags,[
-                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString)
-                ]
-            ))
+                                 ->setType(MultiMatch::TYPE_BEST_FIELDS),
+                $conditionFactory->getBoolQuery([], [
+                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString, true, 0.5)
+                ], [])
+            ]), [])
         ];
     }
 

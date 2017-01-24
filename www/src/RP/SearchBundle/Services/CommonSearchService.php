@@ -94,22 +94,21 @@ class CommonSearchService extends AbstractSearchService
 
                 $this->setHighlightQuery($type::getHighlightConditions());
 
-                /*$this->setScriptFunctions([
-                    FunctionScore::DECAY_GAUSS => [
+                $this->setScriptFunctions([
+                    FunctionScore::DECAY_LINEAR => [
                         $type::LOCATION_POINT_FIELD => [
                             'origin' => "{$point->getLongitude()}, {$point->getLatitude()}",
                             'scale'  => '1km',
                             'offset' => '0km',
-                            'decay'  => 0.33,
+                            'decay'  => 0.2,
                         ],
                     ],
                 ]);
 
                 $this->setScriptFunctionOption([
                     'scoreMode' => 'multiply',
-                    'boostMode' => 'multiply',
-                    'maxBoost'  => 10,
-                ]);*/
+                    'boostMode' => 'multiply'
+                ]);
 
                 $this->setSortingQuery([
                     $this->_sortingFactory->getGeoDistanceSort(

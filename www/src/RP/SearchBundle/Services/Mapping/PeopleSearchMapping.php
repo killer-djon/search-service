@@ -337,7 +337,9 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
                     $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString, true, 0.5)
                 ]
             ))*/
-            $conditionFactory->getDisMaxQuery(array_merge(
+
+
+            /*$conditionFactory->getDisMaxQuery(array_merge(
                 [
                     $conditionFactory->getMultiMatchQuery()
                                      ->setFields(self::getMultiMatchQuerySearchFields())
@@ -357,7 +359,12 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
                     $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString, true, 0.5)
                 ],
                 $prefixWildCardByTags
-            ))
+            ))*/
+            $conditionFactory->getMultiMatchQuery()
+                             ->setFields(self::getMultiMatchQuerySearchFields())
+                             ->setQuery($queryString)
+                             ->setOperator(MultiMatch::OPERATOR_OR)
+                             ->setType(MultiMatch::TYPE_BEST_FIELDS)
         ];
     }
 

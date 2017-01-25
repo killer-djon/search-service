@@ -73,7 +73,7 @@ class PeopleSearchService extends AbstractSearchService
         );
 
         /** Получаем сформированный объект запроса */
-        $this->setConditionQueryShould([
+        /*$this->setConditionQueryShould([
             $this->_queryConditionFactory->getMultiMatchQuery()
                                          ->setQuery($searchText)
                                          ->setFields(PeopleSearchMapping::getMultiMatchQuerySearchFields()),
@@ -81,10 +81,40 @@ class PeopleSearchService extends AbstractSearchService
                 PeopleSearchMapping::FULLNAME_MORPHOLOGY_FIELD,
                 "*{$searchText}*"
             ),
-        ]);
+        ]);*/
+        $searchText = mb_strtolower($searchText);
+        $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
+
+        $slopPhrase = array_filter(explode(" ", $searchText));
+        $queryShouldFields = $must = $should = [];
+
+        if (count($slopPhrase) > 1) {
+
+            /**
+             * Поиск по точному воспадению искомого словосочетания
+             */
+            $this->setConditionQueryMust([
+                $this->_queryConditionFactory
+                    ->getFieldQuery(PeopleSearchMapping::getMultiMatchQuerySearchFields(), $searchText)
+                    ->setDefaultOperator(MultiMatch::OPERATOR_AND)
+            ]);
+
+        } else {
+            /**
+             * Ищем по частичному совпадению поисковой фразы
+             */
+            $this->setConditionQueryMust([
+                $this->_queryConditionFactory->getMultiMatchQuery()
+                                             ->setFields(PeopleSearchMapping::getMultiMatchQuerySearchFields())
+                                             ->setQuery($searchText)
+                                             ->setOperator(MultiMatch::OPERATOR_OR)
+                                             ->setType(MultiMatch::TYPE_BEST_FIELDS)
+            ]);
+        }
 
         // Получаем сформированный объект запроса
         $queryMatchResult = $this->createQuery($skip, $count);
+
 
         /** поиск документа */
         return $this->searchDocuments($queryMatchResult, PeopleSearchMapping::CONTEXT);

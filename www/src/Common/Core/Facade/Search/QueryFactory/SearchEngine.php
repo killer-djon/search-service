@@ -104,10 +104,11 @@ class SearchEngine implements SearchEngineInterface
     ];
 
     protected $availableTypesSearch = [
-        CitySearchMapping::CONTEXT => CitySearchMapping::class,
-        ChatMessageMapping::CONTEXT => ChatMessageMapping::class,
-        TagNameSearchMapping::CONTEXT => TagNameSearchMapping::class,
-        PlaceTypeSearchMapping::CONTEXT => PlaceTypeSearchMapping::class
+        CitySearchMapping::CONTEXT      => CitySearchMapping::class,
+        ChatMessageMapping::CONTEXT     => ChatMessageMapping::class,
+        TagNameSearchMapping::CONTEXT   => TagNameSearchMapping::class,
+        PlaceTypeSearchMapping::CONTEXT => PlaceTypeSearchMapping::class,
+        PeopleSearchMapping::CONTEXT    => PeopleSearchMapping::class,
     ];
 
     /**
@@ -548,7 +549,7 @@ class SearchEngine implements SearchEngineInterface
 
             //$resultSet = $elasticType->search($elasticQuery);
             $searchQuery = $elasticType->createSearch($elasticQuery);
-            if( !$searchQuery->hasIndex( $this->availableTypesSearch[$context]::DEFAULT_INDEX ) ){
+            if (!$searchQuery->hasIndex($this->availableTypesSearch[$context]::DEFAULT_INDEX)) {
                 $searchQuery->addIndex($this->availableTypesSearch[$context]::DEFAULT_INDEX);
             }
 

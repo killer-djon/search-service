@@ -141,7 +141,11 @@ class SearchUsersController extends ApiController
                 } else {
                     return $this->_handleViewWithData(
                         [
-                            'users'      => $oldFormat['results'][PeopleSearchMapping::CONTEXT],
+                            'users'      => (
+                            isset($oldFormat['results'][PeopleSearchMapping::CONTEXT]) ?
+                                $oldFormat['results'][PeopleSearchMapping::CONTEXT] :
+                                []
+                            ),
                             'pagination' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
                         ],
                         null,
@@ -206,7 +210,6 @@ class SearchUsersController extends ApiController
         try {
             $userContext = $peopleSearchService->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, $userId);
 
-
             if (!is_null($userContext)) {
                 return $this->_handleViewWithData($userContext);
             }
@@ -241,9 +244,9 @@ class SearchUsersController extends ApiController
             $peopleSearchService->setFilterQuery([
                 $peopleSearchService->_queryFilterFactory->getNotFilter(
                     $peopleSearchService->_queryFilterFactory->getTermsFilter(PeopleSearchMapping::FRIEND_LIST_FIELD, [
-                        $userId
+                        $userId,
                     ])
-                )
+                ),
             ]);
 
             $possibleFriends = $peopleSearchService->searchPossibleFriendsForUser(
@@ -264,8 +267,7 @@ class SearchUsersController extends ApiController
 
             $action = $request->get('action');
 
-            if( !is_null($action) && $action == 'registration_tour' )
-            {
+            if (!is_null($action) && $action == 'registration_tour') {
                 $peopleSearchService->clearQueryFactory();
                 // исторический костыль из приложения
                 // чтобы на первом месте в массиве был RP_USER
@@ -278,7 +280,6 @@ class SearchUsersController extends ApiController
                 array_unshift($data, $rpUser);
                 array_pop($data);
             }
-
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
 

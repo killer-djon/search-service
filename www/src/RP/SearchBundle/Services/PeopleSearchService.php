@@ -145,8 +145,6 @@ class PeopleSearchService extends AbstractSearchService
             $query = $this->createQuery($skip, $count);
         }
 
-
-
         return $this->searchDocuments($query, PeopleSearchMapping::CONTEXT);
     }
 
@@ -179,8 +177,7 @@ class PeopleSearchService extends AbstractSearchService
             ),
         ]);
 
-        if( $point->isValid() )
-        {
+        if ($point->isValid()) {
             /** формируем условия сортировки */
             $this->setSortingQuery(
                 $this->_sortingFactory->getGeoDistanceSort(
@@ -193,17 +190,56 @@ class PeopleSearchService extends AbstractSearchService
         if (!is_null($searchText) && !empty($searchText)) {
 
             /** Получаем сформированный объект запроса */
-            $queryMatchResult = $this->createMatchQuery(
+            /*$queryMatchResult = $this->createMatchQuery(
                 $searchText,
                 PeopleSearchMapping::getMultiMatchQuerySearchFields(),
                 $skip,
                 $count
-            );
+            );*/
+            $searchText = mb_strtolower($searchText);
+            $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
+
+            $slopPhrase = array_filter(explode(" ", $searchText));
+
+            $must = $should = [];
+
+            if (count($slopPhrase) > 1) {
+
+                /**
+                 * Поиск по точному воспадению искомого словосочетания
+                 */
+                $this->setConditionQueryMust([
+                    $this->_queryConditionFactory
+                        ->getFieldQuery(PeopleSearchMapping::getMultiMatchQuerySearchFields(), $searchText)
+                        ->setDefaultOperator(MultiMatch::OPERATOR_AND)
+                ]);
+
+            } else {
+
+                $prefixWildCardByName = [];
+
+                foreach (PeopleSearchMapping::getMultiMatchQuerySearchFields() as $field) {
+                    //$prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
+                    $prefixWildCardByName[] = $this->_queryConditionFactory->getPrefixQuery($field, $searchText, 0.5);
+                }
+
+                $this->setConditionQueryShould([
+                    $this->_queryConditionFactory->getMultiMatchQuery()
+                                                 ->setFields(PeopleSearchMapping::getMultiMatchQuerySearchFields())
+                                                 ->setQuery($searchText)
+                                                 ->setOperator(MultiMatch::OPERATOR_OR)
+                                                 ->setType(MultiMatch::TYPE_BEST_FIELDS),
+                    $this->_queryConditionFactory->getBoolQuery([], $prefixWildCardByName, [])
+                ]);
+            }
+
+            $queryMatchResult = $this->createQuery($skip, $count);
 
         } else {
             /** Получаем сформированный объект запроса */
             $queryMatchResult = $this->createMatchQuery(null, [], $skip, $count);
         }
+
 
         /** поиск документа */
         return $this->searchDocuments($queryMatchResult, PeopleSearchMapping::CONTEXT);
@@ -265,10 +301,10 @@ class PeopleSearchService extends AbstractSearchService
             $queryShouldFields = $must = $should = [];
 
             $this->setHighlightQuery([
-                HelpOffersSearchMapping::getHighlightConditions()
+                HelpOffersSearchMapping::getHighlightConditions(),
             ]);
 
-            if( count($slopPhrase) > 1 ){
+            if (count($slopPhrase) > 1) {
                 // поиск по словосочетанию
                 $this->setConditionQueryMust([
                     $this->_queryConditionFactory->getDisMaxQuery([
@@ -277,10 +313,10 @@ class PeopleSearchService extends AbstractSearchService
                         ),
                         $this->_queryConditionFactory->getMatchPhraseQuery(
                             HelpOffersSearchMapping::HELP_OFFERS_NAME_TRANSLIT_FIELD, $searchText
-                        )
-                    ])
+                        ),
+                    ]),
                 ]);
-            }else{
+            } else {
                 // ищем по одному слову, с учетом словоформы, с учетом вхождения морфологии
                 $this->setConditionQueryShould([
                     $this->_queryConditionFactory->getDisMaxQuery([
@@ -293,21 +329,21 @@ class PeopleSearchService extends AbstractSearchService
                                                      ->setOperator(MultiMatch::OPERATOR_OR),
                         $this->_queryConditionFactory->getFieldQuery([
                             HelpOffersSearchMapping::HELP_OFFERS_WORDS_NAME_FIELD,
-                            HelpOffersSearchMapping::HELP_OFFERS_WORDS_NAME_TRANSLIT_FIELD
+                            HelpOffersSearchMapping::HELP_OFFERS_WORDS_NAME_TRANSLIT_FIELD,
                         ], $searchText),
                         $this->_queryConditionFactory->getMatchPhrasePrefixQuery(
                             HelpOffersSearchMapping::HELP_OFFERS_WORDS_NAME_FIELD, $searchText
                         ),
                         $this->_queryConditionFactory->getMatchPhrasePrefixQuery(
                             HelpOffersSearchMapping::HELP_OFFERS_WORDS_NAME_TRANSLIT_FIELD, $searchText
-                        )
-                    ])
+                        ),
+                    ]),
                 ]);
 
             }
 
             $queryMatch = $this->createQuery($skip, $count);
-        }else{
+        } else {
             $queryMatch = $this->createMatchQuery(
                 null, [], $skip, $count
             );
@@ -436,14 +472,14 @@ class PeopleSearchService extends AbstractSearchService
 
             $this->setScriptFunctionOption([
                 'scoreMode' => 'multiply',
-                'boostMode' => 'multiply'
+                'boostMode' => 'multiply',
             ]);
 
             $this->setSortingQuery([
                 $this->_sortingFactory->getGeoDistanceSort(
                     PeopleSearchMapping::LOCATION_POINT_FIELD,
                     $point
-                )
+                ),
             ]);
 
             $queryMatch = $this->createMatchQuery($searchText, PeopleSearchMapping::getMultiMatchQuerySearchFields(), $skip, $count);

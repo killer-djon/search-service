@@ -82,6 +82,14 @@ abstract class RequestConstant
     const USER_ID_PARAM = 'userId';
 
     /**
+     * Параметр поисковой строки
+     * id пользователя который хотим просмотреть (не равен текущему пользователю)
+     *
+     * @conts string TARGET_USER_ID_PARAM
+     */
+    const TARGET_USER_ID_PARAM = 'targetUserId';
+
+    /**
      * Параметр поиска при запросе по городу
      *
      * @const string CITY_SEARCH_PARAM

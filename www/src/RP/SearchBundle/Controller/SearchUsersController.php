@@ -122,8 +122,28 @@ class SearchUsersController extends ApiController
             /** @var ID пользователя */
             $userId = $this->getRequestUserId();
 
+            /** @var ID другого профиля */
+            $targerUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM);
+            if (is_null($targerUserId) || empty($targerUserId)) {
+                return $this->_handleViewWithError(
+                    new BadRequestHttpException(
+                        'Не указан targetUserId профиля',
+                        null,
+                        Response::HTTP_BAD_REQUEST
+                    )
+                );
+            }
+
             $peopleSearchService = $this->getPeopleSearchService();
-            $people = $peopleSearchService->searchPeopleFriends($userId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
+
+            $people = $peopleSearchService->searchPeopleFriends(
+                $userId,
+                $targerUserId,
+                $this->getGeoPoint(),
+                $searchText,
+                $this->getSkip(),
+                $this->getCount()
+            );
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                 $oldFormat = $this->getVersioningData($peopleSearchService);

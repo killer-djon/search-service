@@ -215,7 +215,19 @@ trait ControllerTrait
             }
 
             if (array_key_exists($key, $this->tagsMatchFields)) {
-                //$item = ($this->tagsMatchFields[$key])$item;
+                if (!isset($inputArray['distance'])
+                    && isset($inputArray['distanceInPercent']) && $inputArray['distanceInPercent'] == 0
+                    || isset($inputArray['distancePct']) && $inputArray['distancePct'] == 0
+                ) {
+
+                    if (isset($inputArray['distancePct'])) {
+                        unset($inputArray['distancePct']);
+                    }
+                    if (isset($inputArray['distanceInPercent'])) {
+                        unset($inputArray['distanceInPercent']);
+                    }
+                }
+
                 $item = call_user_func($this->tagsMatchFields[$key], $item);
             }
         }

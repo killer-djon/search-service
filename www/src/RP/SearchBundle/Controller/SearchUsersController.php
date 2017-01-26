@@ -208,7 +208,12 @@ class SearchUsersController extends ApiController
         $peopleSearchService = $this->getPeopleSearchService();
 
         try {
-            $userContext = $peopleSearchService->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, $userId);
+
+            $userContext = $peopleSearchService->searchRecordById(
+                PeopleSearchMapping::CONTEXT,
+                PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
+                $userId
+            );
 
             if (!is_null($userContext)) {
                 return $this->_handleViewWithData($userContext);

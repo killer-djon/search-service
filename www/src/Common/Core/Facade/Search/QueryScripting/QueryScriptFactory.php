@@ -66,12 +66,13 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
             ]);
 
             $script = "
-            var distance = 0.0;
+            var distance;
             if (!doc[pointField].empty) {
                 distance = doc[pointField].distanceInKm(lat, lon);
+                distance = distance.toFixed(2)
+            }else{
+                distance = '';
             }
-            
-            distance = distance.toFixed(2)
             ";
 
             return new \Elastica\Script(
@@ -109,8 +110,8 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
             if (!doc[pointField].empty && radius) {
                 var distance = doc[pointField].distanceInKm(lat, lon);
                 distanceInPercent = distance * 100 / (radius / 1000);
+                distanceInPercent = distanceInPercent.toFixed()
             }
-            distanceInPercent = distanceInPercent.toFixed()
             ";
 
             return new \Elastica\Script(
@@ -135,11 +136,9 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
      */
     public function getTagsIntersectScript($tagsField, array $tags, $lang = \Elastica\Script::LANG_JS)
     {
-        if(!empty($tags))
-        {
-            try
-            {
-                $tags = array_map(function($tag){
+        if (!empty($tags)) {
+            try {
+                $tags = array_map(function ($tag) {
                     return $tag['id'];
                 }, $tags);
 
@@ -165,9 +164,9 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
 
                 return new \Elastica\Script($script, [
                     'tagIdField' => $tagsField,
-                    'tagsValue' => $tags
+                    'tagsValue'  => $tags,
                 ], $lang);
-            }catch(ElasticsearchException $e){
+            } catch (ElasticsearchException $e) {
                 throw new ElasticsearchException($e);
             }
         }
@@ -187,10 +186,9 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
      */
     public function getTagsIntersectInPercentScript($tagsField, array $tags, $lang = \Elastica\Script::LANG_JS)
     {
-        if(!empty($tags))
-        {
-            try{
-                $tags = array_map(function($tag){
+        if (!empty($tags)) {
+            try {
+                $tags = array_map(function ($tag) {
                     return $tag['id'];
                 }, $tags);
 
@@ -217,9 +215,9 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
 
                 return new \Elastica\Script($script, [
                     'tagIdField' => $tagsField,
-                    'tagsValue' => $tags
+                    'tagsValue'  => $tags,
                 ], $lang);
-            }catch(ElasticsearchException $e){
+            } catch (ElasticsearchException $e) {
                 throw new ElasticsearchException($e);
             }
         }

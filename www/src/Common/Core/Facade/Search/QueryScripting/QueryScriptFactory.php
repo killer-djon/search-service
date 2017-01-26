@@ -71,7 +71,7 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                 distance = doc[pointField].distanceInKm(lat, lon);
                 distance = distance.toFixed(2)
             }else{
-                distance = '';
+                distance = -1;
             }
             ";
 

@@ -96,7 +96,7 @@ class PeopleSearchService extends AbstractSearchService
             $this->setConditionQueryMust([
                 $this->_queryConditionFactory
                     ->getFieldQuery(PeopleSearchMapping::getMultiMatchQuerySearchFields(), $searchText)
-                    ->setDefaultOperator(MultiMatch::OPERATOR_AND)
+                    ->setDefaultOperator(MultiMatch::OPERATOR_AND),
             ]);
 
         } else {
@@ -108,13 +108,12 @@ class PeopleSearchService extends AbstractSearchService
                                              ->setFields(PeopleSearchMapping::getMultiMatchQuerySearchFields())
                                              ->setQuery($searchText)
                                              ->setOperator(MultiMatch::OPERATOR_OR)
-                                             ->setType(MultiMatch::TYPE_BEST_FIELDS)
+                                             ->setType(MultiMatch::TYPE_BEST_FIELDS),
             ]);
         }
 
         // Получаем сформированный объект запроса
         $queryMatchResult = $this->createQuery($skip, $count);
-
 
         /** поиск документа */
         return $this->searchDocuments($queryMatchResult, PeopleSearchMapping::CONTEXT);
@@ -178,6 +177,114 @@ class PeopleSearchService extends AbstractSearchService
         return $this->searchDocuments($query, PeopleSearchMapping::CONTEXT);
     }
 
+    public function searchPeopleFriends(
+        $userId,
+        $targetUserId,
+        array $filters,
+        GeoPointServiceInterface $point,
+        $searchText = null,
+        $skip = 0,
+        $count = null
+    ) {
+        $queryMatchResults = [];
+
+        /** получаем объект текущего пользователя */
+        $currentUser = $this->getUserById($userId);
+
+        /** получаем объект профиля пользователя */
+        $targetUser = ($userId == $targetUserId ? $currentUser : $this->getUserById($targetUserId));
+        $filtersKey = array_flip($filters);
+
+        if ($userId == $targetUserId && isset($filtersKey[PeopleSearchMapping::COMMON_FRIENDS_FILTER])) {
+            unset($filtersKey[PeopleSearchMapping::COMMON_FRIENDS_FILTER]);
+            $key = array_search(PeopleSearchMapping::COMMON_FRIENDS_FILTER, $filters);
+            if (is_int($key)) {
+                unset($filters[$key]);
+            }
+
+        }
+        $friendsFilter = [];
+
+        if ($userId != $targetUserId) {
+            if (isset($filtersKey[PeopleSearchMapping::COMMON_FRIENDS_FILTER])) {
+                $friendsFilter[PeopleSearchMapping::COMMON_FRIENDS_FILTER] = [
+                    $this->_queryFilterFactory->getTermsFilter(
+                        PeopleSearchMapping::FRIEND_LIST_FIELD,
+                        [$userId]
+                    ),
+                    $this->_queryFilterFactory->getTermsFilter(
+                        PeopleSearchMapping::FRIEND_LIST_FIELD,
+                        [$targetUserId]
+                    ),
+                ];
+            }
+
+            if (isset($filtersKey[PeopleSearchMapping::FRIENDS_FILTER])) {
+                if (isset($filtersKey[PeopleSearchMapping::COMMON_FRIENDS_FILTER])) {
+                    $friendsFilter[PeopleSearchMapping::FRIENDS_FILTER] = [
+                        $this->_queryFilterFactory->getNotFilter(
+                            $this->_queryFilterFactory->getTermsFilter(
+                                PeopleSearchMapping::FRIEND_LIST_FIELD,
+                                [$userId]
+                            )
+                        ),
+                        $this->_queryFilterFactory->getTermsFilter(
+                            PeopleSearchMapping::FRIEND_LIST_FIELD,
+                            [$targetUserId]
+                        ),
+                    ];
+                } else {
+                    $friendsFilter[PeopleSearchMapping::FRIENDS_FILTER] = [
+                        $this->_queryFilterFactory->getTermsFilter(
+                            PeopleSearchMapping::FRIEND_LIST_FIELD,
+                            [$targetUserId]
+                        ),
+                    ];
+                }
+            }
+        } else {
+            $friendsFilter[PeopleSearchMapping::FRIENDS_FILTER] = [
+                $this->_queryFilterFactory->getTermsFilter(
+                    PeopleSearchMapping::FRIEND_LIST_FIELD,
+                    [$targetUserId]
+                ),
+            ];
+        }
+
+        foreach ($filters as $filter) {
+            $this->clearQueryFactory();
+
+            /** добавляем к условию поиска рассчет по совпадению интересов */
+            $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);
+
+            /** добавляем к условию поиска рассчет расстояния */
+            $this->setGeoPointConditions($point, PeopleSearchMapping::class);
+
+            if ($filter == PeopleSearchMapping::COMMON_FRIENDS_FILTER && isset($friendsFilter[PeopleSearchMapping::COMMON_FRIENDS_FILTER])) {
+                $this->setFilterQuery($friendsFilter[PeopleSearchMapping::COMMON_FRIENDS_FILTER]);
+            }
+
+            if ($filter == PeopleSearchMapping::FRIENDS_FILTER && isset($friendsFilter[PeopleSearchMapping::FRIENDS_FILTER])) {
+                $this->setFilterQuery($friendsFilter[PeopleSearchMapping::FRIENDS_FILTER]);
+            }
+
+            if ($point->isValid()) {
+                /** формируем условия сортировки */
+                $this->setSortingQuery(
+                    $this->_sortingFactory->getGeoDistanceSort(
+                        PeopleSearchMapping::LOCATION_POINT_FIELD,
+                        $point
+                    )
+                );
+            }
+
+            $queryMatchResults[$filter] = $this->createMatchQuery(null, [], $skip, $count);
+
+        }
+
+        return $this->searchMultiTypeDocuments($queryMatchResults);
+    }
+
     /**
      * Метод осуществляет поиск в еластике
      * по имени/фамилии пользьвателя находяхищся в друзьях
@@ -189,7 +296,7 @@ class PeopleSearchService extends AbstractSearchService
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchPeopleFriends($userId, GeoPointServiceInterface $point, $searchText = null, $skip = 0, $count = null)
+    public function __searchPeopleFriends($userId, GeoPointServiceInterface $point, $searchText = null, $skip = 0, $count = null)
     {
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
@@ -220,12 +327,6 @@ class PeopleSearchService extends AbstractSearchService
         if (!is_null($searchText) && !empty($searchText)) {
 
             /** Получаем сформированный объект запроса */
-            /*$queryMatchResult = $this->createMatchQuery(
-                $searchText,
-                PeopleSearchMapping::getMultiMatchQuerySearchFields(),
-                $skip,
-                $count
-            );*/
             $searchText = mb_strtolower($searchText);
             $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
 
@@ -241,7 +342,7 @@ class PeopleSearchService extends AbstractSearchService
                 $this->setConditionQueryMust([
                     $this->_queryConditionFactory
                         ->getFieldQuery(PeopleSearchMapping::getMultiMatchQuerySearchFields(), $searchText)
-                        ->setDefaultOperator(MultiMatch::OPERATOR_AND)
+                        ->setDefaultOperator(MultiMatch::OPERATOR_AND),
                 ]);
 
             } else {
@@ -259,7 +360,7 @@ class PeopleSearchService extends AbstractSearchService
                                                  ->setQuery($searchText)
                                                  ->setOperator(MultiMatch::OPERATOR_OR)
                                                  ->setType(MultiMatch::TYPE_BEST_FIELDS),
-                    $this->_queryConditionFactory->getBoolQuery([], $prefixWildCardByName, [])
+                    $this->_queryConditionFactory->getBoolQuery([], $prefixWildCardByName, []),
                 ]);
             }
 
@@ -269,7 +370,6 @@ class PeopleSearchService extends AbstractSearchService
             /** Получаем сформированный объект запроса */
             $queryMatchResult = $this->createMatchQuery(null, [], $skip, $count);
         }
-
 
         /** поиск документа */
         return $this->searchDocuments($queryMatchResult, PeopleSearchMapping::CONTEXT);

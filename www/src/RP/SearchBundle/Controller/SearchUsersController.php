@@ -9,6 +9,7 @@ use Common\Core\Exceptions\SearchServiceException;
 use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
+use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\HttpFoundation\Request;
 use Common\Core\Constants\RequestConstant;
 use Symfony\Component\HttpFoundation\Response;
@@ -113,19 +114,39 @@ class SearchUsersController extends ApiController
     public function searchUsersByFriendAction(Request $request)
     {
         try {
+            /** @var ID пользователя */
+            $userId = $this->getRequestUserId();
+
+            /** @var ID профиля которого хотим посмотреть */
+            $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $userId);
+
+            $filtersType = $request->get(RequestConstant::FILTERS_PARAM);
+
+            if (is_null($filtersType) || empty($filtersType)) {
+                return $this->_handleViewWithError(
+                    new BadRequestHttpException(
+                        'Не указаны фильтры',
+                        null,
+                        Response::HTTP_BAD_REQUEST
+                    )
+                );
+            }
+
             $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
             $simpleList = $request->get('simpleList');
 
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
-            /** @var ID пользователя */
-            $userId = $this->getRequestUserId();
+            /** @var array Набор фильтров запроса */
+            $filters = $this->getParseFilters($filtersType);
 
             $peopleSearchService = $this->getPeopleSearchService();
 
             $people = $peopleSearchService->searchPeopleFriends(
                 $userId,
+                $targetUserId,
+                $filters,
                 $this->getGeoPoint(),
                 $searchText,
                 $this->getSkip(),
@@ -133,36 +154,34 @@ class SearchUsersController extends ApiController
             );
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
-                $oldFormat = $this->getVersioningData($peopleSearchService);
+                $dataResult = [];
+                foreach ($people['items'] as $key => $items) {
+                    $item[$key] = $items;
+                    $this->restructTagsField($item[$key]);
+                    $this->restructLocationField($item[$key]);
+                    $item[$key] = $this->changeKeysName($item[$key]);
+                    $item[$key] = $this->excludeEmptyValue($item[$key]);
 
-                $dataResult = (isset($oldFormat['results'][PeopleSearchMapping::CONTEXT])
-                    ? $oldFormat['results'][PeopleSearchMapping::CONTEXT]
-                    : []);
-
-                if ($simpleList) {
-                    return $this->_handleViewWithData(
-                        $dataResult,
-                        null,
-                        !self::INCLUDE_IN_CONTEXT
-                    );
-                } else {
-                    return $this->_handleViewWithData(
-                        [
-                            'users'      => (
-                            isset($oldFormat['results'][PeopleSearchMapping::CONTEXT]) ?
-                                $oldFormat['results'][PeopleSearchMapping::CONTEXT] :
-                                []
-                            ),
-                            'pagination' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
-                        ],
-                        null,
-                        !self::INCLUDE_IN_CONTEXT
-                    );
+                    $dataResult[$key] = [
+                        'items'      => $item[$key],
+                        'pagination' => $peopleSearchService->getPaginationAdapter(
+                            $this->getSkip(),
+                            $this->getCount(),
+                            (isset($people['info']) ? $people['info']['searchType'][$key]['totalHits'] : null)
+                        ),
+                    ];
                 }
+
+                return $this->_handleViewWithData(
+                    $dataResult,
+                    null,
+                    !self::INCLUDE_IN_CONTEXT
+                );
             }
 
             /** выводим результат */
-            return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
+            return $this->_handleViewWithData($people);
+            //return $this->returnDataResult($peopleSearchService, self::KEY_FIELD_RESPONSE);
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

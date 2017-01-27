@@ -132,6 +132,22 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     const USER_REMOVED_FIELD = 'isRemoved';
 
     /**
+     * Рабор фильтров просмотра друзей
+     * личные друзья профиля
+     *
+     * @const string FRIENDS_FILTER
+     */
+    const FRIENDS_FILTER = 'friends';
+
+    /**
+     * Рабор фильтров просмотра друзей
+     * общие с профилем друзья
+     *
+     * @const string COMMON_FRIENDS_FILTER
+     */
+    const COMMON_FRIENDS_FILTER = 'commonFriends';
+
+    /**
      * Получаем поля для поиска
      * сбор полей для формирования объекта запроса
      * multiMatch - без точных условий с возможностью фильтрации
@@ -168,7 +184,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             self::TAG_NAME_TRANSLIT_FIELD,
             // сфера деятельности
             self::ACTIVITY_SPHERE_NAME_FIELD,
-            self::ACTIVITY_SPHERE_NAME_TRANSLIT_FIELD
+            self::ACTIVITY_SPHERE_NAME_TRANSLIT_FIELD,
         ];
     }
 
@@ -217,7 +233,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             self::ACTIVITY_SPHERE_PREFIX_TRANSLIT_NAME_FIELD,
 
             self::TAG_PREFIX_FIELD,
-            self::TAG_PREFIX_TRANSLIT_FIELD
+            self::TAG_PREFIX_TRANSLIT_FIELD,
         ];
     }
 
@@ -239,7 +255,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             self::TAG_WORDS_TRANSLIT_FIELD,
 
             self::ACTIVITY_SPHERE_WORDS_NAME_FIELD,
-            self::ACTIVITY_SPHERE_WORDS_TRANSLIT_NAME_FIELD
+            self::ACTIVITY_SPHERE_WORDS_TRANSLIT_NAME_FIELD,
         ];
     }
 
@@ -341,7 +357,6 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
                 ]
             ))*/
 
-
             /*$conditionFactory->getDisMaxQuery(array_merge(
                 [
                     $conditionFactory->getMultiMatchQuery()
@@ -375,9 +390,9 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
                                  ->setOperator(MultiMatch::OPERATOR_OR)
                                  ->setType(MultiMatch::TYPE_BEST_FIELDS),
                 $conditionFactory->getBoolQuery([], [
-                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString, true, 0.5)
-                ], [])
-            ]), [])
+                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString, true, 0.5),
+                ], []),
+            ]), []),
         ];
     }
 
@@ -389,22 +404,22 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     public static function getHighlightConditions()
     {
         $highlight = [
-            self::TAG_NAME_FIELD    => [
-                'term_vector'   => 'with_positions_offsets',
-                'fragment_size' => 150
-            ],
-            self::ACTIVITY_SPHERE_NAME_FIELD    => [
+            self::TAG_NAME_FIELD             => [
                 'term_vector'   => 'with_positions_offsets',
                 'fragment_size' => 150,
             ],
-            self::NAME_FIELD => [
+            self::ACTIVITY_SPHERE_NAME_FIELD => [
                 'term_vector'   => 'with_positions_offsets',
                 'fragment_size' => 150,
             ],
-            self::SURNAME_FIELD => [
+            self::NAME_FIELD                 => [
                 'term_vector'   => 'with_positions_offsets',
                 'fragment_size' => 150,
-            ]
+            ],
+            self::SURNAME_FIELD              => [
+                'term_vector'   => 'with_positions_offsets',
+                'fragment_size' => 150,
+            ],
         ];
 
         return $highlight;

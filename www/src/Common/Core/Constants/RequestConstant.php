@@ -154,4 +154,12 @@ abstract class RequestConstant
      * @const float DEFAULT_SEARCH_MIN_SCORE
      */
     const DEFAULT_SEARCH_MIN_SCORE = 0.1;
+
+    /**
+     * Параметр фильтров передаваемый
+     * в запросе (как правило набор ключей, типа: friends,commonFriends ...)
+     *
+     * @const string FILTERS_PARAM
+     */
+    const FILTERS_PARAM = 'filters';
 }

@@ -117,15 +117,16 @@ class SearchEngine implements SearchEngineInterface
      * но при этом использовать всего-лишь фильтр
      */
     protected $searchTypes = [
-        'people'     => 'people',
-        'places'     => 'places',
-        'helpOffers' => 'people',
-        'help'       => 'people',
-        'discounts'  => 'places',
-        'rusPlaces'  => 'places',
-        'events'     => 'events',
-        'friends'    => 'people',
-        'peoples'    => 'people',
+        'people'        => 'people',
+        'places'        => 'places',
+        'helpOffers'    => 'people',
+        'help'          => 'people',
+        'discounts'     => 'places',
+        'rusPlaces'     => 'places',
+        'events'        => 'events',
+        'friends'       => 'people',
+        'commonFriends' => 'people',
+        'peoples'       => 'people',
     ];
 
     /**
@@ -365,6 +366,7 @@ class SearchEngine implements SearchEngineInterface
 
             foreach ($resultIterator as $key => $resultSet) {
                 $dataItem[$key] = $this->setTotalResults($resultSet);
+
                 if (!is_null($dataItem[$key]) && !empty($dataItem[$key])) {
                     $hits[$key] = $this->setTotalHits($resultSet);
                     $totalHits += $hits[$key]['totalHits'];
@@ -574,16 +576,24 @@ class SearchEngine implements SearchEngineInterface
      *
      * @param int $skip
      * @param int $limit
+     * @param int|null $totalHits Общее число записей
      * @return array
      */
-    public function getPaginationAdapter($skip, $limit)
+    public function getPaginationAdapter($skip, $limit, $totalHits = null)
     {
 
-        if (is_null($this->_paginator)) {
+        if (is_null($this->_paginator) && is_null($totalHits)) {
             return [];
         }
 
-        $totalCount = $this->_paginator->getNbResults();
+        $totalCount = 0;
+        if (!is_null($this->_paginator)) {
+            $totalCount = $this->_paginator->getNbResults();
+        } else {
+            if (!is_null($totalHits) && is_int($totalHits) && $totalHits > 0) {
+                $totalCount = (int)$totalHits;
+            }
+        }
 
         if ($totalCount != 0) {
             $count = ($limit >= $totalCount ? $totalCount : $limit);

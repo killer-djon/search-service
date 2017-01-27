@@ -27,6 +27,14 @@ abstract class RequestConstant
     const DEFAULT_VERSION = 3;
 
     /**
+     * Параметр запроса версии
+     * номер версии (новая фишка)
+     *
+     * @var int NEW_DEFAULT_VERSION
+     */
+    const NEW_DEFAULT_VERSION = 4;
+
+    /**
      * Параметр запроса долготы
      * короткое представление
      *

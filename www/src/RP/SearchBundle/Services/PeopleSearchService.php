@@ -177,6 +177,20 @@ class PeopleSearchService extends AbstractSearchService
         return $this->searchDocuments($query, PeopleSearchMapping::CONTEXT);
     }
 
+
+    /**
+     * Метод осуществляет поиск в еластике
+     * по имени/фамилии пользьвателя находяхищся в друзьях
+     *
+     * @param string $userId ID пользователя который делает запрос к АПИ
+     * @param string $targetUserId ID профиля
+     * @param array $filters фильтры запроса (friends,commonFriends)
+     * @param string $searchText Поисковый запрос
+     * @param GeoPointServiceInterface $point
+     * @param int $skip Кол-во пропускаемых позиций поискового результата
+     * @param int $count Какое кол-во выводим
+     * @return array Массив с найденными результатами
+     */
     public function searchPeopleFriends(
         $userId,
         $targetUserId,
@@ -296,7 +310,7 @@ class PeopleSearchService extends AbstractSearchService
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function __searchPeopleFriends($userId, GeoPointServiceInterface $point, $searchText = null, $skip = 0, $count = null)
+    public function oldSearchPeopleFriends($userId, GeoPointServiceInterface $point, $searchText = null, $skip = 0, $count = null)
     {
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
@@ -350,7 +364,6 @@ class PeopleSearchService extends AbstractSearchService
                 $prefixWildCardByName = [];
 
                 foreach (PeopleSearchMapping::getMultiMatchQuerySearchFields() as $field) {
-                    //$prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
                     $prefixWildCardByName[] = $this->_queryConditionFactory->getPrefixQuery($field, $searchText, 0.5);
                 }
 

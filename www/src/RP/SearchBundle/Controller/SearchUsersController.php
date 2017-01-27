@@ -120,7 +120,101 @@ class SearchUsersController extends ApiController
             /** @var ID профиля которого хотим посмотреть */
             $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $userId);
 
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
+            $simpleList = $request->get('simpleList');
+
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+
             $filtersType = $request->get(RequestConstant::FILTERS_PARAM);
+
+            /** @var array Набор фильтров запроса */
+            $filters = $this->getParseFilters($filtersType);
+
+            $peopleSearchService = $this->getPeopleSearchService();
+
+            if (!is_null($version) && !empty($version)) {
+                $dataResult = [];
+                if ((int)$version == RequestConstant::NEW_DEFAULT_VERSION) {
+                    if (is_null($filtersType) || empty($filtersType)) {
+                        return $this->_handleViewWithError(
+                            new BadRequestHttpException(
+                                'Не указаны фильтры',
+                                null,
+                                Response::HTTP_BAD_REQUEST
+                            )
+                        );
+                    }
+
+                    $people = $peopleSearchService->searchPeopleFriends(
+                        $userId,
+                        $targetUserId,
+                        $filters,
+                        $this->getGeoPoint(),
+                        $searchText,
+                        $this->getSkip(),
+                        $this->getCount()
+                    );
+
+                    foreach ($people['items'] as $key => $items) {
+                        $item[$key] = $items;
+                        $this->restructTagsField($item[$key]);
+                        $this->restructLocationField($item[$key]);
+                        $item[$key] = $this->changeKeysName($item[$key]);
+                        $item[$key] = $this->excludeEmptyValue($item[$key]);
+
+                        $dataResult[$key] = [
+                            'items'      => $item[$key],
+                            'pagination' => $peopleSearchService->getPaginationAdapter(
+                                $this->getSkip(),
+                                $this->getCount(),
+                                (isset($people['info']) ? $people['info']['searchType'][$key]['totalHits'] : null)
+                            ),
+                        ];
+                    }
+
+                    return $this->_handleViewWithData(
+                        $dataResult,
+                        null,
+                        !self::INCLUDE_IN_CONTEXT
+                    );
+                } elseif ((int)$version == RequestConstant::DEFAULT_VERSION) {
+                    $people = $peopleSearchService->oldSearchPeopleFriends(
+                        $targetUserId,
+                        $this->getGeoPoint(),
+                        $searchText,
+                        $this->getSkip(),
+                        $this->getCount()
+                    );
+
+                    $oldFormat = $this->getVersioningData($peopleSearchService);
+
+                    $dataResult = (isset($oldFormat['results'][PeopleSearchMapping::CONTEXT])
+                        ? $oldFormat['results'][PeopleSearchMapping::CONTEXT]
+                        : []);
+
+                    if ($simpleList) {
+                        return $this->_handleViewWithData(
+                            $dataResult,
+                            null,
+                            !self::INCLUDE_IN_CONTEXT
+                        );
+                    } else {
+                        return $this->_handleViewWithData(
+                            [
+                                'users'      => (
+                                isset($oldFormat['results'][PeopleSearchMapping::CONTEXT]) ?
+                                    $oldFormat['results'][PeopleSearchMapping::CONTEXT] :
+                                    []
+                                ),
+                                'pagination' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
+                            ],
+                            null,
+                            !self::INCLUDE_IN_CONTEXT
+                        );
+                    }
+                }
+            }
 
             if (is_null($filtersType) || empty($filtersType)) {
                 return $this->_handleViewWithError(
@@ -131,18 +225,10 @@ class SearchUsersController extends ApiController
                     )
                 );
             }
-
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
-            $simpleList = $request->get('simpleList');
-
-            /** @var Текст запроса */
-            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
-
-            /** @var array Набор фильтров запроса */
-            $filters = $this->getParseFilters($filtersType);
-
-            $peopleSearchService = $this->getPeopleSearchService();
-
+            /**
+             * После того как мы уберем костыли
+             * по совместимости со старыми приложениям
+             */
             $people = $peopleSearchService->searchPeopleFriends(
                 $userId,
                 $targetUserId,
@@ -152,32 +238,6 @@ class SearchUsersController extends ApiController
                 $this->getSkip(),
                 $this->getCount()
             );
-
-            if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
-                $dataResult = [];
-                foreach ($people['items'] as $key => $items) {
-                    $item[$key] = $items;
-                    $this->restructTagsField($item[$key]);
-                    $this->restructLocationField($item[$key]);
-                    $item[$key] = $this->changeKeysName($item[$key]);
-                    $item[$key] = $this->excludeEmptyValue($item[$key]);
-
-                    $dataResult[$key] = [
-                        'items'      => $item[$key],
-                        'pagination' => $peopleSearchService->getPaginationAdapter(
-                            $this->getSkip(),
-                            $this->getCount(),
-                            (isset($people['info']) ? $people['info']['searchType'][$key]['totalHits'] : null)
-                        ),
-                    ];
-                }
-
-                return $this->_handleViewWithData(
-                    $dataResult,
-                    null,
-                    !self::INCLUDE_IN_CONTEXT
-                );
-            }
 
             /** выводим результат */
             return $this->_handleViewWithData($people);

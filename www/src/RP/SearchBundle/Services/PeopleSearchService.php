@@ -632,4 +632,32 @@ class PeopleSearchService extends AbstractSearchService
 
         return $resultQuery;
     }
+
+
+    /**
+     * Поиск профиля по заданному ID
+     * @param string $userId ID текущего пользователя
+     * @param string $profileId ID профиля по которому ищем инфу
+     * @param GeoPointServiceInterface $point
+     * @return array
+     */
+    public function searchProfileById($userId, $profileId, GeoPointServiceInterface $point)
+    {
+        /** получаем объект текущего пользователя */
+        $currentUser = $this->getUserById($userId);
+
+        /** добавляем к условию поиска рассчет по совпадению интересов */
+        $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);
+
+
+        /** добавляем к условию поиска рассчет расстояния */
+        $this->setGeoPointConditions($point, PeopleSearchMapping::class);
+
+        $this->setConditionQueryMust([
+            $this->_queryConditionFactory->getTermQuery(PeopleSearchMapping::IDENTIFIER_FIELD, $profileId)
+        ]);
+
+        $query = $this->createQuery(0, 1);
+        return $this->searchDocuments($query, PeopleSearchMapping::CONTEXT);
+    }
 }

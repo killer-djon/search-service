@@ -111,6 +111,9 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                 var distance = doc[pointField].distanceInKm(lat, lon);
                 distanceInPercent = distance * 100 / (radius / 1000);
                 distanceInPercent = distanceInPercent.toFixed()
+            }else
+            {
+                distanceInPercent = '0';
             }
             ";
 
@@ -173,6 +176,7 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
 
         return new \Elastica\Script("");
     }
+
 
     /**
      * Формируем поле скрипта с пересекающихся тегов (интересов)

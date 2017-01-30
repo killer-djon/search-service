@@ -292,16 +292,60 @@ class SearchUsersController extends ApiController
     public function searchUsersByIdAction(Request $request, $userId)
     {
         $peopleSearchService = $this->getPeopleSearchService();
+        $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
 
         try {
+            $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $userId);
 
-            $userContext = $peopleSearchService->searchRecordById(
-                PeopleSearchMapping::CONTEXT,
-                PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
-                $userId
-            );
+            $userContext = null;
+            if( $targetUserId !=  $userId)
+            {
+                $userContext = $peopleSearchService->searchProfileById($userId, $targetUserId, $this->getGeoPoint());
+                $userContext = !empty($userContext[PeopleSearchMapping::CONTEXT]) ? current($userContext[PeopleSearchMapping::CONTEXT]) : [];
 
-            if (!is_null($userContext)) {
+                $currentUserTags = $peopleSearchService->getUserById($userId)->getTags();
+                $targetUserTags = $userContext['tags'];
+
+                $currentUserFillTags = array_combine(
+                    array_column($currentUserTags, 'id'),
+                    $currentUserTags
+                );
+
+                $targetUserFillTags = array_combine(
+                    array_column($targetUserTags, 'id'),
+                    $targetUserTags
+                );
+
+                $intersectKeys = array_intersect(
+                    array_keys($currentUserFillTags),
+                    array_keys($targetUserFillTags)
+                );
+
+                $userContext['matchingInterests'] = [];
+                foreach ($intersectKeys as $keyTag){
+                    $userContext['matchingInterests'][$keyTag] = $currentUserFillTags[$keyTag];
+                }
+
+            }else
+            {
+                $userContext = $peopleSearchService->searchRecordById(
+                    PeopleSearchMapping::CONTEXT,
+                    PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
+                    $userId
+                );
+            }
+
+
+            if (!is_null($userContext) && !empty($userContext)) {
+
+                if( !is_null($version) && !empty($version) ){
+
+                    $this->restructTagsField($userContext);
+                    $this->restructLocationField($userContext);
+                    $userContext = $this->changeKeysName($userContext);
+                    $userContext = $this->revertToScalarTagsMatchFields($userContext);
+                }
+
                 return $this->_handleViewWithData($userContext);
             }
 

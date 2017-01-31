@@ -299,6 +299,7 @@ class SearchUsersController extends ApiController
 
             $userContext = null;
             if ($targetUserId != $userId) {
+
                 $userContext = $peopleSearchService->searchProfileById($userId, $targetUserId, $this->getGeoPoint());
                 $userContext = !empty($userContext[PeopleSearchMapping::CONTEXT]) ? current($userContext[PeopleSearchMapping::CONTEXT]) : [];
 
@@ -323,7 +324,7 @@ class SearchUsersController extends ApiController
 
             if (!is_null($userContext) && !empty($userContext)) {
 
-                if (!is_null($version) && !empty($version)) {
+                if (!is_null($version) && !empty($version) && $version == RequestConstant::DEFAULT_VERSION) {
 
                     $this->restructTagsField($userContext);
                     $this->restructLocationField($userContext);

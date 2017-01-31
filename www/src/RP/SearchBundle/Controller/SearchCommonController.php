@@ -65,10 +65,6 @@ class SearchCommonController extends ApiController
 
             if( !is_null($searchText) && mb_strlen($searchText) < 3 )
             {
-                if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
-                    return $this->_handleViewWithData([]);
-                }
-
                 return $this->_handleViewWithData([]);
             }
 

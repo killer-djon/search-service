@@ -146,30 +146,77 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                 }, $tags);
 
                 $script = "
-                tagsCount = 0;
-                count = 0;
-                totalCount = 0;
-                list = [];
-                
-                if(tagsValue.size() > 0 && doc[tagIdField].values.size() > 0){
-                     for(var i = 0, len = tagsValue.size(); i < len; i++){
-                        ++tagsCount;
-                        for(var j = 0, lenJ = doc[tagIdField].values.size(); j < lenJ; j++){
-                            if( tagsValue[i] == doc[tagIdField][j] ){
-                                ++count;
-                                list.push(doc[tagIdField][j]);
+                    tagsCount = 0;
+                    count = 0;
+                    totalCount = 0;
+                    list = [];
+                    
+                    if(tagsValue.size() > 0 && doc[tagIdField].values.size() > 0){
+                         for(var i = 0, len = tagsValue.size(); i < len; i++){
+                            ++tagsCount;
+                            for(var j = 0, lenJ = doc[tagIdField].values.size(); j < lenJ; j++){
+                                if( tagsValue[i] == doc[tagIdField][j] ){
+                                    ++count;
+                                    list.push(doc[tagIdField][j]);
+                                }
                             }
                         }
                     }
-                }
-                totalCount = count.toFixed()
-            ";
+                    totalCount = count.toFixed()
+                ";
 
                 return new \Elastica\Script($script, [
                     'tagIdField' => $tagsField,
                     'tagsValue'  => $tags,
                 ], $lang);
             } catch (ElasticsearchException $e) {
+                throw new ElasticsearchException($e);
+            }
+        }
+
+        return new \Elastica\Script("");
+    }
+
+    /**
+     * Формируем поле скрипта с пересекающихся тегов (интересов)
+     * найденых пользователей с заданным (возвращаем массив этих интересов)
+     *
+     * @param string $tagsField Название поля где хранятся теги
+     * @param array $tags набор тегов для рассчета
+     * @param string $lang Язык скрипта (default: groovy)
+     * @throws ElasticsearchException
+     * @return \Elastica\Script
+     */
+    public function getMatchingInterestsScript($tagsField, array $tags, $lang = \Elastica\Script::LANG_JS)
+    {
+        if (!empty($tags)) {
+            try {
+                $tags = array_map(function ($tag) {
+                    return $tag['id'];
+                }, $tags);
+
+                $script = "
+                    list = [];
+                    tagsList = '';
+                    
+                    if(tagsValue.size() > 0 && doc[tagIdField].values.size() > 0){
+                         for(var i = 0, len = tagsValue.size(); i < len; i++){
+                            for(var j = 0, lenJ = doc[tagIdField].values.size(); j < lenJ; j++){
+                                if( tagsValue[i] == doc[tagIdField][j] ){
+                                    list.push(doc[tagIdField][j]);
+                                }
+                            }
+                        }
+                        tagsList = list.join(',');
+                    }
+                ";
+
+                return new \Elastica\Script($script, [
+                    'tagIdField' => $tagsField,
+                    'tagsValue'  => $tags,
+                ], $lang);
+
+            }catch (ElasticsearchException $e) {
                 throw new ElasticsearchException($e);
             }
         }

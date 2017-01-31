@@ -303,6 +303,20 @@ class SearchUsersController extends ApiController
                 $userContext = $peopleSearchService->searchProfileById($userId, $targetUserId, $this->getGeoPoint());
                 $userContext = !empty($userContext[PeopleSearchMapping::CONTEXT]) ? current($userContext[PeopleSearchMapping::CONTEXT]) : [];
 
+                if( isset($userContext['matchingInterests']) && !empty($userContext['matchingInterests']) )
+                {
+                    $tagsArray = explode(',', $userContext['matchingInterests']);
+                    $userContext['matchingInterests'] = array_map(function($tagId) use ($userContext){
+                        $keyTag = array_search($tagId, array_column($userContext['tags'], 'id'));
+
+                        return [$tagId => $userContext['tags'][$keyTag]];
+                    }, $tagsArray);
+
+                    $userContext['tagsMatch']['tags'] = $userContext['matchingInterests'];
+                    unset($userContext['tagsMatch']['matchingInterests']);
+                }
+
+                    /*
                 if( isset($userContext['tags']) )
                 {
                     $targetUserTags = $userContext['tags'];
@@ -328,7 +342,7 @@ class SearchUsersController extends ApiController
                     foreach ($intersectKeys as $keyTag){
                         $userContext['matchingInterests'][$keyTag] = $currentUserFillTags[$keyTag];
                     }
-                }
+                }*/
 
             }else
             {

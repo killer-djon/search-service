@@ -1,6 +1,8 @@
 <?php
 namespace Common\Core\Facade\Search\QueryScripting;
 
+use Elastica\Exception\ElasticsearchException;
+
 interface QueryScriptFactoryInterface
 {
     /**
@@ -12,6 +14,18 @@ interface QueryScriptFactoryInterface
      * @return \Elastica\Script
      */
     public function getScript($script, array $params = null, $lang = \Elastica\Script::LANG_JS);
+
+    /**
+     * Формируем поле скрипта с пересекающихся тегов (интересов)
+     * найденых пользователей с заданным (возвращаем массив этих интересов)
+     *
+     * @param string $tagsField Название поля где хранятся теги
+     * @param array $tags набор тегов для рассчета
+     * @param string $lang Язык скрипта (default: groovy)
+     * @throws ElasticsearchException
+     * @return \Elastica\Script
+     */
+    public function getMatchingInterestsScript($tagsField, array $tags, $lang = \Elastica\Script::LANG_JS);
 
     /**
      * Формируем поле скрипта с расчетом дистанции

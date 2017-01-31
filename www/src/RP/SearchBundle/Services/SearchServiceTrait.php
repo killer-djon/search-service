@@ -32,6 +32,24 @@ trait SearchServiceTrait
         ]);
     }
 
+    /**
+     * Выводим массив интересов которые совпадают у пользователя
+     * и найденного результата
+     *
+     * @param \Common\Core\Facade\Service\User\UserProfileService $currentUser Объект текущего пользователя
+     * @param object $classMapping Класс маппинга
+     * @return void
+     */
+    public function setScriptMatchInterestsConditions(UserProfileService $currentUser, $classMapping)
+    {
+        $this->setScriptFields([
+            'matchingInterests' => $this->_scriptFactory->getMatchingInterestsScript(
+                $classMapping::TAGS_ID_FIELD,
+                $currentUser->getTags()
+            )
+        ]);
+    }
+
 
     /**
      * Часто используемое условие по локации

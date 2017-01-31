@@ -322,6 +322,14 @@ class SearchUsersController extends ApiController
                 );
             }
 
+            if( isset($userContext['tags']) && !empty($userContext['tags']) )
+            {
+                //$script_string = "doc['usersCount'].value + doc['placeCount'].value + doc['eventsCount'].value";
+                foreach ($userContext['tags'] as $key =>& $itemTag){
+                    $itemTag['sumCount'] =   $itemTag['usersCount'] + $itemTag['placeCount'] + $itemTag['eventsCount'];
+                }
+            }
+
             if (!is_null($userContext) && !empty($userContext)) {
 
                 if (!is_null($version) && !empty($version) && $version == RequestConstant::DEFAULT_VERSION) {

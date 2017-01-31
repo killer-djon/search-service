@@ -298,15 +298,13 @@ class SearchUsersController extends ApiController
             $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $userId);
 
             $userContext = null;
-            if( $targetUserId !=  $userId)
-            {
+            if ($targetUserId != $userId) {
                 $userContext = $peopleSearchService->searchProfileById($userId, $targetUserId, $this->getGeoPoint());
                 $userContext = !empty($userContext[PeopleSearchMapping::CONTEXT]) ? current($userContext[PeopleSearchMapping::CONTEXT]) : [];
 
-                if( isset($userContext['matchingInterests']) && !empty($userContext['matchingInterests']) )
-                {
+                if (isset($userContext['matchingInterests']) && !empty($userContext['matchingInterests'])) {
                     $tagsArray = explode(',', $userContext['matchingInterests']);
-                    $userContext['matchingInterests'] = array_map(function($tagId) use ($userContext){
+                    $userContext['matchingInterests'] = array_map(function ($tagId) use ($userContext) {
                         $keyTag = array_search($tagId, array_column($userContext['tags'], 'id'));
 
                         return [$tagId => $userContext['tags'][$keyTag]];
@@ -315,37 +313,7 @@ class SearchUsersController extends ApiController
                     $userContext['tagsMatch']['tags'] = $userContext['matchingInterests'];
                     unset($userContext['tagsMatch']['matchingInterests']);
                 }
-
-                    /*
-                if( isset($userContext['tags']) )
-                {
-                    $targetUserTags = $userContext['tags'];
-                    $currentUserTags = $peopleSearchService->getUserById($userId)->getTags();
-
-
-                    $currentUserFillTags = array_combine(
-                        array_column($currentUserTags, 'id'),
-                        $currentUserTags
-                    );
-
-                    $targetUserFillTags = array_combine(
-                        array_column($targetUserTags, 'id'),
-                        $targetUserTags
-                    );
-
-                    $intersectKeys = array_intersect(
-                        array_keys($currentUserFillTags),
-                        array_keys($targetUserFillTags)
-                    );
-
-                    $userContext['matchingInterests'] = [];
-                    foreach ($intersectKeys as $keyTag){
-                        $userContext['matchingInterests'][$keyTag] = $currentUserFillTags[$keyTag];
-                    }
-                }*/
-
-            }else
-            {
+            } else {
                 $userContext = $peopleSearchService->searchRecordById(
                     PeopleSearchMapping::CONTEXT,
                     PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
@@ -353,10 +321,9 @@ class SearchUsersController extends ApiController
                 );
             }
 
-
             if (!is_null($userContext) && !empty($userContext)) {
 
-                if( !is_null($version) && !empty($version) ){
+                if (!is_null($version) && !empty($version)) {
 
                     $this->restructTagsField($userContext);
                     $this->restructLocationField($userContext);

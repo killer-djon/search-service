@@ -303,27 +303,31 @@ class SearchUsersController extends ApiController
                 $userContext = $peopleSearchService->searchProfileById($userId, $targetUserId, $this->getGeoPoint());
                 $userContext = !empty($userContext[PeopleSearchMapping::CONTEXT]) ? current($userContext[PeopleSearchMapping::CONTEXT]) : [];
 
-                $currentUserTags = $peopleSearchService->getUserById($userId)->getTags();
-                $targetUserTags = $userContext['tags'];
+                if( isset($userContext['tags']) )
+                {
+                    $targetUserTags = $userContext['tags'];
+                    $currentUserTags = $peopleSearchService->getUserById($userId)->getTags();
 
-                $currentUserFillTags = array_combine(
-                    array_column($currentUserTags, 'id'),
-                    $currentUserTags
-                );
 
-                $targetUserFillTags = array_combine(
-                    array_column($targetUserTags, 'id'),
-                    $targetUserTags
-                );
+                    $currentUserFillTags = array_combine(
+                        array_column($currentUserTags, 'id'),
+                        $currentUserTags
+                    );
 
-                $intersectKeys = array_intersect(
-                    array_keys($currentUserFillTags),
-                    array_keys($targetUserFillTags)
-                );
+                    $targetUserFillTags = array_combine(
+                        array_column($targetUserTags, 'id'),
+                        $targetUserTags
+                    );
 
-                $userContext['matchingInterests'] = [];
-                foreach ($intersectKeys as $keyTag){
-                    $userContext['matchingInterests'][$keyTag] = $currentUserFillTags[$keyTag];
+                    $intersectKeys = array_intersect(
+                        array_keys($currentUserFillTags),
+                        array_keys($targetUserFillTags)
+                    );
+
+                    $userContext['matchingInterests'] = [];
+                    foreach ($intersectKeys as $keyTag){
+                        $userContext['matchingInterests'][$keyTag] = $currentUserFillTags[$keyTag];
+                    }
                 }
 
             }else
@@ -349,7 +353,7 @@ class SearchUsersController extends ApiController
                 return $this->_handleViewWithData($userContext);
             }
 
-            return null;
+            return $this->_handleViewWithData([]);
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);

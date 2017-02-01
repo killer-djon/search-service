@@ -112,7 +112,7 @@ class SearchCommonController extends ApiController
                 [
                     'info' => $commonSearchService->getTotalHits(),
                 ],
-                $searchData ?: []
+                $searchData ? $this->revertToScalarTagsMatchFields($searchData) : []
             ));
 
         } catch (SearchServiceException $e) {

@@ -103,7 +103,7 @@ class SearchMarkersController extends ApiController
                 );
             }
 
-            return $this->_handleViewWithData($markers);
+            return $this->_handleViewWithData($this->revertToScalarTagsMatchFields($markers));
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);

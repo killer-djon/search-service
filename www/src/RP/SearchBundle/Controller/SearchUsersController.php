@@ -339,7 +339,7 @@ class SearchUsersController extends ApiController
                     $userContext = $this->changeKeysName($userContext);
                     $userContext = $this->excludeEmptyValue($userContext);
                     $userContext = $this->revertToScalarTagsMatchFields($userContext);
-
+                    AbstractTransformer::recursiveTransformAvatar($userContext);
                 }
 
                 return $this->_handleViewWithData($userContext);

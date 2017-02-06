@@ -151,7 +151,7 @@ trait ControllerTrait
         'surname'           => ' ',
         'text'              => ' ',
         'distance'          => 0,
-        'distanceInPercent' => 0,
+        'distanceInPercent' => 0
     ];
 
     /**

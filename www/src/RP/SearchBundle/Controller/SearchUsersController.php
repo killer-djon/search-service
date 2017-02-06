@@ -337,7 +337,9 @@ class SearchUsersController extends ApiController
                     $this->restructTagsField($userContext);
                     $this->restructLocationField($userContext);
                     $userContext = $this->changeKeysName($userContext);
+                    $userContext = $this->excludeEmptyValue($userContext);
                     $userContext = $this->revertToScalarTagsMatchFields($userContext);
+
                 }
 
                 return $this->_handleViewWithData($userContext);

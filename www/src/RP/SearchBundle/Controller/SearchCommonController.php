@@ -78,6 +78,20 @@ class SearchCommonController extends ApiController
                 $this->getCount()
             );
 
+            foreach( $searchData['items'] as $key => $searchItemInfo )
+            {
+                if( !empty($searchItemInfo) )
+                {
+                    $item[$key] = $searchItemInfo;
+                    $searchData['pagination'][$key] = $commonSearchService->getPaginationAdapter(
+                        $this->getSkip(),
+                        $this->getCount(),
+                        (isset($searchData['info']) ? $searchData['info']['searchType'][$key]['totalHits'] : null)
+                    );
+                }
+            }
+
+
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
 
                 $oldFormat = $this->getVersioningData($commonSearchService);
@@ -98,6 +112,7 @@ class SearchCommonController extends ApiController
                     $data = [
                         'results' => $data,
                         'info'    => $oldFormat['info'],
+                        'pagination' => isset($searchData['pagination']) ? $searchData['pagination'] : null
                     ];
                 }
 

@@ -374,7 +374,7 @@ abstract class ApiController extends FOSRestController
 
         return [
             'results' => $resultData,
-            'info'    => (isset($resultInfo['searchType']) ? $resultInfo['searchType'] : $resultInfo),
+            'info'    => (isset($resultInfo['searchType']) ? $resultInfo['searchType'] : $resultInfo)
         ];
     }
 

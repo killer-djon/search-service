@@ -292,7 +292,58 @@ class PeopleSearchService extends AbstractSearchService
                 );
             }
 
-            $queryMatchResults[$filter] = $this->createMatchQuery(null, [], $skip, $count);
+            if (!is_null($searchText) && !empty($searchText)) {
+
+                /** Получаем сформированный объект запроса */
+                $searchText = mb_strtolower($searchText);
+                $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
+
+                $slopPhrase = array_filter(explode(" ", $searchText));
+
+                $must = $should = [];
+
+                if (count($slopPhrase) > 1) {
+
+                    /**
+                     * Поиск по точному воспадению искомого словосочетания
+                     */
+                    $this->setConditionQueryMust([
+                        $this->_queryConditionFactory
+                            ->getFieldQuery(PeopleSearchMapping::getMultiMatchQuerySearchFields(), $searchText)
+                            ->setDefaultOperator(MultiMatch::OPERATOR_AND)
+                            ->setDefaultField(PeopleSearchMapping::NAME_FIELD)
+                    ]);
+
+                } else {
+
+                    $prefixWildCardByName = [];
+
+                    foreach (PeopleSearchMapping::getMultiMatchQuerySearchFields() as $field) {
+                        $prefixWildCardByName[] = $this->_queryConditionFactory->getPrefixQuery($field, $searchText, 0.5);
+                    }
+
+                    $this->setConditionQueryShould([
+                        $this->_queryConditionFactory->getDisMaxQuery([
+                            $this->_queryConditionFactory->getMultiMatchQuery()
+                                                         ->setFields(PeopleSearchMapping::getMultiMatchQuerySearchFields())
+                                                         ->setQuery($searchText)
+                                                         ->setOperator(MultiMatch::OPERATOR_OR)
+                                                         ->setType(MultiMatch::TYPE_BEST_FIELDS),
+                            $this->_queryConditionFactory->getBoolQuery([], $prefixWildCardByName, []),
+                            $this->_queryConditionFactory->getFieldQuery(
+                                PeopleSearchMapping::getMultiMatchQuerySearchFields(),
+                                $searchText
+                            )
+                        ])
+                    ]);
+                }
+
+                $queryMatchResults[$filter] = $this->createQuery($skip, $count);
+
+            } else {
+                /** Получаем сформированный объект запроса */
+                $queryMatchResults[$filter] = $this->createMatchQuery(null, [], $skip, $count);
+            }
 
         }
 

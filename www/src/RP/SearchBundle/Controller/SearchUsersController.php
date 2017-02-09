@@ -120,6 +120,98 @@ class SearchUsersController extends ApiController
             /** @var ID профиля которого хотим посмотреть */
             $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $userId);
 
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+            $simpleList = $request->get('simpleList');
+
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+
+            $filtersType = $request->get(RequestConstant::FILTERS_PARAM);
+
+            if (is_null($filtersType) || empty($filtersType)) {
+                return $this->_handleViewWithError(
+                    new BadRequestHttpException(
+                        'Не указаны фильтры',
+                        null,
+                        Response::HTTP_BAD_REQUEST
+                    )
+                );
+            }
+
+            /** @var array Набор фильтров запроса */
+            $filters = $this->getParseFilters($filtersType);
+            if( $version == RequestConstant::DEFAULT_VERSION )
+            {
+                $filters = [ 'friends' ];
+            }
+
+            $peopleSearchService = $this->getPeopleSearchService();
+
+            /**
+             * После того как мы уберем костыли
+             * по совместимости со старыми приложениям
+             */
+            $people = $peopleSearchService->searchPeopleFriends(
+                $userId,
+                $targetUserId,
+                $filters,
+                $this->getGeoPoint(),
+                $searchText,
+                $this->getSkip(),
+                $this->getCount()
+            );
+
+            if( $version == RequestConstant::DEFAULT_VERSION )
+            {
+                $items = (isset($people['items']) && !empty($people['items']) ? $people['items'] : NULL);
+
+                if( is_null($items) )
+                {
+                    return $this->_handleViewWithData([]);
+                }
+
+                $info = $people['info']['searchType'];
+
+                $this->restructTagsField($items);
+                $this->restructLocationField($items);
+                $items = $this->changeKeysName($items);
+                $items = $this->excludeEmptyValue($items);
+
+                $items = $this->revertToScalarTagsMatchFields($items);
+                AbstractTransformer::recursiveTransformAvatar($items);
+
+
+                return $this->_handleViewWithData([
+                    'users' => $items['friends'],
+                    'info' => $info['friends'],
+                    'pagination' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount(), $info['friends']['totalHits'])
+                ]);
+            }
+
+            /** выводим результат */
+            return $this->_handleViewWithData($people);
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+    }
+
+    /**
+     * Поиск пользователей в друзъях
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function __searchUsersByFriendAction(Request $request)
+    {
+        try {
+            /** @var ID пользователя */
+            $userId = $this->getRequestUserId();
+
+            /** @var ID профиля которого хотим посмотреть */
+            $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $userId);
+
             $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
             $simpleList = $request->get('simpleList');
 
@@ -168,7 +260,7 @@ class SearchUsersController extends ApiController
                             'pagination' => $peopleSearchService->getPaginationAdapter(
                                 $this->getSkip(),
                                 $this->getCount(),
-                                (isset($people['info']) ? $people['info']['searchType'][$key]['totalHits'] : null)
+                                (isset($item[$key]['info']) ? $item[$key]['info']['searchType'][$key]['totalHits'] : null)
                             ),
                         ];
                     }
@@ -322,11 +414,10 @@ class SearchUsersController extends ApiController
                 );
             }
 
-            if( isset($userContext['tags']) && !empty($userContext['tags']) )
-            {
+            if (isset($userContext['tags']) && !empty($userContext['tags'])) {
                 //$script_string = "doc['usersCount'].value + doc['placeCount'].value + doc['eventsCount'].value";
-                foreach ($userContext['tags'] as $key =>& $itemTag){
-                    $itemTag['sumCount'] =   $itemTag['usersCount'] + $itemTag['placeCount'] + $itemTag['eventsCount'];
+                foreach ($userContext['tags'] as $key => & $itemTag) {
+                    $itemTag['sumCount'] = $itemTag['usersCount'] + $itemTag['placeCount'] + $itemTag['eventsCount'];
                 }
             }
 

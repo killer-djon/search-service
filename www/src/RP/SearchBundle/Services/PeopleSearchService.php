@@ -271,6 +271,7 @@ class PeopleSearchService extends AbstractSearchService
             /** добавляем к условию поиска рассчет по совпадению интересов */
             $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);
 
+            $this->setScriptMatchInterestsConditions($currentUser, PeopleSearchMapping::class);
             /** добавляем к условию поиска рассчет расстояния */
             $this->setGeoPointConditions($point, PeopleSearchMapping::class);
 

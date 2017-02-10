@@ -161,6 +161,11 @@ class SearchUsersController extends ApiController
                 $this->getCount()
             );
 
+            if( empty($peopleSearchService->getTotalResults()))
+            {
+                return $this->_handleViewWithData([]);
+            }
+
             if( $version == RequestConstant::DEFAULT_VERSION )
             {
                 $items = (isset($people['items']) && !empty($people['items']) ? $people['items'] : NULL);
@@ -197,7 +202,7 @@ class SearchUsersController extends ApiController
         }
     }
 
-    
+
 
     /**
      * Поиск пользователей которые могут помочь
@@ -254,7 +259,8 @@ class SearchUsersController extends ApiController
                 $userContext = !empty($userContext[PeopleSearchMapping::CONTEXT]) ? current($userContext[PeopleSearchMapping::CONTEXT]) : [];
 
                 if (isset($userContext['matchingInterests']) && !empty($userContext['matchingInterests'])) {
-                    $tagsArray = explode(',', $userContext['matchingInterests']);
+
+                    /*$tagsArray = explode(',', $userContext['matchingInterests']);
                     $userContext['matchingInterests'] = array_map(function ($tagId) use ($userContext) {
                         $keyTag = array_search($tagId, array_column($userContext['tags'], 'id'));
 
@@ -262,6 +268,16 @@ class SearchUsersController extends ApiController
                     }, $tagsArray);
 
                     $userContext['tagsMatch']['tags'] = $userContext['matchingInterests'];
+                    unset($userContext['tagsMatch']['matchingInterests']);
+                    */
+                    $tagsArray = explode(',', $userContext['matchingInterests']);
+                    foreach ($tagsArray as $tagId)
+                    {
+                        $keyTag = array_search($tagId, array_column($userContext['tags'], 'id'));
+                        $userContext['tagsMatch']['tags'][$tagId] = $userContext['tags'][$keyTag];
+                    }
+
+                    $userContext['matchingInterests'] = $userContext['tagsMatch']['tags'];
                     unset($userContext['tagsMatch']['matchingInterests']);
                 }
             } else {

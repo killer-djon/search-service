@@ -205,6 +205,7 @@ class PeopleSearchService extends AbstractSearchService
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
 
+
         /** получаем объект профиля пользователя */
         $targetUser = ($userId == $targetUserId ? $currentUser : $this->getUserById($targetUserId));
         $filtersKey = array_flip($filters);

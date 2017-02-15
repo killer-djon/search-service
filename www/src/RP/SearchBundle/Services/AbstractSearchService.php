@@ -528,14 +528,19 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      *
      * @param string $userId ID пользователя для получения
      * @throws SearchServiceException
-     * @return UserProfileService
+     * @return UserProfileService|null
      */
     public function getUserById($userId)
     {
         try {
             $user = $this->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, "$userId");
 
-            return new UserProfileService($user);
+            if( !is_null($user) )
+            {
+                return new UserProfileService($user);
+            }
+
+            return null;
         } catch (SearchServiceException $e) {
             throw new SearchServiceException('User not found with ID ' . $userId);
         }

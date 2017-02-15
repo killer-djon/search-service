@@ -198,6 +198,15 @@ trait ControllerTrait
         'distanceInPercent'           => 'intval',
         'distancePct'                 => 'intval',
         'distance'                    => 'floatval',
+        // ugcStat
+        'placesCount' => 'intval',
+        "checkinPlacesCount" => 'intval',
+        "eventsCount" => 'intval',
+        "willComeEventsCount" => 'intval',
+        "interestsCount" => 'intval',
+        "helpOffersCount" => 'intval',
+        "friendsCount" => 'intval',
+
     ];
 
     /**

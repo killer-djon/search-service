@@ -182,7 +182,7 @@ class SearchUsersController extends ApiController
                 $items = $this->changeKeysName($items);
                 $items = $this->excludeEmptyValue($items);
 
-                $items = $this->revertToScalarTagsMatchFields($items);
+                //$items = $this->revertToScalarTagsMatchFields($items);
                 AbstractTransformer::recursiveTransformAvatar($items);
 
 

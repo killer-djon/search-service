@@ -7,6 +7,7 @@ namespace RP\SearchBundle\Controller;
 use Common\Core\Controller\ApiController;
 use Common\Core\Controller\ControllerTrait;
 use Common\Core\Exceptions\SearchServiceException;
+use RP\SearchBundle\Services\EventsSearchService;
 use Symfony\Component\HttpFoundation\Request;
 use Common\Core\Constants\RequestConstant;
 use Symfony\Component\HttpFoundation\Response;
@@ -165,5 +166,17 @@ class SearchEventsController extends ApiController
         } catch (\HttpResponseException $e) {
             return $this->_handleViewWithError($e);
         }
+    }
+
+    /**
+     * ДОбавляем динамические поля к событию
+     * что нельзя сделать для хранения в еластике
+     *
+     * @param EventsSearchService $eventsSearchService Объект события
+     * @return EventsSearchService
+     */
+    private function customFieldsEvents(EventsSearchService $eventsSearchService)
+    {
+
     }
 }

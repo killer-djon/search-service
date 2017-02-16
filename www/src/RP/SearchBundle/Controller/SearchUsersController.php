@@ -193,8 +193,21 @@ class SearchUsersController extends ApiController
                 ]);
             }
 
+            $pagination = [];
+            foreach( $people['info']['searchType'] as $keyItems => $infoItems )
+            {
+                $pagination[$keyItems] = $peopleSearchService->getPaginationAdapter(
+                    $this->getSkip(),
+                    $this->getCount(),
+                    $infoItems['totalHits']
+                );
+            }
+
             /** выводим результат */
-            return $this->_handleViewWithData($people);
+            return $this->_handleViewWithData(array_merge(
+                $people,
+                ['pagination' => $pagination]
+            ));
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

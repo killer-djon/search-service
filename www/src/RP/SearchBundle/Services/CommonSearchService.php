@@ -26,6 +26,76 @@ class CommonSearchService extends AbstractSearchService
     const DEFAULT_SEARCH_BLOCK_SIZE = 3;
 
 
+    /**
+     * Глобальный (общий поиск) в системе
+     * варианты поиска могут быть:
+     *  1. Указан ID города и поисковый запрос
+     *  2. Указан ID города но пустой поисковый запрос
+     *  3. Не указан ID города, НО указан поисковый запрос
+     *
+     * @param string $userId
+     * @param array $filterType Коллекция в которой ищем или же пусто тогда во всех
+     * @param string|null $searchText Поисковый запрос
+     * @param string|null $cityId ID города в котором будем искать
+     * @param \Common\Core\Facade\Service\Geo\GeoPointServiceInterface|null $point ТОчка координат
+     * @param int $skip (default: 0)
+     * @param int|null $count Кол-во в результате
+     * @return array Массив с найденными результатами
+     */
+    public function commonFlatSearchByFilters(
+        $userId,
+        array $filterType,
+        $searchText = null,
+        $cityId = null,
+        GeoPointServiceInterface $point = null,
+        $skip = 0,
+        $count = null
+    ){
+        $currentUser = $this->getUserById($userId);
+
+        $searchFilters = [];
+
+        foreach ($filterType as $type) {
+
+            $searchFilters[] = $this->_queryFilterFactory->getBoolAndFilter(
+                $this->filterSearchTypes[$type]::getFlatMatchSearchFilter($this->_queryFilterFactory, $this->searchTypes[$type], $userId)
+            );
+            $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$type]);
+            $this->setGeoPointConditions($point, $this->filterSearchTypes[$type]);
+        }
+
+        $this->setFilterQuery([$this->_queryFilterFactory->getBoolOrFilter($searchFilters)]);
+
+
+        if( !is_null($cityId) && !empty($cityId) )
+        {
+            $this->setFilterQuery([$this->_queryFilterFactory->getTermFilter([
+                $this->filterSearchTypes[$type]::LOCATION_CITY_ID_FIELD => $cityId
+            ])]);
+        }
+
+        $queryMatch = $this->createQuery($skip, $count); // в случае если есть поисковая строка
+
+        /*$queryMatch = $this->createMatchQuery(
+            $searchText,
+            $type::getMultiMatchQuerySearchFields(),
+            $skip, (is_null($count) ? self::DEFAULT_SEARCH_BLOCK_SIZE : $count)
+        );*/
+
+        $this->setIndexedTransform(true);
+        /**
+         * Надо допилить поиск flat данных в одну кучу
+         * надо создать новый метод который это будет делать
+         * потому что прежние методы делают это с индексом
+         *
+         * например: searchFlatDocuments и transformFlatResult
+         * это надо обязательно
+         */
+        return $this->searchDocuments($queryMatch);
+
+        //print_r( $queryMatch ); die();
+    }
+
 
     /**
      * Глобальный (общий поиск) в системе
@@ -38,7 +108,7 @@ class CommonSearchService extends AbstractSearchService
      * @param string|null $searchText Поисковый запрос
      * @param string|null $cityId ID города в котором будем искать
      * @param \Common\Core\Facade\Service\Geo\GeoPointServiceInterface|null $point ТОчка координат
-     * @param string|null $filterType Коллекция в которой ищем или же пусто тогда во всех
+     * @param array|null $filterType Коллекция в которой ищем или же пусто тогда во всех
      * @param int $skip (default: 0)
      * @param int|null $count Кол-во в результате
      * @return array Массив с найденными результатами

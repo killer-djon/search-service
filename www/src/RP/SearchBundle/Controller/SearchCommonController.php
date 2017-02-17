@@ -69,6 +69,34 @@ class SearchCommonController extends ApiController
                 return $this->_handleViewWithData([]);
             }
 
+            $isFlat = false;
+                //$this->getBoolRequestParam($request->get(RequestConstant::IS_FLAT_PARAM, false));
+
+            if( $isFlat === true )
+            {
+                if( is_null($filterType) || empty($filterType) )
+                {
+                    return $this->_handleViewWithError(
+                        new BadRequestHttpException(
+                            'Необходимо указать параметры фильтров',
+                            null,
+                            Response::HTTP_BAD_REQUEST
+                        )
+                    );
+                }
+                $searchData = $commonSearchService->commonFlatSearchByFilters(
+                    $userId,
+                    $filterType,
+                    $searchText,
+                    $cityId,
+                    $this->getGeoPoint(),
+                    $this->getSkip(),
+                    $this->getCount()
+                );
+
+                return $this->_handleViewWithData($searchData);
+            }
+
             $searchData = $commonSearchService->commonSearchByFilters(
                 $userId,
                 $searchText,

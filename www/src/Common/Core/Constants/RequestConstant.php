@@ -6,9 +6,18 @@ abstract class RequestConstant
     /**
      * Параметр запроса класстерных данных
      *
-     * @var string IS_CLUSTER_PARAM
+     * @var bool IS_CLUSTER_PARAM
      */
     const IS_CLUSTER_PARAM = 'isCluster';
+
+    /**
+     * Параметр запроса level массива
+     * выводить ли одноуровневый/склеенный массив или нет
+     * по умолчанию false - не выводить
+     *
+     * @var bool IS_FLAT_PARAM
+     */
+    const IS_FLAT_PARAM = 'isFlat';
 
     /**
      * Параметр запроса версии

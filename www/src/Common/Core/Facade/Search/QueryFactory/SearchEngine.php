@@ -303,8 +303,11 @@ class SearchEngine implements SearchEngineInterface
             $elasticType = $this->_getElasticType($context);
 
             $this->_paginator = new SearchElasticaAdapter($elasticType, $elasticQuery);
-            $this->_paginator->setIndex($this->availableTypesSearch[$context]::DEFAULT_INDEX);
 
+            if( !is_null($context) && !empty($context) )
+            {
+                $this->_paginator->setIndex($this->availableTypesSearch[$context]::DEFAULT_INDEX);
+            }
             return $this->transformResult($this->_paginator->getResultSet(), $keyField);
 
         } catch (ElasticsearchException $e) {
@@ -659,6 +662,7 @@ class SearchEngine implements SearchEngineInterface
      */
     private function setTotalHits(\Elastica\ResultSet $resultSets, $keyField = null)
     {
+        //print_r($resultSets->getTotalHits()); die();
         $elipsedTime = $resultSets->getTotalTime() / 1000;
         $this->_totalHits = (!is_null($keyField) && !empty($keyField) ? [
             $keyField => [
@@ -673,6 +677,13 @@ class SearchEngine implements SearchEngineInterface
         return $this->_totalHits;
     }
 
+    private $indexedTransform = false;
+
+    public function setIndexedTransform($flag = false)
+    {
+        $this->indexedTransform = $flag;
+    }
+
     /**
      * Устанавливаем общие данные запроса
      *
@@ -684,7 +695,7 @@ class SearchEngine implements SearchEngineInterface
     {
         $results = $resultSets->getResults();
         $items = [];
-        foreach ($results as $resultItem) {
+        foreach ($results as $indexKey => $resultItem) {
             $type = $keyField ?: $resultItem->getType();
 
             $record[$type] = $resultItem->getData();
@@ -722,6 +733,7 @@ class SearchEngine implements SearchEngineInterface
                     'hit' => $record[$type]['hit'],
                 ]);
             }
+
         }
         $this->_totalResults = $items;
 

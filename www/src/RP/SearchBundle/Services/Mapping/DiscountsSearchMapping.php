@@ -64,6 +64,22 @@ abstract class DiscountsSearchMapping extends PlaceSearchMapping
         ];
     }
 
+    /**
+     * Собираем фильтр для поиска c isFlat параметров
+     *
+     * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param string $type Колекция для поиска
+     * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
+     * @return array
+     */
+    public static function getFlatMatchSearchFilter(FilterFactoryInterface $filterFactory, $type, $userId = null)
+    {
+        return array_merge(
+            self::getMarkersSearchFilter($filterFactory, $userId),
+            [$filterFactory->getTypeFilter($type)]
+        );
+    }
+
 
     /**
      * Собираем фильтр для поиска

@@ -173,6 +173,8 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
         ];
     }
 
+
+
     /**
      * Собираем фильтр для поиска
      *
@@ -191,6 +193,23 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
                 $filterFactory->getExistsFilter(self::BONUS_FIELD)
             ),
         ];
+    }
+
+
+    /**
+     * Собираем фильтр для поиска c isFlat параметров
+     *
+     * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param string $type Колекция для поиска
+     * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
+     * @return array
+     */
+    public static function getFlatMatchSearchFilter(FilterFactoryInterface $filterFactory, $type, $userId = null)
+    {
+        return array_merge(
+            self::getMatchSearchFilter($filterFactory, $userId),
+            [$filterFactory->getTypeFilter($type)]
+        );
     }
 
     /**

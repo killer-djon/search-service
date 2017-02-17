@@ -636,4 +636,42 @@ abstract class ApiController extends FOSRestController
             }
         }
     }
+
+    /**
+     * Преобразует полученнйы параметр в boolan значение
+     * потому что на входе параметр может быть либо строка "true"|"false" либо число 0|1
+     *
+     * @param mixed $param
+     * @return bool (default: false)
+     */
+    protected function getBoolRequestParam($param)
+    {
+        if (!empty($param)) {
+            if (is_string($param)) {
+                $param = mb_strtolower($param);
+                switch ($param) {
+                    case 'true':
+                    case '1':
+                        return true;
+                        break;
+                    case 'false':
+                    case '0':
+                        return false;
+                        break;
+                    default:
+                        return false;
+                }
+            }
+
+            if (is_int($param)) {
+                if ($param >= 1) {
+                    return true;
+                } else {
+                    return false;
+                }
+            }
+        }
+
+        return false;
+    }
 }

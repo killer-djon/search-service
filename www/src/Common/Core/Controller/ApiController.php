@@ -609,6 +609,9 @@ abstract class ApiController extends FOSRestController
     {
         //willComeUsers
         //willComeFriends
+
+        if( is_null($events) ) return null;
+
         $events = AbstractTransformer::is_assoc($events) ? [$events] : $events;
         foreach ($events as $key => &$event)
         {

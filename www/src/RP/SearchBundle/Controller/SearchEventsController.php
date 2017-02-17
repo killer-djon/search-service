@@ -132,7 +132,7 @@ class SearchEventsController extends ApiController
             $eventResult = $eventsSearchService->getEventById($userId, $eventId);
             $this->extractWillComeFriends($eventResult, $userId);
 
-            return $this->_handleViewWithData($eventResult);
+            return $this->_handleViewWithData((is_array($eventResult)&&!empty($eventResult)?current($eventResult):null));
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

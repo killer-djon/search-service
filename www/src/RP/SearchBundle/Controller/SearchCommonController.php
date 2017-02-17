@@ -8,6 +8,7 @@ use Common\Core\Controller\ApiController;
 use Common\Core\Exceptions\SearchServiceException;
 use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Exception\ElasticsearchException;
+use RP\SearchBundle\Services\Mapping\EventsSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\TagNameSearchMapping;
 use Symfony\Component\HttpFoundation\Request;
@@ -78,10 +79,12 @@ class SearchCommonController extends ApiController
                 $this->getCount()
             );
 
-            foreach( $searchData['items'] as $key => $searchItemInfo )
+            foreach( $searchData['items'] as $key => &$searchItemInfo )
             {
+
                 if( !empty($searchItemInfo) )
                 {
+                    if( $key == EventsSearchMapping::CONTEXT ) $this->extractWillComeFriends($searchItemInfo, $userId);
                     $item[$key] = $searchItemInfo;
                     $searchData['pagination'][$key] = $commonSearchService->getPaginationAdapter(
                         $this->getSkip(),

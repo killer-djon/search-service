@@ -596,4 +596,41 @@ abstract class ApiController extends FOSRestController
     {
         return $this->get('rp_search.search_service.chat_message');
     }
+
+    /**
+     * ДОбавляем динамические поля к событию
+     * что нельзя сделать для хранения в еластике
+     *
+     * @param array $events
+     * @param string $userId
+     * @return EventsSearchService
+     */
+    public function extractWillComeFriends(&$events, $userId)
+    {
+        //willComeUsers
+        //willComeFriends
+        $events = AbstractTransformer::is_assoc($events) ? [$events] : $events;
+        foreach ($events as $key => &$event)
+        {
+            //$event['willComeFriends'] = [];
+            if( isset($event['willComeUsers']) && !empty($event['willComeUsers']) )
+            {
+                $event['willComeUsers'] = array_combine(array_column($event['willComeUsers'], 'id'), $event['willComeUsers']);
+                $willComeFriends = [];
+                $willComeUsers = [];
+                foreach ($event['willComeUsers'] as $idUser => $users)
+                {
+                    if( isset($users['friendList']) && !empty($users['friendList']) && in_array($userId, $users['friendList']) )
+                    {
+                        $willComeFriends[] = $users;
+                    }else{
+                        $willComeUsers[] = $users;
+                    }
+                }
+
+                $event['willComeUsers'] = array_values($willComeUsers);
+                $event['willComeFriends'] = $willComeFriends;
+            }
+        }
+    }
 }

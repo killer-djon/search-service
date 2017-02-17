@@ -130,7 +130,7 @@ class SearchEventsController extends ApiController
 
             $eventsSearchService = $this->getEventsSearchService();
             $eventResult = $eventsSearchService->getEventById($userId, $eventId);
-            //$this->extractWillComeFriends($eventResult, $userId);
+            $this->extractWillComeFriends($eventResult, $userId);
 
             return $this->_handleViewWithData($eventResult);
         } catch (SearchServiceException $e) {
@@ -159,8 +159,9 @@ class SearchEventsController extends ApiController
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
             $eventsSearchService = $this->getEventsSearchService();
-            $eventsSearchService->searchEventsByPlacesId($userId, $places, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
+            $eventsResult = $eventsSearchService->searchEventsByPlacesId($userId, $places, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
 
+            $this->extractWillComeFriends($eventsResult, $userId);
             return $this->returnDataResult($eventsSearchService, self::KEY_FIELD_RESPONSE);
 
         }catch (SearchServiceException $e) {
@@ -170,32 +171,4 @@ class SearchEventsController extends ApiController
         }
     }
 
-    /**
-     * ДОбавляем динамические поля к событию
-     * что нельзя сделать для хранения в еластике
-     *
-     * @param array $events
-     * @param string $userId
-     * @return EventsSearchService
-     */
-    private function extractWillComeFriends(&$events, $userId)
-    {
-        //willComeUsers
-        //willComeFriends
-        $events = AbstractTransformer::is_assoc($events) ? [$events] : $events;
-        foreach ($events as $key => &$event)
-        {
-            $event['willComeFriends'] = [];
-            if( isset($event['willComeUsers']) && !empty($event['willComeUsers']) )
-            {
-                foreach ($event['willComeUsers'] as $users)
-                {
-                    if( isset($users['friendList']) && !empty($users['friendList']) )
-                    {
-
-                    }
-                }
-            }
-        }
-    }
 }

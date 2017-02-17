@@ -110,7 +110,7 @@ class SearchCommonController extends ApiController
                     }
 
                     $data = [
-                        'results' => $data,
+                        'results' => (!empty($data) ? $data : new \stdClass),
                         'info'    => $oldFormat['info'],
                         'pagination' => isset($searchData['pagination']) ? $searchData['pagination'] : null
                     ];

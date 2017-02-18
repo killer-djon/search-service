@@ -51,8 +51,8 @@ class CommonSearchService extends AbstractSearchService
         $skip = 0,
         $count = null
     ){
-        $currentUser = $this->getUserById($userId);
 
+        $currentUser = $this->getUserById($userId);
         $searchFilters = [];
 
         foreach ($filterType as $type) {
@@ -82,7 +82,8 @@ class CommonSearchService extends AbstractSearchService
             $skip, (is_null($count) ? self::DEFAULT_SEARCH_BLOCK_SIZE : $count)
         );*/
 
-        $this->setIndexedTransform(true);
+        $this->setFlatFormatResult(true);
+        
         /**
          * Надо допилить поиск flat данных в одну кучу
          * надо создать новый метод который это будет делать

@@ -69,8 +69,7 @@ class SearchCommonController extends ApiController
                 return $this->_handleViewWithData([]);
             }
 
-            $isFlat = false;
-                //$this->getBoolRequestParam($request->get(RequestConstant::IS_FLAT_PARAM, false));
+            $isFlat = $this->getBoolRequestParam($request->get(RequestConstant::IS_FLAT_PARAM, false));
 
             if( $isFlat === true )
             {
@@ -94,7 +93,15 @@ class SearchCommonController extends ApiController
                     $this->getCount()
                 );
 
-                return $this->_handleViewWithData($searchData);
+                return $this->_handleViewWithData(array_merge(
+	                ['info'  => $commonSearchService->getTotalHits()],
+	                ['pagination' => $commonSearchService->getPaginationAdapter(
+		                $this->getSkip(),
+                        $this->getCount(),
+                        (isset($searchData['info']) ? $searchData['info']['totalHits'] : null)
+	                )],
+	                ['items' => ($searchData ? $this->revertToScalarTagsMatchFields($searchData) : [])]
+	            ));
             }
 
             $searchData = $commonSearchService->commonSearchByFilters(

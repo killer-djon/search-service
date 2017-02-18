@@ -308,6 +308,8 @@ class SearchEngine implements SearchEngineInterface
             {
                 $this->_paginator->setIndex($this->availableTypesSearch[$context]::DEFAULT_INDEX);
             }
+            
+            
             return $this->transformResult($this->_paginator->getResultSet(), $keyField);
 
         } catch (ElasticsearchException $e) {
@@ -676,12 +678,26 @@ class SearchEngine implements SearchEngineInterface
 
         return $this->_totalHits;
     }
+    
 
-    private $indexedTransform = false;
+	/**
+	 * флаг указывающий на необходимость одноуровнего формата данных	
+	 *
+	 * @var bool $flatFormatData
+	 */
+    private $flatFormatData = false;
+    
 
-    public function setIndexedTransform($flag = false)
+    /**
+	 * Необходимо установить формат вывода данных
+	 * для вывода одноуровнего формата данных
+	 *
+	 * @param bool $indexedTransform
+	 * @return void
+     */
+    public function setFlatFormatResult($flag = false)
     {
-        $this->indexedTransform = $flag;
+        $this->flatFormatData = $flag;
     }
 
     /**
@@ -735,7 +751,13 @@ class SearchEngine implements SearchEngineInterface
             }
 
         }
+        
         $this->_totalResults = $items;
+        
+        if( $this->flatFormatData === true )
+        {
+	    	$this->_totalResults = current($items);
+        }
 
         return $this->getTotalResults();
     }

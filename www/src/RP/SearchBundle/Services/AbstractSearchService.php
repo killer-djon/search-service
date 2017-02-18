@@ -535,7 +535,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         try {
             $user = $this->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, "$userId");
 
-            if( !is_null($user) )
+            if( !is_null($user) && !empty($user) )
             {
                 return new UserProfileService($user);
             }

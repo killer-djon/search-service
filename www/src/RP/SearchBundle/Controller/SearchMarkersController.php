@@ -53,7 +53,8 @@ class SearchMarkersController extends ApiController
             $userId = $this->getRequestUserId();
 
             // Определяем выводить ли нам класстерные данные
-            $isCluster = $request->get(RequestConstant::IS_CLUSTER_PARAM, false);
+            //$isCluster = $request->get(RequestConstant::IS_CLUSTER_PARAM, false);
+            $isCluster = $this->getBoolRequestParam($request->get(RequestConstant::IS_CLUSTER_PARAM), false);
 
             // получаем сервис многотипного поиска
             $markersSearchService = $this->getCommonSearchService();
@@ -74,11 +75,12 @@ class SearchMarkersController extends ApiController
                 $request->get(RequestConstant::SEARCH_LIMIT_PARAM, RequestConstant::DEFAULT_SEARCH_UNLIMIT)
             );
 
+            $platform = $request->get(RequestConstant::PLATFORM_PARAM, RequestConstant::PLATFORM_IOS);
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                 $oldFormat = $this->getVersioningData($markersSearchService);
 
-                if (!empty($oldFormat)) {
+                if (!empty($oldFormat) && $platform == RequestConstant::PLATFORM_ANDROID) {
                     $keys = array_keys($oldFormat['results']);
 
                     foreach ($keys as $format) {

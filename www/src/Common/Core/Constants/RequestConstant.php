@@ -4,6 +4,35 @@ namespace Common\Core\Constants;
 abstract class RequestConstant
 {
     /**
+     * Параметр запроса представляющий платформу
+     * с которой был совершен запрос
+     *
+     * @var string PLATFORM_PARAM
+     */
+    const PLATFORM_PARAM = 'platform';
+
+    /**
+     * Платформа Android
+     *
+     * @var string PLATFORM_ANDROID
+     */
+    const PLATFORM_ANDROID = 'android';
+
+    /**
+     * Платформа IOS
+     *
+     * @var string PLATFORM_IOS
+     */
+    const PLATFORM_IOS = 'ios';
+
+    /**
+     * Платформа WEB
+     *
+     * @var string PLATFORM_WEB
+     */
+    const PLATFORM_WEB = 'web';
+
+    /**
      * Параметр запроса класстерных данных
      *
      * @var bool IS_CLUSTER_PARAM

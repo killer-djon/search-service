@@ -642,11 +642,12 @@ abstract class ApiController extends FOSRestController
      * потому что на входе параметр может быть либо строка "true"|"false" либо число 0|1
      *
      * @param mixed $param
+     * @param bool $defaultValue Значение по умолчанию
      * @return bool (default: false)
      */
-    protected function getBoolRequestParam($param)
+    protected function getBoolRequestParam($param, $defaultValue = false)
     {
-        if (!empty($param)) {
+        if (!is_null($param) && !empty($param)) {
             if (is_string($param)) {
                 $param = mb_strtolower($param);
                 switch ($param) {
@@ -659,7 +660,7 @@ abstract class ApiController extends FOSRestController
                         return false;
                         break;
                     default:
-                        return false;
+                        return $defaultValue;
                 }
             }
 
@@ -672,6 +673,6 @@ abstract class ApiController extends FOSRestController
             }
         }
 
-        return false;
+        return $defaultValue;
     }
 }

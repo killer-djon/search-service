@@ -89,7 +89,7 @@ class SearchMarkersController extends ApiController
                         }
                     }
 
-                    //$oldFormat['results'] = AbstractTransformer::array_filter_recursive($oldFormat['results']);
+                    $oldFormat['results'] = AbstractTransformer::array_filter_recursive($oldFormat['results']);
 
                 }
 

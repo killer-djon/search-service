@@ -313,7 +313,42 @@ class PlacesSearchService extends AbstractSearchService
      */
     public function getPlaceById($userId, $context, $fieldId, $recordId)
     {
-        $this->setFilterPlaces($userId);
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getBoolOrFilter([
+                $this->_queryFilterFactory->getBoolAndFilter([
+                    $this->_queryFilterFactory->getBoolOrFilter([
+                        $this->_queryFilterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 1, 100),
+                        $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
+                    ]),
+                    $this->_queryFilterFactory->getBoolOrFilter([
+                        $this->_queryFilterFactory->getBoolAndFilter([
+                            $this->_queryFilterFactory->getNotFilter(
+                                $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId])
+                            ),
+                            $this->_queryFilterFactory->getTermFilter([
+                                PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK
+                            ])
+                        ]),
+                        $this->_queryFilterFactory->getBoolAndFilter([
+                            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                            $this->_queryFilterFactory->getTermsFilter(PlaceSearchMapping::MODERATION_STATUS_FIELD, [
+                                ModerationStatus::OK,
+                                ModerationStatus::DIRTY,
+                                ModerationStatus::REJECTED,
+                                ModerationStatus::RESTORED,
+                                ModerationStatus::DELETED
+                            ])
+                        ])
+                    ])
+                ]),
+                $this->_queryFilterFactory->getBoolOrFilter([
+                    $this->_queryFilterFactory->getNotFilter(
+                        $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
+                    ),
+                    $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0])
+                ])
+            ])
+        ]);
 
         return $this->searchRecordById($context, $fieldId, $recordId);
     }

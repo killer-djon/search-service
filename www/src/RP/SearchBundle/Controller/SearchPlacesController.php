@@ -152,7 +152,11 @@ class SearchPlacesController extends ApiController
         try {
             /** @var ID пользователя */
             $userId = $this->getRequestUserId();
-            $place = $placeSearchService->getPlaceById($userId, PlaceSearchMapping::CONTEXT, PlaceSearchMapping::PLACE_ID_FIELD, $placeId);
+            $place = $placeSearchService->getPlaceById(
+                $userId, PlaceSearchMapping::CONTEXT,
+                PlaceSearchMapping::PLACE_ID_FIELD,
+                $placeId
+            );
 
             return $this->_handleViewWithData($place);
 

@@ -80,7 +80,7 @@ class SearchMarkersController extends ApiController
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                 $oldFormat = $this->getVersioningData($markersSearchService);
 
-                if (!empty($oldFormat) && $platform == RequestConstant::PLATFORM_ANDROID) {
+                if (!empty($oldFormat)) {
                     $keys = array_keys($oldFormat['results']);
 
                     /*foreach ($keys as $format) {

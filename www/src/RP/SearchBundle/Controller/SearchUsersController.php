@@ -273,16 +273,6 @@ class SearchUsersController extends ApiController
 
                 if (isset($userContext['matchingInterests']) && !empty($userContext['matchingInterests'])) {
 
-                    /*$tagsArray = explode(',', $userContext['matchingInterests']);
-                    $userContext['matchingInterests'] = array_map(function ($tagId) use ($userContext) {
-                        $keyTag = array_search($tagId, array_column($userContext['tags'], 'id'));
-
-                        return [$tagId => $userContext['tags'][$keyTag]];
-                    }, $tagsArray);
-
-                    $userContext['tagsMatch']['tags'] = $userContext['matchingInterests'];
-                    unset($userContext['tagsMatch']['matchingInterests']);
-                    */
                     $tagsArray = explode(',', $userContext['matchingInterests']);
                     foreach ($tagsArray as $tagId)
                     {
@@ -318,6 +308,8 @@ class SearchUsersController extends ApiController
                     $userContext = $this->excludeEmptyValue($userContext);
                     $userContext = $this->revertToScalarTagsMatchFields($userContext);
                     AbstractTransformer::recursiveTransformAvatar($userContext);
+
+                    $userContext = $this->excludeEmptyValue($userContext);
                 }
 
                 return $this->_handleViewWithData($userContext);

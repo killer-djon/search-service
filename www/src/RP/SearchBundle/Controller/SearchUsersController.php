@@ -260,7 +260,7 @@ class SearchUsersController extends ApiController
     public function searchUsersByIdAction(Request $request, $userId)
     {
         $peopleSearchService = $this->getPeopleSearchService();
-        $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
+        $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
 
         try {
             $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $userId);

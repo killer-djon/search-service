@@ -83,11 +83,11 @@ class SearchMarkersController extends ApiController
                 if (!empty($oldFormat) && $platform == RequestConstant::PLATFORM_ANDROID) {
                     $keys = array_keys($oldFormat['results']);
 
-                    foreach ($keys as $format) {
+                    /*foreach ($keys as $format) {
                         foreach ($oldFormat['results'][$format] as &$obj) {
                             AbstractTransformer::recursiveTransformAvatar($obj);
                         }
-                    }
+                    }*/
 
                     $oldFormat['results'] = AbstractTransformer::array_filter_recursive($oldFormat['results']);
 

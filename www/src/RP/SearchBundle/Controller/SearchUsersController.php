@@ -183,7 +183,7 @@ class SearchUsersController extends ApiController
                 $items = $this->excludeEmptyValue($items);
 
                 //$items = $this->revertToScalarTagsMatchFields($items);
-                AbstractTransformer::recursiveTransformAvatar($items);
+                //AbstractTransformer::recursiveTransformAvatar($items);
 
 
                 return $this->_handleViewWithData([
@@ -307,7 +307,7 @@ class SearchUsersController extends ApiController
                     $userContext = $this->changeKeysName($userContext);
                     $userContext = $this->excludeEmptyValue($userContext);
                     $userContext = $this->revertToScalarTagsMatchFields($userContext);
-                    AbstractTransformer::recursiveTransformAvatar($userContext);
+                    //AbstractTransformer::recursiveTransformAvatar($userContext);
 
                     $userContext = $this->excludeEmptyValue($userContext);
                 }

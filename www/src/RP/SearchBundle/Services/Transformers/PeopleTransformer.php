@@ -20,7 +20,7 @@ class PeopleTransformer extends AbstractTransformer implements TransformerInterf
         if (!is_null($dataResult[$context]) && isset($dataResult[$context])) {
             foreach ($dataResult[$context] as $key => $itemObject) {
                 $obj = (!is_null($subContext) ? $itemObject[$subContext] : $itemObject);
-                AbstractTransformer::recursiveTransformAvatar($obj);
+                //AbstractTransformer::recursiveTransformAvatar($obj);
 
                 if (!is_null($subContext)) {
                     $result[] = (isset($itemObject['hit']) ? array_merge(

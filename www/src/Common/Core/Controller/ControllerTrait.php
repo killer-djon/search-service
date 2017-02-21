@@ -150,6 +150,7 @@ trait ControllerTrait
     private $neededKeys = [
         'surname'           => ' ',
         'text'              => ' ',
+        'allCheckinsCount'  => ' ',
         'distance'          => 0,
         'distanceInPercent' => 0
     ];
@@ -198,6 +199,7 @@ trait ControllerTrait
         'distanceInPercent'           => 'intval',
         'distancePct'                 => 'intval',
         'distance'                    => 'floatval',
+        'allCheckinsCount'  => 'intval',
         // ugcStat
         'placesCount' => 'intval',
         "checkinPlacesCount" => 'intval',

@@ -265,9 +265,6 @@ class CommonSearchService extends AbstractSearchService
                 ]);
             }
 
-            $this->setScriptFields([
-                'relation' => $this->_scriptFactory->getRelationUserScript($userId)
-            ]);
             $this->setFilterQuery($this->filterSearchTypes[$type]::getMatchSearchFilter($this->_queryFilterFactory, $userId));
 
             $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$type]);

@@ -275,4 +275,26 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
 
         return new \Elastica\Script("");
     }
+
+
+    /**
+     * Формируем поле скрипта relation
+     * которое будет формировать отношения с пользователями
+     *
+     * @param string $userId ID пользователя с кем формируем отношение
+     * @param string $relationType Тип отношения
+     * @param string $lang Язык скрипта (default: groovy)
+     * @throws ElasticsearchException
+     * @return \Elastica\Script
+     */
+    public function getRelationUserScript($userId, $relationType, $lang = \Elastica\Script::LANG_JS)
+    {
+        $script = "
+            var relation = [];
+            if( !doc['relations'].empty && doc['relations'].values.size() ){
+                for(var j = 0, lenJ = doc['relations'].values.size(); j < lenJ; j++){
+                }
+            }
+        ";
+    }
 }

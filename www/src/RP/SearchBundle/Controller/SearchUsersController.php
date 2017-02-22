@@ -298,7 +298,7 @@ class SearchUsersController extends ApiController
                 }
             }
 
-            if (!is_null($userContext)) {
+            if (!is_null($userContext) && !empty($userContext)) {
 
                 if (!is_null($version) && !empty($version) && $version == RequestConstant::DEFAULT_VERSION) {
 
@@ -313,6 +313,12 @@ class SearchUsersController extends ApiController
 
                 return $this->_handleViewWithData($userContext);
             }
+
+            if( !is_null($userContext) )
+            {
+                return $this->_handleViewWithData($userContext);
+            }
+
 
             return $this->_handleViewWithData([]);
 

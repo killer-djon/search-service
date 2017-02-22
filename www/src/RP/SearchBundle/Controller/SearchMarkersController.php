@@ -36,13 +36,21 @@ class SearchMarkersController extends ApiController
                 return $this->_handleViewWithError(new BadRequestHttpException('Некорректные координаты геопозиции'), Response::HTTP_BAD_REQUEST);
             }
 
-            // получаем порцию данных из ячайки класстера
-            $geoHashCell = $request->get(Location::GEO_HASH_CELL_PARAM);
-            $geoHashCell = (!is_null($geoHashCell) && !empty($geoHashCell) ? $geoHashCell : null);
+            // Определяем выводить ли нам класстерные данные
+            //$isCluster = $request->get(RequestConstant::IS_CLUSTER_PARAM, false);
+            $isCluster = $this->getBoolRequestParam($request->get(RequestConstant::IS_CLUSTER_PARAM), false);
 
-            if (mb_strlen($geoHashCell) <= 0) {
-                if (is_null($this->getGeoPoint()->getRadius())) {
-                    return $this->_handleViewWithError(new BadRequestHttpException('Радиус должен быть установлен'), Response::HTTP_BAD_REQUEST);
+            $geoHashCell = null;
+            if( $isCluster === false )
+            {
+                // получаем порцию данных из ячайки класстера
+                $geoHashCell = $request->get(Location::GEO_HASH_CELL_PARAM);
+                $geoHashCell = (!is_null($geoHashCell) && !empty($geoHashCell) ? $geoHashCell : null);
+
+                if (mb_strlen($geoHashCell) <= 0) {
+                    if (is_null($this->getGeoPoint()->getRadius())) {
+                        return $this->_handleViewWithError(new BadRequestHttpException('Радиус должен быть установлен'), Response::HTTP_BAD_REQUEST);
+                    }
                 }
             }
 
@@ -51,10 +59,6 @@ class SearchMarkersController extends ApiController
             $types = $this->getParseFilters($filterTypes);
 
             $userId = $this->getRequestUserId();
-
-            // Определяем выводить ли нам класстерные данные
-            //$isCluster = $request->get(RequestConstant::IS_CLUSTER_PARAM, false);
-            $isCluster = $this->getBoolRequestParam($request->get(RequestConstant::IS_CLUSTER_PARAM), false);
 
             // получаем сервис многотипного поиска
             $markersSearchService = $this->getCommonSearchService();
@@ -82,13 +86,6 @@ class SearchMarkersController extends ApiController
 
                 if (!empty($oldFormat)) {
                     $keys = array_keys($oldFormat['results']);
-
-                    /*foreach ($keys as $format) {
-                        foreach ($oldFormat['results'][$format] as &$obj) {
-                            AbstractTransformer::recursiveTransformAvatar($obj);
-                        }
-                    }*/
-
                     $oldFormat['results'] = AbstractTransformer::array_filter_recursive($oldFormat['results']);
 
                 }

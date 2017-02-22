@@ -298,7 +298,7 @@ class SearchUsersController extends ApiController
                 }
             }
 
-            if (!is_null($userContext) && !empty($userContext)) {
+            if (!is_null($userContext)) {
 
                 if (!is_null($version) && !empty($version) && $version == RequestConstant::DEFAULT_VERSION) {
 
@@ -307,7 +307,6 @@ class SearchUsersController extends ApiController
                     $userContext = $this->changeKeysName($userContext);
                     $userContext = $this->excludeEmptyValue($userContext);
                     $userContext = $this->revertToScalarTagsMatchFields($userContext);
-                    //AbstractTransformer::recursiveTransformAvatar($userContext);
 
                     $userContext = $this->excludeEmptyValue($userContext);
                 }

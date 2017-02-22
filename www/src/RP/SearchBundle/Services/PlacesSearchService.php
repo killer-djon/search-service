@@ -350,6 +350,15 @@ class PlacesSearchService extends AbstractSearchService
             ])
         ]);
 
+        /*$currentUser = $this->getUserById($userId);
+        if( $this->getGeoPoint() instanceof GeoPointServiceInterface )
+        {
+            $this->setGeoPointConditions($this->getGeoPoint(), PlaceSearchMapping::class);
+        }
+
+        $this->setScriptTagsConditions($currentUser, PlaceSearchMapping::class);
+        */
+
         return $this->searchRecordById($context, $fieldId, $recordId);
     }
 

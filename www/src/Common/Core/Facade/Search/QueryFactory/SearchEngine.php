@@ -564,7 +564,6 @@ class SearchEngine implements SearchEngineInterface
 
             if ($resultSet->current() !== false) {
                 $items = $resultSet->current()->getData();
-
                 return $items;
             }
 
@@ -626,6 +625,7 @@ class SearchEngine implements SearchEngineInterface
      */
     public function transformResult(\Elastica\ResultSet $resultSets, $keyField = null)
     {
+
         if ($resultSets->count() > 0) {
             $this->setTotalHits($resultSets, $keyField);
             $this->setTotalResults($resultSets, $keyField);
@@ -714,7 +714,9 @@ class SearchEngine implements SearchEngineInterface
         foreach ($results as $indexKey => $resultItem) {
             $type = $keyField ?: $resultItem->getType();
 
+
             $record[$type] = $resultItem->getData();
+
             if ($resultItem->hasFields()) {
                 foreach ($resultItem->getFields() as $fieldKey => $field) {
                     if (isset($record[$type][$fieldKey])) {
@@ -756,6 +758,7 @@ class SearchEngine implements SearchEngineInterface
         
         if( $this->flatFormatData === true )
         {
+
 	    	$this->_totalResults = current($items);
         }
 

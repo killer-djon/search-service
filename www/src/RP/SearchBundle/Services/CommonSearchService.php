@@ -392,31 +392,33 @@ class CommonSearchService extends AbstractSearchService
                 $this->setFilterQuery($this->filterTypes[$keyType]::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
                 $this->setScriptTagsConditions($currentUser, $this->filterTypes[$keyType]);
 
-                if (!is_null($geoHashCell) && !empty($geoHashCell)) {
-                    $isCluster = false;
+                if( $isCluster === false )
+                {
+                    if (!is_null($geoHashCell) && !empty($geoHashCell)) {
 
-                    $geoDistanceRange = array_map(function ($itemDistance) {
-                        return (int)$itemDistance;
-                    }, explode('-', $geoHashCell));
+                        $geoDistanceRange = array_map(function ($itemDistance) {
+                            return (int)$itemDistance;
+                        }, explode('-', $geoHashCell));
 
-                    $this->setFilterQuery([
-                        $this->_queryFilterFactory->getGeoDistanceRangeFilter(
-                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
-                            [
-                                "lat" => $point->getLatitude(),
-                                "lon" => $point->getLongitude(),
-                            ],
-                            [
-                                'from' => "{$geoDistanceRange[0]}m",
-                                'to'   => "{$geoDistanceRange[1]}m",
-                            ]
-                        ),
-                    ]);
+                        $this->setFilterQuery([
+                            $this->_queryFilterFactory->getGeoDistanceRangeFilter(
+                                $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
+                                [
+                                    "lat" => $point->getLatitude(),
+                                    "lon" => $point->getLongitude(),
+                                ],
+                                [
+                                    'from' => "{$geoDistanceRange[0]}m",
+                                    'to'   => "{$geoDistanceRange[1]}m",
+                                ]
+                            ),
+                        ]);
+                    }
                 }
 
                 $this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
 
-                if ($isCluster == true) {
+                if ($isCluster === true) {
                     $this->setAggregationQuery([
                         $this->_queryAggregationFactory->getGeoDistanceAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,

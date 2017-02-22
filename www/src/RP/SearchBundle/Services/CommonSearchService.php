@@ -60,6 +60,11 @@ class CommonSearchService extends AbstractSearchService
             $searchFilters[] = $this->_queryFilterFactory->getBoolAndFilter(
                 $this->filterSearchTypes[$type]::getFlatMatchSearchFilter($this->_queryFilterFactory, $this->searchTypes[$type], $userId)
             );
+
+            $this->setScriptFields([
+                'relation' => $this->_scriptFactory->getRelationUserScript($userId)
+            ]);
+
             $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$type]);
             $this->setGeoPointConditions($point, $this->filterSearchTypes[$type]);
         }
@@ -138,6 +143,9 @@ class CommonSearchService extends AbstractSearchService
             foreach ($this->filterSearchTypes as $keyType => $type) {
                 $this->clearQueryFactory();
 
+                $this->setScriptFields([
+                    'relation' => $this->_scriptFactory->getRelationUserScript($userId)
+                ]);
                 $this->setFilterQuery($type::getMatchSearchFilter($this->_queryFilterFactory, $userId));
                 $this->setScriptTagsConditions($currentUser, $type);
                 $this->setGeoPointConditions($point, $type);
@@ -257,6 +265,9 @@ class CommonSearchService extends AbstractSearchService
                 ]);
             }
 
+            $this->setScriptFields([
+                'relation' => $this->_scriptFactory->getRelationUserScript($userId)
+            ]);
             $this->setFilterQuery($this->filterSearchTypes[$type]::getMatchSearchFilter($this->_queryFilterFactory, $userId));
 
             $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$type]);
@@ -389,6 +400,9 @@ class CommonSearchService extends AbstractSearchService
             foreach ($searchTypes as $keyType => $typeFields) {
                 $this->clearQueryFactory();
 
+                $this->setScriptFields([
+                    'relation' => $this->_scriptFactory->getRelationUserScript($userId)
+                ]);
                 $this->setFilterQuery($this->filterTypes[$keyType]::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
                 $this->setScriptTagsConditions($currentUser, $this->filterTypes[$keyType]);
 
@@ -497,6 +511,10 @@ class CommonSearchService extends AbstractSearchService
     {
         $this->setFilterQuery([
             $this->_queryFilterFactory->getGtFilter(TagNameSearchMapping::USERS_COUNT_FIELD, 0),
+        ]);
+
+        $this->setScriptFields([
+            'relation' => $this->_scriptFactory->getRelationUserScript($userId)
         ]);
 
         $this->setSortingQuery(

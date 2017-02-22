@@ -1,6 +1,7 @@
 <?php
 namespace Common\Core\Facade\Search\QueryScripting;
 
+use Common\Core\Constants\RelationType;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Elastica\Exception\ElasticsearchException;
 
@@ -216,14 +217,13 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                     'tagsValue'  => $tags,
                 ], $lang);
 
-            }catch (ElasticsearchException $e) {
+            } catch (ElasticsearchException $e) {
                 throw new ElasticsearchException($e);
             }
         }
 
         return new \Elastica\Script("");
     }
-
 
     /**
      * Формируем поле скрипта с пересекающихся тегов (интересов)
@@ -276,25 +276,41 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
         return new \Elastica\Script("");
     }
 
-
     /**
      * Формируем поле скрипта relation
      * которое будет формировать отношения с пользователями
      *
      * @param string $userId ID пользователя с кем формируем отношение
-     * @param string $relationType Тип отношения
      * @param string $lang Язык скрипта (default: groovy)
      * @throws ElasticsearchException
      * @return \Elastica\Script
      */
-    public function getRelationUserScript($userId, $relationType, $lang = \Elastica\Script::LANG_JS)
+    public function getRelationUserScript($userId, $lang = \Elastica\Script::LANG_JS)
     {
-        $script = "
-            var relation = [];
-            if( !doc['relations'].empty && doc['relations'].values.size() ){
-                for(var j = 0, lenJ = doc['relations'].values.size(); j < lenJ; j++){
+        try {
+            $script = "
+                type = doc['relations.' + userId];
+                relation = {
+                    'isFriend': type.value == 'friendship' ? true : false,
+                    'isFollower': type.value == 'following' ? true : false,
+                    'isFriendshipRequestSent': type.value == 'friendshipRequest' ? true : false,
+                    'isFriendshipRequestReceived': type.value == 'friendshipRequestReceived' ? true : false,
                 }
-            }
-        ";
+            ";
+
+            return new \Elastica\Script($script, [
+                'userId' => $userId,
+                'relationTypes' => [
+                    RelationType::FRIENDSHIP,
+                    RelationType::FOLLOWING,
+                    RelationType::FRIENDSHIP_REQUEST,
+                    RelationType::FRIENDSHIP_REQUEST_INITIATOR
+                ]
+            ], $lang);
+
+        } catch (ElasticsearchException $e) {
+            throw new ElasticsearchException($e);
+        }
+
     }
 }

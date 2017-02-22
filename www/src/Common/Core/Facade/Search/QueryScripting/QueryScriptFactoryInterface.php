@@ -68,11 +68,10 @@ interface QueryScriptFactoryInterface
      * которое будет формировать отношения с пользователями
      *
      * @param string $userId ID пользователя с кем формируем отношение
-     * @param string $relationType Тип отношения
      * @param string $lang Язык скрипта (default: groovy)
      * @throws ElasticsearchException
      * @return \Elastica\Script
      */
-    public function getRelationUserScript($userId, $relationType, $lang = \Elastica\Script::LANG_JS);
+    public function getRelationUserScript($userId, $lang = \Elastica\Script::LANG_JS);
 
 }

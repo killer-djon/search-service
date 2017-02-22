@@ -304,12 +304,10 @@ class SearchEngine implements SearchEngineInterface
 
             $this->_paginator = new SearchElasticaAdapter($elasticType, $elasticQuery);
 
-            if( !is_null($context) && !empty($context) )
-            {
+            if (!is_null($context) && !empty($context)) {
                 $this->_paginator->setIndex($this->availableTypesSearch[$context]::DEFAULT_INDEX);
             }
-            
-            
+
             return $this->transformResult($this->_paginator->getResultSet(), $keyField);
 
         } catch (ElasticsearchException $e) {
@@ -564,6 +562,7 @@ class SearchEngine implements SearchEngineInterface
 
             if ($resultSet->current() !== false) {
                 $items = $resultSet->current()->getData();
+
                 return $items;
             }
 
@@ -678,22 +677,20 @@ class SearchEngine implements SearchEngineInterface
 
         return $this->_totalHits;
     }
-    
-
-	/**
-	 * флаг указывающий на необходимость одноуровнего формата данных	
-	 *
-	 * @var bool $flatFormatData
-	 */
-    private $flatFormatData = false;
-    
 
     /**
-	 * Необходимо установить формат вывода данных
-	 * для вывода одноуровнего формата данных
-	 *
-	 * @param bool $indexedTransform
-	 * @return void
+     * флаг указывающий на необходимость одноуровнего формата данных
+     *
+     * @var bool $flatFormatData
+     */
+    private $flatFormatData = false;
+
+    /**
+     * Необходимо установить формат вывода данных
+     * для вывода одноуровнего формата данных
+     *
+     * @param bool $indexedTransform
+     * @return void
      */
     public function setFlatFormatResult($flag = false)
     {
@@ -713,7 +710,6 @@ class SearchEngine implements SearchEngineInterface
         $items = [];
         foreach ($results as $indexKey => $resultItem) {
             $type = $keyField ?: $resultItem->getType();
-
 
             $record[$type] = $resultItem->getData();
 
@@ -740,6 +736,7 @@ class SearchEngine implements SearchEngineInterface
                 unset($record[$type]['hit']['sort']);
             }
 
+
             if ($this->getOldFormat() === true) {
                 $items[$type][] = [
                     'item' => $record[$type],
@@ -753,13 +750,12 @@ class SearchEngine implements SearchEngineInterface
             }
 
         }
-        
-        $this->_totalResults = $items;
-        
-        if( $this->flatFormatData === true )
-        {
 
-	    	$this->_totalResults = current($items);
+        $this->_totalResults = $items;
+
+        if ($this->flatFormatData === true) {
+
+            $this->_totalResults = current($items);
         }
 
         return $this->getTotalResults();

@@ -699,6 +699,9 @@ class PeopleSearchService extends AbstractSearchService
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
 
+        $this->setScriptFields([
+            'relation' => $this->_scriptFactory->getRelationUserScript($userId)
+        ]);
         /** добавляем к условию поиска рассчет по совпадению интересов */
         $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);
 

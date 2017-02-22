@@ -63,4 +63,5 @@ interface QueryScriptFactoryInterface
      */
     public function getTagsIntersectInPercentScript($tagsField, array $tags, $lang = \Elastica\Script::LANG_JS);
 
+
 }

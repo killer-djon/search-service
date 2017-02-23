@@ -289,13 +289,16 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
     {
         try {
             $script = "
+            if( doc['relations.' + userId] !== undefined )
+            {                                 
                 type = doc['relations.' + userId];
-                relation = {
+                relation = {                  
                     'isFriend': type.value == 'friendship' ? true : false,
                     'isFollower': type.value == 'following' ? true : false,
                     'isFriendshipRequestSent': type.value == 'friendshipRequest' ? true : false,
                     'isFriendshipRequestReceived': type.value == 'friendshipRequestReceived' ? true : false,
                 }
+            }
             ";
 
             return new \Elastica\Script($script, [

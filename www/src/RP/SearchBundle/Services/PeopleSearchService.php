@@ -71,6 +71,7 @@ class PeopleSearchService extends AbstractSearchService
                 $point
             )
         );
+        
         $this->setScriptFields([
             'relation' => $this->_scriptFactory->getRelationUserScript($userId)
         ]);

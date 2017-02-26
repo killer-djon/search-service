@@ -41,28 +41,23 @@ class CitySearchService extends AbstractSearchService
         ]);
 
         $searchText = mb_strtolower($searchText);
-        $wildCardQuery = [];
-        foreach (CitySearchMapping::getMultiMatchQuerySearchFields() as $field) {
-            $wildCardQuery[] = $this->_queryConditionFactory->getWildCardQuery($field, "{$searchText}*");
-        }
-
-        $this->setConditionQueryShould([
-            $this->_queryConditionFactory->getMultiMatchQuery()
-                                         ->setFields(CitySearchMapping::getMultiMatchQuerySearchFields())
-                                         ->setQuery($searchText)
-                                         ->setOperator(MultiMatch::OPERATOR_OR)
-                                         ->setType(MultiMatch::TYPE_BEST_FIELDS),
-            $this->_queryConditionFactory->getBoolQuery([], array_merge($wildCardQuery, [
-                $this->_queryConditionFactory->getFieldQuery(
-                    CitySearchMapping::getMultiMatchQuerySearchFields(),
-                    $searchText
-                ),
-            ]), []),
+        
+        $this->setConditionQueryMust([
+	        $this->_queryConditionFactory->getMultiMatchQuery()
+	        	->setFields([
+		        	$this->setBoostField(CitySearchMapping::NAME_FIELD, 5),
+		        	$this->setBoostField(CitySearchMapping::INTERNATIONAL_NAME_FIELD, 4),
+		        	$this->setBoostField(CitySearchMapping::TRANSLIT_NAME_FIELD, 3),
+	        	])
+	        	->setQuery($searchText)
+	        	->setOperator(MultiMatch::OPERATOR_OR)
+	        	->setType(MultiMatch::TYPE_PHRASE_PREFIX)
         ]);
 
-        $this->setSortingQuery(
-            $this->_sortingFactory->getFieldSort(CitySearchMapping::NAME_FIELD)
-        );
+        $this->setSortingQuery([
+	        $this->_sortingFactory->getFieldSort('_score', 'desc'),
+        	$this->_sortingFactory->getFieldSort(CitySearchMapping::NAME_FIELD)    
+        ]);
 
         /** Получаем сформированный объект запроса */
         $queryMatchResult = $this->createQuery($skip, $count);

@@ -575,5 +575,26 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         /** Возращаем объект профиля пользователя */
         return $userSearchDocument;
     }
+    
+    /**
+	 * Устанавливаем бустинг для конкретного поля
+	 * этот бустинг будет означать преоретизацию при поиске
+	 * при множественных полях
+	 * 
+	 * @param string $fieldName Название поля
+	 * @param int|null $boost Приоритет в целочисленном выражении
+	 *
+	 * @return string Название поля с отметкой приоритета (like: "title^5")
+     */
+    public function setBoostField($fieldName, $boost = null)
+    {
+	    if( !is_null($boost) && is_int($boost) )
+	    {
+		    $boost = (int)$boost;
+		    return "$fieldName^$boost";
+	    }
+	    
+	    return $fieldName;
+    }
 
 }

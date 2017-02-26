@@ -26,7 +26,7 @@ abstract class CitySearchMapping extends AbstractSearchMapping
     const COUNTRY_SHIRT_NAME_FIELD = 'Country.shortName';
 
     /** Маппинг поля имени города для префиксного поиска */
-    const TRANSLIT_NAME_FIELD = 'Name._translit';
+    const TRANSLIT_NAME_FIELD = 'name._translit';
 
     /** Поле названия города в международном формате */
     const INTERNATIONAL_NAME_FIELD = 'InternationalName';

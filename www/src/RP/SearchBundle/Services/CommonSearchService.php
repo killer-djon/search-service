@@ -360,9 +360,18 @@ class CommonSearchService extends AbstractSearchService
      * @param int|null $count Кол-во в результате
      * @return array Массив с найденными результатами
      */
-    public function searchMarkersByFilters($userId, array $filters, GeoPointServiceInterface $point, $isCluster = false, $geoHashCell = null, $skip = 0, $count = null)
+    public function searchMarkersByFilters(
+    	$userId, 
+    	array $filters, 
+    	GeoPointServiceInterface $point, 
+    	$isCluster = false, 
+    	$geoHashCell = null, 
+    	$skip = 0,
+    	$count = null
+    )
     {
         $currentUser = $this->getUserById($userId);
+        
 
         array_walk($filters, function ($filter) use (&$searchTypes) {
             // временный костыль для IOS приложения
@@ -382,6 +391,7 @@ class CommonSearchService extends AbstractSearchService
                 }
             }
         });
+        
 
         if (!is_null($searchTypes) && !empty($searchTypes)) {
             $queryMatchResults = [];
@@ -392,7 +402,7 @@ class CommonSearchService extends AbstractSearchService
                 $this->setFilterQuery($this->filterTypes[$keyType]::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
                 $this->setScriptTagsConditions($currentUser, $this->filterTypes[$keyType]);
 
-                if( $isCluster === false )
+                if( $isCluster == false )
                 {
                     if (!is_null($geoHashCell) && !empty($geoHashCell)) {
 
@@ -418,8 +428,9 @@ class CommonSearchService extends AbstractSearchService
 
                 $this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
 
-                if ($isCluster === true) {
-                    $this->setAggregationQuery([
+                if ($isCluster) {
+                    
+                    /*$this->setAggregationQuery([
                         $this->_queryAggregationFactory->getGeoDistanceAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
                             [
@@ -434,6 +445,34 @@ class CommonSearchService extends AbstractSearchService
                             $this->filterTypes[$keyType]::LOCATION_FIELD,
                             [], 1
                         )),
+                    ]);*/
+                    $this->setAggregationQuery([
+	                    $this->_queryAggregationFactory->getFilterAggregation(
+		                    'filtered_cells', 
+		                    $this->_queryFilterFactory->getBoundingBoxFilter(
+			                    $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
+	                            [
+	                                "lat" => $point->getLatitude(),
+	                                "lon" => $point->getLongitude(),
+	                            ],
+	                            $point->getRadius()
+		                    )
+		                )->addAggregation(
+			                $this->_queryAggregationFactory->getGeoDistanceAggregation(
+	                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
+	                            [
+	                                "lat" => $point->getLatitude(),
+	                                "lon" => $point->getLongitude(),
+	                            ],
+	                            $point->getRadius(),
+	                            'm'
+	                        )->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
+	                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
+	                        ))->addAggregation($this->_queryAggregationFactory->setAggregationSource(
+	                            $this->filterTypes[$keyType]::LOCATION_FIELD,
+	                            [], 1
+	                        ))
+		                )
                     ]);
                 }
 
@@ -456,8 +495,9 @@ class CommonSearchService extends AbstractSearchService
                     $skip,
                     $count
                 );
-
+                //print_r( $queryMatchResults[$keyType]->toArray() ); die();
             }
+            
 
             /**
              * Так же при вызове метода поиска для многотипных

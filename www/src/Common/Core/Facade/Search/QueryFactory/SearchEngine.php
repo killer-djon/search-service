@@ -340,6 +340,7 @@ class SearchEngine implements SearchEngineInterface
 
                 $elasticType = $this->_getElasticType($this->searchTypes[$keyType]);
                 $searchItem = $elasticType->createSearch($elasticQuery);
+                
                 if (!$searchItem->hasIndex($this->availableTypesSearch[$this->searchTypes[$keyType]]::DEFAULT_INDEX)) {
                     $searchItem->addIndex($this->availableTypesSearch[$this->searchTypes[$keyType]]::DEFAULT_INDEX);
                 }
@@ -363,6 +364,7 @@ class SearchEngine implements SearchEngineInterface
     public function multiTransformResult(\Elastica\Multi\ResultSet $resultSets)
     {
         $resultIterator = $resultSets->getResultSets();
+        
         if (!empty($resultIterator)) {
             $results = $info = $items = [];
             $aggs = [];
@@ -388,6 +390,8 @@ class SearchEngine implements SearchEngineInterface
                     $aggs[$key] = $this->setAggregationsResult($resultSet);
                 }
             }
+            
+            
 
             $results['cluster'] = $aggs;
             $results['info'] = $info;
@@ -445,16 +449,21 @@ class SearchEngine implements SearchEngineInterface
         if (is_null($keyField)) {
             return $initBuckets;
         }
+       
 
         // 1. Вытаскиваем из набора основные данные (и складываем в массив по ключам)
         $buckets = [];
         foreach ($initBuckets as $typeKey => $bucketItem) {
             $bucketKeys = $this->array_combine_(array_column($bucketItem, 'key'), $bucketItem);
             foreach ($bucketKeys as $key => & $item) {
+	            
                 $currentItem = current($item);
-                $docCount = $currentItem[$keyField]['hits']['total'];
+                $docCount = $currentItem['doc_count'];
+                //$docCount = $currentItem[$keyField]['hits']['total'];
+                
 
                 if ((int)$docCount > 0) {
+	                
                     $item = [
                         'doc_count' => $docCount,
                         'type'      => $typeKey,
@@ -463,6 +472,7 @@ class SearchEngine implements SearchEngineInterface
                             Location::LONG_LONGITUDE => $currentItem['centroid'][$keyField][Location::LONGITUDE],
                         ],
                     ];
+                    
 
                     if ($docCount == 1) {
                         $docs = array_combine(
@@ -477,11 +487,13 @@ class SearchEngine implements SearchEngineInterface
                 $buckets[$typeKey] = $bucketKeys;
             }
         }
+        
 
         // костыль ужасный
         if (isset($buckets['people'])) {
             unset($buckets['people']);
         }
+
 
         // 2. Затем группируем все по ключам класстера
         $bucketItems = [];
@@ -508,6 +520,7 @@ class SearchEngine implements SearchEngineInterface
                     'location'  => GeoPointService::GetCenterFromDegrees($location),
                 ];
 
+					
                 if ($sumDocCount == 1) {
                     $docItems = array_column($bucketItem, 'items');
                     $docItemValues = array_map(function ($item) {
@@ -647,8 +660,9 @@ class SearchEngine implements SearchEngineInterface
      */
     private function setAggregationsResult(\Elastica\ResultSet $resultSets)
     {
+	    
         $aggs = current($resultSets->getAggregations());
-        $buckets = (isset($aggs['buckets']) && !empty($aggs['buckets']) ? $aggs['buckets'] : null);
+        $buckets = (isset($aggs['geo_distance']['buckets']) && !empty($aggs['geo_distance']['buckets']) ? $aggs['geo_distance']['buckets'] : null);
 
         if (!is_null($buckets)) {
             $this->_aggregationsResult = $buckets;

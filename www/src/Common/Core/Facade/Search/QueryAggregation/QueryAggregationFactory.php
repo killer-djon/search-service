@@ -71,9 +71,9 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
      * @param string|\Elastica\Script $script
      * @return \Elastica\Aggregation\AbstractSimpleAggregation
      */
-    public function getAvgAggregation($fieldName, $script = null)
+    public function getAvgAggregation($fieldName, $script = null, $name = 'avg_script')
     {
-        $avg = new \Elastica\Aggregation\Avg('avg_script');
+        $avg = new \Elastica\Aggregation\Avg($name);
         $avg->setField($fieldName);
         if (!is_null($script)) {
             $avg->setScript($script);

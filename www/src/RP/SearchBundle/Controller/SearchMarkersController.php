@@ -37,7 +37,6 @@ class SearchMarkersController extends ApiController
             }
 
             // Определяем выводить ли нам класстерные данные
-            //$isCluster = $request->get(RequestConstant::IS_CLUSTER_PARAM, false);
             $isCluster = $this->getBoolRequestParam($request->get(RequestConstant::IS_CLUSTER_PARAM), false);
 
             $geoHashCell = null;
@@ -54,9 +53,10 @@ class SearchMarkersController extends ApiController
                 }
             }
 
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
             // получаем фильтры и парсим их в нужный вид для дальнейшей работы
             $types = $this->getParseFilters($filterTypes);
+            
 
             $userId = $this->getRequestUserId();
 
@@ -78,6 +78,7 @@ class SearchMarkersController extends ApiController
                 $this->getSkip(),
                 $request->get(RequestConstant::SEARCH_LIMIT_PARAM, RequestConstant::DEFAULT_SEARCH_UNLIMIT)
             );
+            
 
             $platform = $request->get(RequestConstant::PLATFORM_PARAM, RequestConstant::PLATFORM_IOS);
 
@@ -101,8 +102,9 @@ class SearchMarkersController extends ApiController
                     !self::INCLUDE_IN_CONTEXT
                 );
             }
+            
 
-            return $this->_handleViewWithData($this->revertToScalarTagsMatchFields($markers));
+            return $this->_handleViewWithData($markers);
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);

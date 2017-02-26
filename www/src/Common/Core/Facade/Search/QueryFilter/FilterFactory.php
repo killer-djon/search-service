@@ -329,6 +329,7 @@ class FilterFactory implements FilterFactoryInterface
         ];
 
         return new \Elastica\Filter\GeoBoundingBox($fieldName, [$startPoints, $endPoints]);
+        
     }
 
 }

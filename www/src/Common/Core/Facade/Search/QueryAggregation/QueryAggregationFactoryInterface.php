@@ -45,7 +45,7 @@ interface QueryAggregationFactoryInterface
      * @param string|\Elastica\Script $script
      * @return \Elastica\Aggregation\AbstractSimpleAggregation
      */
-    public function getAvgAggregation($fieldName, $script = null);
+    public function getAvgAggregation($fieldName, $script = null, $name = 'avg_script');
 
     /**
      * Аггрегирование временных промежутков

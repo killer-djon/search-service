@@ -289,6 +289,21 @@ class SearchUsersController extends ApiController
                     PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
                     $userId
                 );
+
+                if( !isset($userContext['relation']))
+                {
+                    $userContext['relation'] = [];
+                }
+
+                $userContext['relation']['isFriend'] = false;
+                $userContext['relation']['isFollower'] = false;
+                $userContext['relation']['isFriendshipRequestSent'] = false;
+                $userContext['relation']['isFriendshipRequestReceived'] = false;
+
+                if( isset($userContext['relations']) )
+                {
+                    unset($userContext['relations']);
+                }
             }
 
             if (isset($userContext['tags']) && !empty($userContext['tags'])) {

@@ -135,7 +135,12 @@ class CommonSearchService extends AbstractSearchService
              * Если не задана категория поиска
              * тогда ищем во всех коллекциях еластика по условиям
              */
+            if( isset($this->filterSearchTypes['people']) )
+            {
+                unset($this->filterSearchTypes['people']);
+            }
             foreach ($this->filterSearchTypes as $keyType => $type) {
+
                 $this->clearQueryFactory();
 
                 $this->setFilterQuery($type::getMatchSearchFilter($this->_queryFilterFactory, $userId));

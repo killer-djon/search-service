@@ -78,9 +78,7 @@ class SearchMarkersController extends ApiController
                 $this->getSkip(),
                 $request->get(RequestConstant::SEARCH_LIMIT_PARAM, RequestConstant::DEFAULT_SEARCH_UNLIMIT)
             );
-            
 
-            $platform = $request->get(RequestConstant::PLATFORM_PARAM, RequestConstant::PLATFORM_IOS);
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                 $oldFormat = $this->getVersioningData($markersSearchService);
@@ -102,9 +100,9 @@ class SearchMarkersController extends ApiController
                     !self::INCLUDE_IN_CONTEXT
                 );
             }
-            
 
-            return $this->_handleViewWithData($markers);
+
+            return $this->_handleViewWithData($this->revertToScalarTagsMatchFields($markers));
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);

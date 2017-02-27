@@ -289,14 +289,21 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
     {
         try {
             $script = "
-            if( doc['relations.' + userId] !== undefined )
+            relation = {                  
+                'isFriend': false,
+                'isFollower': false,
+                'isFriendshipRequestSent': false,
+                'isFriendshipRequestReceived': false,
+            };
+            
+            if( doc['relations.'+userId].size() > 0 )
             {                                 
-                type = doc['relations.' + userId];
+                type = doc['relations.'+userId];
                 relation = {                  
                     'isFriend': type.value == 'friendship' ? true : false,
                     'isFollower': type.value == 'following' ? true : false,
-                    'isFriendshipRequestSent': type.value == 'friendshipRequest' ? true : false,
-                    'isFriendshipRequestReceived': type.value == 'friendshipRequestReceived' ? true : false,
+                    'isFriendshipRequestSent': type.value == 'friendshiprequest' ? true : false,
+                    'isFriendshipRequestReceived': type.value == 'friendshiprequestreceived' ? true : false,
                 }
             }
             ";

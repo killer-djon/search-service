@@ -458,8 +458,8 @@ class SearchEngine implements SearchEngineInterface
             foreach ($bucketKeys as $key => & $item) {
 	            
                 $currentItem = current($item);
-                $docCount = $currentItem['doc_count'];
-                //$docCount = $currentItem[$keyField]['hits']['total'];
+                //$docCount = $currentItem['doc_count'];
+                $docCount = $currentItem[$keyField]['hits']['total'];
                 
 
                 if ((int)$docCount > 0) {
@@ -662,7 +662,7 @@ class SearchEngine implements SearchEngineInterface
     {
 	    
         $aggs = current($resultSets->getAggregations());
-        $buckets = (isset($aggs['geo_distance']['buckets']) && !empty($aggs['geo_distance']['buckets']) ? $aggs['geo_distance']['buckets'] : null);
+        $buckets = (isset($aggs['buckets']) && !empty($aggs['buckets']) ? $aggs['buckets'] : null);
 
         if (!is_null($buckets)) {
             $this->_aggregationsResult = $buckets;
@@ -706,7 +706,7 @@ class SearchEngine implements SearchEngineInterface
      * Необходимо установить формат вывода данных
      * для вывода одноуровнего формата данных
      *
-     * @param bool $indexedTransform
+     * @param bool $flag
      * @return void
      */
     public function setFlatFormatResult($flag = false)

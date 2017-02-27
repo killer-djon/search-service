@@ -430,7 +430,7 @@ class CommonSearchService extends AbstractSearchService
 
                 if ($isCluster) {
                     
-                    /*$this->setAggregationQuery([
+                    $this->setAggregationQuery([
                         $this->_queryAggregationFactory->getGeoDistanceAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
                             [
@@ -445,8 +445,8 @@ class CommonSearchService extends AbstractSearchService
                             $this->filterTypes[$keyType]::LOCATION_FIELD,
                             [], 1
                         )),
-                    ]);*/
-                    $this->setAggregationQuery([
+                    ]);
+                    /*$this->setAggregationQuery([
 	                    $this->_queryAggregationFactory->getFilterAggregation(
 		                    'filtered_cells', 
 		                    $this->_queryFilterFactory->getBoundingBoxFilter(
@@ -473,7 +473,7 @@ class CommonSearchService extends AbstractSearchService
 	                            [], 1
 	                        ))
 		                )
-                    ]);
+                    ]);*/
                 }
 
                 /** формируем условия сортировки */

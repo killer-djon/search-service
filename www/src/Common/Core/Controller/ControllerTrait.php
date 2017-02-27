@@ -153,10 +153,10 @@ trait ControllerTrait
         'allCheckinsCount'  => ' ',
         'distance'          => 0,
         'distanceInPercent' => 0,
-        'isFriendshipRequestReceived' => 'false',
-        'isFriend' => 'false',
-        'isFollower' => 'false',
-        'isFriendshipRequestSent' => 'false',
+        //'isFriendshipRequestReceived' => 'false',
+        //'isFriend' => 'false',
+        //'isFollower' => 'false',
+        //'isFriendshipRequestSent' => 'false',
     ];
 
     /**
@@ -213,10 +213,10 @@ trait ControllerTrait
         "helpOffersCount" => 'intval',
         "friendsCount" => 'intval',
         
-		'isFriendshipRequestReceived' => 'boolval',
-        'isFriend' => 'boolval',
-        'isFollower' => 'boolval',
-        'isFriendshipRequestSent' => 'boolval',
+		//'isFriendshipRequestReceived' => 'boolval',
+        //'isFriend' => 'boolval',
+        //'isFollower' => 'boolval',
+        //'isFriendshipRequestSent' => 'boolval',
     ];
 
     /**

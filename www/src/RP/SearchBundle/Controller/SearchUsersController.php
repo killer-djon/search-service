@@ -313,16 +313,29 @@ class SearchUsersController extends ApiController
                     $userContext = $this->excludeEmptyValue($userContext);
                     $userContext = $this->revertToScalarTagsMatchFields($userContext);
                     
+                    /**
+	                 * Как всегда говнокод для быдло андройда   
+	                 * надо будет выпилить при использовании только 4 версии и далее
+                     */
                     $userContext = $this->excludeEmptyValue($userContext);
-                }
-                
-                if( !isset($userContext['relation']) )
-                {
                     
-                    $userContext['relation']['isFriend'] = false;
-                    $userContext['relation']['isFollower'] = false;
-                    $userContext['relation']['isFriendshipRequestSent'] = false;
-                    $userContext['relation']['isFriendshipRequestReceived'] = false;
+                    if( !isset($userContext['relation']) )
+	                {
+	                    
+	                    $userContext['relation']['isFriend'] = false;
+	                    $userContext['relation']['isFollower'] = false;
+	                    $userContext['relation']['isFriendshipRequestSent'] = false;
+	                    $userContext['relation']['isFriendshipRequestReceived'] = false;
+	                }else
+	                {
+		                $relation = $userContext['relation'];
+		                $userContext['relation'] = [
+			                'isFriend' => isset($relation['isFriend']) ? $relation['isFriend'] : false,
+			                'isFollower' => isset($relation['isFollower']) ? $relation['isFollower'] : false,
+			                'isFriendshipRequestSent' => isset($relation['isFriendshipRequestSent']) ? $relation['isFriendshipRequestSent'] : false,
+			                'isFriendshipRequestReceived' => isset($relation['isFriendshipRequestReceived']) ? $relation['isFriendshipRequestReceived'] : false,
+		                ];
+	                }
                 }
 
                 return $this->_handleViewWithData($userContext);

@@ -312,16 +312,17 @@ class SearchUsersController extends ApiController
                     $userContext = $this->changeKeysName($userContext);
                     $userContext = $this->excludeEmptyValue($userContext);
                     $userContext = $this->revertToScalarTagsMatchFields($userContext);
-
-                    $userContext = $this->excludeEmptyValue($userContext);
                     
-                    if( !isset($userContext['relation']) )
-                    {
-	                    $userContext['relation']['isFriend'] = false;
-	                    $userContext['relation']['isFollower'] = false;
-	                    $userContext['relation']['isFriendshipRequestSent'] = false;
-	                    $userContext['relation']['isFriendshipRequestReceived'] = false;
-                    }
+                    $userContext = $this->excludeEmptyValue($userContext);
+                }
+                
+                if( !isset($userContext['relation']) )
+                {
+                    
+                    $userContext['relation']['isFriend'] = false;
+                    $userContext['relation']['isFollower'] = false;
+                    $userContext['relation']['isFriendshipRequestSent'] = false;
+                    $userContext['relation']['isFriendshipRequestReceived'] = false;
                 }
 
                 return $this->_handleViewWithData($userContext);

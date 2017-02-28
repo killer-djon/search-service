@@ -305,7 +305,7 @@ class SearchUsersController extends ApiController
 
             if (!is_null($userContext) && !empty($userContext)) {
 
-                if (!is_null($version) && !empty($version) && $version == RequestConstant::DEFAULT_VERSION) {
+                if (!is_null($version) && $version == RequestConstant::DEFAULT_VERSION) {
 
                     $this->restructTagsField($userContext);
                     $this->restructLocationField($userContext);

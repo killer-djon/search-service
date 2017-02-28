@@ -40,8 +40,7 @@ class SearchMarkersController extends ApiController
             $isCluster = $this->getBoolRequestParam($request->get(RequestConstant::IS_CLUSTER_PARAM), false);
 
             $geoHashCell = null;
-            if( $isCluster === false )
-            {
+            if ($isCluster === false) {
                 // получаем порцию данных из ячайки класстера
                 $geoHashCell = $request->get(Location::GEO_HASH_CELL_PARAM);
                 $geoHashCell = (!is_null($geoHashCell) && !empty($geoHashCell) ? $geoHashCell : null);
@@ -56,7 +55,6 @@ class SearchMarkersController extends ApiController
             $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
             // получаем фильтры и парсим их в нужный вид для дальнейшей работы
             $types = $this->getParseFilters($filterTypes);
-            
 
             $userId = $this->getRequestUserId();
 
@@ -99,7 +97,6 @@ class SearchMarkersController extends ApiController
                     !self::INCLUDE_IN_CONTEXT
                 );
             }
-
 
             return $this->_handleViewWithData($this->revertToScalarTagsMatchFields($markers));
 

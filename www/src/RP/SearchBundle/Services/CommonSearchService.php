@@ -25,7 +25,6 @@ class CommonSearchService extends AbstractSearchService
      */
     const DEFAULT_SEARCH_BLOCK_SIZE = 3;
 
-
     /**
      * Глобальный (общий поиск) в системе
      * варианты поиска могут быть:
@@ -50,7 +49,7 @@ class CommonSearchService extends AbstractSearchService
         GeoPointServiceInterface $point = null,
         $skip = 0,
         $count = null
-    ){
+    ) {
 
         $currentUser = $this->getUserById($userId);
         $searchFilters = [];
@@ -66,12 +65,12 @@ class CommonSearchService extends AbstractSearchService
 
         $this->setFilterQuery([$this->_queryFilterFactory->getBoolOrFilter($searchFilters)]);
 
-
-        if( !is_null($cityId) && !empty($cityId) )
-        {
-            $this->setFilterQuery([$this->_queryFilterFactory->getTermFilter([
-                $this->filterSearchTypes[$type]::LOCATION_CITY_ID_FIELD => $cityId
-            ])]);
+        if (!is_null($cityId) && !empty($cityId)) {
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getTermFilter([
+                    $this->filterSearchTypes[$type]::LOCATION_CITY_ID_FIELD => $cityId,
+                ]),
+            ]);
         }
 
         $queryMatch = $this->createQuery($skip, $count); // в случае если есть поисковая строка
@@ -83,12 +82,11 @@ class CommonSearchService extends AbstractSearchService
         );*/
 
         $this->setFlatFormatResult(true);
-        
+
         /**
          * Надо допилить поиск flat данных в одну кучу
          * надо создать новый метод который это будет делать
          * потому что прежние методы делают это с индексом
-         *
          * например: searchFlatDocuments и transformFlatResult
          * это надо обязательно
          */
@@ -96,7 +94,6 @@ class CommonSearchService extends AbstractSearchService
 
         //print_r( $queryMatch ); die();
     }
-
 
     /**
      * Глобальный (общий поиск) в системе
@@ -180,7 +177,7 @@ class CommonSearchService extends AbstractSearchService
 
                 $this->setScriptFunctionOption([
                     'scoreMode' => 'multiply',
-                    'boostMode' => 'multiply'
+                    'boostMode' => 'multiply',
                 ]);
 
                 $this->setSortingQuery([
@@ -363,17 +360,15 @@ class CommonSearchService extends AbstractSearchService
      * @return array Массив с найденными результатами
      */
     public function searchMarkersByFilters(
-    	$userId, 
-    	array $filters, 
-    	GeoPointServiceInterface $point, 
-    	$isCluster = false, 
-    	$geoHashCell = null, 
-    	$skip = 0,
-    	$count = null
-    )
-    {
+        $userId,
+        array $filters,
+        GeoPointServiceInterface $point,
+        $isCluster = false,
+        $geoHashCell = null,
+        $skip = 0,
+        $count = null
+    ) {
         $currentUser = $this->getUserById($userId);
-        
 
         array_walk($filters, function ($filter) use (&$searchTypes) {
             if (!preg_match('/(all)/i', $filter)) {
@@ -384,7 +379,6 @@ class CommonSearchService extends AbstractSearchService
                 }
             }
         });
-        
 
         if (!is_null($searchTypes) && !empty($searchTypes)) {
             $queryMatchResults = [];
@@ -395,8 +389,7 @@ class CommonSearchService extends AbstractSearchService
                 $this->setFilterQuery($this->filterTypes[$keyType]::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
                 $this->setScriptTagsConditions($currentUser, $this->filterTypes[$keyType]);
 
-                if( $isCluster == false )
-                {
+                if ($isCluster == false) {
                     if (!is_null($geoHashCell) && !empty($geoHashCell)) {
 
                         $geoDistanceRange = array_map(function ($itemDistance) {
@@ -422,7 +415,7 @@ class CommonSearchService extends AbstractSearchService
                 $this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
 
                 if ($isCluster) {
-                    
+
                     $this->setAggregationQuery([
                         $this->_queryAggregationFactory->getGeoDistanceAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
@@ -490,7 +483,6 @@ class CommonSearchService extends AbstractSearchService
                 );
                 //print_r( $queryMatchResults[$keyType]->toArray() ); die();
             }
-            
 
             /**
              * Так же при вызове метода поиска для многотипных
@@ -501,6 +493,7 @@ class CommonSearchService extends AbstractSearchService
 
             if ($isCluster == true) {
                 if ($this->getClusterGrouped() == true) {
+
                     $documents['cluster'] = $this->groupClasterLocationBuckets(
                         $documents['cluster'],
                         AbstractSearchMapping::LOCATION_FIELD
@@ -585,19 +578,19 @@ class CommonSearchService extends AbstractSearchService
                                              ->setFields([
                                                  TagNameSearchMapping::NAME_FIELD,
                                                  TagNameSearchMapping::NAME_TRANSLIT_FIELD,
-                                                 TagNameSearchMapping::RUS_TRANSLITERATE_NAME
+                                                 TagNameSearchMapping::RUS_TRANSLITERATE_NAME,
                                              ])
                                              ->setOperator(MultiMatch::OPERATOR_OR)
                                              ->setQuery($searchText),
                 $this->_queryConditionFactory->getFieldQuery([
                     TagNameSearchMapping::NAME_FIELD,
                     TagNameSearchMapping::NAME_TRANSLIT_FIELD,
-                    TagNameSearchMapping::RUS_TRANSLITERATE_NAME
+                    TagNameSearchMapping::RUS_TRANSLITERATE_NAME,
                 ], $searchText),
                 $this->_queryConditionFactory->getPrefixQuery(TagNameSearchMapping::NAME_FIELD, $searchText),
                 $this->_queryConditionFactory->getPrefixQuery(TagNameSearchMapping::NAME_TRANSLIT_FIELD, $searchText),
-                $this->_queryConditionFactory->getPrefixQuery(TagNameSearchMapping::RUS_TRANSLITERATE_NAME, $searchText)
-            ])
+                $this->_queryConditionFactory->getPrefixQuery(TagNameSearchMapping::RUS_TRANSLITERATE_NAME, $searchText),
+            ]),
         ]);
 
         $queryMatch = $this->createQuery($skip, $count);
@@ -608,6 +601,7 @@ class CommonSearchService extends AbstractSearchService
     /**
      * Прокси метод который возвращает найденные данные
      * по заданным условиям поиска
+     *
      * @param \Elastica\Query $query Объект запроса
      * @return array набора найденных данных
      */

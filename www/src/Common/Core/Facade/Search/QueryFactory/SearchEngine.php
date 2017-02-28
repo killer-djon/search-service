@@ -81,6 +81,7 @@ class SearchEngine implements SearchEngineInterface
      */
     protected $filterTypes = [
         PeopleSearchMapping::CONTEXT    => PeopleSearchMapping::class,
+        'peoples'                       => PeopleSearchMapping::class,
         FriendsSearchMapping::CONTEXT   => FriendsSearchMapping::class,
         PlaceSearchMapping::CONTEXT     => PlaceSearchMapping::class,
         RusPlaceSearchMapping::CONTEXT  => RusPlaceSearchMapping::class,
@@ -100,8 +101,8 @@ class SearchEngine implements SearchEngineInterface
         HelpOffersSearchMapping::CONTEXT_MARKER => HelpOffersSearchMapping::class,
         DiscountsSearchMapping::CONTEXT         => DiscountsSearchMapping::class,
         EventsSearchMapping::CONTEXT            => EventsSearchMapping::class,
-
-        RusPlaceSearchMapping::CONTEXT => RusPlaceSearchMapping::class,
+        RusPlaceSearchMapping::CONTEXT  => RusPlaceSearchMapping::class,
+        'peoples'                       => PeopleSearchMapping::class,
     ];
 
     protected $availableTypesSearch = [
@@ -127,6 +128,7 @@ class SearchEngine implements SearchEngineInterface
         'events'        => 'events',
         'friends'       => 'people',
         'commonFriends' => 'people',
+        'peoples'       => 'people',
     ];
 
     /**

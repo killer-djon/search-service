@@ -77,7 +77,6 @@ class SearchMarkersController extends ApiController
                 $request->get(RequestConstant::SEARCH_LIMIT_PARAM, RequestConstant::DEFAULT_SEARCH_UNLIMIT)
             );
 
-
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                 $oldFormat = $this->getVersioningData($markersSearchService);
 

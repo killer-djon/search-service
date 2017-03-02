@@ -481,7 +481,6 @@ class CommonSearchService extends AbstractSearchService
                     $skip,
                     $count
                 );
-                //print_r( $queryMatchResults[$keyType]->toArray() ); die();
             }
 
             /**

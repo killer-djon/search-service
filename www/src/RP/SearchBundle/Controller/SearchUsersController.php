@@ -323,6 +323,11 @@ class SearchUsersController extends ApiController
                     {
                         unset($userContext['relations']);
                     }
+
+                    if( !isset($userContext['helpOffers']) )
+                    {
+                        $userContext['helpOffers'] = [];
+                    }
                 }
 
                 return $this->_handleViewWithData($userContext);

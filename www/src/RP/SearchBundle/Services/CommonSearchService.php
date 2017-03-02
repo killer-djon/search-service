@@ -132,9 +132,11 @@ class CommonSearchService extends AbstractSearchService
              * Если не задана категория поиска
              * тогда ищем во всех коллекциях еластика по условиям
              */
-
+            if( isset($this->filterSearchTypes['people']) )
+            {
+                unset($this->filterSearchTypes['people']);
+            }
             foreach ($this->filterSearchTypes as $keyType => $type) {
-
                 $this->clearQueryFactory();
 
                 $this->setFilterQuery($type::getMatchSearchFilter($this->_queryFilterFactory, $userId));
@@ -371,10 +373,19 @@ class CommonSearchService extends AbstractSearchService
         $currentUser = $this->getUserById($userId);
 
         array_walk($filters, function ($filter) use (&$searchTypes) {
+            // временный костыль для IOS приложения
+            // это чтобы грамАтным угодить
+            if ($filter == 'people') {
+                $filter = 'peoples';
+            }
+
             if (!preg_match('/(all)/i', $filter)) {
                 array_key_exists($filter, $this->filterTypes) && $searchTypes[$filter] = $this->filterTypes[$filter]::getMultiMatchQuerySearchFields();
             } else {
                 foreach ($this->getFilterTypes() as $key => $class) {
+                    if ($key == 'people') {
+                        $key = 'peoples';
+                    }
                     $searchTypes[$key] = $class::getMultiMatchQuerySearchFields();
                 }
             }

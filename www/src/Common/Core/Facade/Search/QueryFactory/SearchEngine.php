@@ -100,8 +100,8 @@ class SearchEngine implements SearchEngineInterface
         HelpOffersSearchMapping::CONTEXT_MARKER => HelpOffersSearchMapping::class,
         DiscountsSearchMapping::CONTEXT         => DiscountsSearchMapping::class,
         EventsSearchMapping::CONTEXT            => EventsSearchMapping::class,
-
-        RusPlaceSearchMapping::CONTEXT => RusPlaceSearchMapping::class,
+        RusPlaceSearchMapping::CONTEXT          => RusPlaceSearchMapping::class,
+        FriendsSearchMapping::CONTEXT            => FriendsSearchMapping::class,
     ];
 
     protected $availableTypesSearch = [

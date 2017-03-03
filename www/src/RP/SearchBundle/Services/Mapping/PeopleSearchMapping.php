@@ -11,6 +11,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     /** Контекст поиска */
     const CONTEXT = 'people';
 
+
     /** ID системного пользователя RussianPlace */
     const RP_USER_ID = '4092';
 

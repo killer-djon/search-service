@@ -27,22 +27,11 @@ class SearchChatMessageController extends ApiController
     public function searchChatMessageAction(Request $request)
     {
         try {
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
 
-            /** @var Текст запроса */
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
             $searchText = !empty($searchText) ? $searchText : RequestConstant::NULLED_PARAMS;
-
-            /*if (is_null($searchText)) {
-                return $this->_handleViewWithError(
-                    new BadRequestHttpException(
-                        'Не указана поисковая строка searchText',
-                        null,
-                        Response::HTTP_BAD_REQUEST
-                    )
-                );
-            }*/
 
             /** @var ID чата в котором можем искать */
             $chatId = $request->get(RequestConstant::CHAT_ID_PARAM);

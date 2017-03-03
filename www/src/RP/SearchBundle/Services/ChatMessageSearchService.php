@@ -63,6 +63,7 @@ class ChatMessageSearchService extends AbstractSearchService
             $this->_sortingFactory->getFieldSort(ChatMessageMapping::MESSAGE_SEND_AT_FIELD, SortingOrder::SORTING_DESC)
         ]);
 
+
         if (is_null($searchText)) {
             $queryMatchResults = $this->createMatchQuery(
                 $searchText,

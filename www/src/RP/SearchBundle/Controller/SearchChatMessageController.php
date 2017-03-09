@@ -92,8 +92,12 @@ class SearchChatMessageController extends ApiController
 
             return $this->_handleViewWithData(array_merge(
                 [
-                    'info' => $chatSearchService->getTotalHits(),
-                    'totalChats' => count($chatSearchService->getAggregations())
+                    'info' => array_merge(
+                        $chatSearchService->getTotalHits(),
+                        [
+                            'totalChats' => count($chatSearchService->getAggregations())
+                        ]
+                    ),
                 ],
                 $chatMessages ?: []
             ));

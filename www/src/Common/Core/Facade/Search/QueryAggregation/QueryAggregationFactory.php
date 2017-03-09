@@ -48,40 +48,6 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         return $geoBound;
     }
 
-    /**
-     * Аггрегирование по значению
-     * т.е. развернуть bucket документы
-     *
-     * @param string $fieldName Название поля
-     * @return \Elastica\Aggregation\Terms
-     */
-    public function getTermsAggregation($fieldName)
-    {
-        $geo = new \Elastica\Aggregation\Terms('distance-hashes');
-        $geo->setField($fieldName);
-        $geo->setMinimumDocumentCount(1);
-
-        return $geo;
-    }
-
-    /**
-     * Получаем аггрегированный скрипт AVG
-     *
-     * @param string $fieldName Название поле аггрегации
-     * @param string|\Elastica\Script $script
-     * @return \Elastica\Aggregation\AbstractSimpleAggregation
-     */
-    public function getAvgAggregation($fieldName, $script = null, $name = 'avg_script')
-    {
-        $avg = new \Elastica\Aggregation\Avg($name);
-        $avg->setField($fieldName);
-        if (!is_null($script)) {
-            $avg->setScript($script);
-        }
-
-        return $avg;
-    }
-
     public function getGeoCentroidAggregation($fieldName)
     {
         return new GeoCentroid('centroid', $fieldName);
@@ -237,7 +203,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
     public function getFilterAggregation($name, AbstractFilter $filter = null)
     {
         $filterAggs = new \Elastica\Aggregation\Filter($name);
-        if( !is_null($filter) && $filter instanceof AbstractFilter){
+        if (!is_null($filter) && $filter instanceof AbstractFilter) {
             $filterAggs->setFilter($filter);
         }
 
@@ -248,12 +214,13 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
      * Возвращаем единственный результат запроса
      * нужно когда например получаем данные по ID
      *
+     * @param int $doc_count Кол-во документов
      * @return \Elastica\Aggregation\AbstractAggregation
      */
-    public function getTopHitsAggregation()
+    public function getTopHitsAggregation($doc_count = 1)
     {
         $topHits = new \Elastica\Aggregation\TopHits('top_hits');
-        $topHits->setSize(1);
+        $topHits->setSize((int)$doc_count);
 
         return $topHits;
     }
@@ -277,5 +244,93 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         }
 
         return $topHits;
+    }
+
+    /**
+     * Группировка данных по названию поля
+     * типа bucket по полю
+     *
+     * @param string $fieldName Название поля
+     * @param string|\Elastica\Script $script Скрипт для аггрегирования
+     * @param string $order "_count", "_term", or the name of a sub-aggregation or sub-aggregation response field
+     * @param string $direction Направление сортировки
+     * @param int|null $minDocCount Минимальное кол-во документов в букете
+     * @return \Elastica\Aggregation\Terms
+     */
+    public function getTermsAggregation($fieldName = null, $script = null, $order = '_term', $direction = 'asc', $minDocCount = null)
+    {
+        $terms = new \Elastica\Aggregation\Terms('term_aggregation');
+        if (!is_null($minDocCount) && (int)$minDocCount > 0) {
+            $terms->setMinimumDocumentCount($minDocCount);
+        }
+        if (!is_null($fieldName)) {
+            $terms->setField($fieldName);
+        }
+        $terms->setOrder($order, $direction);
+
+        if (!is_null($script)) {
+            $terms->setScript($script);
+        }
+
+        return $terms;
+    }
+
+    /**
+     * Аггрегирование по max выражению
+     *
+     * @param string $fieldName Название поля
+     * @param string|\Elastica\Script $script
+     * @return \Elastica\Aggregation\
+     */
+    public function getMaxAggregation($fieldName, $script = null)
+    {
+        $aggType = new \Elastica\Aggregation\Max('max');
+
+        return $this->getSimpleAggregation($aggType, $fieldName, $script);
+    }
+
+    /**
+     * Аггрегирование по min выражению
+     *
+     * @param string $fieldName Название поля
+     * @param string|\Elastica\Script $script
+     * @return \Elastica\Aggregation\
+     */
+    public function getMinAggregation($fieldName, $script = null)
+    {
+        $aggType = new \Elastica\Aggregation\Min('min');
+
+        return $this->getSimpleAggregation($aggType, $fieldName, $script);
+    }
+
+    /**
+     * Получаем аггрегированный скрипт AVG
+     *
+     * @param string $fieldName Название поле аггрегации
+     * @param string|\Elastica\Script $script
+     * @return \Elastica\Aggregation\AbstractSimpleAggregation
+     */
+    public function getAvgAggregation($fieldName, $script = null)
+    {
+        $aggType = new \Elastica\Aggregation\Avg('avg');
+
+        return $this->getSimpleAggregation($aggType, $fieldName, $script);
+    }
+
+    /**
+     * Базовый класс аггрегации для простых выражений
+     *
+     * @param string $fieldName Название поле аггрегации
+     * @param string|\Elastica\Script $script
+     * @return \Elastica\Aggregation\AbstractSimpleAggregation
+     */
+    private function getSimpleAggregation(\Elastica\Aggregation\AbstractSimpleAggregation $aggType, $fieldName, $script = null)
+    {
+        $aggType->setField($fieldName);
+        if (!is_null($script)) {
+            $aggType->setScript($script);
+        }
+
+        return $aggType;
     }
 }

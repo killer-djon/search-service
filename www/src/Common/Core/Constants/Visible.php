@@ -25,22 +25,4 @@ abstract class Visible
      * Значение "Для всех"
      */
     const ALL = 'all';
-
-    /**
-     * Проверяет значение видимости на соответствие допустимым значениям
-     * @static
-     * @param $visible
-     * @return bool
-     */
-    public static function isValid($visible)
-    {
-        $variants = self::getVisibleVariants();
-
-        return in_array($visible, $variants);
-    }
-
-    public static function getVisibleVariants()
-    {
-        return array(self::NONE, self::FRIEND, self::NOT_FRIEND, self::ALL);
-    }
 }

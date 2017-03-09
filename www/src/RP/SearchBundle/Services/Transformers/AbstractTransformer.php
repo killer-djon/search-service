@@ -247,8 +247,8 @@ class AbstractTransformer
     {
         $flat = array_merge([
             [
-                'id'       => 1,
-                'parentId' => 0,
+                $idField       => 1,
+                $parentIdField => 0,
                 'name'     => 'Root',
             ],
         ], $flat);

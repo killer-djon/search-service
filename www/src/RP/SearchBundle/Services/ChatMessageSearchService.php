@@ -20,7 +20,6 @@ class ChatMessageSearchService extends AbstractSearchService
      */
     const MIN_SEARCH_SCRORE = 3;
 
-
     /**
      * Метод осуществляет поиск в еластике
      * по имени/фамилии пользьвателя в чате
@@ -30,11 +29,12 @@ class ChatMessageSearchService extends AbstractSearchService
      * @param string $userId ID пользователя который делает запрос к АПИ
      * @param string $searchText Поисковый запрос
      * @param string $chatId ID чата по которому будем фильтровать
+     * @param bool $groupChat Группировать чат (для группы без поиска - аггрегирование по бакетам)
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchByChatMessage($userId, $searchText = null, $chatId = null, $skip = 0, $count = null)
+    public function searchByChatMessage($userId, $searchText = null, $chatId = null, $groupChat = false, $skip = 0, $count = null)
     {
         $this->setFilterQuery([
             $this->_queryFilterFactory->getBoolOrFilter([
@@ -60,9 +60,47 @@ class ChatMessageSearchService extends AbstractSearchService
         ]);
 
         $this->setSortingQuery([
-            $this->_sortingFactory->getFieldSort(ChatMessageMapping::MESSAGE_SEND_AT_FIELD, SortingOrder::SORTING_DESC)
+            $this->_sortingFactory->getFieldSort(ChatMessageMapping::MESSAGE_SEND_AT_FIELD, SortingOrder::SORTING_DESC),
         ]);
 
+        /**
+         * Если задано условие группировки
+         * значит мы группируем все чаты которые приходят
+         */
+        if( $groupChat )
+        {
+            /**
+             * Группируем набор данных
+             * чтобы по одному чату выводить только последние сообщения
+             */
+            $this->setAggregationQuery([
+                $this->_queryAggregationFactory->getTermsAggregation(
+                    ChatMessageMapping::CHAT_ID_FIELD
+                )->addAggregation(
+                    $this->_queryAggregationFactory->setAggregationSource(
+                        ChatMessageMapping::LAST_CHAT_MESSAGE,
+                        [],
+                        1
+                    )->setSort([
+                        ChatMessageMapping::MESSAGE_SEND_AT_FIELD => SortingOrder::SORTING_DESC,
+                    ])
+                )->addAggregation(
+                    $this->_queryAggregationFactory->setAggregationSource(
+                        ChatMessageMapping::CONTEXT,
+                        [
+                            ChatMessageMapping::IDENTIFIER_FIELD,
+                            ChatMessageMapping::CHAT_ID_FIELD,
+                            ChatMessageMapping::CHAT_CREATED_AT,
+                            ChatMessageMapping::CHAT_IS_DIALOG,
+                            ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD
+                        ],
+                        1
+                    )->setSort([
+                        ChatMessageMapping::MESSAGE_SEND_AT_FIELD => SortingOrder::SORTING_DESC,
+                    ])
+                )
+            ]);
+        }
 
         if (is_null($searchText)) {
             $queryMatchResults = $this->createMatchQuery(
@@ -86,8 +124,7 @@ class ChatMessageSearchService extends AbstractSearchService
                  */
                 $queryMust = ChatMessageMapping::getSearchConditionQueryMust($this->_queryConditionFactory, $searchText);
 
-                if(!empty($queryMust))
-                {
+                if (!empty($queryMust)) {
                     $this->setConditionQueryMust($queryMust);
                 }
 
@@ -96,8 +133,7 @@ class ChatMessageSearchService extends AbstractSearchService
                     $this->_queryConditionFactory, $searchText
                 );
 
-                if(!empty($queryShould))
-                {
+                if (!empty($queryShould)) {
                     /**
                      * Ищем по частичному совпадению поисковой фразы
                      */

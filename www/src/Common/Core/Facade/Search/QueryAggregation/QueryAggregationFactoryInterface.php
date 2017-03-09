@@ -38,14 +38,7 @@ interface QueryAggregationFactoryInterface
      */
     public function getGeoBoundBoxAggregation($fieldName, $setWrapLon = true);
 
-    /**
-     * Получаем аггрегированный скрипт AVG
-     *
-     * @param string $fieldName Название поле аггрегации
-     * @param string|\Elastica\Script $script
-     * @return \Elastica\Aggregation\AbstractSimpleAggregation
-     */
-    public function getAvgAggregation($fieldName, $script = null, $name = 'avg_script');
+
 
     /**
      * Аггрегирование временных промежутков
@@ -108,4 +101,44 @@ interface QueryAggregationFactoryInterface
      * @return \Elastica\Aggregation\TopHits
      */
     public function setAggregationSource($fieldName, $fields = [], $size = null);
+
+    /**
+     * Группировка данных по названию поля
+     * типа bucket по полю
+     *
+     * @param string $fieldName Название поля
+     * @param string|\Elastica\Script $script Скрипт для аггрегирования
+     * @param string $order "_count", "_term", or the name of a sub-aggregation or sub-aggregation response field
+     * @param string $direction Направление сортировки
+     * @param int|null $minDocCount Минимальное кол-во документов в букете
+     * @return \Elastica\Aggregation\Terms
+     */
+    public function getTermsAggregation($fieldName, $script = null, $order = '_term', $direction = 'asc', $minDocCount = null);
+
+    /**
+     * Аггрегирование по max выражению
+     *
+     * @param string $fieldName Название поля
+     * @param string|\Elastica\Script $script
+     * @return \Elastica\Aggregation\
+     */
+    public function getMaxAggregation($fieldName, $script = null);
+
+    /**
+     * Аггрегирование по min выражению
+     *
+     * @param string $fieldName Название поля
+     * @param string|\Elastica\Script $script
+     * @return \Elastica\Aggregation\
+     */
+    public function getMinAggregation($fieldName, $script = null);
+
+    /**
+     * Получаем аггрегированный скрипт AVG
+     *
+     * @param string $fieldName Название поле аггрегации
+     * @param string|\Elastica\Script $script
+     * @return \Elastica\Aggregation\AbstractSimpleAggregation
+     */
+    public function getAvgAggregation($fieldName, $script = null);
 }

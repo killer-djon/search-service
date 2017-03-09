@@ -14,6 +14,7 @@ use Elastica\Query;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
+use RP\SearchBundle\Services\Transformers\ChatMessageTransformer;
 use RP\SearchBundle\Services\Transformers\CityTransformer;
 use RP\SearchBundle\Services\Transformers\PeopleTransformer;
 use RP\SearchBundle\Services\Transformers\PlaceTypeTransformer;
@@ -145,6 +146,11 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     public $tagNamesTransformer;
 
     /**
+     * @var ChatMessageTransformer $chatMessageTransformer
+     */
+    public $chatMessageTransformer;
+
+    /**
      * Оперделяем проеобразователь для городов
      *
      * @param CityTransformer $cityTransformer
@@ -153,6 +159,11 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     public function setCityTransformer(CityTransformer $cityTransformer)
     {
         $this->cityTransformer = $cityTransformer;
+    }
+
+    public function setChatMessagesTransformer(ChatMessageTransformer $chatMessageTransformer)
+    {
+        $this->chatMessageTransformer = $chatMessageTransformer;
     }
 
     /**

@@ -47,6 +47,7 @@ services:
             - [ setPeopleTransformer, [ "@rp_search.transform_interface.people" ] ]
             - [ setPlaceTypeTransformer, [ "@rp_search.transform_interface.placetype" ] ]
             - [ setTagNamesTransformer, [ "@rp_search.transform_interface.tagnames" ] ]
+            - [ setChatMessagesTransformer, [ "@rp_search.transform_interface.chat_message" ] ]
 
     # Сервис поиска людей в базе еластика
     rp_search.search_service.people:
@@ -106,3 +107,9 @@ services:
         parent: rp_search.transform_interface.base
         calls:
             - [ setSearchService, [ "@rp_search.search_service.common" ] ]
+
+    rp_search.transform_interface.chat_message:
+        class: RP\SearchBundle\Services\Transformers\ChatMessageTransformer
+        parent: rp_search.transform_interface.base
+        calls:
+            - [ setSearchService, [ "@rp_search.search_service.chat_message" ] ]

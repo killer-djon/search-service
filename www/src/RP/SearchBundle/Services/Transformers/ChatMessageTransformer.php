@@ -45,6 +45,8 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
             {
                 $chatData = AbstractTransformer::path($resultItem[$chatMessageKey], 'hits.hits.0._source');
                 $result[$context][] = array_merge($chatData, [
+                    'messages_count' => $resultItem['doc_count'],
+                ], [
                     $lastMessageKey => AbstractTransformer::path($resultItem[$lastMessageKey], 'hits.hits.0._source')
                 ]);
             }

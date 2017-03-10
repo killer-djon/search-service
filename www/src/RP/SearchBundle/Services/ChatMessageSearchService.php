@@ -98,7 +98,7 @@ class ChatMessageSearchService extends AbstractSearchService
                     )->setSort([
                         ChatMessageMapping::MESSAGE_SEND_AT_FIELD => SortingOrder::SORTING_DESC,
                     ])
-                )->setSize($count)
+                )->setSize(0)
             ]);
         }
 

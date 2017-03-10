@@ -42,11 +42,6 @@ class SearchChatMessageController extends ApiController
 
             $chatSearchService = $this->getChatMessageSearchService();
 
-            // ужасный костыль после перехода к новому сервису надо убрать
-            if (!is_null($version) && (int)$version == RequestConstant::DEFAULT_VERSION) {
-                $chatSearchService->setOldFormat(true);
-            }
-
             //$groupChat = ( is_null($searchText) ? true : false );
             $groupChat = ( is_null($chatId) || empty($chatId) ? true : false );
 

@@ -20,7 +20,19 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
      */
     public function transform(array $dataResult, $context, $subContext = null)
     {
-        return $dataResult[$context];
+        foreach ( $dataResult[$context] as &$chat )
+        {
+            if( isset($chat['recipients']) )
+            {
+                $chat['members'] = $chat['recipients'];
+                unset($chat['recipients']);
+            }
+
+            $chat['id'] = $chat['chatId'];
+            unset($chat['chatId']);
+        }
+
+        return $dataResult;
     }
 
 

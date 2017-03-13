@@ -353,6 +353,8 @@ class SearchUsersController extends ApiController
 
             if( !is_null($userContext) )
             {
+                $this->restructLocationField($userContext);
+
                 return $this->_handleViewWithData($userContext);
             }
 

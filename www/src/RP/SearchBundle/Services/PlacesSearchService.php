@@ -257,7 +257,6 @@ class PlacesSearchService extends AbstractSearchService
     private function setFilterDiscounts($userId)
     {
         $this->setFilterQuery([
-            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::REMOVED_FIELD => false]),
             $this->_queryFilterFactory->getBoolOrFilter([
                 $this->_queryFilterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 1, 100),
                 $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
@@ -299,11 +298,7 @@ class PlacesSearchService extends AbstractSearchService
                     $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
                 ),
                 $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
-            ]),
-            $this->_queryFilterFactory->getNotFilter(
-                $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
-            ),
-            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::REMOVED_FIELD => false])
+            ])
         ]);
     }
 
@@ -319,7 +314,6 @@ class PlacesSearchService extends AbstractSearchService
     public function getPlaceById($userId, $context, $fieldId, $recordId)
     {
         $this->setFilterQuery([
-            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::REMOVED_FIELD => false]),
             $this->_queryFilterFactory->getBoolOrFilter([
                 $this->_queryFilterFactory->getBoolAndFilter([
                     $this->_queryFilterFactory->getBoolOrFilter([

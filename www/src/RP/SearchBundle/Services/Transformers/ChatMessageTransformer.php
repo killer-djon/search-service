@@ -15,18 +15,35 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
      */
     public function transform(array $dataResult, $context, $subContext = null)
     {
-        foreach ($dataResult[$context] as &$chat) {
-            if (isset($chat[ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD])) {
-                $chat['members'] = $chat[ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD];
-                unset($chat[ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD]);
+
+        $result = [];
+        foreach ($dataResult[$context] as $chat) {
+            $obj = (!is_null($subContext) ? $chat[$subContext] : $chat);
+
+            if (isset($obj[ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD])) {
+                $obj['members'] = $obj[ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD];
+                unset($obj[ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD]);
             }
 
-            $chat[ChatMessageMapping::IDENTIFIER_FIELD] = $chat[ChatMessageMapping::CHAT_ID_FIELD];
-            unset($chat[ChatMessageMapping::CHAT_ID_FIELD]);
+            $obj[ChatMessageMapping::IDENTIFIER_FIELD] = $obj[ChatMessageMapping::CHAT_ID_FIELD];
+            unset($obj[ChatMessageMapping::CHAT_ID_FIELD]);
+
+            if (!is_null($subContext)) {
+                $result[] = (isset($chat['hit']) ? array_merge(
+                    [$subContext => $obj],
+                    [
+                        'hit' => isset($chat['hit']['highlight'])
+                            ? array_merge($chat['hit'], ['matchedFields' => $chat['hit']['highlight']])
+                            : $chat['hit']
+                    ]
+                ) : [$subContext => $obj]);
+            } else {
+                $result[] = $obj;
+            }
 
         }
 
-        return $dataResult;
+        return $result;
     }
 
     /**

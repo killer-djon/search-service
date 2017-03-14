@@ -741,6 +741,8 @@ class SearchEngine implements SearchEngineInterface
                 unset($record[$type]['relations']);
             }
 
+
+
             if ($this->getOldFormat() === true) {
                 $items[$type][] = [
                     'item' => $record[$type],

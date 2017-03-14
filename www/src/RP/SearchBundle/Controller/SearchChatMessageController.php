@@ -18,7 +18,6 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 class SearchChatMessageController extends ApiController
 {
 
-
     /**
      * Метод осуществляющий поиск по сообщениям
      *
@@ -42,6 +41,10 @@ class SearchChatMessageController extends ApiController
 
             $chatSearchService = $this->getChatMessageSearchService();
 
+            if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                $chatSearchService->setOldFormat(true);
+            }
+
             $chatMessages = $chatSearchService->searchByChatMessage(
                 $userId,
                 $searchText,
@@ -51,11 +54,16 @@ class SearchChatMessageController extends ApiController
                 $this->getCount()
             );
 
+            if (empty($chatMessages)) {
+                return $this->_handleViewWithData([]);
+            }
+
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
 
-                $chatMessages = $chatSearchService->chatMessageTransformer->transform(
+                $chatMessages[ChatMessageMapping::CONTEXT] = $chatSearchService->chatMessageTransformer->transform(
                     $chatMessages,
-                    ChatMessageMapping::CONTEXT
+                    ChatMessageMapping::CONTEXT,
+                    'item'
                 );
 
                 return $this->_handleViewWithData(
@@ -67,10 +75,10 @@ class SearchChatMessageController extends ApiController
 
             return $this->_handleViewWithData(array_merge(
                 [
-                    'info' => $chatSearchService->getTotalHits()
+                    'info' => $chatSearchService->getTotalHits(),
                 ],
                 [
-                    'pagination' => $chatSearchService->getPaginationAdapter($this->getSkip(), $this->getCount())
+                    'pagination' => $chatSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
                 ],
                 $chatMessages ?: []
             ));
@@ -142,7 +150,7 @@ class SearchChatMessageController extends ApiController
                     'info' => array_merge(
                         $chatSearchService->getTotalHits(),
                         [
-                            'totalChats' => count($chatSearchService->getAggregations())
+                            'totalChats' => count($chatSearchService->getAggregations()),
                         ]
                     ),
                 ],

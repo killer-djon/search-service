@@ -86,6 +86,25 @@ class QueryFactory implements QueryFactoryInterface
     }
 
     /**
+     * Управление исходными полями при извлечении данных
+     * можно указать как набор полей по маске,
+     * так и массив с включаемыми полями и исключаемыми
+     *
+     * @param mixed|null $params ( bool: true|false, string: "obj.*", string[]: [ "obj1.*", "obj2.*" ],
+     * array: ["includes": [ "obj1.*", "obj2.*" ], "excludes": [ "*.description" ]] )
+     * @return QueryFactoryInterface
+     * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-source-filtering.html
+     */
+    public function setSource($params = null)
+    {
+        if (!is_null($params) && !empty($params)) {
+            $this->_queryObject->setSource($params);
+        }
+
+        return $this;
+    }
+
+    /**
      * Adds an Aggregation to the query.
      *
      * @param \Elastica\Aggregation\AbstractAggregation[] $aggs
@@ -133,7 +152,7 @@ class QueryFactory implements QueryFactoryInterface
             "post_tags"           => ["</em>"],
             "require_field_match" => false,
             "encoder"             => 'default',
-            "fields"              => []
+            "fields"              => [],
         ];
 
         if (!empty($highlightArgs)) {

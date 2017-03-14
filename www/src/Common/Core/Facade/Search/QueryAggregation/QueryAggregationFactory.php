@@ -229,11 +229,11 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
      * Установка исходных данных в агррегированные данные
      *
      * @param string $fieldName Название поля
-     * @param array $fields Набор полей которые нужно выводить
+     * @param array $fieldsSource Набор полей которые нужно выводить
      * @param int|null $size Сколько объектов указывать
      * @return \Elastica\Aggregation\TopHits
      */
-    public function setAggregationSource($fieldName, $fields = [], $size = null)
+    public function setAggregationSource($fieldName, $fieldsSource = [], $size = null)
     {
         $topHits = new \Elastica\Aggregation\TopHits($fieldName);
         if (!empty($fields)) {

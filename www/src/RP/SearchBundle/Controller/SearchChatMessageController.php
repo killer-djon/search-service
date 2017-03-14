@@ -124,10 +124,28 @@ class SearchChatMessageController extends ApiController
                     ChatMessageMapping::CONTEXT
                 );
 
-                return $this->_handleViewWithData(
+                $chatList = array_slice(
                     $chatMessages[ChatMessageMapping::CONTEXT],
+                    $this->getSkip(),
+                    $this->getCount()
+                );
+
+                return $this->_handleViewWithData(
+                    $chatList,
                     null,
                     !self::INCLUDE_IN_CONTEXT
+                );
+            }
+
+
+            $chatList = [];
+
+            if( !empty($chatMessages) )
+            {
+                $chatList[ChatMessageMapping::CONTEXT] = array_slice(
+                    $chatMessages[ChatMessageMapping::CONTEXT],
+                    $this->getSkip(),
+                    $this->getCount()
                 );
             }
 
@@ -140,7 +158,7 @@ class SearchChatMessageController extends ApiController
                         ]
                     ),
                 ],
-                $chatMessages ?: []
+                $chatList ?: []
             ));
 
         } catch (SearchServiceException $e) {

@@ -296,14 +296,14 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                 'isFriendshipRequestReceived': false,
             };
             
-            if( _source.relations != undefined && (_source.relations).length > 0 && doc['relations.'+userId].size() > 0 )
+            if( _source.relations != undefined && _source.relations.length > 0 && _source.relations[userId] != null )
             {                                 
-                type = doc['relations.'+userId];
+                type = _source.relations[userId];
                 relation = {                  
-                    'isFriend': type.value == 'friendship' ? true : false,
-                    'isFollower': type.value == 'following' ? true : false,
-                    'isFriendshipRequestSent': type.value == 'friendshiprequest' ? true : false,
-                    'isFriendshipRequestReceived': type.value == 'friendshiprequestreceived' ? true : false,
+                    'isFriend': type == 'friendship' ? true : false,
+                    'isFollower': type == 'following' ? true : false,
+                    'isFriendshipRequestSent': type == 'friendshiprequest' ? true : false,
+                    'isFriendshipRequestReceived': type == 'friendshiprequestreceived' ? true : false,
                 }
             }
             ";

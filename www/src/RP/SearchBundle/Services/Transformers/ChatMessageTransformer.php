@@ -1,12 +1,7 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: eleshanu
- * Date: 06.03.17
- * Time: 12:16
- */
-
 namespace RP\SearchBundle\Services\Transformers;
+
+use RP\SearchBundle\Services\Mapping\ChatMessageMapping;
 
 class ChatMessageTransformer extends AbstractTransformer implements TransformerInterface
 {
@@ -20,21 +15,19 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
      */
     public function transform(array $dataResult, $context, $subContext = null)
     {
-        foreach ( $dataResult[$context] as &$chat )
-        {
-            if( isset($chat['recipients']) )
-            {
-                $chat['members'] = $chat['recipients'];
-                unset($chat['recipients']);
+        foreach ($dataResult[$context] as &$chat) {
+            if (isset($chat[ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD])) {
+                $chat['members'] = $chat[ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD];
+                unset($chat[ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD]);
             }
 
-            $chat['id'] = $chat['chatId'];
-            unset($chat['chatId']);
+            $chat[ChatMessageMapping::IDENTIFIER_FIELD] = $chat[ChatMessageMapping::CHAT_ID_FIELD];
+            unset($chat[ChatMessageMapping::CHAT_ID_FIELD]);
+
         }
 
         return $dataResult;
     }
-
 
     /**
      * Трансформируем аггрегированные данные
@@ -51,15 +44,18 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
         /** @var array В текущую переменную скидываем все данныех после обработки */
         $result = [];
 
-        if( !empty($dataResult) )
-        {
-            foreach ($dataResult as $resultItem)
-            {
+        if (!empty($dataResult)) {
+            foreach ($dataResult as $resultItem) {
                 $chatData = AbstractTransformer::path($resultItem[$chatMessageKey], 'hits.hits.0._source');
+                $lastMessage = AbstractTransformer::path($resultItem[$lastMessageKey], 'hits.hits.0._source');
+                if( isset($lastMessage[ ChatMessageMapping::CHAT_CREATED_AT ]) ){
+                    unset($lastMessage[ ChatMessageMapping::CHAT_CREATED_AT ]);
+                }
+
                 $result[$context][] = array_merge($chatData, [
                     'messages_count' => $resultItem['doc_count'],
                 ], [
-                    $lastMessageKey => AbstractTransformer::path($resultItem[$lastMessageKey], 'hits.hits.0._source')
+                    $lastMessageKey => $lastMessage
                 ]);
             }
         }

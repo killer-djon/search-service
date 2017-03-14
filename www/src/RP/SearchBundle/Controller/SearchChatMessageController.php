@@ -137,18 +137,6 @@ class SearchChatMessageController extends ApiController
                 );
             }
 
-
-            $chatList = [];
-
-            if( !empty($chatMessages) )
-            {
-                $chatList[ChatMessageMapping::CONTEXT] = array_slice(
-                    $chatMessages[ChatMessageMapping::CONTEXT],
-                    $this->getSkip(),
-                    $this->getCount()
-                );
-            }
-
             return $this->_handleViewWithData(array_merge(
                 [
                     'info' => array_merge(
@@ -158,7 +146,7 @@ class SearchChatMessageController extends ApiController
                         ]
                     ),
                 ],
-                $chatList ?: []
+                $chatMessages ?: []
             ));
 
         } catch (SearchServiceException $e) {

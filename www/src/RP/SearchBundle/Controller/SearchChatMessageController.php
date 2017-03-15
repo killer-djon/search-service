@@ -19,6 +19,76 @@ class SearchChatMessageController extends ApiController
 {
 
     /**
+     * Метод осуществляющий вывод всех собщений чата
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
+     * @param string $chatId ID чата для которого выводим все сообщения
+     * @return \Symfony\Component\HttpFoundation\Response Возвращаем ответ
+     */
+    public function getChatMessageAction(Request $request, $chatId)
+    {
+        try {
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
+            $searchText = (!is_null($searchText) && !empty($searchText) ? $searchText : RequestConstant::NULLED_PARAMS);
+
+            // получаем из запроса ID пользователя
+            $userId = $this->getRequestUserId();
+
+            $chatSearchService = $this->getChatMessageSearchService();
+
+            $chatMessages = $chatSearchService->searchByChatMessage(
+                $userId,
+                $searchText,
+                $chatId,
+                false,
+                $this->getSkip(),
+                $this->getCount()
+            );
+
+
+            if (empty($chatMessages)) {
+                return $this->_handleViewWithData([]);
+            }
+
+            if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+
+                $chatMessages[ChatMessageMapping::CONTEXT] = $chatSearchService->chatMessageTransformer->transformForSearch(
+                    $chatMessages,
+                    ChatMessageMapping::CONTEXT,
+                    null,
+                    $userId
+                );
+
+                return $this->_handleViewWithData(
+                    [
+                        'messages' => $chatMessages[ChatMessageMapping::CONTEXT],
+                        'info' => $chatSearchService->getTotalHits()
+                    ],
+                    null,
+                    !self::INCLUDE_IN_CONTEXT
+                );
+            }
+
+            return $this->_handleViewWithData(array_merge(
+                [
+                    'info' => $chatSearchService->getTotalHits(),
+                ],
+                [
+                    'pagination' => $chatSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
+                ],
+                $chatMessages ?: []
+            ));
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+    }
+
+    /**
      * Метод осуществляющий поиск по сообщениям
      *
      * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
@@ -27,14 +97,11 @@ class SearchChatMessageController extends ApiController
     public function searchChatMessageAction(Request $request)
     {
         try {
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
 
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
             $searchText = (!is_null($searchText) && !empty($searchText) ? $searchText : RequestConstant::NULLED_PARAMS);
-
-            /** @var ID чата в котором можем искать */
-            $chatId = $request->get(RequestConstant::CHAT_ID_PARAM);
 
             // получаем из запроса ID пользователя
             $userId = $this->getRequestUserId();
@@ -48,7 +115,7 @@ class SearchChatMessageController extends ApiController
             $chatMessages = $chatSearchService->searchByChatMessage(
                 $userId,
                 $searchText,
-                $chatId,
+                null,
                 false,
                 $this->getSkip(),
                 $this->getCount()
@@ -60,14 +127,13 @@ class SearchChatMessageController extends ApiController
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
 
-                if(!is_null($searchText) && !empty($searchText))
-                {
+                if (!is_null($searchText) && !empty($searchText)) {
                     $chatMessages[ChatMessageMapping::CONTEXT] = $chatSearchService->chatMessageTransformer->transformForSearch(
                         $chatMessages,
                         ChatMessageMapping::CONTEXT,
                         'item'
                     );
-                }else{
+                } else {
                     $chatMessages[ChatMessageMapping::CONTEXT] = $chatSearchService->chatMessageTransformer->transform(
                         $chatMessages,
                         ChatMessageMapping::CONTEXT,
@@ -108,7 +174,7 @@ class SearchChatMessageController extends ApiController
     public function searchChatsAction(Request $request)
     {
         try {
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
 
             /** @var ID чата в котором можем искать */
             $chatId = $request->get(RequestConstant::CHAT_ID_PARAM);
@@ -137,7 +203,6 @@ class SearchChatMessageController extends ApiController
             if (empty($chatMessages)) {
                 return $this->_handleViewWithData([]);
             }
-
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
 

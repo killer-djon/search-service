@@ -298,7 +298,7 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
             
             if( _source.relations != undefined && (_source.relations).length > 0 && doc['relations.'+userId].size() > 0 )
             {                                 
-                type = doc['relations.'+userId];
+                type = _source['relations.'+userId];
                 relation = {                  
                     'isFriend': type.value == 'friendship' ? true : false,
                     'isFollower': type.value == 'following' ? true : false,

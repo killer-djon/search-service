@@ -62,13 +62,12 @@ class ChatMessageSearchService extends AbstractSearchService
         $this->setSortingQuery([
             $this->_sortingFactory->getFieldSort(ChatMessageMapping::MESSAGE_SEND_AT_FIELD, SortingOrder::SORTING_DESC),
         ]);
-
+        
         /**
          * Если задано условие группировки
          * значит мы группируем все чаты которые приходят
          */
-        if( $groupChat )
-        {
+        if ($groupChat) {
             /**
              * Группируем набор данных
              * чтобы по одному чату выводить только последние сообщения
@@ -92,13 +91,13 @@ class ChatMessageSearchService extends AbstractSearchService
                             ChatMessageMapping::CHAT_ID_FIELD,
                             ChatMessageMapping::CHAT_CREATED_AT,
                             ChatMessageMapping::CHAT_IS_DIALOG,
-                            ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD
+                            ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD,
                         ],
                         1
                     )->setSort([
                         ChatMessageMapping::MESSAGE_SEND_AT_FIELD => SortingOrder::SORTING_DESC,
                     ])
-                )->setSize(0)
+                )->setSize(0),
             ]);
         }
 

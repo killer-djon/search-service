@@ -13,11 +13,11 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
      *
      * @param array $dataResult Набор данных для преобразования
      * @param string $context Контекст массива (т.е. ключ ассоц.массива)
-     * @param string $subContext Это если есть вложенность, нам нужен ключ вложенного объекта
      * @param string $userId ID пользователя - это надо для вывода поля isRead
+     * @param string $subContext Это если есть вложенность, нам нужен ключ вложенного объекта
      * @return array
      */
-    public function transformForSearch(array $dataResult, $context, $subContext = null, $userId)
+    public function transformForSearch(array $dataResult, $context, $userId, $subContext = null)
     {
         $result = [];
         foreach ($dataResult[$context] as $chat) {

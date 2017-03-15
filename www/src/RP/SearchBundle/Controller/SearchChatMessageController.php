@@ -58,7 +58,6 @@ class SearchChatMessageController extends ApiController
                 $chatMessages[ChatMessageMapping::CONTEXT] = $chatSearchService->chatMessageTransformer->transformForSearch(
                     $chatMessages,
                     ChatMessageMapping::CONTEXT,
-                    null,
                     $userId
                 );
 
@@ -131,6 +130,7 @@ class SearchChatMessageController extends ApiController
                     $chatMessages[ChatMessageMapping::CONTEXT] = $chatSearchService->chatMessageTransformer->transformForSearch(
                         $chatMessages,
                         ChatMessageMapping::CONTEXT,
+                        $userId,
                         'item'
                     );
                 } else {

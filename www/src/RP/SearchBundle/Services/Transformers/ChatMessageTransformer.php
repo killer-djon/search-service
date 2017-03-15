@@ -5,6 +5,45 @@ use RP\SearchBundle\Services\Mapping\ChatMessageMapping;
 
 class ChatMessageTransformer extends AbstractTransformer implements TransformerInterface
 {
+
+    /**
+     * Метод который занимается преобразованиями для формата
+     * старого поиска по чатам
+     * полная блядь жопа с совместимостью
+     *
+     * @param array $dataResult Набор данных для преобразования
+     * @param string $context Контекст массива (т.е. ключ ассоц.массива)
+     * @param string $subContext Это если есть вложенность, нам нужен ключ вложенного объекта
+     * @return array
+     */
+    public function transformForSearch(array $dataResult, $context, $subContext = null)
+    {
+        $result = [];
+        foreach ($dataResult[$context] as $chat) {
+            $obj = (!is_null($subContext) ? $chat[$subContext] : $chat);
+
+            if (isset($obj[ChatMessageMapping::CHAT_CREATED_AT])) {
+                unset($obj[ChatMessageMapping::CHAT_CREATED_AT]);
+            }
+
+            if (!is_null($subContext)) {
+                $result[] = (isset($chat['hit']) ? array_merge(
+                    [$subContext => $obj],
+                    [
+                        'hit' => isset($chat['hit']['highlight'])
+                            ? array_merge($chat['hit'], ['matchedFields' => $chat['hit']['highlight']])
+                            : $chat['hit'],
+                    ]
+                ) : [$subContext => $obj]);
+            } else {
+                $result[] = $obj;
+            }
+
+        }
+
+        return $result;
+    }
+
     /**
      * Трансформируем данные в соответсвии с заданным маппингом полей
      *
@@ -15,7 +54,6 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
      */
     public function transform(array $dataResult, $context, $subContext = null)
     {
-
         $result = [];
         foreach ($dataResult[$context] as $chat) {
             $obj = (!is_null($subContext) ? $chat[$subContext] : $chat);
@@ -34,7 +72,7 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
                     [
                         'hit' => isset($chat['hit']['highlight'])
                             ? array_merge($chat['hit'], ['matchedFields' => $chat['hit']['highlight']])
-                            : $chat['hit']
+                            : $chat['hit'],
                     ]
                 ) : [$subContext => $obj]);
             } else {
@@ -65,14 +103,14 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
             foreach ($dataResult as $resultItem) {
                 $chatData = AbstractTransformer::path($resultItem[$chatMessageKey], 'hits.hits.0._source');
                 $lastMessage = AbstractTransformer::path($resultItem[$lastMessageKey], 'hits.hits.0._source');
-                if( isset($lastMessage[ ChatMessageMapping::CHAT_CREATED_AT ]) ){
-                    unset($lastMessage[ ChatMessageMapping::CHAT_CREATED_AT ]);
+                if (isset($lastMessage[ChatMessageMapping::CHAT_CREATED_AT])) {
+                    unset($lastMessage[ChatMessageMapping::CHAT_CREATED_AT]);
                 }
 
                 $result[$context][] = array_merge($chatData, [
                     'messages_count' => $resultItem['doc_count'],
                 ], [
-                    $lastMessageKey => $lastMessage
+                    $lastMessageKey => $lastMessage,
                 ]);
             }
         }

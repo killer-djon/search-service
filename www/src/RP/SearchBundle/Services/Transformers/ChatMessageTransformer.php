@@ -33,7 +33,7 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
                 {
                     if( $recipient[ChatMessageMapping::IDENTIFIER_FIELD] != $userId )
                     {
-                        $obj['isRead'] = $recipient['isRead'];
+                        $obj['isRead'] = ( isset($recipient['isRead']) ? $recipient['isRead'] : false );
                     }
                 }
             }

@@ -54,6 +54,7 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
      */
     public function transform(array $dataResult, $context, $subContext = null)
     {
+
         $result = [];
         foreach ($dataResult[$context] as $chat) {
             $obj = (!is_null($subContext) ? $chat[$subContext] : $chat);

@@ -296,9 +296,11 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                 'isFriendshipRequestReceived': false,
             };
             
-            if( _source.relations != undefined && _source.relations.length > 0 && _source.relations[userId] != null )
+            if( _source.relations != undefined && _source.relations.length > 0 && _source.relations[userId] != null && !doc['relations.'+userId].empty )
             {                                 
-                type = _source.relations[userId];
+                //type = _source.relations[userId];
+                type = doc['relations.'+userId].value;
+                
                 relation = {                  
                     'isFriend': type == 'friendship' ? true : false,
                     'isFollower': type == 'following' ? true : false,

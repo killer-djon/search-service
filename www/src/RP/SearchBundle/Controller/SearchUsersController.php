@@ -9,6 +9,7 @@ use Common\Core\Exceptions\SearchServiceException;
 use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
+use RP\SearchBundle\Services\Traits\PeopleServiceTrait;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\HttpFoundation\Request;
 use Common\Core\Constants\RequestConstant;
@@ -17,6 +18,7 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class SearchUsersController extends ApiController
 {
+    use PeopleServiceTrait;
 
     /**
      * Ключ контекста объекта ответа клиенту
@@ -140,9 +142,8 @@ class SearchUsersController extends ApiController
 
             /** @var array Набор фильтров запроса */
             $filters = $this->getParseFilters($filtersType);
-            if( $version == RequestConstant::DEFAULT_VERSION )
-            {
-                $filters = [ 'friends' ];
+            if ($version == RequestConstant::DEFAULT_VERSION) {
+                $filters = ['friends'];
             }
 
             $peopleSearchService = $this->getPeopleSearchService();
@@ -161,17 +162,14 @@ class SearchUsersController extends ApiController
                 $this->getCount()
             );
 
-            if( empty($peopleSearchService->getTotalResults()))
-            {
+            if (empty($peopleSearchService->getTotalResults())) {
                 return $this->_handleViewWithData([]);
             }
 
-            if( $version == RequestConstant::DEFAULT_VERSION )
-            {
-                $items = (isset($people['items']) && !empty($people['items']) ? $people['items'] : NULL);
+            if ($version == RequestConstant::DEFAULT_VERSION) {
+                $items = (isset($people['items']) && !empty($people['items']) ? $people['items'] : null);
 
-                if( is_null($items) )
-                {
+                if (is_null($items)) {
                     return $this->_handleViewWithData([]);
                 }
 
@@ -185,17 +183,15 @@ class SearchUsersController extends ApiController
                 //$items = $this->revertToScalarTagsMatchFields($items);
                 //AbstractTransformer::recursiveTransformAvatar($items);
 
-
                 return $this->_handleViewWithData([
-                    'users' => $items['friends'],
-                    'info' => $info['friends'],
-                    'pagination' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount(), $info['friends']['totalHits'])
+                    'users'      => $items['friends'],
+                    'info'       => $info['friends'],
+                    'pagination' => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount(), $info['friends']['totalHits']),
                 ]);
             }
 
             $pagination = [];
-            foreach( $people['info']['searchType'] as $keyItems => $infoItems )
-            {
+            foreach ($people['info']['searchType'] as $keyItems => $infoItems) {
                 $pagination[$keyItems] = $peopleSearchService->getPaginationAdapter(
                     $this->getSkip(),
                     $this->getCount(),
@@ -214,8 +210,6 @@ class SearchUsersController extends ApiController
             return $this->_handleViewWithError($e);
         }
     }
-
-
 
     /**
      * Поиск пользователей которые могут помочь
@@ -274,8 +268,7 @@ class SearchUsersController extends ApiController
                 if (isset($userContext['matchingInterests']) && !empty($userContext['matchingInterests'])) {
 
                     $tagsArray = explode(',', $userContext['matchingInterests']);
-                    foreach ($tagsArray as $tagId)
-                    {
+                    foreach ($tagsArray as $tagId) {
                         $keyTag = array_search($tagId, array_column($userContext['tags'], 'id'));
                         $userContext['tagsMatch']['tags'][$tagId] = $userContext['tags'][$keyTag];
                     }
@@ -289,11 +282,6 @@ class SearchUsersController extends ApiController
                     PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
                     $userId
                 );
-
-                if( !isset($userContext['relation']))
-                {
-                    $userContext['relation'] = [];
-                }
             }
 
             if (isset($userContext['tags']) && !empty($userContext['tags'])) {
@@ -312,52 +300,35 @@ class SearchUsersController extends ApiController
                     $userContext = $this->changeKeysName($userContext);
                     $userContext = $this->excludeEmptyValue($userContext);
                     $userContext = $this->revertToScalarTagsMatchFields($userContext);
-                    
+
                     /**
-	                 * Как всегда говнокод для быдло андройда   
-	                 * надо будет выпилить при использовании только 4 версии и далее
+                     * Как всегда говнокод для быдло андройда
+                     * надо будет выпилить при использовании только 4 версии и далее
                      */
                     $userContext = $this->excludeEmptyValue($userContext);
 
-                    if( !isset($userContext['relation']) )
-	                {
-
-	                    $userContext['relation']['isFriend'] = false;
-	                    $userContext['relation']['isFollower'] = false;
-	                    $userContext['relation']['isFriendshipRequestSent'] = false;
-	                    $userContext['relation']['isFriendshipRequestReceived'] = false;
-	                }else
-	                {
-		                $relation = $userContext['relation'];
-		                $userContext['relation'] = [
-			                'isFriend' => isset($relation['isFriend']) ? $relation['isFriend'] : false,
-			                'isFollower' => isset($relation['isFollower']) ? $relation['isFollower'] : false,
-			                'isFriendshipRequestSent' => isset($relation['isFriendshipRequestSent']) ? $relation['isFriendshipRequestSent'] : false,
-			                'isFriendshipRequestReceived' => isset($relation['isFriendshipRequestReceived']) ? $relation['isFriendshipRequestReceived'] : false,
-		                ];
-	                }
-
-                    if( isset($userContext['relations']) )
-                    {
-                        unset($userContext['relations']);
-                    }
-
-                    if( !isset($userContext['helpOffers']) )
-                    {
+                    if (!isset($userContext['helpOffers'])) {
                         $userContext['helpOffers'] = [];
                     }
+                }
+
+                if ($userId != $targetUserId && (isset($userContext['relations']) && !empty($userContext['relations']))) {
+                    $userContext['relation'] = $this->setRelations($userContext['relations'], $userId);
+                    unset($userContext['relations']);
                 }
 
                 return $this->_handleViewWithData($userContext);
             }
 
-            if( !is_null($userContext) )
-            {
+            if (!is_null($userContext)) {
                 $this->restructLocationField($userContext);
+                if ($userId != $targetUserId && (isset($userContext['relations']) && !empty($userContext['relations']))) {
+                    $userContext['relation'] = $this->setRelations($userContext['relations'], $userId);
+                    unset($userContext['relations']);
+                }
 
                 return $this->_handleViewWithData($userContext);
             }
-
 
             return $this->_handleViewWithData([]);
 

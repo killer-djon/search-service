@@ -71,10 +71,7 @@ class PeopleSearchService extends AbstractSearchService
                 $point
             )
         );
-        
-        $this->setScriptFields([
-            'relation' => $this->_scriptFactory->getRelationUserScript($userId)
-        ]);
+
 
         /** Получаем сформированный объект запроса */
         /*$this->setConditionQueryShould([
@@ -147,10 +144,6 @@ class PeopleSearchService extends AbstractSearchService
                 $point
             )
         );
-        
-        $this->setScriptFields([
-            'relation' => $this->_scriptFactory->getRelationUserScript($userId)
-        ]);
 
         /** добавляем к условию поиска рассчет по совпадению интересов */
         $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);
@@ -277,9 +270,6 @@ class PeopleSearchService extends AbstractSearchService
         foreach ($filters as $filter) {
             $this->clearQueryFactory();
 
-			$this->setScriptFields([
-	            'relation' => $this->_scriptFactory->getRelationUserScript($userId)
-	        ]);
         
             /** добавляем к условию поиска рассчет по совпадению интересов */
             $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);
@@ -474,9 +464,6 @@ class PeopleSearchService extends AbstractSearchService
         /** добавляем к условию поиска рассчет расстояния */
         $this->setGeoPointConditions($point, PeopleSearchMapping::class);
 
-		$this->setScriptFields([
-            'relation' => $this->_scriptFactory->getRelationUserScript($userId)
-        ]);
 
         $this->setFilterQuery([
             $this->_queryFilterFactory->getExistsFilter(PeopleSearchMapping::HELP_OFFERS_LIST_FIELD),
@@ -625,10 +612,6 @@ class PeopleSearchService extends AbstractSearchService
                     $this->_queryFilterFactory->getTermFilter([PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId])
                 ),
             ]);
-            
-            $this->setScriptFields([
-	            'relation' => $this->_scriptFactory->getRelationUserScript($userId)
-	        ]);
 
             $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);
             $this->setGeoPointConditions($point, PeopleSearchMapping::class);
@@ -698,10 +681,6 @@ class PeopleSearchService extends AbstractSearchService
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
 
-        $this->setScriptFields([
-            'relation' => $this->_scriptFactory->getRelationUserScript($userId)
-        ]);
-        
         /** добавляем к условию поиска рассчет по совпадению интересов */
         $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);
 

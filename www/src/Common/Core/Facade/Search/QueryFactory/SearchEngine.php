@@ -737,12 +737,6 @@ class SearchEngine implements SearchEngineInterface
                 unset($record[$type]['hit']['sort']);
             }
 
-            if (isset($record[$type]['relations'])) {
-                unset($record[$type]['relations']);
-            }
-
-
-
             if ($this->getOldFormat() === true) {
                 $items[$type][] = [
                     'item' => $record[$type],

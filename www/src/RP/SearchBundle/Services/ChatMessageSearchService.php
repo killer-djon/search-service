@@ -45,6 +45,9 @@ class ChatMessageSearchService extends AbstractSearchService
                     ChatMessageMapping::MEMBERS_MESSAGE_FIELD . '.' . PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId,
                 ]),
             ]),
+            $this->_queryFilterFactory->getScriptFilter(
+                $this->_scriptFactory->getScript("doc['chatMembers.id'].values.length > 0")
+            )
         ]);
 
         if (!is_null($chatId) && !empty($chatId)) {

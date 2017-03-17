@@ -46,7 +46,7 @@ class ChatMessageSearchService extends AbstractSearchService
                 ]),
             ]),
             $this->_queryFilterFactory->getScriptFilter(
-                $this->_scriptFactory->getScript("doc['chatMembers.id'].values.length > 0")
+                $this->_scriptFactory->getScript("doc['chatMembers.id'].values.length > 1")
             )
         ]);
 

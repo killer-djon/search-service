@@ -73,13 +73,82 @@ class CommonSearchService extends AbstractSearchService
             ]);
         }
 
-        $queryMatch = $this->createQuery($skip, $count); // в случае если есть поисковая строка
+        $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
 
-        /*$queryMatch = $this->createMatchQuery(
-            $searchText,
-            $type::getMultiMatchQuerySearchFields(),
-            $skip, (is_null($count) ? self::DEFAULT_SEARCH_BLOCK_SIZE : $count)
-        );*/
+        if( $point->isValid() )
+        {
+            $this->setScriptFunctions([
+                FunctionScore::DECAY_LINEAR => [
+                    $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD => [
+                        'origin' => "{$point->getLongitude()}, {$point->getLatitude()}",
+                        'scale'  => '1km',
+                        'offset' => '0km',
+                        'decay'  => 0.2,
+                    ],
+                ],
+            ]);
+
+            $this->setScriptFunctionOption([
+                'scoreMode' => 'multiply',
+                'boostMode' => 'multiply',
+            ]);
+        }
+
+        $this->setSortingQuery([
+            $this->_sortingFactory->getGeoDistanceSort(
+                $type::LOCATION_POINT_FIELD,
+                $point
+            ),
+        ]);
+
+        //$queryMatch = $this->createQuery($skip, $count); // в случае если есть поисковая строка
+        if (!is_null($searchText)) {
+            $searchText = mb_strtolower($searchText);
+            $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
+
+            $slopPhrase = array_filter(explode(" ", $searchText));
+            $queryShouldFields = $must = $should = [];
+
+            if (count($slopPhrase) > 1) {
+
+                /**
+                 * Поиск по точному воспадению искомого словосочетания
+                 */
+                $queryMust = $this->filterSearchTypes[$type]::getSearchConditionQueryMust($this->_queryConditionFactory, $searchText);
+
+                if (!empty($queryMust)) {
+                    $this->setConditionQueryMust($queryMust);
+                }
+
+            } else {
+                $queryShould = $this->filterSearchTypes[$type]::getSearchConditionQueryShould(
+                    $this->_queryConditionFactory, $searchText
+                );
+
+                if (!empty($queryShould)) {
+                    /**
+                     * Ищем по частичному совпадению поисковой фразы
+                     */
+                    $this->setConditionQueryShould($queryShould);
+                }
+            }
+
+            $queryMatch = $this->createQuery($skip, (is_null($count) ? self::DEFAULT_SEARCH_BLOCK_SIZE : $count));
+
+        } else {
+            $this->setSortingQuery([
+                $this->_sortingFactory->getGeoDistanceSort(
+                    $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
+                    $point
+                ),
+            ]);
+
+            $queryMatch = $this->createMatchQuery(
+                $searchText,
+                $this->filterSearchTypes[$type]::getMultiMatchQuerySearchFields(),
+                $skip, (is_null($count) ? self::DEFAULT_SEARCH_BLOCK_SIZE : $count)
+            );
+        }
 
         $this->setFlatFormatResult(true);
 
@@ -91,8 +160,6 @@ class CommonSearchService extends AbstractSearchService
          * это надо обязательно
          */
         return $this->searchDocuments($queryMatch);
-
-        //print_r( $queryMatch ); die();
     }
 
     /**

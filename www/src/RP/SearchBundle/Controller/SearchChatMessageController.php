@@ -201,7 +201,7 @@ class SearchChatMessageController extends ApiController
         );
 
         return $this->_handleViewWithData([
-            ChatMessageMapping::CONTEXT => $chatSearchService->getAggregations(),
+            ChatMessageMapping::CONTEXT => $aggregationsResult[ChatMessageMapping::CONTEXT],
             'info' => $chatSearchService->getTotalHits()
         ]);
     }

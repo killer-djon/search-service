@@ -61,11 +61,13 @@ class ChatMessageSearchService extends AbstractSearchService
                 $this->_queryAggregationFactory->setAggregationSource(
                     'chat',
                     [
+                        ChatMessageMapping::IDENTIFIER_FIELD,
                         ChatMessageMapping::CHAT_ID_FIELD,
                         ChatMessageMapping::CHAT_CREATED_AT,
                         ChatMessageMapping::CHAT_IS_DIALOG,
-                        ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD
-                    ]
+                        ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD,
+                    ],
+                    1
                 )
             )->addAggregation(
                 $this->_queryAggregationFactory->setAggregationSource(

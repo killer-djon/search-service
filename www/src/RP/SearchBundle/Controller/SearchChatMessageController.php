@@ -190,19 +190,19 @@ class SearchChatMessageController extends ApiController
             $this->getCount()
         );
 
-        if( empty($chatWithMessages) )
+        if( empty($chatSearchService->getAggregations()) )
         {
             return $this->_handleViewWithData([]);
         }
 
-        $chatWithMessages[ChatMessageMapping::CONTEXT] = $chatSearchService->getAggregations();
+        $chatWithMessages[ChatMessageMapping::CONTEXT] = AbstractTransformer::path($chatSearchService->getAggregations(), '0');
         $chatWithMessages[ChatMessageMapping::CONTEXT] = $chatSearchService->chatMessageTransformer->trasformSingleResult(
             $chatWithMessages,
             ChatMessageMapping::CONTEXT
         );
 
         return $this->_handleViewWithData([
-            ChatMessageMapping::CONTEXT => $aggregationsResult[ChatMessageMapping::CONTEXT],
+            ChatMessageMapping::CONTEXT => $chatWithMessages,
             'info' => $chatSearchService->getTotalHits()
         ]);
     }

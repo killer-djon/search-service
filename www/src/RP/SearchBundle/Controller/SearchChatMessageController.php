@@ -195,8 +195,9 @@ class SearchChatMessageController extends ApiController
             return $this->_handleViewWithData([]);
         }
 
-        $aggregationsResult[ChatMessageMapping::CONTEXT] = $chatSearchService->chatMessageTransformer->trasformSingleResult(
-            $chatSearchService->getAggregations(),
+        $chatWithMessages[ChatMessageMapping::CONTEXT] = $chatSearchService->getAggregations();
+        $chatWithMessages[ChatMessageMapping::CONTEXT] = $chatSearchService->chatMessageTransformer->trasformSingleResult(
+            $chatWithMessages,
             ChatMessageMapping::CONTEXT
         );
 

@@ -165,6 +165,42 @@ class SearchChatMessageController extends ApiController
         }
     }
 
+
+    /**
+     * Метод для поулчения единственного чата по ID
+     * так же мы включаем в вывод последниие count сообщений
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
+     * @param string $chatId ID чата который мы ищем
+     * @return \Symfony\Component\HttpFoundation\Response Возвращаем ответ
+     */
+    public function searchSingleChatAction(Request $request, $chatId)
+    {
+        $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+
+        // получаем из запроса ID пользователя
+        $userId = $this->getRequestUserId();
+
+        $chatSearchService = $this->getChatMessageSearchService();
+
+        $chatWithMessages = $chatSearchService->searchSingleChat(
+            $userId,
+            $chatId,
+            $this->getSkip(),
+            $this->getCount()
+        );
+
+        if( empty($chatWithMessages) )
+        {
+            return $this->_handleViewWithData([]);
+        }
+
+        return $this->_handleViewWithData([
+            ChatMessageMapping::CONTEXT => $chatSearchService->getAggregations(),
+            'info' => $chatSearchService->getTotalHits()
+        ]);
+    }
+
     /**
      * Метод осуществляющий вывод списка чатов
      *

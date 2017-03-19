@@ -20,6 +20,67 @@ class ChatMessageSearchService extends AbstractSearchService
      */
     const MIN_SEARCH_SCRORE = 3;
 
+
+    /**
+     * КОл-во сообщений при выводе одного чата
+     *
+     * @const int DEFAULT_MESSAGES_COUNT
+     */
+    const DEFAULT_MESSAGES_COUNT = 3;
+
+
+    /**
+     * Получение единственного чата по его ID
+     * при этом мы аггрегируем данные потому что
+     * у нас сущности чатов нет, есть только сообщения
+     * поэтому их надо сорать в кучу в один чат
+     *
+     * @param string $userId
+     * @param string $chatId ID чата который надо вывести
+     * @param int $skip Пропуск кол-ва (по идее нет необходимости в этом, разве что предусмотрим сущность чатов)
+     * @param int|null $count Кол-ва сообщщений в найденно чате
+     *
+     * @return array
+     */
+    public function searchSingleChat($userId, $chatId, $skip = 0, $count = null)
+    {
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getTermFilter([
+                ChatMessageMapping::CHAT_ID_FIELD => $chatId
+            ]),
+            $this->_queryFilterFactory->getTermsFilter(
+                ChatMessageMapping::CHAT_MEMBERS_ID_FIELD,
+                [$userId]
+            )
+        ]);
+
+        $this->setAggregationQuery([
+            $this->_queryAggregationFactory->getTermsAggregation(
+                ChatMessageMapping::CHAT_ID_FIELD
+            )->addAggregation(
+                $this->_queryAggregationFactory->setAggregationSource(
+                    ChatMessageMapping::LAST_CHAT_MESSAGE,
+                    [],
+                    1
+                )->setSort([
+                    ChatMessageMapping::MESSAGE_SEND_AT_FIELD => SortingOrder::SORTING_DESC,
+                ])
+            )->addAggregation(
+                $this->_queryAggregationFactory->setAggregationSource(
+                    'messages',
+                    [],
+                    ($count ?: self::DEFAULT_MESSAGES_COUNT)
+                )->setSort([
+                    ChatMessageMapping::MESSAGE_SEND_AT_FIELD => SortingOrder::SORTING_DESC,
+                ])
+            )->setSize(0),
+        ]);
+
+        $queryMatchResults = $this->createQuery();
+        return $this->searchDocuments($queryMatchResults);
+    }
+
+
     /**
      * Метод осуществляет поиск в еластике
      * по имени/фамилии пользьвателя в чате

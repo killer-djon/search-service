@@ -41,3 +41,18 @@ RPSearchBundle_search_chats:
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
 
+# Routing который формирует запрос поиска одного чата
+# пример запроса /api/search/v1/json/chat/id/{chatId}
+RPSearchBundle_search_chatbyID:
+    path: /v{_version}/{_format}/chat/id/{chatId}
+    defaults:
+        _controller: RPSearchBundle:SearchChatMessage:searchSingleChat
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchChatMessage:searchChatMessage.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        chatId: \w+
+

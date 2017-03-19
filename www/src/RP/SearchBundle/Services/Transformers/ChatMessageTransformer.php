@@ -27,13 +27,10 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
                 unset($obj[ChatMessageMapping::CHAT_CREATED_AT]);
             }
 
-            if( !empty($obj[ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD]) )
-            {
-                foreach ($obj[ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD] as $recipient)
-                {
-                    if( $recipient[ChatMessageMapping::IDENTIFIER_FIELD] != $userId )
-                    {
-                        $obj['isRead'] = ( isset($recipient['isRead']) ? $recipient['isRead'] : false );
+            if (!empty($obj[ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD])) {
+                foreach ($obj[ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD] as $recipient) {
+                    if ($recipient[ChatMessageMapping::IDENTIFIER_FIELD] != $userId) {
+                        $obj['isRead'] = (isset($recipient['isRead']) ? $recipient['isRead'] : false);
                     }
                 }
             }
@@ -99,6 +96,39 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
 
     /**
      * Трансформируем аггрегированные данные
+     * в одиночный результат
+     *
+     * @param array $dataResult Набор аггрегированного результата
+     * @param string $context Контекст (ключ из набора данных по которому извлекаем массив)
+     * @param string $messagesKey Ключ последних N сообщений в наборе данных
+     * @param string $lastMessageKey Ключ объекта последнего сообщения
+     * @return array
+     */
+    public function trasformSingleResult(array $dataResult, $context, $messagesKey = 'messages', $lastMessageKey = 'lastMessage')
+    {
+        $result = [];
+        if( isset($dataResult[$context]) && !empty($dataResult[$context]) )
+        {
+            $chatMessage = $dataResult[$context];
+            $chat = AbstractTransformer::path($chatMessage['chat'], 'hits.hits.0._source');
+            $messages = AbstractTransformer::path($chatMessage[$messagesKey], 'hits.hits'); // массив из которого надо извлечь _source
+            $messages = array_filter($messages, function($singleMessage){
+                return $singleMessage['_source'];
+            });
+            $lastMessage = AbstractTransformer::path($chatMessage[$lastMessageKey], 'hits.hits.0._source');
+
+            $result = array_merge(
+                $chat,
+                [$lastMessageKey => $lastMessage],
+                [$messagesKey => $messages]
+            );
+        }
+
+        return $result;
+    }
+
+    /**
+     * Трансформируем аггрегированные данные
      * т.е. формируем читаемые блоки данных из аггрегации
      *
      * @param array $dataResult Набор данных для преобразования
@@ -107,8 +137,12 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
      * @param string $lastMessageKey Ключ где храниться объект послдего собщения
      * @return array
      */
-    public function transformAggregations(array $dataResult, $context, $chatMessageKey = 'chat_message', $lastMessageKey = 'lastMessage')
-    {
+    public function transformAggregations(
+        array $dataResult,
+        $context,
+        $chatMessageKey = 'chat_message',
+        $lastMessageKey = 'lastMessage'
+    ) {
         /** @var array В текущую переменную скидываем все данныех после обработки */
         $result = [];
 

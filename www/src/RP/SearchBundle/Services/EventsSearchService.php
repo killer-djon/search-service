@@ -142,12 +142,19 @@ class EventsSearchService extends AbstractSearchService
      *
      * @param string $userId ID пользователя который делает запрос к АПИ
      * @param string $eventId ID искомого события
+     * @param GeoPointServiceInterface $point
      * @return array|null
      */
-    public function getEventById($userId, $eventId)
+    public function getEventById($userId, $eventId, GeoPointServiceInterface $point)
     {
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
+
+        /** добавляем к условию поиска рассчет по совпадению интересов */
+        $this->setScriptTagsConditions($currentUser, EventsSearchMapping::class);
+
+        /** добавляем к условию поиска рассчет расстояния */
+        $this->setGeoPointConditions($point, EventsSearchMapping::class);
 
         return $this->searchRecordById(EventsSearchMapping::CONTEXT, EventsSearchMapping::EVENT_ID_FIELD, $eventId);
     }

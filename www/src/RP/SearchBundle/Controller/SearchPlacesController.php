@@ -155,8 +155,11 @@ class SearchPlacesController extends ApiController
             $place = $placeSearchService->getPlaceById(
                 $userId, PlaceSearchMapping::CONTEXT,
                 PlaceSearchMapping::PLACE_ID_FIELD,
-                $placeId
+                $placeId,
+                $this->getGeoPoint()
             );
+
+            $place = $this->revertToScalarTagsMatchFields($place);
 
             return $this->_handleViewWithData($place);
 

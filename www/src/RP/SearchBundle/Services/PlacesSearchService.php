@@ -309,10 +309,14 @@ class PlacesSearchService extends AbstractSearchService
      * @param string $context Контекст поиска
      * @param string $fieldId Название поля идентификатора
      * @param string $recordId ID записи места которое надо найти
+     * @param GeoPointServiceInterface $point
      * @return array Набор данных найденной записи
      */
-    public function getPlaceById($userId, $context, $fieldId, $recordId)
+    public function getPlaceById($userId, $context, $fieldId, $recordId, GeoPointServiceInterface $point)
     {
+        /** получаем текущего ползователя */
+        $currentUser = $this->getUserById($userId);
+
         $this->setFilterQuery([
             $this->_queryFilterFactory->getBoolOrFilter([
                 $this->_queryFilterFactory->getBoolAndFilter([
@@ -350,14 +354,12 @@ class PlacesSearchService extends AbstractSearchService
             ])
         ]);
 
-        /*$currentUser = $this->getUserById($userId);
-        if( $this->getGeoPoint() instanceof GeoPointServiceInterface )
-        {
-            $this->setGeoPointConditions($this->getGeoPoint(), PlaceSearchMapping::class);
-        }
-
+        $currentUser = $this->getUserById($userId);
+        /** добавляем к условию поиска рассчет по совпадению интересов */
         $this->setScriptTagsConditions($currentUser, PlaceSearchMapping::class);
-        */
+
+        /** добавляем к условию поиска рассчет расстояния */
+        $this->setGeoPointConditions($point, PlaceSearchMapping::class);
 
         return $this->searchRecordById($context, $fieldId, $recordId);
     }

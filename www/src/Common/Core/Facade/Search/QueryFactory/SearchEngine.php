@@ -562,6 +562,18 @@ class SearchEngine implements SearchEngineInterface
 
             if ($resultSet->current() !== false) {
                 $items = $resultSet->current()->getData();
+                $fields = $resultSet->current()->getFields();
+
+                if( !empty($fields) )
+                {
+                    foreach ($fields as $fieldKey => $field)
+                    {
+                        $items['tagsMatch'][$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
+                        unset($items[$fieldKey]);
+                        // для совместимости со старыми прилоежнмия
+                        $items[$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
+                    }
+                }
 
                 return $items;
             }

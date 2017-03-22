@@ -188,6 +188,7 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
             $filterFactory->getNotFilter(
                 $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
             ),
+            $filterFactory->getTermFilter([self::REMOVED_FIELD => false]),
             $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
             $filterFactory->getNotFilter(
                 $filterFactory->getExistsFilter(self::BONUS_FIELD)

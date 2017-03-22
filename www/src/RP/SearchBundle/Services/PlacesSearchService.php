@@ -293,6 +293,10 @@ class PlacesSearchService extends AbstractSearchService
     {
 
         $this->setFilterQuery([
+            $this->_queryFilterFactory->getNotFilter(
+                $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
+            ),
+            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::REMOVED_FIELD => false]),
             $this->_queryFilterFactory->getBoolAndFilter([
                 $this->_queryFilterFactory->getNotFilter(
                     $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
@@ -339,8 +343,7 @@ class PlacesSearchService extends AbstractSearchService
                                 ModerationStatus::OK,
                                 ModerationStatus::DIRTY,
                                 ModerationStatus::REJECTED,
-                                ModerationStatus::RESTORED,
-                                ModerationStatus::DELETED
+                                ModerationStatus::RESTORED
                             ])
                         ])
                     ])

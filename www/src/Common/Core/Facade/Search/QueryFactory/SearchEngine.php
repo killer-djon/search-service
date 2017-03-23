@@ -529,7 +529,7 @@ class SearchEngine implements SearchEngineInterface
                     $this->restructLocationField($docItemSource);
                     $docItemSource = $this->revertToScalarTagsMatchFields($docItemSource);
 
-                    $resultItem['items'] = $docItemSource;
+                    $resultItem['items'][] = (!is_array($docItemSource) ? [$docItemSource] : $docItemSource);
                 }
 
                 $results[] = $resultItem;

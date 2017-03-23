@@ -349,10 +349,17 @@ class PlacesSearchService extends AbstractSearchService
                     ])
                 ]),
                 $this->_queryFilterFactory->getBoolOrFilter([
-                    $this->_queryFilterFactory->getNotFilter(
-                        $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
-                    ),
-                    $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0])
+                    $this->_queryFilterFactory->getBoolAndFilter([
+                        $this->_queryFilterFactory->getNotFilter(
+                            $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
+                        ),
+                        $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
+                        $this->_queryFilterFactory->getNotFilter(
+                            $this->_queryFilterFactory->getTermFilter([
+                                PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DELETED
+                            ])
+                        )
+                    ])
                 ])
             ])
         ]);

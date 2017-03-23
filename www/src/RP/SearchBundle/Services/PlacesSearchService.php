@@ -357,7 +357,6 @@ class PlacesSearchService extends AbstractSearchService
             ])
         ]);
 
-        $currentUser = $this->getUserById($userId);
         /** добавляем к условию поиска рассчет по совпадению интересов */
         $this->setScriptTagsConditions($currentUser, PlaceSearchMapping::class);
 

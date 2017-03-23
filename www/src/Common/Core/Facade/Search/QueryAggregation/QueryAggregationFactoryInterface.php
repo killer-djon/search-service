@@ -96,11 +96,12 @@ interface QueryAggregationFactoryInterface
      * Установка исходных данных в агррегированные данные
      *
      * @param string $fieldName Название поля
-     * @param array $fields Набор полей которые нужно выводить
+     * @param array $fieldsSource Набор полей которые нужно выводить
      * @param int|null $size Сколько объектов указывать
+     * @param array $scriptedFields Набор полей скрипта (ассоциативный массив)
      * @return \Elastica\Aggregation\TopHits
      */
-    public function setAggregationSource($fieldName, $fields = [], $size = null);
+    public function setAggregationSource($fieldName, $fieldsSource = [], $size = null, $scriptedFields = []);
 
     /**
      * Группировка данных по названию поля

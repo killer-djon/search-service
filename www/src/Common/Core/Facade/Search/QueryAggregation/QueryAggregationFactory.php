@@ -231,16 +231,21 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
      * @param string $fieldName Название поля
      * @param array $fieldsSource Набор полей которые нужно выводить
      * @param int|null $size Сколько объектов указывать
+     * @param array $scriptedFields Набор полей скрипта (ассоциативный массив)
      * @return \Elastica\Aggregation\TopHits
      */
-    public function setAggregationSource($fieldName, $fieldsSource = [], $size = null)
+    public function setAggregationSource($fieldName, $fieldsSource = [], $size = null, $scriptedFields = [])
     {
         $topHits = new \Elastica\Aggregation\TopHits($fieldName);
-        if (!empty($fields)) {
-            $topHits->setSource($fields);
-        }
+        $topHits->setSource($fieldsSource);
+
         if (!is_null($size)) {
             $topHits->setSize($size);
+        }
+
+        if( !is_null($scriptedFields) && !empty($scriptedFields) )
+        {
+            $topHits->setScriptFields($scriptedFields);
         }
 
         return $topHits;

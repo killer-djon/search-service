@@ -427,37 +427,26 @@ class CommonSearchService extends AbstractSearchService
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
                         ))->addAggregation($this->_queryAggregationFactory->setAggregationSource(
                             $this->filterTypes[$keyType]::LOCATION_FIELD,
-                            [], 1
+                            [], 1, [
+                                'tagsInPercent'     => $this->_scriptFactory->getTagsIntersectInPercentScript(
+                                    $this->filterTypes[$keyType]::TAGS_ID_FIELD,
+                                    $currentUser->getTags()
+                                ),
+                                'tagsCount'         => $this->_scriptFactory->getTagsIntersectScript(
+                                    $this->filterTypes[$keyType]::TAGS_ID_FIELD,
+                                    $currentUser->getTags()
+                                ),
+                                'distance'          => $this->_scriptFactory->getDistanceScript(
+                                    $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
+                                    $point
+                                ),
+                                'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
+                                    $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
+                                    $point
+                                ),
+                            ]
                         )),
                     ]);
-                    /*$this->setAggregationQuery([
-	                    $this->_queryAggregationFactory->getFilterAggregation(
-		                    'filtered_cells', 
-		                    $this->_queryFilterFactory->getBoundingBoxFilter(
-			                    $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
-	                            [
-	                                "lat" => $point->getLatitude(),
-	                                "lon" => $point->getLongitude(),
-	                            ],
-	                            $point->getRadius()
-		                    )
-		                )->addAggregation(
-			                $this->_queryAggregationFactory->getGeoDistanceAggregation(
-	                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
-	                            [
-	                                "lat" => $point->getLatitude(),
-	                                "lon" => $point->getLongitude(),
-	                            ],
-	                            $point->getRadius(),
-	                            'm'
-	                        )->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
-	                            $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
-	                        ))->addAggregation($this->_queryAggregationFactory->setAggregationSource(
-	                            $this->filterTypes[$keyType]::LOCATION_FIELD,
-	                            [], 1
-	                        ))
-		                )
-                    ]);*/
                 }
 
                 /** формируем условия сортировки */

@@ -101,7 +101,7 @@ class SearchEngine implements SearchEngineInterface
         DiscountsSearchMapping::CONTEXT         => DiscountsSearchMapping::class,
         EventsSearchMapping::CONTEXT            => EventsSearchMapping::class,
         RusPlaceSearchMapping::CONTEXT          => RusPlaceSearchMapping::class,
-        FriendsSearchMapping::CONTEXT            => FriendsSearchMapping::class,
+        FriendsSearchMapping::CONTEXT           => FriendsSearchMapping::class,
     ];
 
     protected $availableTypesSearch = [
@@ -506,14 +506,30 @@ class SearchEngine implements SearchEngineInterface
                 ];
 
                 if ($sumDocCount == 1) {
+
                     $docItems = array_column($bucketItem, 'items');
+
                     $docItemValues = array_map(function ($item) {
-                        return $item['_source'];
+                        return [
+                            'source' => $item['_source'],
+                            'fields' => $item['fields'],
+                        ];
                     }, array_values(current($docItems)));
 
-                    $this->restructLocationField($docItemValues);
+                    $docItemSource = AbstractTransformer::path(current($docItemValues), 'source');
+                    $docItemFields = AbstractTransformer::path(current($docItemValues), 'fields');
+                    if (!is_null($docItemFields) && !empty($docItemFields)) {
+                        foreach ($docItemFields as $fieldKey => $field) {
+                            $docItemSource['tagsMatch'][$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
+                            unset($docItemSource[$fieldKey]);
+                            // для совместимости со старыми прилоежнмия
+                            $docItemSource[$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
+                        }
+                    }
+                    $this->restructLocationField($docItemSource);
+                    $docItemSource = $this->revertToScalarTagsMatchFields($docItemSource);
 
-                    $resultItem['items'] = $docItemValues;
+                    $resultItem['items'] = $docItemSource;
                 }
 
                 $results[] = $resultItem;
@@ -564,10 +580,8 @@ class SearchEngine implements SearchEngineInterface
                 $items = $resultSet->current()->getData();
                 $fields = $resultSet->current()->getFields();
 
-                if( !empty($fields) )
-                {
-                    foreach ($fields as $fieldKey => $field)
-                    {
+                if (!empty($fields)) {
+                    foreach ($fields as $fieldKey => $field) {
                         $items['tagsMatch'][$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
                         unset($items[$fieldKey]);
                         // для совместимости со старыми прилоежнмия

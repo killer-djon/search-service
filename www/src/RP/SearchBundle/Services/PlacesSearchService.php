@@ -293,6 +293,10 @@ class PlacesSearchService extends AbstractSearchService
     {
 
         $this->setFilterQuery([
+            $this->_queryFilterFactory->getNotFilter(
+                $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
+            ),
+            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::REMOVED_FIELD => false]),
             $this->_queryFilterFactory->getBoolAndFilter([
                 $this->_queryFilterFactory->getNotFilter(
                     $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
@@ -309,10 +313,14 @@ class PlacesSearchService extends AbstractSearchService
      * @param string $context Контекст поиска
      * @param string $fieldId Название поля идентификатора
      * @param string $recordId ID записи места которое надо найти
+     * @param GeoPointServiceInterface $point
      * @return array Набор данных найденной записи
      */
-    public function getPlaceById($userId, $context, $fieldId, $recordId)
+    public function getPlaceById($userId, $context, $fieldId, $recordId, GeoPointServiceInterface $point)
     {
+        /** получаем текущего ползователя */
+        $currentUser = $this->getUserById($userId);
+
         $this->setFilterQuery([
             $this->_queryFilterFactory->getBoolOrFilter([
                 $this->_queryFilterFactory->getBoolAndFilter([
@@ -335,29 +343,32 @@ class PlacesSearchService extends AbstractSearchService
                                 ModerationStatus::OK,
                                 ModerationStatus::DIRTY,
                                 ModerationStatus::REJECTED,
-                                ModerationStatus::RESTORED,
-                                ModerationStatus::DELETED
+                                ModerationStatus::RESTORED
                             ])
                         ])
                     ])
                 ]),
                 $this->_queryFilterFactory->getBoolOrFilter([
-                    $this->_queryFilterFactory->getNotFilter(
-                        $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
-                    ),
-                    $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0])
+                    $this->_queryFilterFactory->getBoolAndFilter([
+                        $this->_queryFilterFactory->getNotFilter(
+                            $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
+                        ),
+                        $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
+                        $this->_queryFilterFactory->getNotFilter(
+                            $this->_queryFilterFactory->getTermFilter([
+                                PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DELETED
+                            ])
+                        )
+                    ])
                 ])
             ])
         ]);
 
-        /*$currentUser = $this->getUserById($userId);
-        if( $this->getGeoPoint() instanceof GeoPointServiceInterface )
-        {
-            $this->setGeoPointConditions($this->getGeoPoint(), PlaceSearchMapping::class);
-        }
-
+        /** добавляем к условию поиска рассчет по совпадению интересов */
         $this->setScriptTagsConditions($currentUser, PlaceSearchMapping::class);
-        */
+
+        /** добавляем к условию поиска рассчет расстояния */
+        $this->setGeoPointConditions($point, PlaceSearchMapping::class);
 
         return $this->searchRecordById($context, $fieldId, $recordId);
     }

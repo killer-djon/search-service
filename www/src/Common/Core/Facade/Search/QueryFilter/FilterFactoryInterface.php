@@ -205,4 +205,13 @@ interface FilterFactoryInterface
      * @return array
      */
     public function getBoundingBoxFilter($fieldName, array $coordinates, $radius);
+
+    /**
+     * Используем фильтр для nested объектов
+     *
+     * @param string $path Ключ nested объекта
+     * @param AbstractFilter $filter
+     * @return AbstractFilter $filter
+     */
+    public function getNestedFilter($path, AbstractFilter $filter);
 }

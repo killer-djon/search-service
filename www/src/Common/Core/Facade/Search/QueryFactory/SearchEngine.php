@@ -81,7 +81,6 @@ class SearchEngine implements SearchEngineInterface
      */
     protected $filterTypes = [
         PeopleSearchMapping::CONTEXT    => PeopleSearchMapping::class,
-        'peoples'                       => PeopleSearchMapping::class,
         FriendsSearchMapping::CONTEXT   => FriendsSearchMapping::class,
         PlaceSearchMapping::CONTEXT     => PlaceSearchMapping::class,
         RusPlaceSearchMapping::CONTEXT  => RusPlaceSearchMapping::class,
@@ -101,8 +100,8 @@ class SearchEngine implements SearchEngineInterface
         HelpOffersSearchMapping::CONTEXT_MARKER => HelpOffersSearchMapping::class,
         DiscountsSearchMapping::CONTEXT         => DiscountsSearchMapping::class,
         EventsSearchMapping::CONTEXT            => EventsSearchMapping::class,
-        RusPlaceSearchMapping::CONTEXT  => RusPlaceSearchMapping::class,
-        'peoples'                       => PeopleSearchMapping::class,
+        RusPlaceSearchMapping::CONTEXT          => RusPlaceSearchMapping::class,
+        FriendsSearchMapping::CONTEXT           => FriendsSearchMapping::class,
     ];
 
     protected $availableTypesSearch = [
@@ -128,7 +127,6 @@ class SearchEngine implements SearchEngineInterface
         'events'        => 'events',
         'friends'       => 'people',
         'commonFriends' => 'people',
-        'peoples'       => 'people',
     ];
 
     /**
@@ -508,14 +506,30 @@ class SearchEngine implements SearchEngineInterface
                 ];
 
                 if ($sumDocCount == 1) {
+
                     $docItems = array_column($bucketItem, 'items');
+
                     $docItemValues = array_map(function ($item) {
-                        return $item['_source'];
+                        return [
+                            'source' => $item['_source'],
+                            'fields' => $item['fields'],
+                        ];
                     }, array_values(current($docItems)));
 
-                    $this->restructLocationField($docItemValues);
+                    $docItemSource = AbstractTransformer::path(current($docItemValues), 'source');
+                    $docItemFields = AbstractTransformer::path(current($docItemValues), 'fields');
+                    if (!is_null($docItemFields) && !empty($docItemFields)) {
+                        foreach ($docItemFields as $fieldKey => $field) {
+                            $docItemSource['tagsMatch'][$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
+                            unset($docItemSource[$fieldKey]);
+                            // для совместимости со старыми прилоежнмия
+                            $docItemSource[$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
+                        }
+                    }
+                    $this->restructLocationField($docItemSource);
+                    $docItemSource = $this->revertToScalarTagsMatchFields($docItemSource);
 
-                    $resultItem['items'] = $docItemValues;
+                    $resultItem['items'][] = (!is_array($docItemSource) ? [$docItemSource] : $docItemSource);
                 }
 
                 $results[] = $resultItem;
@@ -564,6 +578,16 @@ class SearchEngine implements SearchEngineInterface
 
             if ($resultSet->current() !== false) {
                 $items = $resultSet->current()->getData();
+                $fields = $resultSet->current()->getFields();
+
+                if (!empty($fields)) {
+                    foreach ($fields as $fieldKey => $field) {
+                        $items['tagsMatch'][$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
+                        unset($items[$fieldKey]);
+                        // для совместимости со старыми прилоежнмия
+                        $items[$fieldKey] = (is_string($field) ? $field : (isset($field[0]) ? $field[0] : null));
+                    }
+                }
 
                 return $items;
             }
@@ -630,6 +654,7 @@ class SearchEngine implements SearchEngineInterface
         if ($resultSets->count() > 0) {
             $this->setTotalHits($resultSets, $keyField);
             $this->setTotalResults($resultSets, $keyField);
+
             $this->setAggregationsResult($resultSets);
 
             return $this->getTotalResults();
@@ -646,7 +671,6 @@ class SearchEngine implements SearchEngineInterface
      */
     private function setAggregationsResult(\Elastica\ResultSet $resultSets)
     {
-
         $aggs = current($resultSets->getAggregations());
         $buckets = (isset($aggs['buckets']) && !empty($aggs['buckets']) ? $aggs['buckets'] : null);
 
@@ -737,10 +761,6 @@ class SearchEngine implements SearchEngineInterface
 
             if (isset($record[$type]['hit']['sort'])) {
                 unset($record[$type]['hit']['sort']);
-            }
-
-            if (isset($record[$type]['relations'])) {
-                unset($record[$type]['relations']);
             }
 
             if ($this->getOldFormat() === true) {

@@ -17,7 +17,7 @@ class RelationType
     const FRIENDSHIP_REQUEST = 'friendshipRequest';
 
     /** детализация запроса в друзья */
-    const FRIENDSHIP_REQUEST_INITIATOR = 'friendshipRequestInitiator';
+    const FRIENDSHIP_REQUEST_INITIATOR = 'friendshipRequestReceived';
 
     /** Подписка */
     const FOLLOWING = 'following';

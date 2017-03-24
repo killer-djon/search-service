@@ -250,17 +250,16 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                 
                 if(tagsValue.size() > 0 && doc[tagIdField].values.size() > 0){
                     for(var i = 0, len = tagsValue.size(); i < len; i++){
-                        ++tagsCount;
+                        tagsCount++;
                         for(var j = 0, lenJ = doc[tagIdField].values.size(); j < lenJ; j++){
                             if( tagsValue[i] == doc[tagIdField][j] ){
-                                ++count;
+                                count++;
                             }
                         }
                     }
                     
-                    tagInPercent = count/tagsCount*100;
+                    tagInPercent = (count/tagsCount)*100;
                 }
-                
                 tagInPercent = tagInPercent.toFixed()
             ";
 
@@ -295,10 +294,12 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                 'isFriendshipRequestSent': false,
                 'isFriendshipRequestReceived': false,
             };
-            
-            if( _source.relations != undefined && _source.relations.length > 0 && _source.relations[userId] != null )
+
+            if( _source.relations != undefined && _source.relations.length > 0 && _source.relations[userId] != null && !doc['relations.'+userId].empty )
             {                                 
-                type = _source.relations[userId];
+                //type = _source.relations[userId];
+                type = doc['relations.'+userId].value;
+
                 relation = {                  
                     'isFriend': type == 'friendship' ? true : false,
                     'isFollower': type == 'following' ? true : false,
@@ -309,13 +310,13 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
             ";
 
             return new \Elastica\Script($script, [
-                'userId' => $userId,
+                'userId'        => $userId,
                 'relationTypes' => [
                     RelationType::FRIENDSHIP,
                     RelationType::FOLLOWING,
                     RelationType::FRIENDSHIP_REQUEST,
-                    RelationType::FRIENDSHIP_REQUEST_INITIATOR
-                ]
+                    RelationType::FRIENDSHIP_REQUEST_INITIATOR,
+                ],
             ], $lang);
 
         } catch (ElasticsearchException $e) {

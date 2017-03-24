@@ -14,6 +14,7 @@ use Elastica\Query;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
+use RP\SearchBundle\Services\Transformers\ChatMessageTransformer;
 use RP\SearchBundle\Services\Transformers\CityTransformer;
 use RP\SearchBundle\Services\Transformers\PeopleTransformer;
 use RP\SearchBundle\Services\Transformers\PlaceTypeTransformer;
@@ -22,6 +23,22 @@ use RP\SearchBundle\Services\Transformers\TagNameTransformer;
 class AbstractSearchService extends SearchEngine implements SearchServiceInterface
 {
     use SearchServiceTrait;
+
+    /**
+     * Параметр указывающий какие поля исходной позиции
+     * необходимо учитывать
+     *
+     * @const string INCLUDES_FIELDS_KEY
+     */
+    const INCLUDES_FIELDS_KEY = 'includes';
+
+    /**
+     * Параметр указывающий какие поля исходной позиции
+     * необходимо исключить в выдаче
+     *
+     * @const string EXCLUDES_FIELDS_KEY
+     */
+    const EXCLUDES_FIELDS_KEY = 'excludes';
 
     /**
      * Ключ обозначающий название скрипта
@@ -145,6 +162,11 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     public $tagNamesTransformer;
 
     /**
+     * @var ChatMessageTransformer $chatMessageTransformer
+     */
+    public $chatMessageTransformer;
+
+    /**
      * Оперделяем проеобразователь для городов
      *
      * @param CityTransformer $cityTransformer
@@ -153,6 +175,11 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     public function setCityTransformer(CityTransformer $cityTransformer)
     {
         $this->cityTransformer = $cityTransformer;
+    }
+
+    public function setChatMessagesTransformer(ChatMessageTransformer $chatMessageTransformer)
+    {
+        $this->chatMessageTransformer = $chatMessageTransformer;
     }
 
     /**
@@ -513,7 +540,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      */
     public function setScriptFunctions(array $scripts, array $scriptOptions = null)
     {
-        foreach ($scripts as $scriptKey  => $script) {
+        foreach ($scripts as $scriptKey => $script) {
             $this->_scriptFunctions[$scriptKey] = $script;
         }
 
@@ -535,8 +562,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         try {
             $user = $this->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, "$userId");
 
-            if( !is_null($user) && !empty($user) )
-            {
+            if (!is_null($user) && !empty($user)) {
                 return new UserProfileService($user);
             }
 
@@ -575,26 +601,25 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         /** Возращаем объект профиля пользователя */
         return $userSearchDocument;
     }
-    
+
     /**
-	 * Устанавливаем бустинг для конкретного поля
-	 * этот бустинг будет означать преоретизацию при поиске
-	 * при множественных полях
-	 * 
-	 * @param string $fieldName Название поля
-	 * @param int|null $boost Приоритет в целочисленном выражении
-	 *
-	 * @return string Название поля с отметкой приоритета (like: "title^5")
+     * Устанавливаем бустинг для конкретного поля
+     * этот бустинг будет означать преоретизацию при поиске
+     * при множественных полях
+     *
+     * @param string $fieldName Название поля
+     * @param int|null $boost Приоритет в целочисленном выражении
+     * @return string Название поля с отметкой приоритета (like: "title^5")
      */
     public function setBoostField($fieldName, $boost = null)
     {
-	    if( !is_null($boost) && is_int($boost) )
-	    {
-		    $boost = (int)$boost;
-		    return "$fieldName^$boost";
-	    }
-	    
-	    return $fieldName;
+        if (!is_null($boost) && is_int($boost)) {
+            $boost = (int)$boost;
+
+            return "$fieldName^$boost";
+        }
+
+        return $fieldName;
     }
 
 }

@@ -14,6 +14,8 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
     /** Контекст поиска */
     const CONTEXT = 'chat_message';
 
+    const LAST_CHAT_MESSAGE = 'lastMessage';
+
     /** ID сообщений */
     const MESSAGE_ID_FIELD = 'id';
 
@@ -22,6 +24,12 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
 
     /** ID чата с сообщениям */
     const MESSAGE_SEND_AT_FIELD = 'sentAt';
+
+    /** когда был создан чат */
+    const CHAT_CREATED_AT = 'createdAt';
+
+    /** пока ненужная вещь, но означает что чат c кем-то, т.е. сформирован диалог между пользователями */
+    const CHAT_IS_DIALOG = 'isDialog';
 
     /** Текст сообщения */
     const MESSAGE_TEXT_FIELD = 'text';
@@ -43,6 +51,7 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
     /** ПОле nested объекта участников чата */
     const RECIPIENTS_PEOPLES_MESSAGE_FIELD = 'peoples';
 
+    const CHAT_MEMBERS_ID_FIELD = 'chatMembers.id';
     const CHAT_MEMBERS_NAME_FIELD = 'chatMembers.name';
     const CHAT_MEMBERS_NAME_NGRAM_FIELD = 'chatMembers.name._nameNgram';
     const CHAT_MEMBERS_NAME_TRANSLIT_FIELD = 'chatMembers.name._translit';

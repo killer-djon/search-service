@@ -103,4 +103,16 @@ interface QueryFactoryInterface
      */
     public function toArray();
 
+    /**
+     * Управление исходными полями при извлечении данных
+     * можно указать как набор полей по маске,
+     * так и массив с включаемыми полями и исключаемыми
+     *
+     * @param mixed|null $params ( bool: true|false, string: "obj.*", string[]: [ "obj1.*", "obj2.*" ],
+     * array: ["includes": [ "obj1.*", "obj2.*" ], "excludes": [ "*.description" ]] )
+     * @return QueryFactoryInterface
+     * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-request-source-filtering.html
+     */
+    public function setSource($params = null);
+
 }

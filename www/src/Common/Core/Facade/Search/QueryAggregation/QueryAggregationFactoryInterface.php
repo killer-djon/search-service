@@ -16,7 +16,6 @@ interface QueryAggregationFactoryInterface
      */
     const DEFAULT_RADIUS_DISTANCE = 3;
 
-
     public function getGeoCentroidAggregation($fieldName);
 
     /**
@@ -37,15 +36,6 @@ interface QueryAggregationFactoryInterface
      * @return \Elastica\Aggregation\AbstractAggregation
      */
     public function getGeoBoundBoxAggregation($fieldName, $setWrapLon = true);
-
-    /**
-     * Получаем аггрегированный скрипт AVG
-     *
-     * @param string $fieldName Название поле аггрегации
-     * @param string|\Elastica\Script $script
-     * @return \Elastica\Aggregation\AbstractSimpleAggregation
-     */
-    public function getAvgAggregation($fieldName, $script = null, $name = 'avg_script');
 
     /**
      * Аггрегирование временных промежутков
@@ -103,9 +93,63 @@ interface QueryAggregationFactoryInterface
      * Установка исходных данных в агррегированные данные
      *
      * @param string $fieldName Название поля
-     * @param array $fields Набор полей которые нужно выводить
+     * @param array $fieldsSource Набор полей которые нужно выводить
      * @param int|null $size Сколько объектов указывать
+     * @param array $scriptedFields Набор полей скрипта (ассоциативный массив)
      * @return \Elastica\Aggregation\TopHits
      */
-    public function setAggregationSource($fieldName, $fields = [], $size = null);
+    public function setAggregationSource($fieldName, $fieldsSource = [], $size = null, $scriptedFields = []);
+
+    /**
+     * Группировка данных по названию поля
+     * типа bucket по полю
+     *
+     * @param string $fieldName Название поля
+     * @param string|\Elastica\Script $script Скрипт для аггрегирования
+     * @param string $order "_count", "_term", or the name of a sub-aggregation or sub-aggregation response field
+     * @param string $direction Направление сортировки
+     * @param int|null $minDocCount Минимальное кол-во документов в букете
+     * @return \Elastica\Aggregation\Terms
+     */
+    public function getTermsAggregation($fieldName, $script = null, $order = '_term', $direction = 'asc', $minDocCount = null);
+
+    /**
+     * Аггрегирование по max выражению
+     *
+     * @param string $fieldName Название поля
+     * @param string|\Elastica\Script $script
+     * @return \Elastica\Aggregation\
+     */
+    public function getMaxAggregation($fieldName, $script = null);
+
+    /**
+     * Аггрегирование по min выражению
+     *
+     * @param string $fieldName Название поля
+     * @param string|\Elastica\Script $script
+     * @return \Elastica\Aggregation\
+     */
+    public function getMinAggregation($fieldName, $script = null);
+
+    /**
+     * Получаем аггрегированный скрипт AVG
+     *
+     * @param string $fieldName Название поле аггрегации
+     * @param string|\Elastica\Script $script
+     * @return \Elastica\Aggregation\AbstractSimpleAggregation
+     */
+    public function getAvgAggregation($fieldName, $script = null);
+
+    /**
+     * Метод аггрегирования призван делать выборку из базы
+     * уникальных значений (не повторяющихся)
+     *
+     * @link https://www.elastic.co/guide/en/elasticsearch/guide/current/cardinality.html
+     *
+     * @param string $name Название функции аггрегирования
+     * @param string $fieldName Название поля по которому выбираем уникальные значения
+     * @param int $threshold Целочисленное значение
+     * @return \Elastica\Aggregation\AbstractSimpleAggregation
+     */
+    public function getCardinalityAggregation($name, $fieldName, $threshold = null);
 }

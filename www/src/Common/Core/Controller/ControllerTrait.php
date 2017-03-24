@@ -228,6 +228,10 @@ trait ControllerTrait
      */
     public function revertToScalarTagsMatchFields(& $inputArray)
     {
+        if( empty($inputArray) )
+        {
+            return [];
+        }
         foreach ($inputArray as $key => & $item) {
             if (is_array($item) && !empty($item)) {
                 $item = $this->revertToScalarTagsMatchFields($item);

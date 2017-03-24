@@ -129,7 +129,8 @@ class SearchEventsController extends ApiController
             $userId = $this->getRequestUserId();
 
             $eventsSearchService = $this->getEventsSearchService();
-            $eventResult = $eventsSearchService->getEventById($userId, $eventId);
+            $eventResult = $eventsSearchService->getEventById($userId, $eventId, $this->getGeoPoint());
+
             $this->extractWillComeFriends($eventResult, $userId);
 
             return $this->_handleViewWithData((is_array($eventResult)&&!empty($eventResult)?current($eventResult):null));

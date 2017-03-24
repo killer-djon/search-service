@@ -120,12 +120,6 @@ class ChatMessageSearchService extends AbstractSearchService
             ]),
             $this->_queryFilterFactory->getScriptFilter(
                 $this->_scriptFactory->getScript("doc['chatMembers.id'].values.length > 1")
-            ),
-            $this->_queryFilterFactory->getNestedFilter(
-                'recipients',
-                $this->_queryFilterFactory->getTermFilter([
-                    'recipients.isDeleted' => false
-                ])
             )
         ]);
 

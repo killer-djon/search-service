@@ -130,18 +130,31 @@ class SearchUsersController extends ApiController
 
             $filtersType = $request->get(RequestConstant::FILTERS_PARAM);
 
+
             if (is_null($filtersType) || empty($filtersType)) {
-                return $this->_handleViewWithError(
+                /*return $this->_handleViewWithError(
                     new BadRequestHttpException(
                         'Не указаны фильтры',
                         null,
                         Response::HTTP_BAD_REQUEST
                     )
-                );
+                );*/
             }
 
             /** @var array Набор фильтров запроса */
             $filters = $this->getParseFilters($filtersType);
+
+            if (is_null($filtersType) || empty($filtersType)) {
+                /*return $this->_handleViewWithError(
+                    new BadRequestHttpException(
+                        'Не указаны фильтры',
+                        null,
+                        Response::HTTP_BAD_REQUEST
+                    )
+                );*/
+                $filters = ['friends'];
+            }
+
             if ($version == RequestConstant::DEFAULT_VERSION) {
                 $filters = ['friends'];
             }
@@ -372,7 +385,6 @@ class SearchUsersController extends ApiController
                 $this->getSkip(),
                 $this->getCount()
             );
-
             $data = [];
 
             foreach ($possibleFriends as $keyCategory => $possibleFriend) {

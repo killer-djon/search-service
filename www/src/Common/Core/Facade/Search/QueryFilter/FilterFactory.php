@@ -319,17 +319,33 @@ class FilterFactory implements FilterFactoryInterface
     public function getBoundingBoxFilter($fieldName, array $coordinates, $radius)
     {
         $startPoints = [
-            'lat' => GeoPointService::addDistanceToLat($coordinates['lat'], $radius/2),
-            'lon' => GeoPointService::removeDistanceFromLon($coordinates['lat'], $coordinates['lon'], $radius/2),
+            'lat' => GeoPointService::addDistanceToLat($coordinates['lat'], $radius / 2),
+            'lon' => GeoPointService::removeDistanceFromLon($coordinates['lat'], $coordinates['lon'], $radius / 2),
         ];
 
         $endPoints = [
-            'lat' => GeoPointService::removeDistanceFromLat($coordinates['lat'], $radius/2),
-            'lon' => GeoPointService::addDistanceToLon($coordinates['lat'], $coordinates['lon'], $radius/2),
+            'lat' => GeoPointService::removeDistanceFromLat($coordinates['lat'], $radius / 2),
+            'lon' => GeoPointService::addDistanceToLon($coordinates['lat'], $coordinates['lon'], $radius / 2),
         ];
 
         return new \Elastica\Filter\GeoBoundingBox($fieldName, [$startPoints, $endPoints]);
-        
+
+    }
+
+    /**
+     * Используем фильтр для nested объектов
+     *
+     * @param string $path Ключ nested объекта
+     * @param AbstractFilter $filterQuery
+     * @return AbstractFilter $filter
+     */
+    public function getNestedFilter($path, AbstractFilter $filterQuery)
+    {
+        $filter = new \Elastica\Filter\Nested();
+        $filter->setPath($path);
+        $filter->setFilter($filterQuery);
+
+        return $filter;
     }
 
 }

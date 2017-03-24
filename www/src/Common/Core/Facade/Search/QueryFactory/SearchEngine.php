@@ -654,6 +654,7 @@ class SearchEngine implements SearchEngineInterface
         if ($resultSets->count() > 0) {
             $this->setTotalHits($resultSets, $keyField);
             $this->setTotalResults($resultSets, $keyField);
+
             $this->setAggregationsResult($resultSets);
 
             return $this->getTotalResults();
@@ -670,7 +671,6 @@ class SearchEngine implements SearchEngineInterface
      */
     private function setAggregationsResult(\Elastica\ResultSet $resultSets)
     {
-
         $aggs = current($resultSets->getAggregations());
         $buckets = (isset($aggs['buckets']) && !empty($aggs['buckets']) ? $aggs['buckets'] : null);
 

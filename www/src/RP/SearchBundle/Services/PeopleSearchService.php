@@ -72,7 +72,6 @@ class PeopleSearchService extends AbstractSearchService
             )
         );
 
-
         /** Получаем сформированный объект запроса */
         /*$this->setConditionQueryShould([
             $this->_queryConditionFactory->getMultiMatchQuery()
@@ -178,7 +177,6 @@ class PeopleSearchService extends AbstractSearchService
         return $this->searchDocuments($query, PeopleSearchMapping::CONTEXT);
     }
 
-
     /**
      * Метод осуществляет поиск в еластике
      * по имени/фамилии пользьвателя находяхищся в друзьях
@@ -205,7 +203,6 @@ class PeopleSearchService extends AbstractSearchService
 
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
-
 
         /** получаем объект профиля пользователя */
         $targetUser = ($userId == $targetUserId ? $currentUser : $this->getUserById($targetUserId));
@@ -270,7 +267,6 @@ class PeopleSearchService extends AbstractSearchService
         foreach ($filters as $filter) {
             $this->clearQueryFactory();
 
-        
             /** добавляем к условию поиска рассчет по совпадению интересов */
             $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);
 
@@ -315,7 +311,7 @@ class PeopleSearchService extends AbstractSearchService
                         $this->_queryConditionFactory
                             ->getFieldQuery(PeopleSearchMapping::getMultiMatchQuerySearchFields(), $searchText)
                             ->setDefaultOperator(MultiMatch::OPERATOR_AND)
-                            ->setDefaultField(PeopleSearchMapping::NAME_FIELD)
+                            ->setDefaultField(PeopleSearchMapping::NAME_FIELD),
                     ]);
 
                 } else {
@@ -337,8 +333,8 @@ class PeopleSearchService extends AbstractSearchService
                             $this->_queryConditionFactory->getFieldQuery(
                                 PeopleSearchMapping::getMultiMatchQuerySearchFields(),
                                 $searchText
-                            )
-                        ])
+                            ),
+                        ]),
                     ]);
                 }
 
@@ -464,14 +460,12 @@ class PeopleSearchService extends AbstractSearchService
         /** добавляем к условию поиска рассчет расстояния */
         $this->setGeoPointConditions($point, PeopleSearchMapping::class);
 
-
         $this->setFilterQuery([
             $this->_queryFilterFactory->getExistsFilter(PeopleSearchMapping::HELP_OFFERS_LIST_FIELD),
         ]);
 
         if (!is_null($searchText) && !empty($searchText)) {
 
-            
             $searchText = mb_strtolower($searchText);
             $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
 
@@ -630,13 +624,14 @@ class PeopleSearchService extends AbstractSearchService
                 ]);
             }
 
-            /** формируем условия сортировки по удаленности */
-            /*$this->setSortingQuery(
-                $this->_sortingFactory->getGeoDistanceSort(
-                    PeopleSearchMapping::LOCATION_POINT_FIELD,
-                    $point
-                )
-            );*/
+            $this->setAggregationQuery([
+                $this->_queryAggregationFactory->getCardinalityAggregation(
+                    'distinct_people',
+                    PeopleSearchMapping::IDENTIFIER_FIELD,
+                    100
+                ),
+            ]);
+
             $this->setScriptFunctions([
                 FunctionScore::DECAY_GAUSS => [
                     PeopleSearchMapping::LOCATION_POINT_FIELD => [
@@ -663,14 +658,15 @@ class PeopleSearchService extends AbstractSearchService
             $queryMatch = $this->createMatchQuery($searchText, PeopleSearchMapping::getMultiMatchQuerySearchFields(), $skip, $count);
 
             $resultQuery[$key] = $this->searchDocuments($queryMatch, PeopleSearchMapping::CONTEXT);
+
         }
 
         return $resultQuery;
     }
 
-
     /**
      * Поиск профиля по заданному ID
+     *
      * @param string $userId ID текущего пользователя
      * @param string $profileId ID профиля по которому ищем инфу
      * @param GeoPointServiceInterface $point
@@ -687,12 +683,11 @@ class PeopleSearchService extends AbstractSearchService
         /** добавляем к условию поиска рассчет по совпадению интересов (массив интересов) */
         $this->setScriptMatchInterestsConditions($currentUser, PeopleSearchMapping::class);
 
-
         /** добавляем к условию поиска рассчет расстояния */
         $this->setGeoPointConditions($currentUser->getLocation(), PeopleSearchMapping::class);
 
         $this->setConditionQueryMust([
-            $this->_queryConditionFactory->getTermQuery(PeopleSearchMapping::IDENTIFIER_FIELD, $profileId)
+            $this->_queryConditionFactory->getTermQuery(PeopleSearchMapping::IDENTIFIER_FIELD, $profileId),
         ]);
 
         $query = $this->createQuery(0, 1);

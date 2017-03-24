@@ -243,8 +243,7 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
             $topHits->setSize($size);
         }
 
-        if( !is_null($scriptedFields) && !empty($scriptedFields) )
-        {
+        if (!is_null($scriptedFields) && !empty($scriptedFields)) {
             $topHits->setScriptFields($scriptedFields);
         }
 
@@ -337,5 +336,28 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
         }
 
         return $aggType;
+    }
+
+    /**
+     * Метод аггрегирования призван делать выборку из базы
+     * уникальных значений (не повторяющихся)
+     *
+     * @link https://www.elastic.co/guide/en/elasticsearch/guide/current/cardinality.html
+     *
+     * @param string $name Название функции аггрегирования
+     * @param string $fieldName Название поля по которому выбираем уникальные значения
+     * @param int $threshold Целочисленное значение
+     * @return \Elastica\Aggregation\AbstractSimpleAggregation
+     */
+    public function getCardinalityAggregation($name, $fieldName, $threshold = null)
+    {
+        $aggs = new \Elastica\Aggregation\Cardinality($name);
+        $aggs->setField($fieldName);
+
+        if (!is_null($threshold)) {
+            $aggs->setPrecisionThreshold((int)$threshold);
+        }
+
+        return $aggs;
     }
 }

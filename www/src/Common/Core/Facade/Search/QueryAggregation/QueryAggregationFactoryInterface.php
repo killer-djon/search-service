@@ -16,7 +16,6 @@ interface QueryAggregationFactoryInterface
      */
     const DEFAULT_RADIUS_DISTANCE = 3;
 
-
     public function getGeoCentroidAggregation($fieldName);
 
     /**
@@ -37,8 +36,6 @@ interface QueryAggregationFactoryInterface
      * @return \Elastica\Aggregation\AbstractAggregation
      */
     public function getGeoBoundBoxAggregation($fieldName, $setWrapLon = true);
-
-
 
     /**
      * Аггрегирование временных промежутков
@@ -142,4 +139,17 @@ interface QueryAggregationFactoryInterface
      * @return \Elastica\Aggregation\AbstractSimpleAggregation
      */
     public function getAvgAggregation($fieldName, $script = null);
+
+    /**
+     * Метод аггрегирования призван делать выборку из базы
+     * уникальных значений (не повторяющихся)
+     *
+     * @link https://www.elastic.co/guide/en/elasticsearch/guide/current/cardinality.html
+     *
+     * @param string $name Название функции аггрегирования
+     * @param string $fieldName Название поля по которому выбираем уникальные значения
+     * @param int $threshold Целочисленное значение
+     * @return \Elastica\Aggregation\AbstractSimpleAggregation
+     */
+    public function getCardinalityAggregation($name, $fieldName, $threshold = null);
 }

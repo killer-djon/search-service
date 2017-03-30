@@ -318,6 +318,41 @@ class PlacesSearchService extends AbstractSearchService
      */
     public function getPlaceById($userId, $context, $fieldId, $recordId, GeoPointServiceInterface $point)
     {
+        if( $userId == 0 )
+        {
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getBoolOrFilter([
+                    $this->_queryFilterFactory->getBoolAndFilter([
+                        $this->_queryFilterFactory->getBoolOrFilter([
+                            $this->_queryFilterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 1, 100),
+                            $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
+                        ]),
+                        $this->_queryFilterFactory->getTermFilter([
+                            PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK
+                        ])
+                    ]),
+                    $this->_queryFilterFactory->getBoolOrFilter([
+                        $this->_queryFilterFactory->getBoolAndFilter([
+                            $this->_queryFilterFactory->getNotFilter(
+                                $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
+                            ),
+                            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
+                            $this->_queryFilterFactory->getNotFilter(
+                                $this->_queryFilterFactory->getTermFilter([
+                                    PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DELETED
+                                ])
+                            )
+                        ])
+                    ])
+                ])
+            ]);
+
+            /** добавляем к условию поиска рассчет расстояния */
+            $this->setGeoPointConditions($point, PlaceSearchMapping::class);
+
+            return $this->searchRecordById($context, $fieldId, $recordId);
+        }
+
         /** получаем текущего ползователя */
         $currentUser = $this->getUserById($userId);
 

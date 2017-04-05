@@ -258,7 +258,7 @@ class PlacesSearchService extends AbstractSearchService
     {
         $this->setFilterQuery([
             $this->_queryFilterFactory->getBoolOrFilter([
-                $this->_queryFilterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 1, 100),
+                $this->_queryFilterFactory->getGtFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0),
                 $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
             ]),
             $this->_queryFilterFactory->getBoolOrFilter([
@@ -324,7 +324,7 @@ class PlacesSearchService extends AbstractSearchService
                 $this->_queryFilterFactory->getBoolOrFilter([
                     $this->_queryFilterFactory->getBoolAndFilter([
                         $this->_queryFilterFactory->getBoolOrFilter([
-                            $this->_queryFilterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 1, 100),
+                            $this->_queryFilterFactory->getGtFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0),
                             $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
                         ]),
                         $this->_queryFilterFactory->getTermFilter([
@@ -360,7 +360,7 @@ class PlacesSearchService extends AbstractSearchService
             $this->_queryFilterFactory->getBoolOrFilter([
                 $this->_queryFilterFactory->getBoolAndFilter([
                     $this->_queryFilterFactory->getBoolOrFilter([
-                        $this->_queryFilterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 1, 100),
+                        $this->_queryFilterFactory->getGtFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0),
                         $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
                     ]),
                     $this->_queryFilterFactory->getBoolOrFilter([

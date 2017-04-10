@@ -3,11 +3,11 @@
 doctrine_mongodb:
     connections:
         domain:
-            server: "mongodb://%mongodb.host%:%mongodb.port%"
+            server: '%mongodb.dsn%'
             options:
                 connect: true
         reporting:
-            server: "mongodb://%mongodb.host%:%mongodb.port%"
+            server: '%mongodb.dsn%'
             options:
                 connect: true
 

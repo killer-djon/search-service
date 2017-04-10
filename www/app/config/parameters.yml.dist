@@ -3,6 +3,7 @@ parameters:
     secret: c10433b11dc4ad101034379ec10c8b451bb
     mongodb.host: localhost
     mongodb.port: 27146
+    mongodb.dsn: 'mongodb://localhost:27017,localhost2:27017'
     mailer_transport: mail
     mailer_host: 127.0.0.1
     mailer_user: do-not-reply@russianplace.com

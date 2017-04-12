@@ -235,6 +235,8 @@ class SearchChatMessageController extends ApiController
                 $this->getCount()
             );
 
+
+
             $chatMessages = $chatSearchService->chatMessageTransformer->transformAggregations(
                 $chatSearchService->getAggregations(),
                 ChatMessageMapping::CONTEXT,
@@ -242,8 +244,16 @@ class SearchChatMessageController extends ApiController
                 ChatMessageMapping::LAST_CHAT_MESSAGE
             );
 
+
+
             if (empty($chatMessages)) {
                 return $this->_handleViewWithData([]);
+            }
+
+
+            foreach( $chatMessages[ChatMessageMapping::CONTEXT] as &$chatMessage )
+            {
+                $chatMessage['count'] = $chatSearchService->getCountUnreadMessages($userId, $chatMessage['chatId']);
             }
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {

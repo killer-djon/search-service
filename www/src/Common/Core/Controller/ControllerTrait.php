@@ -153,6 +153,7 @@ trait ControllerTrait
         'allCheckinsCount'  => ' ',
         'distance'          => 0,
         'distanceInPercent' => 0,
+        'emailEnabled' => 'false'
         //'isFriendshipRequestReceived' => 'false',
         //'isFriend' => 'false',
         //'isFollower' => 'false',
@@ -178,7 +179,7 @@ trait ControllerTrait
                 $value = $this->changeKeysName($value);
             }
 
-            if (array_key_exists($key, $this->neededKeys) && empty($value)) {
+            if (array_key_exists($key, $this->neededKeys) && (empty($value) || $value == false)) {
                 $value = $this->neededKeys[$key];
             }
 
@@ -212,6 +213,7 @@ trait ControllerTrait
         "interestsCount" => 'intval',
         "helpOffersCount" => 'intval',
         "friendsCount" => 'intval',
+		"emailEnabled" => 'boolval'
         
 		//'isFriendshipRequestReceived' => 'boolval',
         //'isFriend' => 'boolval',
@@ -251,7 +253,14 @@ trait ControllerTrait
                     }
                 }
 
-                $item = call_user_func($this->tagsMatchFields[$key], $item);
+                if( $this->tagsMatchFields[$key] == 'boolval' )
+                {
+                    $item = ( !is_bool($item) && $item == 'false' ? false : $item );
+                }else
+                {
+                    $item = call_user_func($this->tagsMatchFields[$key], $item);
+                }
+
             }
         }
 

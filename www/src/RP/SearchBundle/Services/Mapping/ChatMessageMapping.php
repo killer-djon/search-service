@@ -23,7 +23,7 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
     const CHAT_ID_FIELD = 'chatId';
 
     /** ID чата с сообщениям */
-    const MESSAGE_SEND_AT_FIELD = 'sentAt';
+    const MESSAGE_SEND_AT_FIELD = 'sendAt';
 
     /** когда был создан чат */
     const CHAT_CREATED_AT = 'createdAt';
@@ -45,41 +45,44 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
     /** ПОле nested объекта участников чата */
     const RECIPIENTS_MESSAGE_FIELD = 'recipients';
 
+    /** Флаг прочитано ли сообщение или нет */
+    const RECIPIENTS_MESSAGE_IS_READ = 'recipients.isRead';
+
     /** ПОле nested объекта участников чата */
     const MEMBERS_MESSAGE_FIELD = 'chatMembers';
 
     /** ПОле nested объекта участников чата */
     const RECIPIENTS_PEOPLES_MESSAGE_FIELD = 'peoples';
 
-    const CHAT_MEMBERS_ID_FIELD = 'chatMembers.id';
-    const CHAT_MEMBERS_NAME_FIELD = 'chatMembers.name';
-    const CHAT_MEMBERS_NAME_NGRAM_FIELD = 'chatMembers.name._nameNgram';
-    const CHAT_MEMBERS_NAME_TRANSLIT_FIELD = 'chatMembers.name._translit';
-    const CHAT_MEMBERS_NAME_TRANSLIT_NGRAM_FIELD = 'chatMembers.name._translitNgram';
-    const CHAT_MEMBERS_WORDS_NAME_FIELD = 'chatMembers.name._wordsName';
-    const CHAT_MEMBERS_WORDS_NAME_TRANSLIT_FIELD = 'chatMembers.name._wordsTranslitName';
-    const CHAT_MEMBERS_EXACT_NAME_FIELD = 'chatMembers.name._exactName';
-    const CHAT_MEMBERS_PREFIX_NAME_FIELD = 'chatMembers.name._prefix';
-    const CHAT_MEMBERS_PREFIX_NAME_TRANSLIT_FIELD = 'chatMembers.name._prefixTranslit';
-    const CHAT_MEMBERS_STANDARD_NAME_FIELD = 'chatMembers.name._standard';
+    const CHAT_MEMBERS_ID_FIELD = 'recipients.id';
+    const CHAT_MEMBERS_NAME_FIELD = 'recipients.name';
+    const CHAT_MEMBERS_NAME_NGRAM_FIELD = 'recipients.name._nameNgram';
+    const CHAT_MEMBERS_NAME_TRANSLIT_FIELD = 'recipients.name._translit';
+    const CHAT_MEMBERS_NAME_TRANSLIT_NGRAM_FIELD = 'recipients.name._translitNgram';
+    const CHAT_MEMBERS_WORDS_NAME_FIELD = 'recipients.name._wordsName';
+    const CHAT_MEMBERS_WORDS_NAME_TRANSLIT_FIELD = 'recipients.name._wordsTranslitName';
+    const CHAT_MEMBERS_EXACT_NAME_FIELD = 'recipients.name._exactName';
+    const CHAT_MEMBERS_PREFIX_NAME_FIELD = 'recipients.name._prefix';
+    const CHAT_MEMBERS_PREFIX_NAME_TRANSLIT_FIELD = 'recipients.name._prefixTranslit';
+    const CHAT_MEMBERS_STANDARD_NAME_FIELD = 'recipients.name._standard';
 
     # Русский транслит поля name
-    const CHAT_MEMBERS_RUS_NAME_FIELD = 'chatMembers.rusName';
+    const CHAT_MEMBERS_RUS_NAME_FIELD = 'recipients.rusName';
 
 
-    const CHAT_MEMBERS_SURNAME_FIELD = 'chatMembers.surname';
-    const CHAT_MEMBERS_SURNAME_NGRAM_FIELD = 'chatMembers.surname._nameNgram';
-    const CHAT_MEMBERS_SURNAME_TRANSLIT_FIELD = 'chatMembers.surname._translit';
-    const CHAT_MEMBERS_SURNAME_TRANSLIT_NGRAM_FIELD = 'chatMembers.surname._translitNgram';
-    const CHAT_MEMBERS_WORDS_SURNAME_FIELD = 'chatMembers.surname._wordsName';
-    const CHAT_MEMBERS_WORDS_SURNAME_TRANSLIT_FIELD = 'chatMembers.surname._wordsTranslitName';
-    const CHAT_MEMBERS_EXACT_SURNAME_FIELD = 'chatMembers.surname._exactName';
-    const CHAT_MEMBERS_PREFIX_SURNAME_FIELD = 'chatMembers.surname._prefix';
-    const CHAT_MEMBERS_PREFIX_SURNAME_TRANSLIT_FIELD = 'chatMembers.surname._prefixTranslit';
-    const CHAT_MEMBERS_STANDARD_SURNAME_FIELD = 'chatMembers.surname._standard';
+    const CHAT_MEMBERS_SURNAME_FIELD = 'recipients.surname';
+    const CHAT_MEMBERS_SURNAME_NGRAM_FIELD = 'recipients.surname._nameNgram';
+    const CHAT_MEMBERS_SURNAME_TRANSLIT_FIELD = 'recipients.surname._translit';
+    const CHAT_MEMBERS_SURNAME_TRANSLIT_NGRAM_FIELD = 'recipients.surname._translitNgram';
+    const CHAT_MEMBERS_WORDS_SURNAME_FIELD = 'recipients.surname._wordsName';
+    const CHAT_MEMBERS_WORDS_SURNAME_TRANSLIT_FIELD = 'recipients.surname._wordsTranslitName';
+    const CHAT_MEMBERS_EXACT_SURNAME_FIELD = 'recipients.surname._exactName';
+    const CHAT_MEMBERS_PREFIX_SURNAME_FIELD = 'recipients.surname._prefix';
+    const CHAT_MEMBERS_PREFIX_SURNAME_TRANSLIT_FIELD = 'recipients.surname._prefixTranslit';
+    const CHAT_MEMBERS_STANDARD_SURNAME_FIELD = 'recipients.surname._standard';
 
     # Русский транслит поля surname
-    const CHAT_MEMBERS_RUS_SURNAME_FIELD = 'chatMembers.rusSurname';
+    const CHAT_MEMBERS_RUS_SURNAME_FIELD = 'recipients.rusSurname';
 
     /**
      * Получаем поля для поиска

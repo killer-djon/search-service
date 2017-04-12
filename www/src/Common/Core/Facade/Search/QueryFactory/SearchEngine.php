@@ -2,6 +2,7 @@
 /**
  * Поисковый движок для работы с еластиком
  */
+
 namespace Common\Core\Facade\Search\QueryFactory;
 
 use Common\Core\Constants\Location;
@@ -313,6 +314,20 @@ class SearchEngine implements SearchEngineInterface
         } catch (ElasticsearchException $e) {
             throw new ElasticsearchException($e);
         }
+    }
+
+    /**
+     * Вывод кол-ва позиций по запросу
+     *
+     * @param \Elastica\Query $elasticQuery An \Elastica\Query object
+     * @param string $context Search type
+     * @return int
+     */
+    public function getCountDocuments(\Elastica\Query $elasticQuery, $context = null)
+    {
+        $elasticType = $this->_getElasticType($context, $context);
+
+        return $elasticType->count($elasticQuery);
     }
 
     /**

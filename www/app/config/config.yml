@@ -3,7 +3,6 @@ imports:
     - { resource: security.yml }
     - { resource: services.yml }
     - { resource: custom/fos_rest.yml }
-    - { resource: custom/mongodb.yml }
     - { resource: custom/snc_redis.yml }
     - { resource: custom/jms_serializer.yml }
     - { resource: custom/fos_elastica.yml }

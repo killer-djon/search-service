@@ -48,6 +48,9 @@ abstract class ChatMessageMapping extends AbstractSearchMapping
     /** Флаг прочитано ли сообщение или нет */
     const RECIPIENTS_MESSAGE_IS_READ = 'recipients.isRead';
 
+    /** Флаг удалено ли сообщение или нет */
+    const RECIPIENTS_MESSAGE_IS_DELETED = 'recipients.isDeleted';
+
     /** ПОле nested объекта участников чата */
     const MEMBERS_MESSAGE_FIELD = 'chatMembers';
 

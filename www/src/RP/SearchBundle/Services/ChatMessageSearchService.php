@@ -48,7 +48,7 @@ class ChatMessageSearchService extends AbstractSearchService
             $this->_queryFilterFactory->getTermsFilter(
                 ChatMessageMapping::RECIPIENTS_MESSAGE_IS_READ,
                 [false]
-            )
+            ),
         ]);
 
         $queryMatchResults = $this->createQuery();
@@ -143,16 +143,16 @@ class ChatMessageSearchService extends AbstractSearchService
                 $this->_queryFilterFactory->getTermFilter([
                     AbstractTransformer::createCompleteKey([
                         ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD,
-                        PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM
-                    ]) => $userId
+                        PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
+                    ]) => $userId,
                 ]),
             ]),
             $this->_queryFilterFactory->getScriptFilter(
                 $this->_scriptFactory->getScript("doc[recipientId].values.length > 1", [
                     "recipientId" => AbstractTransformer::createCompleteKey([
                         ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD,
-                        PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM
-                    ])
+                        PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
+                    ]),
                 ])
             ),
         ]);

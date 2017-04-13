@@ -330,6 +330,7 @@ class SearchUsersController extends ApiController
                     unset($userContext['relations']);
                 }
 
+                $userContext = $this->revertToScalarTagsMatchFields($userContext);
                 return $this->_handleViewWithData($userContext);
             }
 
@@ -340,6 +341,7 @@ class SearchUsersController extends ApiController
                     unset($userContext['relations']);
                 }
 
+                $userContext = $this->revertToScalarTagsMatchFields($userContext);
                 return $this->_handleViewWithData($userContext);
             }
 

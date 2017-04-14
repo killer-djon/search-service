@@ -75,19 +75,25 @@ class SearchChatMessageController extends ApiController
                     $userId
                 );
 
+                $totalHits = $chatSearchService->getTotalHits();
+                $totalHits['totalHits'] = count($chatMessages[ChatMessageMapping::CONTEXT]);
+
                 return $this->_handleViewWithData(
                     [
                         'messages' => $chatMessages[ChatMessageMapping::CONTEXT],
-                        'info'     => $chatSearchService->getTotalHits(),
+                        'info'     => $totalHits,
                     ],
                     null,
                     !self::INCLUDE_IN_CONTEXT
                 );
             }
 
+            $totalHits = $chatSearchService->getTotalHits();
+            $totalHits['totalHits'] = count($chatMessages[ChatMessageMapping::CONTEXT]);
+
             return $this->_handleViewWithData(array_merge(
                 [
-                    'info' => $chatSearchService->getTotalHits(),
+                    'info' => $totalHits,
                 ],
                 [
                     'pagination' => $chatSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),

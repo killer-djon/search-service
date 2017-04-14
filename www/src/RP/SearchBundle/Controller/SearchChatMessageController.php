@@ -57,7 +57,7 @@ class SearchChatMessageController extends ApiController
             foreach ($messages[ChatMessageMapping::CONTEXT] as &$chatMessage) {
                 $key = array_search($userId, array_column($chatMessage['recipients'], 'id'));
 
-                if ($chatMessage['recipients'][$key]['id'] == $userId && $chatMessage['recipients'][$key]['isDeleted'] == false) {
+                if ($chatMessage['recipients'][$key]['id'] == $userId && isset($chatMessage['recipients'][$key]['isDeleted']) && $chatMessage['recipients'][$key]['isDeleted'] == false) {
                     $chatMessages[ChatMessageMapping::CONTEXT][] = $chatMessage;
                 }
             }
@@ -258,7 +258,7 @@ class SearchChatMessageController extends ApiController
             foreach ($messages[ChatMessageMapping::CONTEXT] as &$chatMessage) {
                 $key = array_search($userId, array_column($chatMessage['recipients'], 'id'));
 
-                if ($chatMessage['recipients'][$key]['id'] == $userId && $chatMessage['recipients'][$key]['isDeleted'] != true) {
+                if ($chatMessage['recipients'][$key]['id'] == $userId && isset($chatMessage['recipients'][$key]['isDeleted']) && $chatMessage['recipients'][$key]['isDeleted'] != true) {
                     $chatMessage['count'] = $chatSearchService->getCountUnreadMessages($userId, $chatMessage['chatId']);
                     $chatMessages[ChatMessageMapping::CONTEXT][] = $chatMessage;
                     $totalMessageCount += $chatMessage['messages_count'];

@@ -29,6 +29,56 @@ class ChatMessageSearchService extends AbstractSearchService
     const DEFAULT_MESSAGES_COUNT = 3;
 
     /**
+     * Получаем список сообщений данного чата
+     * список сообщений должен быть отфильтрован по удалению или нет
+     *
+     * @param string $recipientId ID участника чата
+     * @param string $chatId ID чата для которого выводим сообщения
+     * @param int $skip Пропуск кол-ва (по идее нет необходимости в этом, разве что предусмотрим сущность чатов)
+     * @param int|null $count Кол-ва сообщщений в найденно чате
+     * @return array
+     */
+    public function getMessagesByChatId($recipientId, $chatId, $skip = 0, $count = null)
+    {
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getTermFilter([
+                ChatMessageMapping::CHAT_ID_FIELD => $chatId,
+            ]),
+            $this->_queryFilterFactory->getTermsFilter(
+                ChatMessageMapping::CHAT_MEMBERS_ID_FIELD,
+                [$recipientId]
+            ),
+        ]);
+
+        $queryMatchResults = $this->createQuery($skip, $count);
+
+        return $this->searchDocuments($queryMatchResults);
+    }
+
+    public function getCountUnDeleteMessages($recipientId, $chatId)
+    {
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getTermFilter([
+                ChatMessageMapping::CHAT_ID_FIELD => $chatId,
+            ]),
+            $this->_queryFilterFactory->getBoolAndFilter([
+                $this->_queryFilterFactory->getTermsFilter(
+                    ChatMessageMapping::CHAT_MEMBERS_ID_FIELD,
+                    [$recipientId]
+                ),
+                $this->_queryFilterFactory->getTermsFilter(
+                    ChatMessageMapping::RECIPIENTS_MESSAGE_IS_DELETED,
+                    [true]
+                )
+            ])
+        ]);
+
+        $queryMatchResults = $this->createQuery();
+
+        return $this->getCountDocuments($queryMatchResults);
+    }
+
+    /**
      * Получаем кол-во непрочитанных сообщений в каждом чате для пользователя
      *
      * @param string $recipientId ID участника
@@ -41,14 +91,16 @@ class ChatMessageSearchService extends AbstractSearchService
             $this->_queryFilterFactory->getTermFilter([
                 ChatMessageMapping::CHAT_ID_FIELD => $chatId,
             ]),
-            $this->_queryFilterFactory->getTermsFilter(
-                ChatMessageMapping::CHAT_MEMBERS_ID_FIELD,
-                [$recipientId]
-            ),
-            $this->_queryFilterFactory->getTermsFilter(
-                ChatMessageMapping::RECIPIENTS_MESSAGE_IS_READ,
-                [false]
-            ),
+            $this->_queryFilterFactory->getBoolAndFilter([
+                $this->_queryFilterFactory->getTermsFilter(
+                    ChatMessageMapping::CHAT_MEMBERS_ID_FIELD,
+                    [$recipientId]
+                ),
+                $this->_queryFilterFactory->getTermsFilter(
+                    ChatMessageMapping::RECIPIENTS_MESSAGE_IS_READ,
+                    [false]
+                )
+            ])
         ]);
 
         $queryMatchResults = $this->createQuery();
@@ -201,9 +253,9 @@ class ChatMessageSearchService extends AbstractSearchService
                             ChatMessageMapping::CHAT_ID_FIELD,
                             ChatMessageMapping::CHAT_CREATED_AT,
                             ChatMessageMapping::CHAT_IS_DIALOG,
+                            ChatMessageMapping::RECIPIENTS_MESSAGE_IS_DELETED,
                             ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD,
-                        ],
-                        1
+                        ], 1
                     )->setSort([
                         ChatMessageMapping::MESSAGE_SEND_AT_FIELD => SortingOrder::SORTING_DESC,
                     ])

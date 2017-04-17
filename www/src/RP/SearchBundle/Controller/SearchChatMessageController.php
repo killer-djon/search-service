@@ -55,6 +55,7 @@ class SearchChatMessageController extends ApiController
 
             $chatMessages = [];
             foreach ($messages[ChatMessageMapping::CONTEXT] as &$chatMessage) {
+
                 $key = array_search($userId, array_column($chatMessage['recipients'], 'id'));
                 $isDeleted = (isset($chatMessage['recipients'][$key]['isDeleted']) ? $chatMessage['recipients'][$key]['isDeleted'] : false);
 
@@ -268,15 +269,18 @@ class SearchChatMessageController extends ApiController
             if (empty($messages)) {
                 return $this->_handleViewWithData([]);
             }
-
+            
             $chatMessages = [];
             $totalMessageCount = 0;
             foreach ($messages[ChatMessageMapping::CONTEXT] as &$chatMessage) {
-                $key = array_search($userId, array_column($chatMessage['recipients'], 'id'));
 
-                $isDeleted = (isset($chatMessage['recipients'][$key]['isDeleted']) ? $chatMessage['recipients'][$key]['isDeleted'] : false);
-
-                if ($chatMessage['recipients'][$key]['id'] == $userId && $isDeleted != true) {
+                $countUndelete = $chatSearchService->getCountUnDeleteMessages($userId, $chatMessage['chatId']);
+                /**
+                 * Проверяем равно ли кол-во сообщений в чате
+                 * с кол-ом удаленных, если да - это означаем что ым удалили чат
+                 */
+                if( $countUndelete < $chatMessage['messages_count'] )
+                {
                     $chatMessage['count'] = $chatSearchService->getCountUnreadMessages($userId, $chatMessage['chatId']);
                     $chatMessages[ChatMessageMapping::CONTEXT][] = $chatMessage;
                     $totalMessageCount += $chatMessage['messages_count'];

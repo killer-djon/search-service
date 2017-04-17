@@ -287,6 +287,10 @@ class SearchChatMessageController extends ApiController
                 }
             }
 
+            if (empty($chatMessages)) {
+                return $this->_handleViewWithData([]);
+            }
+
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
 
                 $chatMessages[ChatMessageMapping::CONTEXT] = $chatSearchService->chatMessageTransformer->transform(

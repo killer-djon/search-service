@@ -27,4 +27,16 @@ abstract class RusPlaceSearchMapping extends PlaceSearchMapping
         ]);
     }
 
+    /**
+     * Собираем фильтр для поиска
+     *
+     * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
+     * @return array
+     */
+    public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
+    {
+        return self::getMarkersSearchFilter($filterFactory, $userId);
+    }
+
 }

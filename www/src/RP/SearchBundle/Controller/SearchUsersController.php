@@ -318,7 +318,7 @@ class SearchUsersController extends ApiController
                      * Как всегда говнокод для быдло андройда
                      * надо будет выпилить при использовании только 4 версии и далее
                      */
-                    $userContext = $this->excludeEmptyValue($userContext);
+                    //$userContext = $this->excludeEmptyValue($userContext);
 
                     if (!isset($userContext['helpOffers'])) {
                         $userContext['helpOffers'] = [];
@@ -330,6 +330,7 @@ class SearchUsersController extends ApiController
                     unset($userContext['relations']);
                 }
 
+                $userContext = $this->revertToScalarTagsMatchFields($userContext);
                 return $this->_handleViewWithData($userContext);
             }
 
@@ -340,6 +341,7 @@ class SearchUsersController extends ApiController
                     unset($userContext['relations']);
                 }
 
+                $userContext = $this->revertToScalarTagsMatchFields($userContext);
                 return $this->_handleViewWithData($userContext);
             }
 

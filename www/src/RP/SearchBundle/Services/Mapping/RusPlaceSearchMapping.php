@@ -27,4 +27,18 @@ abstract class RusPlaceSearchMapping extends PlaceSearchMapping
         ]);
     }
 
+    /**
+     * Собираем фильтр для поиска
+     *
+     * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
+     * @return array
+     */
+    public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
+    {
+        return array_merge(parent::getMatchSearchFilter($filterFactory, $userId), [
+            $filterFactory->getTermFilter([self::IS_RUSSIAN_FIELD => true]),
+        ]);
+    }
+
 }

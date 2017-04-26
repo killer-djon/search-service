@@ -119,8 +119,8 @@ abstract class ApiController extends FOSRestController
      */
     protected function setCurrentRequest(Request $request)
     {
-        /** @var ID пользователя */
-        $this->requestUserId = $request->get(RequestConstant::USER_ID_PARAM, RequestConstant::NULLED_PARAMS);
+        /** @var ID пользователя из объекта security (авторизация по токену) */
+        $this->requestUserId = $this->getUser()->getUsername();
         $this->requestCityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
         $this->_request = $request;
 

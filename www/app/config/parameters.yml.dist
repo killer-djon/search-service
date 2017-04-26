@@ -11,10 +11,16 @@ parameters:
     mailer_port: 25
     mailer_security: null
 
-    mongodb.main_storage.database: rp_main
-    mongodb.token_storage.database: rp_token
+    mongodb.main_storage: '%mongodb.dsn%'
+    mongodb.main_storage.database: rp_com
+    mongodb.main_storage.user_collection: UserAccount
+
+    mongodb.token_storage: '%mongodb.dsn%'
+    mongodb.token_storage.database: rp_com_token
+    mongodb.token_storage.token_collection: Token
     
     redis.host: localhost
     redis.port: 6379
+
     elasticsearch.host: 172.28.128.3
     elasticsearch.port: 9200

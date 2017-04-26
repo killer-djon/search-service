@@ -1,0 +1,21 @@
+# надо потом интегрировать в сервис
+# это сервисы для авторизации по токену
+security:
+    providers:
+        token_provider:
+            id: common.security.api_token_user_provider
+
+    firewalls:
+        anonymous_area:
+            pattern: ^/api/anonymous_example$
+            security: false
+
+        secured_area:
+            pattern: ^/api
+            stateless: true
+            simple_preauth:
+                authenticator: common.security.api_token_authenticator
+            provider: token_provider
+
+    access_control:
+        - { path: ^/api, roles: ROLE_USER }

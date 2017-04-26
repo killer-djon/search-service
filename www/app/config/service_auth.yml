@@ -1,0 +1,20 @@
+# надо потом интегрировать в сервис
+# это сервисы для авторизации по токену
+services:
+    # Simple Аутентификация по токену
+    common.security.api_token_authenticator:
+        class: Common\Security\ApiTokenAuthenticator
+        public: false
+
+    # UserProvider для вытаскивания аутентификации из MongoDB
+    common.security.api_token_user_provider:
+        class: Common\Security\ApiTokenUserProvider
+        arguments:
+            - '%mongodb.main_storage%'
+            - '%mongodb.main_storage.database%'
+            - '%mongodb.main_storage.user_collection%'
+            - '%mongodb.token_storage%'
+            - '%mongodb.token_storage.database%'
+            - '%mongodb.token_storage.token_collection%'
+        calls:
+            - ['setTranslator', ["@translator"]]

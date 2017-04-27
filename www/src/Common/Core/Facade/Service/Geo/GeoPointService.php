@@ -27,6 +27,9 @@ class GeoPointService implements GeoPointServiceInterface
     /** Максимальное значение для долготы координаты */
     const LONGITUDE_MAX = 180.0;
 
+    /** Радиус по умолчанию для карты */
+    const DEFAULT_MARKERS_MAP_RADIUS_M = 18000;
+
     /* ---------------- \ Constraints parameters ---------------- */
 
     /* ---------------- Error messages ---------------- */
@@ -138,7 +141,7 @@ class GeoPointService implements GeoPointServiceInterface
      */
     private function _setRadius($radius)
     {
-        $this->_radius = $radius;
+        $this->_radius = !is_null($radius) && !empty($radius) ? (int)$radius : self::DEFAULT_MARKERS_MAP_RADIUS_M;
     }
 
     /**

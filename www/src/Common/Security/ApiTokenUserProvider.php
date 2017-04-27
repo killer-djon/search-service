@@ -3,6 +3,7 @@
 namespace Common\Security;
 
 use Symfony\Component\Security\Core\Exception\BadCredentialsException;
+use Symfony\Component\Security\Core\Exception\UsernameNotFoundException;
 use Symfony\Component\Security\Core\User\User;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
@@ -52,6 +53,7 @@ class ApiTokenUserProvider implements UserProviderInterface
     {
         $this->mainStorage = new \MongoClient($mainDsn);
         $this->userCollection = $this->mainStorage->selectDB($mainDb)->selectCollection($userCollection);
+
         $this->tokenStorage = new \MongoClient($tokenDsn);
         $this->tokenCollection = $this->tokenStorage->selectDB($tokenDb)->selectCollection($tokenCollection);
     }
@@ -67,6 +69,15 @@ class ApiTokenUserProvider implements UserProviderInterface
         $this->translator = $translator;
     }
 
+    /**
+     * Находим пользователя в базе по его tokenId
+     * если такого пользовтаеля нет в базе
+     * тогда генерим исключение
+     *
+     * @param string $username TokenID пользователя полученный из заголовка
+     * @throws BadCredentialsException
+     * @return User
+     */
     public function loadUserByUsername($username)
     {
         $res = $this->tokenCollection->findOne([self::TOKEN_FIELD => new \MongoId($username)]);

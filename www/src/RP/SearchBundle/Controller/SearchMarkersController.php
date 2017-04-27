@@ -3,6 +3,7 @@
  * Контроллер поиска маркеров
  * по нескольким типам (например: people,places)
  */
+
 namespace RP\SearchBundle\Controller;
 
 use Common\Core\Constants\Location;
@@ -44,19 +45,19 @@ class SearchMarkersController extends ApiController
                 // получаем порцию данных из ячайки класстера
                 $geoHashCell = $request->get(Location::GEO_HASH_CELL_PARAM);
                 $geoHashCell = (!is_null($geoHashCell) && !empty($geoHashCell) ? $geoHashCell : null);
-
-                if (mb_strlen($geoHashCell) <= 0) {
-                    if (is_null($this->getGeoPoint()->getRadius())) {
-                        return $this->_handleViewWithError(new BadRequestHttpException('Радиус должен быть установлен'), Response::HTTP_BAD_REQUEST);
-                    }
-                }
             }
 
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+            /** @var int Теперь версия по умолчанию везде будет 4, в начале июЛя выпилим костыли для третьей версии */
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
+
             // получаем фильтры и парсим их в нужный вид для дальнейшей работы
             $types = $this->getParseFilters($filterTypes);
 
             $userId = $this->getRequestUserId();
+
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
+            $searchText = !empty($searchText) ? $searchText : RequestConstant::NULLED_PARAMS;
 
             // получаем сервис многотипного поиска
             $markersSearchService = $this->getCommonSearchService();
@@ -71,10 +72,11 @@ class SearchMarkersController extends ApiController
                 $userId,
                 $types,
                 $this->getGeoPoint(),
+                $searchText,
                 $isCluster,
                 $geoHashCell,
                 $this->getSkip(),
-                ( $isCluster ? 1 : ($request->get(RequestConstant::SEARCH_LIMIT_PARAM, RequestConstant::DEFAULT_SEARCH_UNLIMIT)) )
+                ($isCluster ? 1 : ($request->get(RequestConstant::SEARCH_LIMIT_PARAM, RequestConstant::DEFAULT_SEARCH_UNLIMIT)))
             );
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {

@@ -3,6 +3,7 @@
  * Общий сервис поиска
  * с помощью которого будем искать как глобально так и маркеры
  */
+
 namespace RP\SearchBundle\Services;
 
 use Common\Core\Constants\SortingOrder;
@@ -350,7 +351,8 @@ class CommonSearchService extends AbstractSearchService
      *
      * @param string $userId
      * @param array $filters По каким типам делаем поиск
-     * @param \Common\Core\Facade\Service\Geo\GeoPointServiceInterface $point ТОчка координат
+     * @param GeoPointServiceInterface $point ТОчка координат
+     * @param string $searchText Поисковая строка запроса
      * @param bool $isCluster (default: false) выводить ли класстерные данные
      * @param string|null $geoHashCell GeoHash ячайка
      * @param int $skip (default: 0)
@@ -361,6 +363,7 @@ class CommonSearchService extends AbstractSearchService
         $userId,
         array $filters,
         GeoPointServiceInterface $point,
+        $searchText = null,
         $isCluster = false,
         $geoHashCell = null,
         $skip = 0,
@@ -457,17 +460,51 @@ class CommonSearchService extends AbstractSearchService
                     )
                 );
 
-                /**
-                 * Получаем сформированный объект запроса
-                 * когда запрос многотипный НЕТ необходимости
-                 * указывать skip и count
-                 */
-                $queryMatchResults[$keyType] = $this->createMatchQuery(
-                    null,
-                    $typeFields,
-                    $skip,
-                    $count
-                );
+                if (!is_null($searchText) && !empty($searchText)) {
+                    $searchText = mb_strtolower($searchText);
+                    $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
+
+                    $slopPhrase = array_filter(explode(" ", $searchText));
+
+                    if (count($slopPhrase) > 1) {
+
+                        /**
+                         * Поиск по точному воспадению искомого словосочетания
+                         */
+                        $queryMust = $this->filterTypes[$keyType]::getSearchConditionQueryMust($this->_queryConditionFactory, $searchText);
+
+                        if (!empty($queryMust)) {
+                            $this->setConditionQueryMust($queryMust);
+                        }
+
+                    } else {
+                        $queryShould = $this->filterTypes[$keyType]::getSearchConditionQueryShould(
+                            $this->_queryConditionFactory, $searchText
+                        );
+
+                        if (!empty($queryShould)) {
+                            /**
+                             * Ищем по частичному совпадению поисковой фразы
+                             */
+
+                            $this->setConditionQueryShould($queryShould);
+                        }
+                    }
+
+                    $queryMatchResults[$keyType] = $this->createQuery($skip, $count);
+                } else {
+                    /**
+                     * Получаем сформированный объект запроса
+                     * когда запрос многотипный НЕТ необходимости
+                     * указывать skip и count
+                     */
+                    $queryMatchResults[$keyType] = $this->createMatchQuery(
+                        null,
+                        $typeFields,
+                        $skip,
+                        $count
+                    );
+                }
             }
 
             /**

@@ -267,15 +267,16 @@ class SearchUsersController extends ApiController
     public function searchUsersByIdAction(Request $request, $userId)
     {
         $peopleSearchService = $this->getPeopleSearchService();
-        $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+        $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
 
         try {
-            $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $userId);
+            //$targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $userId);
+            $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $this->getRequestUserId());
 
             $userContext = null;
-            if ($targetUserId != $userId) {
+            if ($targetUserId != $this->getRequestUserId()) {
 
-                $userContext = $peopleSearchService->searchProfileById($userId, $targetUserId, $this->getGeoPoint());
+                $userContext = $peopleSearchService->searchProfileById($this->getRequestUserId(), $targetUserId, $this->getGeoPoint());
                 $userContext = !empty($userContext[PeopleSearchMapping::CONTEXT]) ? current($userContext[PeopleSearchMapping::CONTEXT]) : [];
 
                 if (isset($userContext['matchingInterests']) && !empty($userContext['matchingInterests'])) {
@@ -293,7 +294,7 @@ class SearchUsersController extends ApiController
                 $userContext = $peopleSearchService->searchRecordById(
                     PeopleSearchMapping::CONTEXT,
                     PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
-                    $userId
+                    $this->getRequestUserId()
                 );
             }
 
@@ -325,8 +326,8 @@ class SearchUsersController extends ApiController
                     }
                 }
 
-                if ($userId != $targetUserId && (isset($userContext['relations']) && !empty($userContext['relations']))) {
-                    $userContext['relation'] = $this->setRelations($userContext['relations'], $userId);
+                if ($this->getRequestUserId() != $targetUserId && (isset($userContext['relations']) && !empty($userContext['relations']))) {
+                    $userContext['relation'] = $this->setRelations($userContext['relations'], $this->getRequestUserId());
                     unset($userContext['relations']);
                 }
 
@@ -336,8 +337,8 @@ class SearchUsersController extends ApiController
 
             if (!is_null($userContext)) {
                 $this->restructLocationField($userContext);
-                if ($userId != $targetUserId && (isset($userContext['relations']) && !empty($userContext['relations']))) {
-                    $userContext['relation'] = $this->setRelations($userContext['relations'], $userId);
+                if ($this->getRequestUserId() != $targetUserId && (isset($userContext['relations']) && !empty($userContext['relations']))) {
+                    $userContext['relation'] = $this->setRelations($userContext['relations'], $this->getRequestUserId());
                     unset($userContext['relations']);
                 }
 

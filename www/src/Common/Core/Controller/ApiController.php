@@ -160,6 +160,7 @@ abstract class ApiController extends FOSRestController
      */
     public function getRequestUserId()
     {
+
         if (is_null($this->requestUserId)) {
             return $this->_handleViewWithError(
                 new BadRequestHttpException(

@@ -1,4 +1,5 @@
 <?php
+
 namespace Common\Core\Facade\Service\Geo;
 
 /**
@@ -141,7 +142,19 @@ class GeoPointService implements GeoPointServiceInterface
      */
     private function _setRadius($radius)
     {
-        $this->_radius = !is_null($radius) && !empty($radius) ? (int)$radius : self::DEFAULT_MARKERS_MAP_RADIUS_M;
+        $this->_radius = (int)$radius;
+    }
+
+    /**
+     * Устанавливаем радиус по умолчанию
+     *
+     * @param int|null $radius
+     */
+    public function setRadius($radius = null)
+    {
+        if (!is_null($radius)) {
+            $this->_setRadius($radius);
+        }
     }
 
     /**

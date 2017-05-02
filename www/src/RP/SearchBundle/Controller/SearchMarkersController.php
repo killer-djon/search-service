@@ -9,6 +9,7 @@ namespace RP\SearchBundle\Controller;
 use Common\Core\Constants\Location;
 use Common\Core\Controller\ApiController;
 use Common\Core\Exceptions\SearchServiceException;
+use Common\Core\Facade\Service\Geo\GeoPointService;
 use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
@@ -67,11 +68,16 @@ class SearchMarkersController extends ApiController
                 $markersSearchService->setClusterGrouped();
             }
 
+            $point = $this->getGeoPoint();
+            if (is_null($point->getRadius())) {
+                $point->setRadius(GeoPointService::DEFAULT_MARKERS_MAP_RADIUS_M);
+            }
+
             // выполняем поиск по маркерам
             $markers = $markersSearchService->searchMarkersByFilters(
                 $userId,
                 $types,
-                $this->getGeoPoint(),
+                $point,
                 $searchText,
                 $isCluster,
                 $geoHashCell,

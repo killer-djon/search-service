@@ -318,89 +318,85 @@ class PlacesSearchService extends AbstractSearchService
      */
     public function getPlaceById($userId, $context, $fieldId, $recordId, GeoPointServiceInterface $point)
     {
-        if( $userId == 0 )
-        {
-            $this->setFilterQuery([
-                $this->_queryFilterFactory->getBoolOrFilter([
-                    $this->_queryFilterFactory->getBoolAndFilter([
-                        $this->_queryFilterFactory->getBoolOrFilter([
-                            $this->_queryFilterFactory->getGtFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0),
-                            $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
-                        ]),
-                        $this->_queryFilterFactory->getTermFilter([
-                            PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK
-                        ])
-                    ]),
-                    $this->_queryFilterFactory->getBoolOrFilter([
-                        $this->_queryFilterFactory->getBoolAndFilter([
-                            $this->_queryFilterFactory->getNotFilter(
-                                $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
-                            ),
-                            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
-                            $this->_queryFilterFactory->getNotFilter(
-                                $this->_queryFilterFactory->getTermFilter([
-                                    PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DELETED
-                                ])
-                            )
-                        ])
-                    ])
+        $filter = $this->_queryFilterFactory;
+
+        if(empty($userId)) {
+
+            $discount = $filter->getBoolOrFilter([
+                $filter->getBoolOrFilter([
+                    $filter->getGtFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0),
+                    $filter->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
+                ]),
+                $filter->getBoolAndFilter([
+                    $filter->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
+                    $filter->getNotFilter(
+                        $filter->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
+                    )
                 ])
             ]);
 
-            /** добавляем к условию поиска рассчет расстояния */
-            $this->setGeoPointConditions($point, PlaceSearchMapping::class);
+            $visible = $filter->getTermFilter([PlaceSearchMapping::VISIBLE_FIELD => Visible::ALL]);
 
-            return $this->searchRecordById($context, $fieldId, $recordId);
-        }
+            $moderate = $filter->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK]);
 
-        /** получаем текущего ползователя */
-        $currentUser = $this->getUserById($userId);
+            $this->setFilterQuery([
+                $filter->getBoolAndFilter([$discount, $visible, $moderate])
+            ]);
 
-        $this->setFilterQuery([
-            $this->_queryFilterFactory->getBoolOrFilter([
-                $this->_queryFilterFactory->getBoolAndFilter([
-                    $this->_queryFilterFactory->getBoolOrFilter([
-                        $this->_queryFilterFactory->getGtFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0),
-                        $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
-                    ]),
-                    $this->_queryFilterFactory->getBoolOrFilter([
-                        $this->_queryFilterFactory->getBoolAndFilter([
-                            $this->_queryFilterFactory->getNotFilter(
-                                $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId])
-                            ),
-                            $this->_queryFilterFactory->getTermFilter([
-                                PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK
-                            ])
-                        ]),
-                        $this->_queryFilterFactory->getBoolAndFilter([
-                            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
-                            $this->_queryFilterFactory->getTermsFilter(PlaceSearchMapping::MODERATION_STATUS_FIELD, [
-                                ModerationStatus::OK,
-                                ModerationStatus::DIRTY,
-                                ModerationStatus::REJECTED,
-                                ModerationStatus::RESTORED
-                            ])
-                        ])
+        } else {
+
+            /** получаем текущего ползователя */
+            $currentUser = $this->getUserById($userId);
+
+            $discount = $filter->getBoolOrFilter([
+                $filter->getBoolAndFilter([
+                    $filter->getBoolOrFilter([
+                        $filter->getGtFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0),
+                        $filter->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
                     ])
                 ]),
-                $this->_queryFilterFactory->getBoolOrFilter([
-                    $this->_queryFilterFactory->getBoolAndFilter([
-                        $this->_queryFilterFactory->getNotFilter(
-                            $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
-                        ),
-                        $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
-                        $this->_queryFilterFactory->getNotFilter(
-                            $this->_queryFilterFactory->getTermFilter([
-                                PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DELETED
-                            ])
-                        )
-                    ])
+                $filter->getBoolAndFilter([
+                    $filter->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
+                    $filter->getNotFilter(
+                        $filter->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
+                    )
                 ])
-            ])
-        ]);
+            ]);
 
-        /** добавляем к условию поиска рассчет по совпадению интересов */
-        $this->setScriptTagsConditions($currentUser, PlaceSearchMapping::class);
+            $visible = $filter->getBoolOrFilter([
+                $filter->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                $filter->getTermFilter([PlaceSearchMapping::VISIBLE_FIELD => Visible::ALL]),
+                $filter->getBoolAndFilter([
+                    $filter->getTermsFilter(PlaceSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
+                    $filter->getTermsFilter(PlaceSearchMapping::VISIBLE_FIELD, [Visible::FRIEND]),
+                ]),
+                $filter->getBoolAndFilter([
+                    $filter->getNotFilter(
+                        $filter->getTermsFilter(PlaceSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                    ),
+                    $filter->getTermsFilter(PlaceSearchMapping::VISIBLE_FIELD, [Visible::NOT_FRIEND]),
+                ]),
+            ]);
+
+            $moderate = $filter->getBoolOrFilter([
+                $filter->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK]),
+                $filter->getBoolAndFilter([
+                    $filter->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                    $filter->getTermsFilter(PlaceSearchMapping::MODERATION_STATUS_FIELD, [
+                        ModerationStatus::DIRTY,
+                        ModerationStatus::REJECTED,
+                        ModerationStatus::RESTORED,
+                    ]),
+                ]),
+            ]);
+
+            $this->setFilterQuery([
+                $filter->getBoolAndFilter([$discount, $visible, $moderate])
+            ]);
+
+            /** добавляем к условию поиска рассчет по совпадению интересов */
+            $this->setScriptTagsConditions($currentUser, PlaceSearchMapping::class);
+        }
 
         /** добавляем к условию поиска рассчет расстояния */
         $this->setGeoPointConditions($point, PlaceSearchMapping::class);

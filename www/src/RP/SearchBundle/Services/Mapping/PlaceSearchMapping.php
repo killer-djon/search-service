@@ -163,11 +163,26 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
     {
         return [
             $filterFactory->getTermFilter([self::IS_RUSSIAN_FIELD => false]),
-            $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::OK]),
             $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
             $filterFactory->getNotFilter(
                 $filterFactory->getExistsFilter(self::BONUS_FIELD)
             ),
+            $filterFactory->getBoolOrFilter([
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => $userId]),
+                    $filterFactory->getTermsFilter(self::MODERATION_STATUS_FIELD, [
+                        ModerationStatus::DIRTY,
+                        ModerationStatus::REJECTED,
+                        ModerationStatus::OK,
+                    ]),
+                ]),
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getNotFilter(
+                        $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => $userId])
+                    ),
+                    $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::OK])
+                ]),
+            ]),
         ];
     }
 

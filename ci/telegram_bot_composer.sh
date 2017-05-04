@@ -23,8 +23,10 @@ CHATS=($(curl -XGET "${GET_UPDATES}" | jq -r ".result[].message.chat.id" | sort 
 BUILD_LINK="$1"
 BUILD_ID="$2"
 SECOND_COMMIT="$3"
+DIR="$4"
 
-cd www
+cd $DIR
+
 # проверяем на наличие команд по композеру
 if [[ ! -d "vendor" && -a "composer.json" ]]; then
 	/usr/bin/php /usr/local/bin/composer install

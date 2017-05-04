@@ -25,7 +25,6 @@ SECOND_COMMIT="$2"
 BUILD_DIR="$3"
 HOME_DIR="$4"
 
-
 BRANCH_NAME=$(echo $FIRST_COMMIT | cut -d\' -f2)
 
 # Находим референс (ID тикета)

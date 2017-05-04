@@ -1,0 +1,57 @@
+variables:
+  BUILD_NAME: "BUILD-${CI_BUILD_ID}"
+  BUILD_USERNAME: "gitlab-rp"
+  BUILD_HOME_DIR: "/home/gitlab-rp"
+  BUILD_DIR: "/home/gitlab-rp/BUILDS"
+  AUTHOR: "Leshanu E"
+  ENV: "dev"
+  HOME_DIR: "/home/gitlab-rp"
+  PROJECT_DIR: "/home/gitlab-rp/search-service/www"
+
+stages:
+  - build
+  - test
+  - deploy
+  - success_deploy
+  - failure_deploy
+
+deploy_job:
+  stage: deploy
+  before_script:
+    - /bin/bash ci/telegram_bot_start.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}"
+  script:
+    - mkdir -p ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
+    - shopt -s dotglob
+    - cp -r * ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
+    - cd ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
+    - cp ci/parameters.yml.dist app/config/parameters.yml
+    - cp ci/config_dev.yml.dist app/config/config_dev.yml
+    - /bin/bash ci/telegram_bot_composer.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}" "$(git log --max-count=1 --skip=1 --pretty=format:%s)"
+    - /bin/bash ci/telegram_bot_cache.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}" ${ENV} "$(git log --max-count=1 --skip=1 --pretty=format:%s)"
+    - /bin/bash ci/telegram_bot_elastic.sh "$(git log --max-count=1 --skip=1 --pretty=format:%s)" "${CI_BUILD_ID}"
+    - /bin/bash ci/update_jira.sh "$(git log --max-count=1 --pretty=format:%s)" "$(git log --max-count=1 --skip=1 --pretty=format:%s)"
+  after_script:
+    - rm -f ${PROJECT_DIR}
+    - ln -s ${BUILD_DIR}/${BUILD_NAME}-SUCCESS ${PROJECT_DIR}
+    - /bin/bash ci/telegram_bot_end.sh "$(git log --max-count=1 --pretty=format:%s)" "$(git log --max-count=1 --skip=1 --pretty=format:%s)" "${BUILD_DIR}" "${BUILD_HOME_DIR}"
+    - rm -rf ${BUILD_HOME_DIR}/CACHE-BUILDS-API
+  only:
+    - develop
+  except:
+    - master
+    - /^GPI-.*$/
+    - /^RP-.*$/
+  variables:
+    GIT_STRATEGY: fetch
+
+
+failure_deploy_job:
+  stage: failure_deploy
+  script:
+    - if [ -d "${BUILD_DIR}/${BUILD_NAME}-SUCCESS" ]; then mv ${BUILD_DIR}/${BUILD_NAME}-SUCCESS ${BUILD_DIR}/${BUILD_NAME}-FAILURE; fi
+    - rm -f ${PROJECT_DIR}
+    - ln -s $(ls -1t ${BUILD_DIR}/ | grep SUCCESS) ${PROJECT_DIR}
+    - /bin/bash ci/telegram_bot_failure.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}"
+    - mv ${BUILD_HOME_DIR}/CACHE-BUILDS-API/* ${BUILD_DIR}/
+    - rm -rf ${BUILD_HOME_DIR}/CACHE-BUILDS-API
+  when: on_failure

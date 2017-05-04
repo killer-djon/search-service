@@ -2,6 +2,7 @@
 namespace RP\SearchBundle\Services\Mapping;
 
 use Common\Core\Constants\ModerationStatus;
+use Common\Core\Constants\Visible;
 use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Elastica\Query\MultiMatch;
@@ -15,6 +16,7 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
     const PLACE_ID_FIELD = 'id';
 
     const AUTHOR_ID_FIELD = 'author.id';
+    const AUTHOR_FRIENDS_FIELD = 'author.friendList';
 
     /** Тип места */
     const TYPE_FIELD = 'type';
@@ -161,22 +163,47 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
      */
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return [
-            $filterFactory->getTermFilter([self::IS_RUSSIAN_FIELD => false]),
-            $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
-            $filterFactory->getNotFilter(
-                $filterFactory->getExistsFilter(self::BONUS_FIELD)
-            ),
-            $filterFactory->getBoolOrFilter([
+        if (empty($userId)) {
+            $visible = $filterFactory->getTermFilter([self::VISIBLE_FIELD => Visible::ALL]);
+
+            $moderate = $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::OK]);
+        } else {
+            $visible = $filterFactory->getBoolOrFilter([
+                $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => $userId]),
+                $filterFactory->getTermFilter([self::VISIBLE_FIELD => Visible::ALL]),
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getTermsFilter(self::AUTHOR_FRIENDS_FIELD, [$userId]),
+                    $filterFactory->getTermsFilter(self::VISIBLE_FIELD, [Visible::FRIEND]),
+                ]),
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getNotFilter(
+                        $filterFactory->getTermsFilter(self::AUTHOR_FRIENDS_FIELD, [$userId])
+                    ),
+                    $filterFactory->getTermsFilter(self::VISIBLE_FIELD, [Visible::NOT_FRIEND]),
+                ]),
+            ]);
+
+            $moderate = $filterFactory->getBoolOrFilter([
                 $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::OK]),
                 $filterFactory->getBoolAndFilter([
                     $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => $userId]),
                     $filterFactory->getTermsFilter(self::MODERATION_STATUS_FIELD, [
                         ModerationStatus::DIRTY,
                         ModerationStatus::REJECTED,
+                        ModerationStatus::RESTORED,
                     ]),
                 ]),
-            ]),
+            ]);
+        }
+
+        return [
+            $filterFactory->getTermFilter([self::IS_RUSSIAN_FIELD => false]),
+            $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
+            $filterFactory->getNotFilter(
+                $filterFactory->getExistsFilter(self::BONUS_FIELD)
+            ),
+            $visible,
+            $moderate,
         ];
     }
 
@@ -191,14 +218,46 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
      */
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
+        if (empty($userId)) {
+            $visible = $filterFactory->getTermFilter([self::VISIBLE_FIELD => Visible::ALL]);
+
+            $moderate = $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::OK]);
+        } else {
+            $visible = $filterFactory->getBoolOrFilter([
+                $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => $userId]),
+                $filterFactory->getTermFilter([self::VISIBLE_FIELD => Visible::ALL]),
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getTermsFilter(self::AUTHOR_FRIENDS_FIELD, [$userId]),
+                    $filterFactory->getTermsFilter(self::VISIBLE_FIELD, [Visible::FRIEND]),
+                ]),
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getNotFilter(
+                        $filterFactory->getTermsFilter(self::AUTHOR_FRIENDS_FIELD, [$userId])
+                    ),
+                    $filterFactory->getTermsFilter(self::VISIBLE_FIELD, [Visible::NOT_FRIEND]),
+                ]),
+            ]);
+
+            $moderate = $filterFactory->getBoolOrFilter([
+                $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::OK]),
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => $userId]),
+                    $filterFactory->getTermsFilter(self::MODERATION_STATUS_FIELD, [
+                        ModerationStatus::DIRTY,
+                        ModerationStatus::REJECTED,
+                        ModerationStatus::RESTORED,
+                    ]),
+                ]),
+            ]);
+        }
+
         return [
-            $filterFactory->getNotFilter(
-                $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
-            ),
             $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
             $filterFactory->getNotFilter(
                 $filterFactory->getExistsFilter(self::BONUS_FIELD)
             ),
+            $visible,
+            $moderate,
         ];
     }
 

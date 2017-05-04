@@ -25,6 +25,8 @@ BUILD_ID="$2"
 BUILD_ENV="$3"
 SECOND_COMMIT="$4"
 
+cd www
+
 if [[ -d "vendor" ]]; then
 	/usr/bin/php app/console redis:flushall --env=$BUILD_ENV --no-interaction
 	/usr/bin/php app/console cache:clear --env=$BUILD_ENV

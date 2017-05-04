@@ -22,6 +22,7 @@ CHATS=($(curl -XGET "${GET_UPDATES}" | jq -r ".result[].message.chat.id" | sort 
 COMMIT_MSG="$1"
 BUILD_ID="$2"
 
+cd www
 # проверяем на наличие команд по еластику
 if [[ ! -n $(echo "$COMMIT_MSG" | sed -n 's/\(#elastic\)/\1/p') ]]; then
 	# split by awk - echo "$COMMIT_MSG" | awk '{split($0,types,":")} END {for(n in numbers){ print numbers[n] }}'

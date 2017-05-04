@@ -24,6 +24,7 @@ BUILD_LINK="$1"
 BUILD_ID="$2"
 SECOND_COMMIT="$3"
 
+cd www
 # проверяем на наличие команд по композеру
 if [[ ! -d "vendor" && -a "composer.json" ]]; then
 	/usr/bin/php /usr/local/bin/composer install

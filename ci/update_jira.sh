@@ -54,14 +54,14 @@ if [[ -n $(echo "$SECOND_COMMIT" | sed -n 's/\(#action\)/\1/p') ]]; then
 else
     # Get action from branch commmit
     # CI_BUILD_REF_NAME - name of the branch
-    JIRA_ACTION=$(curl -XGET -u $user:$password "https://jira.russianplace.com/rest/api/2/issue/${JIRA_ISSUE}?fields=status" | jq -r '.fields.status.name')
+    JIRA_ACTION=$(curl -XGET -u $user:$password "http://jira.russianplace.com/rest/api/2/issue/${JIRA_ISSUE}?fields=status" | jq -r '.fields.status.name')
 fi
 
 JIRA_COMMIT_MESSAGE="Push commit: ${JIRA_MESSAGE}<br /> Time commit: $(date +%Y-%m-%d:%H:%M:%S)<br> Branch name: ${BRANCH_NAME}<br> Status jira issue: ${JIRA_ACTION}"
 
-curl -D- -u $user:$password -XPUT -H "Content-Type: application/json" "https://jira.russianplace.com/rest/api/2/issue/${JIRA_ISSUE}" --data '{"update": {"comment": [{"add": {"body": "'"${JIRA_COMMIT_MESSAGE}"'"}}]},"fields": {"customfield_10100": "'"${BRANCH_NAME}"'"}}'
+curl -D- -u $user:$password -XPUT -H "Content-Type: application/json" "http://jira.russianplace.com/rest/api/2/issue/${JIRA_ISSUE}" --data '{"update": {"comment": [{"add": {"body": "'"${JIRA_COMMIT_MESSAGE}"'"}}]},"fields": {"customfield_10100": "'"${BRANCH_NAME}"'"}}'
 
-curl -D- -u $user:$password -XPOST -H "Content-Type: application/json" "https://jira.russianplace.com/rest/api/2/issue/${JIRA_ISSUE}/transitions?expand=transitions.fields" --data '{
+curl -D- -u $user:$password -XPOST -H "Content-Type: application/json" "http://jira.russianplace.com/rest/api/2/issue/${JIRA_ISSUE}/transitions?expand=transitions.fields" --data '{
 	"transition": {
 		"id": '"${TRANS[${JIRA_ACTION}]}"'
 	}

@@ -22,17 +22,17 @@ deploy_job:
   script:
     - mkdir -p ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
     - shopt -s dotglob
-    - cp -r * ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
+    - cp -rf www ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
     - cd ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
-    - cp www/ci/parameters.yml.dist app/config/parameters.yml
-    - cp www/ci/config_dev.yml.dist app/config/config_dev.yml
+    - cp www/ci/parameters.yml.dist www/app/config/parameters.yml
+    - cp www/ci/config_dev.yml.dist www/app/config/config_dev.yml
     - /bin/bash www/ci/telegram_bot_composer.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}" "$(git log --max-count=1 --skip=1 --pretty=format:%s)"
     - /bin/bash www/ci/telegram_bot_cache.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}" ${ENV} "$(git log --max-count=1 --skip=1 --pretty=format:%s)"
     - /bin/bash www/ci/telegram_bot_elastic.sh "$(git log --max-count=1 --skip=1 --pretty=format:%s)" "${CI_BUILD_ID}"
     - /bin/bash www/ci/update_jira.sh "$(git log --max-count=1 --pretty=format:%s)" "$(git log --max-count=1 --skip=1 --pretty=format:%s)"
   after_script:
     - rm -rf ${PROJECT_DIR}
-    - ln -s ${BUILD_DIR}/${BUILD_NAME}-SUCCESS ${PROJECT_DIR}
+    - ln -s ${BUILD_DIR}/${BUILD_NAME}-SUCCESS/www ${PROJECT_DIR}
     - /bin/bash www/ci/telegram_bot_end.sh "$(git log --max-count=1 --pretty=format:%s)" "$(git log --max-count=1 --skip=1 --pretty=format:%s)" "${BUILD_DIR}" "${BUILD_HOME_DIR}"
     - rm -rf ${BUILD_HOME_DIR}/CACHE-BUILDS-API
   only:
@@ -50,7 +50,7 @@ failure_deploy_job:
   script:
     - if [ -d "${BUILD_DIR}/${BUILD_NAME}-SUCCESS" ]; then mv ${BUILD_DIR}/${BUILD_NAME}-SUCCESS ${BUILD_DIR}/${BUILD_NAME}-FAILURE; fi
     - rm -rf ${PROJECT_DIR}
-    - ln -s $(ls -1t ${BUILD_DIR}/ | grep SUCCESS) ${PROJECT_DIR}
+    - ln -s $(ls -1t ${BUILD_DIR}/ | grep SUCCESS)/www ${PROJECT_DIR}
     - /bin/bash www/ci/telegram_bot_failure.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}"
     - mv ${BUILD_HOME_DIR}/CACHE-BUILDS-API/* ${BUILD_DIR}/
     - rm -rf ${BUILD_HOME_DIR}/CACHE-BUILDS-API

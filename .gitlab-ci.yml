@@ -25,7 +25,6 @@ deploy_job:
     - cp -rf www ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
     - cp ci/parameters.yml.dist ${BUILD_DIR}/${BUILD_NAME}-SUCCESS/www/app/config/parameters.yml
     - cp ci/config_dev.yml.dist ${BUILD_DIR}/${BUILD_NAME}-SUCCESS/www/app/config/config_dev.yml
-    - cd ${BUILD_DIR}/${BUILD_NAME}-SUCCESS/www
     - /bin/bash ci/telegram_bot_composer.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}" "$(git log --max-count=1 --skip=1 --pretty=format:%s)"
     - /bin/bash ci/telegram_bot_cache.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}" ${ENV} "$(git log --max-count=1 --skip=1 --pretty=format:%s)"
     - /bin/bash ci/telegram_bot_elastic.sh "$(git log --max-count=1 --skip=1 --pretty=format:%s)" "${CI_BUILD_ID}"

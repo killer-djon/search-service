@@ -49,7 +49,7 @@ failure_deploy_job:
   stage: failure_deploy
   script:
     - if [ -d "${BUILD_DIR}/${BUILD_NAME}-SUCCESS" ]; then mv ${BUILD_DIR}/${BUILD_NAME}-SUCCESS ${BUILD_DIR}/${BUILD_NAME}-FAILURE; fi
-    - rm -f ${PROJECT_DIR}
+    - rm -rf ${PROJECT_DIR}
     - ln -s $(ls -1t ${BUILD_DIR}/ | grep SUCCESS) ${PROJECT_DIR}
     - /bin/bash www/ci/telegram_bot_failure.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}"
     - mv ${BUILD_HOME_DIR}/CACHE-BUILDS-API/* ${BUILD_DIR}/

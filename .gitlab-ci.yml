@@ -31,7 +31,7 @@ deploy_job:
     - /bin/bash www/ci/telegram_bot_elastic.sh "$(git log --max-count=1 --skip=1 --pretty=format:%s)" "${CI_BUILD_ID}"
     - /bin/bash www/ci/update_jira.sh "$(git log --max-count=1 --pretty=format:%s)" "$(git log --max-count=1 --skip=1 --pretty=format:%s)"
   after_script:
-    - rm -f ${PROJECT_DIR}
+    - rm -rf ${PROJECT_DIR}
     - ln -s ${BUILD_DIR}/${BUILD_NAME}-SUCCESS ${PROJECT_DIR}
     - /bin/bash www/ci/telegram_bot_end.sh "$(git log --max-count=1 --pretty=format:%s)" "$(git log --max-count=1 --skip=1 --pretty=format:%s)" "${BUILD_DIR}" "${BUILD_HOME_DIR}"
     - rm -rf ${BUILD_HOME_DIR}/CACHE-BUILDS-API

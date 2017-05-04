@@ -3,6 +3,7 @@
  * Main controller trait
  * to manipulate with requests params
  */
+
 namespace Common\Core\Controller;
 
 use Common\Core\Constants\RequestConstant;
@@ -134,9 +135,9 @@ trait ControllerTrait
      * @var array
      */
     protected $fieldsMap = [
-        'fullname'          => 'fullName',
-        'tagsInPercent'     => 'matchingInterestsInPercents',
-        'tagsCount'         => 'tagsPct',
+        'fullname' => 'fullName',
+        'tagsInPercent' => 'matchingInterestsInPercents',
+        'tagsCount' => 'tagsPct',
         'distanceInPercent' => 'distancePct',
     ];
 
@@ -148,12 +149,13 @@ trait ControllerTrait
      * @var array
      */
     private $neededKeys = [
-        'surname'           => ' ',
-        'text'              => ' ',
-        'allCheckinsCount'  => ' ',
-        'distance'          => 0,
+        'surname' => ' ',
+        'text' => ' ',
+        'allCheckinsCount' => ' ',
+        'distance' => 0,
         'distanceInPercent' => 0,
-        'emailEnabled' => 'false'
+        'emailEnabled' => 'false',
+        'description' => ''
         //'isFriendshipRequestReceived' => 'false',
         //'isFriend' => 'false',
         //'isFollower' => 'false',
@@ -197,14 +199,14 @@ trait ControllerTrait
      * @param array
      */
     private $tagsMatchFields = [
-        'tagsInPercent'               => 'intval',
+        'tagsInPercent' => 'intval',
         'matchingInterestsInPercents' => 'intval',
-        'tagsCount'                   => 'intval',
-        'tagsPct'                     => 'intval',
-        'distanceInPercent'           => 'intval',
-        'distancePct'                 => 'intval',
-        'distance'                    => 'floatval',
-        'allCheckinsCount'  => 'intval',
+        'tagsCount' => 'intval',
+        'tagsPct' => 'intval',
+        'distanceInPercent' => 'intval',
+        'distancePct' => 'intval',
+        'distance' => 'floatval',
+        'allCheckinsCount' => 'intval',
         // ugcStat
         'placesCount' => 'intval',
         "checkinPlacesCount" => 'intval',
@@ -213,9 +215,9 @@ trait ControllerTrait
         "interestsCount" => 'intval',
         "helpOffersCount" => 'intval',
         "friendsCount" => 'intval',
-		"emailEnabled" => 'boolval'
-        
-		//'isFriendshipRequestReceived' => 'boolval',
+        "emailEnabled" => 'boolval'
+
+        //'isFriendshipRequestReceived' => 'boolval',
         //'isFriend' => 'boolval',
         //'isFollower' => 'boolval',
         //'isFriendshipRequestSent' => 'boolval',
@@ -230,8 +232,7 @@ trait ControllerTrait
      */
     public function revertToScalarTagsMatchFields(& $inputArray)
     {
-        if( empty($inputArray) )
-        {
+        if (empty($inputArray)) {
             return [];
         }
         foreach ($inputArray as $key => & $item) {
@@ -253,11 +254,9 @@ trait ControllerTrait
                     }
                 }
 
-                if( $this->tagsMatchFields[$key] == 'boolval' )
-                {
-                    $item = ( !is_bool($item) && $item == 'false' ? false : $item );
-                }else
-                {
+                if ($this->tagsMatchFields[$key] == 'boolval') {
+                    $item = (!is_bool($item) && $item == 'false' ? false : $item);
+                } else {
                     $item = call_user_func($this->tagsMatchFields[$key], $item);
                 }
 

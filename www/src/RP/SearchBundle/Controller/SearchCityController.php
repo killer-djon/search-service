@@ -5,6 +5,7 @@
  * Date: 14.11.16
  * Time: 16:21
  */
+
 namespace RP\SearchBundle\Controller;
 
 use Common\Core\Controller\ApiController;
@@ -106,6 +107,34 @@ class SearchCityController extends ApiController
             );
 
             $data = $city;
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+
+        return $this->_handleViewWithData($data);
+    }
+
+    /**
+     * Получить список порции городов
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
+     * @param string $cityId
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function getCitiesListAction(Request $request)
+    {
+        $data = [];
+
+        try {
+            $citySearchService = $this->getCitySearchService();
+            $cities = $citySearchService->getCitiesList(
+                $this->getSkip(),
+                $this->getCount()
+            );
+
+            $data = $cities;
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

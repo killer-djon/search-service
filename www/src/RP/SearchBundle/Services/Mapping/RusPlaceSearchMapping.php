@@ -22,7 +22,7 @@ abstract class RusPlaceSearchMapping extends PlaceSearchMapping
      */
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return array_merge(self::getMatchSearchFilter($filterFactory, $userId), [
+        return array_merge(parent::getMatchSearchFilter($filterFactory, $userId), [
             $filterFactory->getTermFilter([self::IS_RUSSIAN_FIELD => true]),
         ]);
     }

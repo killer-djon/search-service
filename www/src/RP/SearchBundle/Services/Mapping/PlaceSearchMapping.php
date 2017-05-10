@@ -252,6 +252,7 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
         }
 
         return [
+            $filterFactory->getTermFilter([self::IS_RUSSIAN_FIELD => false]),
             $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
             $filterFactory->getNotFilter(
                 $filterFactory->getExistsFilter(self::BONUS_FIELD)

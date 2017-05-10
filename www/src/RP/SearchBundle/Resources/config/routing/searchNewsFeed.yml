@@ -1,0 +1,14 @@
+# Routing который формирует запрос для глобального (общего поиска)
+# пример запроса /api/v1/json/newsfeed/{filter}
+RPSearchBundle_search_newsFeed:
+    path: /v{_version}/{_format}/newsfeed/{filter}
+    defaults:
+        _controller: RPSearchBundle:SearchNewsFeed:getNewsFeedByFilter
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchNewsFeed:newsfeedbyfilter.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        filter: (news|posts)

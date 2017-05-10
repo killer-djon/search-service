@@ -22,9 +22,13 @@ abstract class RusPlaceSearchMapping extends PlaceSearchMapping
      */
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return array_merge(parent::getMatchSearchFilter($filterFactory, $userId), [
-            $filterFactory->getTermFilter([self::IS_RUSSIAN_FIELD => true]),
-        ]);
+        return array_merge([
+            $filterFactory->getTermFilter([parent::IS_RUSSIAN_FIELD => false]),
+            $filterFactory->getTermFilter([parent::DISCOUNT_FIELD => 0]),
+            $filterFactory->getNotFilter(
+                $filterFactory->getExistsFilter(parent::BONUS_FIELD)
+            )
+        ], AbstractSearchMapping::getVisibleConditions($filterFactory, $userId));
     }
 
     /**
@@ -36,9 +40,7 @@ abstract class RusPlaceSearchMapping extends PlaceSearchMapping
      */
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return array_merge(parent::getMatchSearchFilter($filterFactory, $userId), [
-            $filterFactory->getTermFilter([self::IS_RUSSIAN_FIELD => true]),
-        ]);
+        return self::getMarkersSearchFilter($filterFactory, $userId);
     }
 
 }

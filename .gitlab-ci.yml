@@ -27,7 +27,6 @@ deploy_job:
     - cp -rf www/* ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
     - /bin/bash ci/telegram_bot_composer.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}" "$(git log --max-count=1 --skip=1 --pretty=format:%s)" ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
     - /bin/bash ci/telegram_bot_cache.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}" ${ENV} "$(git log --max-count=1 --skip=1 --pretty=format:%s)" ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
-    - /bin/bash ci/telegram_bot_elastic.sh "$(git log --max-count=1 --skip=1 --pretty=format:%s)" "${CI_BUILD_ID}" ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
     - /bin/bash ci/update_jira.sh "$(git log --max-count=1 --pretty=format:%s)" "$(git log --max-count=1 --skip=1 --pretty=format:%s)"
   after_script:
     - rm -rf ${PROJECT_DIR}

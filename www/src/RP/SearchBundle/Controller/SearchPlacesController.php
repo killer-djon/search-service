@@ -8,6 +8,7 @@ namespace RP\SearchBundle\Controller;
 use Common\Core\Constants\RequestConstant;
 use Common\Core\Controller\ApiController;
 use Common\Core\Exceptions\SearchServiceException;
+use RP\SearchBundle\Helper\BackwardCompatibilityHelper;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceTypeSearchMapping;
 use Symfony\Component\HttpFoundation\Request;
@@ -121,13 +122,13 @@ class SearchPlacesController extends ApiController
             /** @var string ID пользователя */
             $userId = $this->getRequestUserId();
 
-            $cityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
-
-            /** @var string Текст запроса */
-            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+            $params = [
+                'search' => $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS),
+                'cityId' => $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS),
+            ];
 
             $placeSearchService = $this->getPlacesSearchService();
-            $places = $placeSearchService->searchPlacesByDiscount($userId, $this->getGeoPoint(), $searchText, $cityId, $this->getSkip(), $this->getCount());
+            $places = $placeSearchService->searchPlacesByDiscount($userId, $this->getGeoPoint(), $params, $this->getSkip(), $this->getCount());
 
             return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
         } catch (SearchServiceException $e) {
@@ -137,21 +138,29 @@ class SearchPlacesController extends ApiController
         }
     }
 
+    /**
+     * Поиск скидочных мест под старый формат api (для rp-front)
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
     public function searchPlacesByPromoAction(Request $request)
     {
         try {
-            /** @var string ID пользователя */
             $userId = $this->getRequestUserId();
+            $skip = (int)$this->getSkip();
+            $count = (int)$this->getCount();
+            $point = $this->getGeoPoint();
 
+            $places = $this->getPlacesSearchService()
+                ->searchPromoPlaces($userId, $point, $skip, $count);
+
+            $countryId = $request->get(RequestConstant::COUNTRY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
             $cityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
 
-            /** @var string Текст запроса */
-            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+            $result = BackwardCompatibilityHelper::preparePromoPlaces($places, $countryId, $cityId);
 
-            $placeSearchService = $this->getPlacesSearchService();
-            $places = $placeSearchService->searchPlacesByDiscount($userId, $this->getGeoPoint(), $searchText, $cityId, $this->getSkip(), $this->getCount());
-
-            return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
+            return $this->_handleViewWithData($result);
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

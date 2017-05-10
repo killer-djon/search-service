@@ -31,7 +31,7 @@ deploy_job:
   after_script:
     - rm -rf ${PROJECT_DIR}
     - ln -s ${BUILD_DIR}/${BUILD_NAME}-SUCCESS ${PROJECT_DIR}
-    - /bin/bash ci/telegram_bot_end.sh "$(git log --max-count=1 --pretty=format:%s)" "$(git log --max-count=1 --skip=1 --pretty=format:%s)" "${BUILD_DIR}" "${BUILD_HOME_DIR}" ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
+    - /bin/bash ci/telegram_bot_end.sh "$(git log --max-count=1 --pretty=format:%s)" "$(git log --max-count=1 --skip=1 --pretty=format:%s)" "${BUILD_DIR}" "${BUILD_HOME_DIR}" "${BUILD_DIR}/${BUILD_NAME}-SUCCESS"
     - rm -rf ${BUILD_HOME_DIR}/CACHE-BUILDS-API
   only:
     - develop

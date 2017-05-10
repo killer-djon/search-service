@@ -40,3 +40,8 @@ rp_search_common:
     prefix:   /api/search
     type: rest
 
+# routing для пост ленты
+rp_search_newsFeed:
+    resource: routing/searchNewsFeed.yml
+    prefix:   /api/search
+    type: rest

@@ -1,4 +1,5 @@
 <?php
+
 namespace Common\Core\Constants;
 
 abstract class RequestConstant
@@ -134,6 +135,13 @@ abstract class RequestConstant
      * @conts string TARGET_USER_ID_PARAM
      */
     const TARGET_USER_ID_PARAM = 'targetUserId';
+
+    /**
+     * Параметр поиска при запросе по стране
+     *
+     * @const string COUNTRY_SEARCH_PARAM
+     */
+    const COUNTRY_SEARCH_PARAM = 'countryId';
 
     /**
      * Параметр поиска при запросе по городу

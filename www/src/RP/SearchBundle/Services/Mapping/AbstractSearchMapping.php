@@ -2,8 +2,11 @@
 /**
  * Базовый абстрактный класс мапперов поиска
  */
+
 namespace RP\SearchBundle\Services\Mapping;
 
+use Common\Core\Constants\ModerationStatus;
+use Common\Core\Constants\Visible;
 use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 
@@ -14,6 +17,16 @@ abstract class AbstractSearchMapping
 
     /** Индекс еластика по умолчанию */
     const DEFAULT_INDEX = 'russianplace';
+
+    /**
+     * @const string поле ID автора сущности
+     */
+    const AUTHOR_ID_FIELD = 'author.id';
+
+    /**
+     * @const array массив id друзей
+     */
+    const AUTHOR_FRIENDS_FIELD = 'author.friendList';
 
     /** Поле имени пользователя */
     const NAME_FIELD = 'name'; // полное совпадение имени по русски
@@ -42,14 +55,14 @@ abstract class AbstractSearchMapping
 
 
     /** Поле с интересами пользователя */
-    const TAG_FIELD         = 'tags';
-    const TAGS_ID_FIELD      = 'tags.id';
-    const TAG_NAME_FIELD    = 'tags.name';
+    const TAG_FIELD = 'tags';
+    const TAGS_ID_FIELD = 'tags.id';
+    const TAG_NAME_FIELD = 'tags.name';
 
-    const TAG_NAME_NGRAM_FIELD    = 'tags.name._nameNgram';
-    const TAG_NAME_TRANSLIT_FIELD    = 'tags.name._translit';
-    const TAG_NAME_TRANSLIT_NGRAM_FIELD    = 'tags.name._translitNgram';
-    const TAG_WORDS_FIELD    = 'tags.name._wordsName';
+    const TAG_NAME_NGRAM_FIELD = 'tags.name._nameNgram';
+    const TAG_NAME_TRANSLIT_FIELD = 'tags.name._translit';
+    const TAG_NAME_TRANSLIT_NGRAM_FIELD = 'tags.name._translitNgram';
+    const TAG_WORDS_FIELD = 'tags.name._wordsName';
     const TAG_WORDS_TRANSLIT_FIELD = 'tags.name._wordsTranslitName'; // частичное совпадение имени от 3-х сивмолов в транслите
 
     const TAG_PREFIX_FIELD = 'tags.name._prefix';
@@ -84,6 +97,10 @@ abstract class AbstractSearchMapping
     const LOCATION_COUNTRY_NAME_PREFIX_FIELD = 'location.country._prefix';
     const LOCATION_COUNTRY_INTERNATIONAL_NAME_FIELD = 'location.country.internationalName';
 
+    /** Статус модерации */
+    const MODERATION_STATUS_FIELD = 'moderationStatus';
+    const VISIBLE_FIELD = 'visible';
+
     /**
      * Получаем поля для поиска
      * сбор полей для формирования объекта запроса
@@ -107,7 +124,7 @@ abstract class AbstractSearchMapping
     /**
      * Собираем фильтр для поиска
      *
-     * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param FilterFactoryInterface $filterFactory Объект фильтрации
      * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
      * @return array
      */
@@ -116,7 +133,7 @@ abstract class AbstractSearchMapping
     /**
      * Собираем фильтр для маркеров
      *
-     * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param FilterFactoryInterface $filterFactory Объект фильтрации
      * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
      * @return array
      */
@@ -174,7 +191,7 @@ abstract class AbstractSearchMapping
     /**
      * Собираем фильтр для поиска c isFlat параметров
      *
-     * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param FilterFactoryInterface $filterFactory Объект фильтрации
      * @param string $type Колекция для поиска
      * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
      * @return array
@@ -182,6 +199,55 @@ abstract class AbstractSearchMapping
     public static function getFlatMatchSearchFilter(FilterFactoryInterface $filterFactory, $type, $userId = null)
     {
         return [];
+    }
+
+    /**
+     * Формируем условия показа сущностей
+     * по флагам видимости
+     *
+     * @param FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
+     * @return array
+     */
+    public static function getVisibleConditions(FilterFactoryInterface $filterFactory, $userId = null)
+    {
+        $visible = $filterFactory->getTermFilter([self::VISIBLE_FIELD => Visible::ALL]);
+
+        $moderate = $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::OK]);
+
+        if (is_null($userId) || empty($userId)) {
+            $visible = $filterFactory->getBoolOrFilter([
+                $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => $userId]),
+                $filterFactory->getTermFilter([self::VISIBLE_FIELD => Visible::ALL]),
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getTermsFilter(self::AUTHOR_FRIENDS_FIELD, [$userId]),
+                    $filterFactory->getTermsFilter(self::VISIBLE_FIELD, [Visible::FRIEND]),
+                ]),
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getNotFilter(
+                        $filterFactory->getTermsFilter(self::AUTHOR_FRIENDS_FIELD, [$userId])
+                    ),
+                    $filterFactory->getTermsFilter(self::VISIBLE_FIELD, [Visible::NOT_FRIEND]),
+                ]),
+            ]);
+
+            $moderate = $filterFactory->getBoolOrFilter([
+                $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::OK]),
+                $filterFactory->getBoolAndFilter([
+                    $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => $userId]),
+                    $filterFactory->getTermsFilter(self::MODERATION_STATUS_FIELD, [
+                        ModerationStatus::DIRTY,
+                        ModerationStatus::REJECTED,
+                        ModerationStatus::RESTORED,
+                    ]),
+                ]),
+            ]);
+        }
+
+        return [
+            $visible,
+            $moderate
+        ];
     }
 
 }

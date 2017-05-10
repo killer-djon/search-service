@@ -28,7 +28,7 @@ DIR="$4"
 cd $DIR
 
 # проверяем на наличие команд по композеру
-if [[ ! -d "vendor" && -a "composer.json" ]]; then
+if [[ ! -d "www/vendor" && -a "composer.json" ]]; then
 	/usr/bin/php /usr/local/bin/composer install
 	   
 else

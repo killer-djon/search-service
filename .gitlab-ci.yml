@@ -22,16 +22,16 @@ deploy_job:
   script:
     - mkdir -p ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
     - shopt -s dotglob
-    - cp -rf www/* ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
-    - cp ${BUILD_DIR}/${BUILD_NAME}-SUCCESS/app/config/parameters.yml.dist ${BUILD_DIR}/${BUILD_NAME}-SUCCESS/app/config/parameters.yml
-    - cp ${BUILD_DIR}/${BUILD_NAME}-SUCCESS/app/config/config_dev.yml.dist ${BUILD_DIR}/${BUILD_NAME}-SUCCESS/app/config/config_dev.yml
-    - /bin/bash ci/telegram_bot_composer.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}" "$(git log --max-count=1 --skip=1 --pretty=format:%s)" ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
-    - /bin/bash ci/telegram_bot_cache.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}" ${ENV} "$(git log --max-count=1 --skip=1 --pretty=format:%s)" ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
+    - cp www/app/config/parameters.yml.dist www/app/config/parameters.yml
+    - cp www/app/config/config_dev.yml.dist www/app/config/config_dev.yml
+    - cp -rf * ${BUILD_DIR}/${BUILD_NAME}-SUCCESS
+    - /bin/bash ci/telegram_bot_composer.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}" "$(git log --max-count=1 --skip=1 --pretty=format:%s)" ${BUILD_DIR}/${BUILD_NAME}-SUCCESS/www
+    - /bin/bash ci/telegram_bot_cache.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}" ${ENV} "$(git log --max-count=1 --skip=1 --pretty=format:%s)" ${BUILD_DIR}/${BUILD_NAME}-SUCCESS/www
     - /bin/bash ci/update_jira.sh "$(git log --max-count=1 --pretty=format:%s)" "$(git log --max-count=1 --skip=1 --pretty=format:%s)"
   after_script:
     - rm -rf ${PROJECT_DIR}
-    - ln -s ${BUILD_DIR}/${BUILD_NAME}-SUCCESS ${PROJECT_DIR}
-    - /bin/bash ci/telegram_bot_end.sh "$(git log --max-count=1 --pretty=format:%s)" "$(git log --max-count=1 --skip=1 --pretty=format:%s)" "${BUILD_DIR}" "${BUILD_HOME_DIR}" "${BUILD_DIR}/${BUILD_NAME}-SUCCESS"
+    - ln -s ${BUILD_DIR}/${BUILD_NAME}-SUCCESS/www ${PROJECT_DIR}
+    - /bin/bash ci/telegram_bot_end.sh "$(git log --max-count=1 --pretty=format:%s)" "$(git log --max-count=1 --skip=1 --pretty=format:%s)" "${BUILD_DIR}" "${BUILD_HOME_DIR}" "${BUILD_DIR}/${BUILD_NAME}-SUCCESS/www"
     - rm -rf ${BUILD_HOME_DIR}/CACHE-BUILDS-API
   only:
     - develop

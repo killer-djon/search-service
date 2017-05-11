@@ -29,6 +29,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     const SURNAME_PREFIX_FIELD = 'surname._prefix';
     const SURNAME_PREFIX_TRANSLIT_FIELD = 'surname._prefixTranslit';
     const SURNAME_STANDARD_FIELD = 'surname._standard';
+    const SURNAME_EXACT_FIELD = 'surname._exactSurname';
 
     // Морфологический разбор поля полного имени
     const FULLNAME_MORPHOLOGY_FIELD = 'fullname';
@@ -424,6 +425,23 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
         ];
 
         return $highlight;
+    }
+
+
+    /**
+     * Вспомогательный метод позволяющий
+     * задавать условия для автодополнения
+     *
+     * @param ConditionFactoryInterface $conditionFactory Объект класса билдера условий
+     * @param string $queryString Строка запроса
+     * @return array
+     */
+    public static function getSuggestQueryConditions(ConditionFactoryInterface $conditionFactory, $queryString)
+    {
+        return [
+            $conditionFactory->getPrefixQuery(self::NAME_EXACT_FIELD, $queryString),
+            $conditionFactory->getPrefixQuery(self::SURNAME_EXACT_FIELD, $queryString)
+        ];
     }
 
 }

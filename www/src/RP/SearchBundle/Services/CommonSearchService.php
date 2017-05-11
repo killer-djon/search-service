@@ -654,19 +654,15 @@ class CommonSearchService extends AbstractSearchService
         $queryMatch = null;
 
         foreach ($filters as $filter) {
+
             $this->setFilterQuery([
                 $this->_queryFilterFactory->getTypeFilter($filter),
             ]);
 
-            $this->setConditionQueryShould([
-                $this->_queryConditionFactory->getPrefixQuery(
-                    $this->filterSearchTypes[$filter]::NAME_FIELD, $searchText
-                ),
-                $this->_queryConditionFactory->getPrefixQuery(
-                    $this->filterSearchTypes[$filter]::DESCRIPTION_FIELD, $searchText
-                ),
-            ]);
-
+            $this->setConditionQueryShould($this->filterSearchTypes[$filter]::getSuggestQueryConditions(
+                $this->_queryConditionFactory,
+                $searchText
+            ));
             $query = $this->createQuery($skip, $count);
             $query->setSource(['id', 'name']);
 
@@ -680,4 +676,6 @@ class CommonSearchService extends AbstractSearchService
 
         return $this->searchMultiTypeDocuments($queryMatch);
     }
+
+
 }

@@ -191,4 +191,21 @@ class EventsSearchMapping extends AbstractSearchMapping
 
         return $highlight;
     }
+
+    /**
+     * Вспомогательный метод позволяющий
+     * задавать условия для автодополнения
+     *
+     * @param ConditionFactoryInterface $conditionFactory Объект класса билдера условий
+     * @param string $queryString Строка запроса
+     * @return array
+     */
+    public static function getSuggestQueryConditions(ConditionFactoryInterface $conditionFactory, $queryString)
+    {
+        return [
+            $conditionFactory->getPrefixQuery(self::NAME_EXACT_FIELD, $queryString),
+            $conditionFactory->getPrefixQuery(self::DESCRIPTION_EXACT_FIELD, $queryString)
+        ];
+    }
+
 }

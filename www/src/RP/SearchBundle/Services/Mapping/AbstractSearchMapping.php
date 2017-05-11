@@ -38,6 +38,7 @@ abstract class AbstractSearchMapping
     const NAME_LONG_NGRAM_FIELD = 'name._nameLongNgram';
     const NAME_TRANSLIT_LONG_NGRAM_FIELD = 'name._translitLongNgram';
     const RUS_TRANSLITERATE_NAME = 'rusName';
+    const NAME_EXACT_FIELD = 'name._exactName';
 
     const NAME_PREFIX_FIELD = 'name._prefix';
     const NAME_PREFIX_TRANSLIT_FIELD = 'name._prefixTranslit';
@@ -248,6 +249,19 @@ abstract class AbstractSearchMapping
             $visible,
             $moderate
         ];
+    }
+
+    /**
+     * Вспомогательный метод позволяющий
+     * задавать условия для автодополнения
+     *
+     * @param ConditionFactoryInterface $conditionFactory Объект класса билдера условий
+     * @param string $queryString Строка запроса
+     * @return array
+     */
+    public static function getSuggestQueryConditions(ConditionFactoryInterface $conditionFactory, $queryString)
+    {
+        return [];
     }
 
 }

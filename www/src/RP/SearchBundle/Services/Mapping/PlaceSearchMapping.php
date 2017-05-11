@@ -292,4 +292,21 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
 
         return $highlight;
     }
+
+
+    /**
+     * Вспомогательный метод позволяющий
+     * задавать условия для автодополнения
+     *
+     * @param ConditionFactoryInterface $conditionFactory Объект класса билдера условий
+     * @param string $queryString Строка запроса
+     * @return array
+     */
+    public static function getSuggestQueryConditions(ConditionFactoryInterface $conditionFactory, $queryString)
+    {
+        return [
+            $conditionFactory->getMatchPhrasePrefixQuery(self::NAME_EXACT_FIELD, $queryString),
+            $conditionFactory->getMatchPhrasePrefixQuery(self::DESCRIPTION_EXACT_FIELD, $queryString)
+        ];
+    }
 }

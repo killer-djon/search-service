@@ -2,22 +2,25 @@
 /**
  * Основной контроллер поиска по людям
  */
+
 namespace RP\SearchBundle\Controller;
 
+use Common\Core\Constants\RequestConstant;
 use Common\Core\Controller\ApiController;
 use Common\Core\Exceptions\SearchServiceException;
-use Common\Core\Facade\Service\User\UserProfileService;
-use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Traits\PeopleServiceTrait;
-use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\HttpFoundation\Request;
-use Common\Core\Constants\RequestConstant;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
+/**
+ * Class SearchUsersController
+ * @package RP\SearchBundle\Controller
+ */
 class SearchUsersController extends ApiController
 {
+
     use PeopleServiceTrait;
 
     /**
@@ -130,7 +133,6 @@ class SearchUsersController extends ApiController
 
             $filtersType = $request->get(RequestConstant::FILTERS_PARAM);
 
-
             if (is_null($filtersType) || empty($filtersType)) {
                 /*return $this->_handleViewWithError(
                     new BadRequestHttpException(
@@ -172,7 +174,8 @@ class SearchUsersController extends ApiController
                 $this->getGeoPoint(),
                 $searchText,
                 $this->getSkip(),
-                $this->getCount()
+                $this->getCount(),
+                $this->getSort()
             );
 
             if (empty($peopleSearchService->getTotalResults())) {
@@ -204,6 +207,7 @@ class SearchUsersController extends ApiController
             }
 
             $pagination = [];
+
             foreach ($people['info']['searchType'] as $keyItems => $infoItems) {
                 $pagination[$keyItems] = $peopleSearchService->getPaginationAdapter(
                     $this->getSkip(),
@@ -212,11 +216,10 @@ class SearchUsersController extends ApiController
                 );
             }
 
+            $result = array_merge($people, ['pagination' => $pagination]);
+
             /** выводим результат */
-            return $this->_handleViewWithData(array_merge(
-                $people,
-                ['pagination' => $pagination]
-            ));
+            return $this->_handleViewWithData($result);
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {
@@ -240,6 +243,7 @@ class SearchUsersController extends ApiController
             $userId = $this->getRequestUserId();
 
             $peopleSearchService = $this->getPeopleSearchService();
+
             $peopleHelpOffers = $peopleSearchService->searchPeopleHelpOffers(
                 $userId,
                 $this->getGeoPoint(),
@@ -332,6 +336,7 @@ class SearchUsersController extends ApiController
                 }
 
                 $userContext = $this->revertToScalarTagsMatchFields($userContext);
+
                 return $this->_handleViewWithData($userContext);
             }
 
@@ -343,6 +348,7 @@ class SearchUsersController extends ApiController
                 }
 
                 $userContext = $this->revertToScalarTagsMatchFields($userContext);
+
                 return $this->_handleViewWithData($userContext);
             }
 
@@ -388,6 +394,7 @@ class SearchUsersController extends ApiController
                 $this->getSkip(),
                 $this->getCount()
             );
+
             $data = [];
 
             foreach ($possibleFriends as $keyCategory => $possibleFriend) {
@@ -437,5 +444,4 @@ class SearchUsersController extends ApiController
             return $this->_handleViewWithError($e);
         }
     }
-
 }

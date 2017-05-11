@@ -1,18 +1,3 @@
-# Routing который формирует запрос для глобального (общего поиска)
-# пример запроса /api/search/v1/json/common/{filterTypes}
-RPSearchBundle_search_common:
-    path: /v{_version}/{_format}/common/{filterType}
-    defaults:
-        _controller: RPSearchBundle:SearchCommon:searchCommonByFilter
-        _version: 1
-        _format: json
-        template: "RPSearchBundle:SearchCommon:searchCommonByFilter.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
-    requirements:
-        _method: (GET)
-        _format: (json|xml|html|plist)
-        _version: '1' # устанавливаем обязательную версию
-        filterType: ([\w,:;_\- ]+)
-
 # Routing который формирует запрос для вывода интересов
 # (самых популярных)
 # пример запроса /api/search/v1/json/common/interests/top
@@ -41,4 +26,34 @@ RPSearchBundle_search_interests_name:
     requirements:
         _method: (GET)
         _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию searchSuggest
+
+# Routing который формирует запрос для поиска suggest (автодополнение)
+# пример запроса /api/search/v1/json/common/suggest
+RPSearchBundle_search_suggest:
+    path: /v{_version}/{_format}/common/suggest/{searchText}
+    defaults:
+        _controller: RPSearchBundle:SearchCommon:searchSuggest
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchCommon:searchsuggest.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
+        searchText: (.*)
+
+# Routing который формирует запрос для глобального (общего поиска)
+# пример запроса /api/search/v1/json/common/{filterTypes}
+RPSearchBundle_search_common:
+    path: /v{_version}/{_format}/common/{filterType}
+    defaults:
+        _controller: RPSearchBundle:SearchCommon:searchCommonByFilter
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchCommon:searchCommonByFilter.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        filterType: ([\w,:;_\- ]+)

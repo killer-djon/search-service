@@ -2,6 +2,7 @@
 /**
  * Класс отвечающий за генерацию условий поиска
  */
+
 namespace Common\Core\Facade\Search\QueryCondition;
 
 use Elastica\Filter\AbstractFilter;
@@ -34,6 +35,7 @@ class ConditionFactory implements ConditionFactoryInterface
     public function getMatchQuery($fieldName, $queryString, $boost = 1.0, $prefixLength = null)
     {
         $matchQuery = new \Elastica\Query\Match();
+
         $matchQuery->setFieldQuery($fieldName, $queryString);
         $matchQuery->setFieldBoost($fieldName, $boost);
         if (!is_null($prefixLength) && is_int($prefixLength)) {
@@ -134,6 +136,7 @@ class ConditionFactory implements ConditionFactoryInterface
      *
      * @param string $fieldName
      * @param string $value
+     * @param float $boost
      * @return \Elastica\Query\Prefix
      */
     public function getPrefixQuery($fieldName, $value, $boost = 1.0)

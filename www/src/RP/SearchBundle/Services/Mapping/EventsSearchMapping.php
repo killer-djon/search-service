@@ -90,6 +90,17 @@ class EventsSearchMapping extends AbstractSearchMapping
         ];
     }
 
+    public static function getPrefixedQuerySearchFields()
+    {
+        return [
+            self::NAME_PREFIX_FIELD,
+            self::NAME_PREFIX_TRANSLIT_FIELD,
+
+            self::TAG_PREFIX_FIELD,
+            self::TAG_PREFIX_TRANSLIT_FIELD,
+        ];
+    }
+
     /**
      * Получаем поля для поиска
      * сбор полей для формирования объекта запроса

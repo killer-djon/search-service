@@ -13,6 +13,7 @@ use Elastica\Aggregation\GeoDistance;
 use Elastica\Query\FunctionScore;
 use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Mapping\AbstractSearchMapping;
+use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\TagNameSearchMapping;
 
 class CommonSearchService extends AbstractSearchService
@@ -633,4 +634,50 @@ class CommonSearchService extends AbstractSearchService
         return $this->searchDocuments($query, TagNameSearchMapping::CONTEXT);
     }
 
+    /**
+     * Осуществляем префиксный поиск по базе всех типов
+     * указанных в филттре (некий suggest query)
+     *
+     * @param string $searchText Поисковый запрос (по мере ввода буков)
+     * @param int $skip
+     * @param int $count
+     * @return array
+     */
+    public function suggestSearch($searchText, $skip = 0, $count = null)
+    {
+        $filters = [
+            'people',
+            'places',
+            'events',
+        ];
+
+        $queryMatch = null;
+
+        foreach ($filters as $filter) {
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getTypeFilter($filter),
+            ]);
+
+            $this->setConditionQueryShould([
+                $this->_queryConditionFactory->getPrefixQuery(
+                    $this->filterSearchTypes[$filter]::NAME_FIELD, $searchText
+                ),
+                $this->_queryConditionFactory->getPrefixQuery(
+                    $this->filterSearchTypes[$filter]::DESCRIPTION_FIELD, $searchText
+                ),
+            ]);
+
+            $query = $this->createQuery($skip, $count);
+            $query->setSource(['id', 'name']);
+
+            $queryMatch[$filter] = $query;
+        }
+
+
+        if (is_null($queryMatch)) {
+            return [];
+        }
+
+        return $this->searchMultiTypeDocuments($queryMatch);
+    }
 }

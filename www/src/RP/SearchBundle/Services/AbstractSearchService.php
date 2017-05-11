@@ -3,6 +3,7 @@
  * Основной сервиса поиска людей в еластике
  * формирование условий запроса к еластику
  */
+
 namespace RP\SearchBundle\Services;
 
 use Common\Core\Exceptions\SearchServiceException;
@@ -47,6 +48,13 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * @const string FUNCTION_SCRIPT_SCORE
      */
     const FUNCTION_SCRIPT_SCORE = 'script_score';
+
+    /**
+     * Кол-во выводимых записей по умолчанию
+     *
+     * @const int DEFAULT_PORTION_COUNT
+     */
+    const DEFAULT_PORTION_COUNT = 20;
 
     /**
      * Возможные значения скриптов
@@ -446,7 +454,6 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $matchQuery->setOperator($operator);
             $matchQuery->setType($type);
             $matchQuery->setFields($fields);
-
         }
 
         if (!is_null($this->_scriptFunctions) && !empty($this->_scriptFunctions)) {

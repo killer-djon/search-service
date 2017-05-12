@@ -159,6 +159,14 @@ abstract class RequestConstant
 
     /**
      * Параметр поисковой строки
+     * способ сортировки
+     *
+     * @conts string SEARCH_SORT_PARAM
+     */
+    const SEARCH_SORT_PARAM = 'sort';
+
+    /**
+     * Параметр поисковой строки
      * кол-во пропускаемых записей поиска
      *
      * @conts string SEARCH_SKIP_PARAM

@@ -440,7 +440,8 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     {
         return [
             $conditionFactory->getPrefixQuery(self::NAME_EXACT_FIELD, $queryString),
-            $conditionFactory->getPrefixQuery(self::SURNAME_EXACT_FIELD, $queryString)
+            $conditionFactory->getPrefixQuery(self::SURNAME_EXACT_FIELD, $queryString),
+            $conditionFactory->getTermQuery('_type', self::CONTEXT)
         ];
     }
 

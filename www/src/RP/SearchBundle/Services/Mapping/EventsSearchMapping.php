@@ -204,7 +204,8 @@ class EventsSearchMapping extends AbstractSearchMapping
     {
         return [
             $conditionFactory->getPrefixQuery(self::NAME_EXACT_FIELD, $queryString),
-            $conditionFactory->getPrefixQuery(self::DESCRIPTION_EXACT_FIELD, $queryString)
+            //$conditionFactory->getPrefixQuery(self::DESCRIPTION_EXACT_FIELD, $queryString),
+            $conditionFactory->getTermQuery('_type', self::CONTEXT)
         ];
     }
 

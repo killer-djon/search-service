@@ -11,8 +11,13 @@ use Common\Core\Facade\Service\Geo\GeoPointService;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\HttpFoundation\Request;
 
+/**
+ * Class ControllerTrait
+ * @package Common\Core\Controller
+ */
 trait ControllerTrait
 {
+
     /**
      * Параметр запроса offset
      *
@@ -26,6 +31,13 @@ trait ControllerTrait
      * @var int $_count
      */
     private $_count;
+
+    /**
+     * Параметр сортировки sort
+     *
+     * @var int $_sort
+     */
+    private $_sort;
 
     /**
      * ОБъект представляющий GeoPoint service
@@ -44,6 +56,7 @@ trait ControllerTrait
     {
         $this->_skip = $request->get(RequestConstant::SEARCH_SKIP_PARAM, RequestConstant::DEFAULT_SEARCH_SKIP);
         $this->_count = $request->get(RequestConstant::SEARCH_LIMIT_PARAM, RequestConstant::DEFAULT_SEARCH_LIMIT);
+        $this->_sort = $request->get(RequestConstant::SEARCH_SORT_PARAM, RequestConstant::NULLED_PARAMS);
     }
 
     /**
@@ -61,14 +74,36 @@ trait ControllerTrait
         );
     }
 
+    /**
+     * @return int
+     */
     public function getSkip()
     {
         return $this->_skip;
     }
 
+    /**
+     * @return int
+     */
     public function getCount()
     {
         return $this->_count;
+    }
+
+    /**
+     * @return array|null
+     */
+    public function getSort()
+    {
+        $sort = trim($this->_sort);
+
+        if (empty($sort)) {
+            return null;
+        } else {
+            $order = mb_strpos($sort, '-', null, 'utf-8') !== false ? SORT_DESC : SORT_ASC;
+
+            return [ltrim($sort, '-'), $order];
+        }
     }
 
     /**
@@ -135,9 +170,9 @@ trait ControllerTrait
      * @var array
      */
     protected $fieldsMap = [
-        'fullname' => 'fullName',
-        'tagsInPercent' => 'matchingInterestsInPercents',
-        'tagsCount' => 'tagsPct',
+        'fullname'          => 'fullName',
+        'tagsInPercent'     => 'matchingInterestsInPercents',
+        'tagsCount'         => 'tagsPct',
         'distanceInPercent' => 'distancePct',
     ];
 
@@ -149,13 +184,13 @@ trait ControllerTrait
      * @var array
      */
     private $neededKeys = [
-        'surname' => ' ',
-        'text' => ' ',
-        'allCheckinsCount' => ' ',
-        'distance' => 0,
+        'surname'           => ' ',
+        'text'              => ' ',
+        'allCheckinsCount'  => ' ',
+        'distance'          => 0,
         'distanceInPercent' => 0,
-        'emailEnabled' => 'false',
-        'description' => ''
+        'emailEnabled'      => 'false',
+        'description'       => ''
         //'isFriendshipRequestReceived' => 'false',
         //'isFriend' => 'false',
         //'isFollower' => 'false',
@@ -199,23 +234,23 @@ trait ControllerTrait
      * @param array
      */
     private $tagsMatchFields = [
-        'tagsInPercent' => 'intval',
+        'tagsInPercent'               => 'intval',
         'matchingInterestsInPercents' => 'intval',
-        'tagsCount' => 'intval',
-        'tagsPct' => 'intval',
-        'distanceInPercent' => 'intval',
-        'distancePct' => 'intval',
-        'distance' => 'floatval',
-        'allCheckinsCount' => 'intval',
+        'tagsCount'                   => 'intval',
+        'tagsPct'                     => 'intval',
+        'distanceInPercent'           => 'intval',
+        'distancePct'                 => 'intval',
+        'distance'                    => 'floatval',
+        'allCheckinsCount'            => 'intval',
         // ugcStat
-        'placesCount' => 'intval',
-        "checkinPlacesCount" => 'intval',
-        "eventsCount" => 'intval',
-        "willComeEventsCount" => 'intval',
-        "interestsCount" => 'intval',
-        "helpOffersCount" => 'intval',
-        "friendsCount" => 'intval',
-        "emailEnabled" => 'boolval'
+        'placesCount'                 => 'intval',
+        'checkinPlacesCount'          => 'intval',
+        'eventsCount'                 => 'intval',
+        'willComeEventsCount'         => 'intval',
+        'interestsCount'              => 'intval',
+        'helpOffersCount'             => 'intval',
+        'friendsCount'                => 'intval',
+        'emailEnabled'                => 'boolval'
 
         //'isFriendshipRequestReceived' => 'boolval',
         //'isFriend' => 'boolval',

@@ -1,10 +1,10 @@
 <?php
+
 namespace RP\SearchBundle\Services\Mapping;
 
 use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Elastica\Query\MultiMatch;
-use Elastica\Query\QueryString;
 
 abstract class PeopleSearchMapping extends AbstractSearchMapping
 {
@@ -382,16 +382,16 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
                 $prefixWildCardByTags
             ))*/
             $conditionFactory->getMultiMatchQuery()
-                             ->setFields(self::getMultiMatchQuerySearchFields())
-                             ->setQuery($queryString)
-                             ->setOperator(MultiMatch::OPERATOR_OR)
-                             ->setType(MultiMatch::TYPE_BEST_FIELDS),
+                ->setFields(self::getMultiMatchQuerySearchFields())
+                ->setQuery($queryString)
+                ->setOperator(MultiMatch::OPERATOR_OR)
+                ->setType(MultiMatch::TYPE_BEST_FIELDS),
             $conditionFactory->getBoolQuery([], array_merge($prefixWildCardByName, [
                 $conditionFactory->getMultiMatchQuery()
-                                 ->setFields(self::getMultiSubMatchQuerySearchFields())
-                                 ->setQuery($queryString)
-                                 ->setOperator(MultiMatch::OPERATOR_OR)
-                                 ->setType(MultiMatch::TYPE_BEST_FIELDS),
+                    ->setFields(self::getMultiSubMatchQuerySearchFields())
+                    ->setQuery($queryString)
+                    ->setOperator(MultiMatch::OPERATOR_OR)
+                    ->setType(MultiMatch::TYPE_BEST_FIELDS),
                 $conditionFactory->getBoolQuery([], [
                     $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString, true, 0.5),
                 ], []),

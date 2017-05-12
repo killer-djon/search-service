@@ -13,7 +13,9 @@ use Elastica\Aggregation\GeoDistance;
 use Elastica\Query\FunctionScore;
 use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Mapping\AbstractSearchMapping;
+use RP\SearchBundle\Services\Mapping\EventsSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
+use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\TagNameSearchMapping;
 
 class CommonSearchService extends AbstractSearchService
@@ -87,8 +89,6 @@ class CommonSearchService extends AbstractSearchService
          * это надо обязательно
          */
         return $this->searchDocuments($queryMatch);
-
-        //print_r( $queryMatch ); die();
     }
 
     /**
@@ -102,55 +102,34 @@ class CommonSearchService extends AbstractSearchService
      */
     public function suggestSearch($searchText, $skip = 0, $count = null)
     {
-        $filters = [
-            'people',
-            'places',
-            'events',
-        ];
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getBoolOrFilter([
+                $this->_queryFilterFactory->getBoolAndFilter([
+                    $this->_queryFilterFactory->getTypeFilter(PeopleSearchMapping::CONTEXT),
+                    $this->_queryFilterFactory->getQueryFilter(
+                        $this->_queryConditionFactory->getBoolQuery([], [
+                            $this->_queryConditionFactory->getPrefixQuery(AbstractSearchMapping::NAME_EXACT_PREFIX_FIELD, $searchText),
+                            $this->_queryConditionFactory->getPrefixQuery(PeopleSearchMapping::SURNAME_EXACT_PREFIX_FIELD, $searchText),
+                        ], [])
+                    ),
+                ]),
+                $this->_queryFilterFactory->getBoolAndFilter([
+                    $this->_queryFilterFactory->getTypeFilter(PlaceSearchMapping::CONTEXT),
+                    $this->_queryFilterFactory->getQueryFilter(
+                        $this->_queryConditionFactory->getMatchPhrasePrefixQuery(AbstractSearchMapping::NAME_EXACT_PREFIX_FIELD, $searchText)
+                    ),
+                ]),
+                $this->_queryFilterFactory->getBoolAndFilter([
+                    $this->_queryFilterFactory->getTypeFilter(EventsSearchMapping::CONTEXT),
+                    $this->_queryFilterFactory->getQueryFilter(
+                        $this->_queryConditionFactory->getMatchPhrasePrefixQuery(AbstractSearchMapping::NAME_EXACT_PREFIX_FIELD, $searchText)
+                    ),
+                ]),
+            ]),
+        ]);
 
-        /*$queryMatch = null;
-
-        foreach ($filters as $filter) {
-
-            $this->setFilterQuery([
-                $this->_queryFilterFactory->getTypeFilter($filter),
-            ]);
-
-            $this->setConditionQueryShould($this->filterSearchTypes[$filter]::getSuggestQueryConditions(
-                $this->_queryConditionFactory,
-                $searchText
-            ));
-            $query = $this->createQuery($skip, $count);
-            $query->setSource(['id', 'name']);
-
-            $queryMatch[$filter] = $query;
-        }*/
-
-        $searchFilters = [];
-        $searchQueries = [];
-        foreach ($filters as $filter) {
-            $searchFilters[] = $this->_queryFilterFactory->getTypeFilter($filter);
-            /*$searchQueries = array_merge($searchQueries, $this->filterSearchTypes[$filter]::getSuggestQueryConditions(
-                $this->_queryConditionFactory,
-                $searchText
-            ));*/
-            $searchQueries[] = $this->_queryConditionFactory->getBoolQuery([], $this->filterSearchTypes[$filter]::getSuggestQueryConditions(
-                $this->_queryConditionFactory,
-                $searchText
-            ), []);
-        }
-
-        $this->setConditionQueryShould($searchQueries);
-        //$this->setFilterQuery($searchFilters);
-
-        $queryMatch = $this->createQuery($skip, $count); // в случае если есть поисковая строка
-
-
+        $queryMatch = $this->createQuery($skip, $count);
         $this->setFlatFormatResult(true);
-
-        if (is_null($queryMatch)) {
-            return [];
-        }
 
         return $this->searchDocuments($queryMatch);
     }
@@ -691,8 +670,5 @@ class CommonSearchService extends AbstractSearchService
     {
         return $this->searchDocuments($query, TagNameSearchMapping::CONTEXT);
     }
-
-
-
 
 }

@@ -479,7 +479,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
 
         // Применить набор фильтров
         if (sizeof($this->_filterQueryData) > 0) {
-            $filter = $this->_queryFilterFactory->getBoolAndFilter($this->_filterQueryData);
+            $filter = $this->_queryFilterFactory->getBoolOrFilter($this->_filterQueryData);
             $matchQuery = new \Elastica\Query\Filtered($matchQuery, $filter);
         }
 

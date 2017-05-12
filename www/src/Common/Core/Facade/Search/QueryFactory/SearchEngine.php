@@ -794,9 +794,18 @@ class SearchEngine implements SearchEngineInterface
 
         $this->_totalResults = $items;
 
-        if ($this->flatFormatData === true) {
+        if ($this->flatFormatData === true && !empty($items)) {
 
-            $this->_totalResults = current($items);
+            $flatArray = [];
+            foreach ($items as $key => $item)
+            {
+                $flatArray = array_merge(
+                    $flatArray,
+                    $item
+                );
+            }
+
+            $this->_totalResults = $flatArray;
         }
 
         return $this->getTotalResults();

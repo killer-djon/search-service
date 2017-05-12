@@ -288,7 +288,17 @@ class SearchCommonController extends ApiController
                 return $this->_handleViewWithData([]);
             }
 
-            return $this->_handleViewWithData($suggests);
+            $info = $commonSearchService->getTotalHits();
+
+            return $this->_handleViewWithData([
+                'info' => $info,
+                'pagination' => $commonSearchService->getPaginationAdapter(
+                    $this->getSkip(),
+                    $this->getCount()
+                ),
+                'items' => $suggests,
+
+            ]);
         }catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

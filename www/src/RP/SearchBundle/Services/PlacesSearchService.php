@@ -42,11 +42,18 @@ class PlacesSearchService extends AbstractSearchService
         $this->setConditionQueryShould([
             $this->_queryConditionFactory->getMultiMatchQuery()
                 ->setQuery($searchText)
-                ->setFields(PlaceSearchMapping::getMultiMatchQuerySearchFields()),
-            $this->_queryConditionFactory->getWildCardQuery(PlaceSearchMapping::DESCRIPTION_FIELD, "{$searchText}*"),
-            $this->_queryConditionFactory->getWildCardQuery(PlaceSearchMapping::NAME_WORDS_NAME_FIELD, "{$searchText}*"),
-            $this->_queryConditionFactory->getWildCardQuery(PlaceSearchMapping::TYPE_WORDS_FIELD, "{$searchText}*"),
-            $this->_queryConditionFactory->getWildCardQuery(PlaceSearchMapping::TAG_WORDS_FIELD, "{$searchText}*"),
+                ->setFields([
+                    PlaceSearchMapping::NAME_FIELD,
+                    PlaceSearchMapping::NAME_TRANSLIT_FIELD
+                ])
+                ->setType(MultiMatch::TYPE_PHRASE_PREFIX),
+            $this->_queryConditionFactory->getFieldQuery(
+                [
+                    PlaceSearchMapping::NAME_FIELD,
+                    PlaceSearchMapping::NAME_TRANSLIT_FIELD
+                ],
+                $searchText
+            )
         ]);
 
         /** добавляем к условию поиска рассчет по совпадению интересов */
@@ -56,7 +63,7 @@ class PlacesSearchService extends AbstractSearchService
         $this->setGeoPointConditions($point, PlaceSearchMapping::class);
 
         /** устанавливаем фильтры только для мест */
-        $this->setFilterPlaces($userId);
+        $this->setFilterQuery(PlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
 
         $queryMatch = $this->createQuery($skip, $count);
 
@@ -142,12 +149,19 @@ class PlacesSearchService extends AbstractSearchService
         if (!is_null($searchText) && !empty($searchText)) {
             $this->setConditionQueryShould([
                 $this->_queryConditionFactory->getMultiMatchQuery()
-                    ->setQuery($searchText)
-                    ->setFields(PlaceSearchMapping::getMultiMatchQuerySearchFields()),
-                $this->_queryConditionFactory->getWildCardQuery(PlaceSearchMapping::DESCRIPTION_FIELD, "{$searchText}*"),
-                $this->_queryConditionFactory->getWildCardQuery(PlaceSearchMapping::NAME_WORDS_NAME_FIELD, "{$searchText}*"),
-                $this->_queryConditionFactory->getWildCardQuery(PlaceSearchMapping::TYPE_WORDS_FIELD, "{$searchText}*"),
-                $this->_queryConditionFactory->getWildCardQuery(PlaceSearchMapping::TAG_WORDS_FIELD, "{$searchText}*"),
+                                             ->setQuery($searchText)
+                                             ->setFields([
+                                                 PlaceSearchMapping::NAME_FIELD,
+                                                 PlaceSearchMapping::NAME_TRANSLIT_FIELD
+                                             ])
+                                             ->setType(MultiMatch::TYPE_PHRASE_PREFIX),
+                $this->_queryConditionFactory->getFieldQuery(
+                    [
+                        PlaceSearchMapping::NAME_FIELD,
+                        PlaceSearchMapping::NAME_TRANSLIT_FIELD
+                    ],
+                    $searchText
+                )
             ]);
         }
 
@@ -162,7 +176,7 @@ class PlacesSearchService extends AbstractSearchService
         $this->setGeoPointConditions($point, PlaceSearchMapping::class);
 
         /** устанавливаем фильтры только для мест */
-        $this->setFilterPlaces($userId);
+        $this->setFilterQuery(PlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
 
         $queryMatch = $this->createQuery($skip, $count);
 

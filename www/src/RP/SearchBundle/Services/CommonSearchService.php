@@ -77,12 +77,6 @@ class CommonSearchService extends AbstractSearchService
 
         $queryMatch = $this->createQuery($skip, $count); // в случае если есть поисковая строка
 
-        /*$queryMatch = $this->createMatchQuery(
-            $searchText,
-            $type::getMultiMatchQuerySearchFields(),
-            $skip, (is_null($count) ? self::DEFAULT_SEARCH_BLOCK_SIZE : $count)
-        );*/
-
         $this->setFlatFormatResult(true);
 
         /**
@@ -95,6 +89,70 @@ class CommonSearchService extends AbstractSearchService
         return $this->searchDocuments($queryMatch);
 
         //print_r( $queryMatch ); die();
+    }
+
+    /**
+     * Осуществляем префиксный поиск по базе всех типов
+     * указанных в филттре (некий suggest query)
+     *
+     * @param string $searchText Поисковый запрос (по мере ввода буков)
+     * @param int $skip
+     * @param int $count
+     * @return array
+     */
+    public function suggestSearch($searchText, $skip = 0, $count = null)
+    {
+        $filters = [
+            'people',
+            'places',
+            'events',
+        ];
+
+        /*$queryMatch = null;
+
+        foreach ($filters as $filter) {
+
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getTypeFilter($filter),
+            ]);
+
+            $this->setConditionQueryShould($this->filterSearchTypes[$filter]::getSuggestQueryConditions(
+                $this->_queryConditionFactory,
+                $searchText
+            ));
+            $query = $this->createQuery($skip, $count);
+            $query->setSource(['id', 'name']);
+
+            $queryMatch[$filter] = $query;
+        }*/
+
+        $searchFilters = [];
+        $searchQueries = [];
+        foreach ($filters as $filter) {
+            $searchFilters[] = $this->_queryFilterFactory->getTypeFilter($filter);
+            /*$searchQueries = array_merge($searchQueries, $this->filterSearchTypes[$filter]::getSuggestQueryConditions(
+                $this->_queryConditionFactory,
+                $searchText
+            ));*/
+            $searchQueries[] = $this->_queryConditionFactory->getBoolQuery([], $this->filterSearchTypes[$filter]::getSuggestQueryConditions(
+                $this->_queryConditionFactory,
+                $searchText
+            ), []);
+        }
+
+        $this->setConditionQueryShould($searchQueries);
+        //$this->setFilterQuery($searchFilters);
+
+        $queryMatch = $this->createQuery($skip, $count); // в случае если есть поисковая строка
+
+
+        $this->setFlatFormatResult(true);
+
+        if (is_null($queryMatch)) {
+            return [];
+        }
+
+        return $this->searchDocuments($queryMatch);
     }
 
     /**
@@ -634,48 +692,7 @@ class CommonSearchService extends AbstractSearchService
         return $this->searchDocuments($query, TagNameSearchMapping::CONTEXT);
     }
 
-    /**
-     * Осуществляем префиксный поиск по базе всех типов
-     * указанных в филттре (некий suggest query)
-     *
-     * @param string $searchText Поисковый запрос (по мере ввода буков)
-     * @param int $skip
-     * @param int $count
-     * @return array
-     */
-    public function suggestSearch($searchText, $skip = 0, $count = null)
-    {
-        $filters = [
-            'people',
-            'places',
-            'events',
-        ];
 
-        $queryMatch = null;
-
-        foreach ($filters as $filter) {
-
-            $this->setFilterQuery([
-                $this->_queryFilterFactory->getTypeFilter($filter),
-            ]);
-
-            $this->setConditionQueryShould($this->filterSearchTypes[$filter]::getSuggestQueryConditions(
-                $this->_queryConditionFactory,
-                $searchText
-            ));
-            $query = $this->createQuery($skip, $count);
-            $query->setSource(['id', 'name']);
-
-            $queryMatch[$filter] = $query;
-        }
-
-
-        if (is_null($queryMatch)) {
-            return [];
-        }
-
-        return $this->searchMultiTypeDocuments($queryMatch);
-    }
 
 
 }

@@ -306,7 +306,8 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
     {
         return [
             $conditionFactory->getMatchPhrasePrefixQuery(self::NAME_EXACT_FIELD, $queryString),
-            $conditionFactory->getMatchPhrasePrefixQuery(self::DESCRIPTION_EXACT_FIELD, $queryString)
+            //$conditionFactory->getMatchPhrasePrefixQuery(self::DESCRIPTION_EXACT_FIELD, $queryString),
+            $conditionFactory->getTermQuery('_type', self::CONTEXT)
         ];
     }
 }

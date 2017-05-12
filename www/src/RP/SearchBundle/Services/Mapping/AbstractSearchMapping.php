@@ -39,6 +39,7 @@ abstract class AbstractSearchMapping
     const NAME_TRANSLIT_LONG_NGRAM_FIELD = 'name._translitLongNgram';
     const RUS_TRANSLITERATE_NAME = 'rusName';
     const NAME_EXACT_FIELD = 'name._exactName';
+    const NAME_EXACT_PREFIX_FIELD = 'name._exactPrefixName';
 
     const NAME_PREFIX_FIELD = 'name._prefix';
     const NAME_PREFIX_TRANSLIT_FIELD = 'name._prefixTranslit';

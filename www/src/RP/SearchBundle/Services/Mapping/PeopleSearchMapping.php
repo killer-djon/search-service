@@ -30,6 +30,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     const SURNAME_PREFIX_TRANSLIT_FIELD = 'surname._prefixTranslit';
     const SURNAME_STANDARD_FIELD = 'surname._standard';
     const SURNAME_EXACT_FIELD = 'surname._exactSurname';
+    const SURNAME_EXACT_PREFIX_FIELD = 'surname._exactPrefixName';
 
     // Морфологический разбор поля полного имени
     const FULLNAME_MORPHOLOGY_FIELD = 'fullname';

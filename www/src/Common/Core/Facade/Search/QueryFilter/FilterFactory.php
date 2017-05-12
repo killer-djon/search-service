@@ -3,6 +3,8 @@ namespace Common\Core\Facade\Search\QueryFilter;
 
 use Common\Core\Facade\Service\Geo\GeoPointService;
 use Elastica\Filter\AbstractFilter;
+use Elastica\Filter\Query;
+use Elastica\Query\AbstractQuery;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 
 class FilterFactory implements FilterFactoryInterface
@@ -347,5 +349,22 @@ class FilterFactory implements FilterFactoryInterface
 
         return $filter;
     }
+
+
+    /**
+     * Query filter.
+     * Запрос в фильтре
+     *
+     * @param AbstractQuery $query
+     * @return AbstractFilter $filter
+     */
+    public function getQueryFilter(AbstractQuery $query)
+    {
+        $queryFilter = new Query();
+        $queryFilter->setQuery($query);
+
+        return $queryFilter;
+    }
+
 
 }

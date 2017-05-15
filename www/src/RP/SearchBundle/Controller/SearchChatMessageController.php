@@ -240,7 +240,7 @@ class SearchChatMessageController extends ApiController
     public function searchChatsAction(Request $request)
     {
         try {
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
 
             /** @var ID чата в котором можем искать */
             $chatId = $request->get(RequestConstant::CHAT_ID_PARAM);

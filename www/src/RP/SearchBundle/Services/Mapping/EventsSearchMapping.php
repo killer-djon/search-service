@@ -51,7 +51,7 @@ class EventsSearchMapping extends AbstractSearchMapping
      */
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return [];
+        return self::getMatchSearchFilter($filterFactory, $userId);
     }
 
     /**

@@ -130,6 +130,8 @@ class SearchCityController extends ApiController
         try {
             $citySearchService = $this->getCitySearchService();
             $cities = $citySearchService->getTopCitiesList(
+                $this->getRequestUserId(),
+                $this->getGeoPoint(),
                 $this->getSkip(),
                 $this->getCount()
             );

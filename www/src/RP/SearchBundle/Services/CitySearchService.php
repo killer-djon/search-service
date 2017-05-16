@@ -15,7 +15,12 @@ use Common\Core\Facade\Service\Geo\GeoPointService;
 use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Mapping\AbstractSearchMapping;
 use RP\SearchBundle\Services\Mapping\CitySearchMapping;
+use RP\SearchBundle\Services\Mapping\DiscountsSearchMapping;
+use RP\SearchBundle\Services\Mapping\EventsSearchMapping;
+use RP\SearchBundle\Services\Mapping\HelpOffersSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
+use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
+use RP\SearchBundle\Services\Mapping\RusPlaceSearchMapping;
 
 class CitySearchService extends AbstractSearchService
 {
@@ -48,7 +53,7 @@ class CitySearchService extends AbstractSearchService
         $this->setFilterQuery([
             $this->_queryFilterFactory->getTermsFilter(CitySearchMapping::CITY_TYPE_FIELD, [
                 Location::CITY_TYPE,
-                Location::TOWN_TYPE,
+                //Location::TOWN_TYPE,
             ]),
         ]);
 
@@ -78,39 +83,105 @@ class CitySearchService extends AbstractSearchService
         return $this->searchDocuments($queryMatchResult, CitySearchMapping::CONTEXT);
     }
 
+
+    /**
+     * Стартовый город от которого
+     * мы будем по радиусу определять 3 самых
+     * популярных городов
+     *
+     * @const string
+     */
+    const DEFAULT_START_CITY = 'Мадрид';
+
     /**
      * Поиск наиболее полулярных городов
      * популярность будет определяться суммой
      * (пользователей + мест + скидок) / коефициент
      *
+     * @param string $userId
+     * @param GeoPointServiceInterface $point
      * @param int $skip
      * @param int $count
      *
      * @return array
      */
-    public function getTopCitiesList($skip = self::DEFAULT_SKIP_CITIES, $count = self::DEFAULT_COUNT_CITIES)
+    public function getTopCitiesList($userId, GeoPointServiceInterface $point, $skip = self::DEFAULT_SKIP_CITIES, $count = self::DEFAULT_COUNT_CITIES)
     {
+        $city = $this->searchCityByName(
+            $userId,
+            self::DEFAULT_START_CITY,
+            $point
+        );
+
+        if( empty($city) )
+        {
+            return [];
+        }
+
+        $city = current($city[CitySearchMapping::CONTEXT]);
+        $cityLocationPoints = $city['CenterPoint'];
+
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getGeoDistanceFilter(
+                AbstractSearchMapping::LOCATION_POINT_FIELD,
+                $cityLocationPoints,
+                2500, 'km'
+            ),
+            $this->_queryFilterFactory->getBoolOrFilter([
+                // события
+                $this->_queryFilterFactory->getBoolAndFilter([
+                    $this->_queryFilterFactory->getTypeFilter(EventsSearchMapping::CONTEXT),
+                    $this->_queryFilterFactory->getBoolAndFilter(
+                        EventsSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
+                    )
+                ]),
+                // могу помочь
+                $this->_queryFilterFactory->getBoolAndFilter([
+                    $this->_queryFilterFactory->getTypeFilter(PeopleSearchMapping::CONTEXT),
+                    $this->_queryFilterFactory->getBoolAndFilter(
+                        HelpOffersSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
+                    )
+                ]),
+                // пользователи
+                $this->_queryFilterFactory->getBoolAndFilter([
+                    $this->_queryFilterFactory->getTypeFilter(PeopleSearchMapping::CONTEXT),
+                    $this->_queryFilterFactory->getBoolAndFilter(
+                        PeopleSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
+                    )
+                ]),
+                // места БЕЗ скидок
+                $this->_queryFilterFactory->getBoolAndFilter([
+                    $this->_queryFilterFactory->getTypeFilter(PlaceSearchMapping::CONTEXT),
+                    $this->_queryFilterFactory->getBoolAndFilter(
+                        PlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
+                    )
+                ]),
+                // скидочные места
+                $this->_queryFilterFactory->getBoolAndFilter([
+                    $this->_queryFilterFactory->getTypeFilter(PlaceSearchMapping::CONTEXT),
+                    $this->_queryFilterFactory->getBoolAndFilter(
+                        DiscountsSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
+                    )
+                ]),
+                // русские места
+                $this->_queryFilterFactory->getBoolAndFilter([
+                    $this->_queryFilterFactory->getTypeFilter(PlaceSearchMapping::CONTEXT),
+                    $this->_queryFilterFactory->getBoolAndFilter(
+                        RusPlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
+                    )
+                ]),
+            ])
+        ]);
+
         $this->setAggregationQuery([
             $this->_queryAggregationFactory->getTermsAggregation(
                 AbstractSearchMapping::LOCATION_CITY_ID_FIELD
             )->setOrder('_count', 'desc')->setSize($count),
-            $this->_queryAggregationFactory->getFilterAggregation(
-                'empty_location',
-                $this->_queryFilterFactory->getBoolAndFilter([
-                    $this->_queryFilterFactory->getNotFilter(
-                        $this->_queryFilterFactory->getMissingFilter(
-                            AbstractSearchMapping::LOCATION_CITY_FIELD
-                        )
-                    ),
-                    $this->_queryFilterFactory->getTermFilter(['isEnabled' => true])
-                ])
-            )
+
         ]);
 
-        /** Получаем сформированный объект запроса */
-        $queryMatchResult = $this->createQuery($skip, $count);
+        $queryMatch = $this->createQuery($skip, $count);
 
-        /** поиск документа */
-        return $this->searchDocuments($queryMatchResult, PeopleSearchMapping::CONTEXT);
+        return $this->searchDocuments($queryMatch);
     }
 }

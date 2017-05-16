@@ -22,6 +22,18 @@ interface GeoPointServiceInterface
     public function getLongitude();
 
     /**
+     * @param float $lon
+     * @return $this
+     */
+    public function setLongitude(float $lon);
+
+    /**
+     * @param float $lat
+     * @return float
+     */
+    public function setLatitude(float $lat);
+
+    /**
      * Возвращает радиус поиска
      *
      * @return null|int

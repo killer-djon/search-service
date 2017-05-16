@@ -39,7 +39,7 @@ abstract class DiscountsSearchMapping extends PlaceSearchMapping
      */
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return [
+        return array_merge([
             $filterFactory->getBoolOrFilter([
                 $filterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0, 101),
                 $filterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
@@ -61,7 +61,7 @@ abstract class DiscountsSearchMapping extends PlaceSearchMapping
                     ])
                 ]),
             ])
-        ];
+        ], AbstractSearchMapping::getVisibleConditions($filterFactory, $userId));
     }
 
     /**

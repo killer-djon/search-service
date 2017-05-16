@@ -102,6 +102,24 @@ class GeoPointService implements GeoPointServiceInterface
     }
 
     /**
+     * @param float $lon
+     * @return $this
+     */
+    public function setLongitude(float $lon)
+    {
+        $this->_longitude = $lon;
+    }
+
+    /**
+     * @param float $lat
+     * @return float
+     */
+    public function setLatitude(float $lat)
+    {
+        $this->_latitude = $lat;
+    }
+
+    /**
      * Возвращает радиус поиска
      *
      * @return null|int

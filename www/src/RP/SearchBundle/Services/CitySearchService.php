@@ -13,7 +13,9 @@ use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Exception\ElasticsearchException;
 use Common\Core\Facade\Service\Geo\GeoPointService;
 use Elastica\Query\MultiMatch;
+use RP\SearchBundle\Services\Mapping\AbstractSearchMapping;
 use RP\SearchBundle\Services\Mapping\CitySearchMapping;
+use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 
 class CitySearchService extends AbstractSearchService
 {
@@ -76,8 +78,39 @@ class CitySearchService extends AbstractSearchService
         return $this->searchDocuments($queryMatchResult, CitySearchMapping::CONTEXT);
     }
 
-    public function getCitiesList($skip = self::DEFAULT_SKIP_CITIES, $count = self::DEFAULT_COUNT_CITIES)
+    /**
+     * Поиск наиболее полулярных городов
+     * популярность будет определяться суммой
+     * (пользователей + мест + скидок) / коефициент
+     *
+     * @param int $skip
+     * @param int $count
+     *
+     * @return array
+     */
+    public function getTopCitiesList($skip = self::DEFAULT_SKIP_CITIES, $count = self::DEFAULT_COUNT_CITIES)
     {
+        $this->setAggregationQuery([
+            $this->_queryAggregationFactory->getTermsAggregation(
+                AbstractSearchMapping::LOCATION_CITY_ID_FIELD
+            )->setOrder('_count', 'desc')->setSize($count),
+            $this->_queryAggregationFactory->getFilterAggregation(
+                'empty_location',
+                $this->_queryFilterFactory->getBoolAndFilter([
+                    $this->_queryFilterFactory->getNotFilter(
+                        $this->_queryFilterFactory->getMissingFilter(
+                            AbstractSearchMapping::LOCATION_CITY_FIELD
+                        )
+                    ),
+                    $this->_queryFilterFactory->getTermFilter(['isEnabled' => true])
+                ])
+            )
+        ]);
 
+        /** Получаем сформированный объект запроса */
+        $queryMatchResult = $this->createQuery($skip, $count);
+
+        /** поиск документа */
+        return $this->searchDocuments($queryMatchResult, PeopleSearchMapping::CONTEXT);
     }
 }

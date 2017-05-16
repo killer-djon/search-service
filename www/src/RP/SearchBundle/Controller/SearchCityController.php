@@ -35,8 +35,8 @@ class SearchCityController extends ApiController
      * применяется во вногих местах где нам необходимо получить город
      * надо в старом API спроксировать запрос
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @param Request $request Объект запроса
+     * @return Response
      */
     public function searchCityByNameAction(Request $request)
     {
@@ -90,9 +90,9 @@ class SearchCityController extends ApiController
     /**
      * Получить город по его ID
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
+     * @param Request $request Объект запроса
      * @param string $cityId
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function searchCityByIdAction(Request $request, $cityId)
     {
@@ -118,10 +118,10 @@ class SearchCityController extends ApiController
 
     /**
      * Получить список порции городов
+     * которые самые популярные 
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
-     * @param string $cityId
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @param Request $request Объект запроса
+     * @return Response
      */
     public function getCitiesListAction(Request $request)
     {
@@ -129,12 +129,26 @@ class SearchCityController extends ApiController
 
         try {
             $citySearchService = $this->getCitySearchService();
-            $cities = $citySearchService->getCitiesList(
+            $cities = $citySearchService->getTopCitiesList(
                 $this->getSkip(),
                 $this->getCount()
             );
 
-            $data = $cities;
+            $citiesData = $citySearchService->getAggregations();
+
+            if(!empty($citiesData))
+            {
+                foreach ($citiesData as &$city)
+                {
+                    $city['city'] = $citySearchService->searchRecordById(
+                        CitySearchMapping::CONTEXT,
+                        CitySearchMapping::ID_FIELD,
+                        $city['key']
+                    );
+                }
+            }
+
+            $data = $citiesData;
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

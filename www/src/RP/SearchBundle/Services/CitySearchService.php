@@ -143,7 +143,7 @@ class CitySearchService extends AbstractSearchService
                     )
                 ]),
                 // пользователи
-                $this->_queryFilterFactory->getBoolAndFilter([
+                /*$this->_queryFilterFactory->getBoolAndFilter([
                     $this->_queryFilterFactory->getTypeFilter(PeopleSearchMapping::CONTEXT),
                     $this->_queryFilterFactory->getBoolAndFilter(
                         PeopleSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
@@ -155,7 +155,7 @@ class CitySearchService extends AbstractSearchService
                     $this->_queryFilterFactory->getBoolAndFilter(
                         PlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
                     )
-                ]),
+                ]),*/
                 // скидочные места
                 $this->_queryFilterFactory->getBoolAndFilter([
                     $this->_queryFilterFactory->getTypeFilter(PlaceSearchMapping::CONTEXT),

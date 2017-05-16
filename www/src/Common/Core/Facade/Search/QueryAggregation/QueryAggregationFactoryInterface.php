@@ -114,6 +114,15 @@ interface QueryAggregationFactoryInterface
     public function getTermsAggregation($fieldName, $script = null, $order = '_term', $direction = 'asc', $minDocCount = null);
 
     /**
+     * Считает кол-во документов по заданному полю
+     *
+     * @param string $name Название аггрегированной функции
+     * @param string $fieldName Название поля для подсчета
+     * @return \Elastica\Aggregation\AbstractAggregation
+     */
+    public function getValueCountAggregation($name, $fieldName);
+
+    /**
      * Аггрегирование по max выражению
      *
      * @param string $fieldName Название поля

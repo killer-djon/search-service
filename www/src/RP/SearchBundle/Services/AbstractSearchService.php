@@ -599,6 +599,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $this->_queryAggregationFactory->getTopHitsAggregation(),
         ]);
 
+
         /** генерируем объект запроса */
         $query = $this->createQuery();
 

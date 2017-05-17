@@ -256,6 +256,7 @@ class CommonSearchService extends AbstractSearchService
                     }
 
                     $queryMatchResults[$keyType] = $this->createQuery($skip, (is_null($count) ? self::DEFAULT_SEARCH_BLOCK_SIZE : $count));
+                    //print_r($queryMatchResults); die();
 
                 } else {
                     $this->setSortingQuery([

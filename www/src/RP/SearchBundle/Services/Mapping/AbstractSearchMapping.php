@@ -70,6 +70,7 @@ abstract class AbstractSearchMapping
     const TAG_PREFIX_FIELD = 'tags.name._prefix';
     const TAG_PREFIX_TRANSLIT_FIELD = 'tags.name._prefixTranslit';
     const TAG_STANDARD_FIELD = 'tags.name._standard';
+    const TAG_EXACT_FIELD = 'tags.name._exactName';
 
     /** Поле идентификатора города */
     const LOCATION_FIELD = 'location';

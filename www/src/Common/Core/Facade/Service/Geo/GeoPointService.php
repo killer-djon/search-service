@@ -138,6 +138,14 @@ class GeoPointService implements GeoPointServiceInterface
     }
 
     /**
+     * @return boolean
+     */
+    public function isEmpty()
+    {
+        return (int)$this->getLatitude() === 0 && (int)$this->getLongitude() === 0;
+    }
+
+    /**
      * @param float $latitude
      */
     private function _setLatitude($latitude)

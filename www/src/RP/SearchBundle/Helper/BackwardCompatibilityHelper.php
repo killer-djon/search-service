@@ -126,7 +126,19 @@ class BackwardCompatibilityHelper
             && isset($parent['places']['hits']['hits'])
             && !empty($parent['places']['hits']['hits'])
         ) {
-            $result = array_column($parent['places']['hits']['hits'], '_source');
+            foreach ($parent['places']['hits']['hits'] as $row) {
+                $fields = $row['fields'];
+
+                $data = $row['_source'];
+                $data['tagsMatch'] = [
+                    'distance'    => $fields['distance'][0],
+                    'distancePct' => $fields['distanceInPercent'][0],
+//                    'tags'        => $fields['tagsCount'][0],
+//                    'tagsPct'     => $fields['tagsInPercent'][0],
+                ];
+
+                $result[] = $data;
+            }
         }
 
         return $result;

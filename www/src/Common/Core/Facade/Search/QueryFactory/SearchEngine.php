@@ -7,12 +7,14 @@ namespace Common\Core\Facade\Search\QueryFactory;
 
 use Common\Core\Constants\Location;
 use Common\Core\Controller\ControllerTrait;
+use Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface;
+use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
+use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Common\Core\Facade\Search\QueryScripting\QueryScriptFactoryInterface;
+use Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface;
 use Common\Core\Facade\Service\Geo\GeoPointService;
 use Elastica\Exception\ElasticsearchException;
 use FOS\ElasticaBundle\Elastica\Index;
-use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
-use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Psr\Log\LoggerInterface;
 use RP\SearchBundle\Services\Mapping\ChatMessageMapping;
 use RP\SearchBundle\Services\Mapping\CitySearchMapping;
@@ -27,8 +29,6 @@ use RP\SearchBundle\Services\Mapping\RusPlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\TagNameSearchMapping;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface;
-use Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface;
 
 class SearchEngine implements SearchEngineInterface
 {
@@ -797,8 +797,7 @@ class SearchEngine implements SearchEngineInterface
         if ($this->flatFormatData === true && !empty($items)) {
 
             $flatArray = [];
-            foreach ($items as $key => $item)
-            {
+            foreach ($items as $key => $item) {
                 $flatArray = array_merge(
                     $flatArray,
                     $item

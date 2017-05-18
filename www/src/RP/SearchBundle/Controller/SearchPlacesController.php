@@ -8,7 +8,6 @@ namespace RP\SearchBundle\Controller;
 use Common\Core\Constants\RequestConstant;
 use Common\Core\Controller\ApiController;
 use Common\Core\Exceptions\SearchServiceException;
-use RP\SearchBundle\Helper\BackwardCompatibilityHelper;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceTypeSearchMapping;
 use Symfony\Component\HttpFoundation\Request;
@@ -151,14 +150,11 @@ class SearchPlacesController extends ApiController
             $skip = (int)$this->getSkip();
             $count = (int)$this->getCount();
             $point = $this->getGeoPoint();
+            $countryId = (int)$request->get(RequestConstant::COUNTRY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
+            $cityId = (int)$request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
 
-            $places = $this->getPlacesSearchService()
-                ->searchPromoPlaces($userId, $point, $skip, $count);
-
-            $countryId = $request->get(RequestConstant::COUNTRY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
-            $cityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
-
-            $result = BackwardCompatibilityHelper::preparePromoPlaces($places, $countryId, $cityId);
+            $result = $this->getPlacesSearchService()
+                ->searchPromoPlaces($userId, $point, $skip, $count, $countryId, $cityId);
 
             return $this->_handleViewWithData($result);
         } catch (SearchServiceException $e) {

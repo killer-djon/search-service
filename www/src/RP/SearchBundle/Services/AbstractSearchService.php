@@ -13,7 +13,6 @@ use Common\Core\Facade\Search\QueryFactory\SearchServiceInterface;
 use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Query;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
-use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use RP\SearchBundle\Services\Transformers\ChatMessageTransformer;
 use RP\SearchBundle\Services\Transformers\CityTransformer;
@@ -530,12 +529,12 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     private function setQueryOptions(QueryFactoryInterface $query, $skip = 0, $count = null)
     {
         return $query->setAggregations($this->_aggregationQueryData)
-                     ->setFields($this->_fieldsSelected)
-                     ->setScriptFields($this->_scriptFields)
-                     ->setHighlight($this->_highlightQueryData)// @todo доработать
-                     ->setSort($this->_sortingQueryData)
-                     ->setSize(is_null($count) ? self::DEFAULT_SIZE_QUERY : (int)$count)
-                     ->setFrom(is_null($skip) ? self::DEFAULT_SKIP_QUERY : $skip);
+            ->setFields($this->_fieldsSelected)
+            ->setScriptFields($this->_scriptFields)
+            ->setHighlight($this->_highlightQueryData)// @todo доработать
+            ->setSort($this->_sortingQueryData)
+            ->setSize(is_null($count) ? self::DEFAULT_SIZE_QUERY : (int)$count)
+            ->setFrom(is_null($skip) ? self::DEFAULT_SKIP_QUERY : $skip);
     }
 
     /**
@@ -599,15 +598,14 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             $this->_queryAggregationFactory->getTopHitsAggregation(),
         ]);
 
-
         /** генерируем объект запроса */
         $query = $this->createQuery();
 
-        /** находим ползователя в базе еластика по его ID */
-        $userSearchDocument = $this->searchSingleDocuments($query, $context);
+        /** находим документ в базе еластика по его ID */
+        $document = $this->searchSingleDocuments($query, $context);
 
-        /** Возращаем объект профиля пользователя */
-        return $userSearchDocument;
+        /** Возращаем документ */
+        return $document;
     }
 
     /**

@@ -8,8 +8,10 @@ namespace RP\SearchBundle\Services;
 use Common\Core\Constants\ModerationStatus;
 use Common\Core\Constants\SortingOrder;
 use Common\Core\Constants\Visible;
+use Common\Core\Facade\Search\QueryScripting\QueryScriptFactory;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Elastica\Query\MultiMatch;
+use RP\SearchBundle\Helper\BackwardCompatibilityHelper;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceTypeSearchMapping;
 
@@ -44,16 +46,16 @@ class PlacesSearchService extends AbstractSearchService
                 ->setQuery($searchText)
                 ->setFields([
                     PlaceSearchMapping::NAME_FIELD,
-                    PlaceSearchMapping::NAME_TRANSLIT_FIELD
+                    PlaceSearchMapping::NAME_TRANSLIT_FIELD,
                 ])
                 ->setType(MultiMatch::TYPE_PHRASE_PREFIX),
             $this->_queryConditionFactory->getFieldQuery(
                 [
                     PlaceSearchMapping::NAME_FIELD,
-                    PlaceSearchMapping::NAME_TRANSLIT_FIELD
+                    PlaceSearchMapping::NAME_TRANSLIT_FIELD,
                 ],
                 $searchText
-            )
+            ),
         ]);
 
         /** добавляем к условию поиска рассчет по совпадению интересов */
@@ -149,19 +151,19 @@ class PlacesSearchService extends AbstractSearchService
         if (!is_null($searchText) && !empty($searchText)) {
             $this->setConditionQueryShould([
                 $this->_queryConditionFactory->getMultiMatchQuery()
-                                             ->setQuery($searchText)
-                                             ->setFields([
-                                                 PlaceSearchMapping::NAME_FIELD,
-                                                 PlaceSearchMapping::NAME_TRANSLIT_FIELD
-                                             ])
-                                             ->setType(MultiMatch::TYPE_PHRASE_PREFIX),
+                    ->setQuery($searchText)
+                    ->setFields([
+                        PlaceSearchMapping::NAME_FIELD,
+                        PlaceSearchMapping::NAME_TRANSLIT_FIELD,
+                    ])
+                    ->setType(MultiMatch::TYPE_PHRASE_PREFIX),
                 $this->_queryConditionFactory->getFieldQuery(
                     [
                         PlaceSearchMapping::NAME_FIELD,
-                        PlaceSearchMapping::NAME_TRANSLIT_FIELD
+                        PlaceSearchMapping::NAME_TRANSLIT_FIELD,
                     ],
                     $searchText
-                )
+                ),
             ]);
         }
 
@@ -254,29 +256,69 @@ class PlacesSearchService extends AbstractSearchService
      * @param GeoPointServiceInterface $point
      * @param int|null $skip Кол-во пропускаемых позиций поискового результата
      * @param int|null $count Какое кол-во выводим
+     * @param int|null $countryId ID страны
+     * @param int|null $cityId ID города
      * @return array Массив с найденными результатами
      */
-    public function searchPromoPlaces($userId, GeoPointServiceInterface $point, $skip = null, $count = null)
+    public function searchPromoPlaces($userId, GeoPointServiceInterface $point, $skip = null, $count = null, $countryId = null, $cityId = null)
     {
         $currentUser = $this->getUserById($userId);
 
+        $userPoint = $currentUser->getLocation();
+
+        if ((!$point->isValid() || $point->isEmpty()) && ($userPoint->isValid() && !$userPoint->isEmpty())) {
+            $point = $userPoint;
+        }
+
         $aggr = $this->_queryAggregationFactory;
 
-        $this->setAggregationQuery([
-            $aggr
-                ->getTermsAggregation(PlaceSearchMapping::LOCATION_COUNTRY_ID_FIELD, null, '_count', 'desc')
-                ->addAggregation($aggr
-                    ->setAggregationSource(PlaceSearchMapping::CONTEXT, [], $count)
-                )
-                ->addAggregation($aggr
-                    ->getTermsAggregation(PlaceSearchMapping::LOCATION_CITY_ID_FIELD, null, '_count', 'desc')
+        /** @var QueryScriptFactory $scriptFactory */
+        $scriptFactory = $this->_scriptFactory;
+
+        $script_fields = [
+            'tagsInPercent'     => $scriptFactory->getTagsIntersectInPercentScript(
+                $this->filterTypes[PlaceSearchMapping::CONTEXT]::TAGS_ID_FIELD,
+                $currentUser->getTags()
+            ),
+            'tagsCount'         => $scriptFactory->getTagsIntersectScript(
+                $this->filterTypes[PlaceSearchMapping::CONTEXT]::TAGS_ID_FIELD,
+                $currentUser->getTags()
+            ),
+            'distance'          => $scriptFactory->getDistanceScript(
+                $this->filterTypes[PlaceSearchMapping::CONTEXT]::LOCATION_POINT_FIELD,
+                $point
+            ),
+            'distanceInPercent' => $scriptFactory->getDistanceInPercentScript(
+                $this->filterTypes[PlaceSearchMapping::CONTEXT]::LOCATION_POINT_FIELD,
+                $point
+            ),
+        ];
+
+        if (!empty($countryId)) {
+            $this->setAggregationQuery([
+                $aggr
+                    ->getTermsAggregation(PlaceSearchMapping::LOCATION_COUNTRY_ID_FIELD, null, '_count', 'desc')
                     ->addAggregation($aggr
                         ->setAggregationSource(PlaceSearchMapping::CONTEXT, [], $count)
-                        ->setSort([PlaceSearchMapping::PLACE_ID_FIELD => SortingOrder::SORTING_DESC])
-                        ->setFrom($skip)
                     )
-                ),
-        ]);
+                    ->addAggregation($aggr
+                        ->getTermsAggregation(PlaceSearchMapping::LOCATION_CITY_ID_FIELD, null, '_count', 'desc')
+                        ->addAggregation($aggr
+                            ->setAggregationSource(PlaceSearchMapping::CONTEXT, [], $count, $script_fields)
+                            ->setSort([PlaceSearchMapping::PLACE_ID_FIELD => SortingOrder::SORTING_DESC])
+                            ->setFrom($skip)
+                        )
+                    ),
+            ]);
+        } else {
+            $this->setAggregationQuery([
+                $aggr
+                    ->getTermsAggregation(PlaceSearchMapping::LOCATION_COUNTRY_ID_FIELD, null, '_count', 'desc')
+                    ->addAggregation($aggr
+                        ->setAggregationSource(PlaceSearchMapping::CONTEXT, [], $count, $script_fields)
+                    ),
+            ]);
+        }
 
         $this->setFilterDiscounts($userId);
 
@@ -290,7 +332,9 @@ class PlacesSearchService extends AbstractSearchService
 
         $this->searchDocuments($queryMatch, PlaceSearchMapping::CONTEXT);
 
-        return $this->getAggregations();
+        $places = $this->getAggregations();
+
+        return BackwardCompatibilityHelper::preparePromoPlaces($places, $countryId, $cityId);
     }
 
     /**

@@ -51,4 +51,9 @@ interface GeoPointServiceInterface
      * @return boolean
      */
     public function isValid();
+
+    /**
+     * @return boolean
+     */
+    public function isEmpty();
 }

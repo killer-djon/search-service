@@ -13,11 +13,11 @@ use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 
 /**
  * Class PeopleSearchService
+ *
  * @package RP\SearchBundle\Services
  */
 class PeopleSearchService extends AbstractSearchService
 {
-
     /**
      * Минимальное значение скора (вес найденного результата)
      *
@@ -105,10 +105,10 @@ class PeopleSearchService extends AbstractSearchService
              */
             $this->setConditionQueryMust([
                 $this->_queryConditionFactory->getMultiMatchQuery()
-                    ->setFields(PeopleSearchMapping::getMultiMatchQuerySearchFields())
-                    ->setQuery($searchText)
-                    ->setOperator(MultiMatch::OPERATOR_OR)
-                    ->setType(MultiMatch::TYPE_BEST_FIELDS),
+                                             ->setFields(PeopleSearchMapping::getMultiMatchQuerySearchFields())
+                                             ->setQuery($searchText)
+                                             ->setOperator(MultiMatch::OPERATOR_OR)
+                                             ->setType(MultiMatch::TYPE_BEST_FIELDS),
             ]);
         }
 
@@ -367,10 +367,10 @@ class PeopleSearchService extends AbstractSearchService
                     $this->setConditionQueryShould([
                         $this->_queryConditionFactory->getDisMaxQuery([
                             $this->_queryConditionFactory->getMultiMatchQuery()
-                                ->setFields(PeopleSearchMapping::getMultiMatchQuerySearchFields())
-                                ->setQuery($searchText)
-                                ->setOperator(MultiMatch::OPERATOR_OR)
-                                ->setType(MultiMatch::TYPE_BEST_FIELDS),
+                                                         ->setFields(PeopleSearchMapping::getMultiMatchQuerySearchFields())
+                                                         ->setQuery($searchText)
+                                                         ->setOperator(MultiMatch::OPERATOR_OR)
+                                                         ->setType(MultiMatch::TYPE_BEST_FIELDS),
                             $this->_queryConditionFactory->getBoolQuery([], $prefixWildCardByName, []),
                             $this->_queryConditionFactory->getFieldQuery(
                                 PeopleSearchMapping::getMultiMatchQuerySearchFields(),
@@ -478,10 +478,10 @@ class PeopleSearchService extends AbstractSearchService
 
                 $this->setConditionQueryShould([
                     $this->_queryConditionFactory->getMultiMatchQuery()
-                        ->setFields(PeopleSearchMapping::getMultiMatchQuerySearchFields())
-                        ->setQuery($searchText)
-                        ->setOperator(MultiMatch::OPERATOR_OR)
-                        ->setType(MultiMatch::TYPE_BEST_FIELDS),
+                                                 ->setFields(PeopleSearchMapping::getMultiMatchQuerySearchFields())
+                                                 ->setQuery($searchText)
+                                                 ->setOperator(MultiMatch::OPERATOR_OR)
+                                                 ->setType(MultiMatch::TYPE_BEST_FIELDS),
                     $this->_queryConditionFactory->getBoolQuery([], $prefixWildCardByName, []),
                 ]);
             }
@@ -556,12 +556,12 @@ class PeopleSearchService extends AbstractSearchService
                 $this->setConditionQueryShould([
                     $this->_queryConditionFactory->getDisMaxQuery([
                         $this->_queryConditionFactory->getMultiMatchQuery()
-                            ->setFields([
-                                HelpOffersSearchMapping::HELP_OFFERS_NAME_FIELD,
-                                HelpOffersSearchMapping::HELP_OFFERS_NAME_TRANSLIT_FIELD,
-                            ])
-                            ->setQuery($searchText)
-                            ->setOperator(MultiMatch::OPERATOR_OR),
+                                                     ->setFields([
+                                                         HelpOffersSearchMapping::HELP_OFFERS_NAME_FIELD,
+                                                         HelpOffersSearchMapping::HELP_OFFERS_NAME_TRANSLIT_FIELD,
+                                                     ])
+                                                     ->setQuery($searchText)
+                                                     ->setOperator(MultiMatch::OPERATOR_OR),
                         $this->_queryConditionFactory->getFieldQuery([
                             HelpOffersSearchMapping::HELP_OFFERS_WORDS_NAME_FIELD,
                             HelpOffersSearchMapping::HELP_OFFERS_WORDS_NAME_TRANSLIT_FIELD,
@@ -761,5 +761,19 @@ class PeopleSearchService extends AbstractSearchService
         $query = $this->createQuery(0, 1);
 
         return $this->searchDocuments($query, PeopleSearchMapping::CONTEXT);
+    }
+
+    /**
+     * Поиск по базе подписчиков пользхователя по его ID
+     *
+     * @param string $userId
+     * @param GeoPointServiceInterface $point
+     * @param int $skip Кол-во пропускаемых позиций поискового результата
+     * @param int $count Какое кол-во выводим
+     * @return array
+     */
+    public function searchFollowersForUser($userId, GeoPointServiceInterface $point, $skip = 0, $count = null)
+    {
+        // @todo данный функционал не реализован
     }
 }

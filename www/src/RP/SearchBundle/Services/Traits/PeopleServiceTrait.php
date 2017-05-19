@@ -1,7 +1,9 @@
 <?php
 namespace RP\SearchBundle\Services\Traits;
 
+use Common\Core\Constants\NewsFeedSections;
 use Common\Core\Constants\RelationType;
+use Common\Core\Constants\UserEventType;
 
 trait PeopleServiceTrait
 {
@@ -28,6 +30,142 @@ trait PeopleServiceTrait
         RelationType::FRIENDSHIP_REQUEST           => 'isFriendshipRequestSent',
         RelationType::FRIENDSHIP_REQUEST_INITIATOR => 'isFriendshipRequestReceived',
     ];
+
+    /**
+     * Типы пользовательских событий в зависимости от выбранного раздела
+     *
+     * @see NewsFeedSections
+     * @param string $section
+     * @return array
+     */
+    public function getUserEventsGroups($section)
+    {
+        switch ($section) {
+            case NewsFeedSections::FEED_MEDIA:
+                $eventGroup = [
+                    UserEventType::POST,
+                ];
+                break;
+            case NewsFeedSections::FEED_PHOTO:
+                $eventGroup = [
+                    UserEventType::CHANGE_AVATAR,
+                    UserEventType::POST,
+                ];
+                break;
+            case NewsFeedSections::FEED_ANSWERS:
+                $eventGroup = [
+                    UserEventType::COMMENT,
+                    UserEventType::LIKE,
+                ];
+                break;
+            case NewsFeedSections::FEED_RECOMMENDATIONS:
+                $eventGroup = [];
+                break;
+
+            case NewsFeedSections::FEED_NOTIFICATIONS:
+                return [
+                    // события, receiver'ом является текущий пользователь, автор события не важен
+                    'personal' => [
+                        // Приходит от RP, только в уведомления
+                        UserEventType::PEOPLE_AROUND,
+                        // Только уведомления
+                        UserEventType::INVITE_EVENT_EVENT,
+                        // Не понимаю, как эти записи продолжают появлятся в базе? По коду API не нашел
+                        UserEventType::INVITE_EVENT_EVENT_LEGACY,
+                        // Только уведомления
+                        UserEventType::COMMENT,
+                        // Только уведомления
+                        UserEventType::LIKE,
+                        // Только уведомления
+                        UserEventType::MENTIONED,
+                        // Только уведомления
+                        UserEventType::TODAY_EVENT,
+                        // Только уведомления,
+                        UserEventType::MODERATION,
+                    ],
+
+                    // автором события являются друзья пользователя
+                    'friends'  => [
+                        // Только уведомления
+                        UserEventType::BIRTHDAY,
+                    ],
+
+                    // события, receiver'ом является текущий пользователь, автор события не является ни самим пользователем, ни его другом
+                    'others'   => [
+                        // Только уведомления
+                        UserEventType::INVITE_EVENT_EVENT,
+                        // От друзей - в ленту, в уведомления - от модератора если наша сущность
+                        UserEventType::NEW_EVENT_UPDATED,
+                        // От друзей - в ленту, в уведомления - от модератора если наша сущность
+                        UserEventType::NEW_PLACE_UPDATED,
+                        // Удаление сущности - непонятно почему только тут
+                        UserEventType::DELETE_EVENT,
+                        // Только уведомления
+                        UserEventType::LIKE,
+                        // Только уведомления
+                        UserEventType::COMMENT,
+                        // Только уведомления
+                        UserEventType::MENTIONED,
+                        // От друзей - в ленту, в уведомления - к нашему событию от незнакомцев
+                        UserEventType::WILL_COME,
+                        // От друзей - в ленту, в уведомления - в наше место от незнакомцев
+                        UserEventType::CHECKIN,
+                        // Сейчас не используется
+                        UserEventType::RECOMMENDATION,
+                    ],
+
+                    // События, автором которых является сам пользователь
+                    'author'   => [
+                        UserEventType::NEW_FRIEND,
+                    ],
+                ];
+                break;
+
+            case NewsFeedSections::FEED_NEWS:
+                return [
+                    /**
+                     * События, receiver'ом и автором которых является текущий пользователь,
+                     * Для событий генерящихся множество раз (например, eventUpdated рассылается всем, кто willCome)
+                     * Иначе одна правка события отобразится миллион раз в ленте, если туда идут миллион человек
+                     */
+                    'personal' => [
+                        // От друзей - в ленту, в уведомления - от модератора если наша сущность
+                        UserEventType::NEW_EVENT_UPDATED,
+                    ],
+
+                    // Только от друзей и самого пользователя
+                    'friends'  => [
+                        // Только в ленту
+                        UserEventType::POST,
+                        // Только в ленту
+                        UserEventType::NEW_PHOTO_ALBUM,
+                        // Только в ленту
+                        UserEventType::NEW_PHOTOS,
+                        // Только в ленту
+                        UserEventType::NEW_PLACE,
+                        // Только в ленту
+                        UserEventType::NEW_EVENT,
+                        // От друзей - в ленту, в уведомления - от модератора если наша сущность
+                        UserEventType::NEW_PLACE_UPDATED,
+                        // Только в ленту
+                        UserEventType::CHANGE_AVATAR,
+                        // Только в ленту
+                        UserEventType::HELP_ADDED,
+                        // От друзей - в ленту, в уведомления - к нашему событию от незнакомцев
+                        UserEventType::WILL_COME,
+                        // От друзей - в ленту, в уведомления - в наше место от незнакомцев
+                        UserEventType::CHECKIN,
+                    ],
+                    'others'   => [
+                    ],
+                ];
+                break;
+        }
+
+        $eventGroup[] = UserEventType::DELETE_EVENT;
+
+        return $eventGroup;
+    }
 
     /**
      * Устанавливаем в предустановленный набор

@@ -18,6 +18,16 @@ use RP\SearchBundle\Services\Mapping\CitySearchMapping;
 class CitySearchService extends AbstractSearchService
 {
     /**
+     * @const int
+     */
+    const DEFAULT_SKIP_CITIES = 0;
+
+    /**
+     * @const int
+     */
+    const DEFAULT_COUNT_CITIES = 3;
+
+    /**
      * Метод осуществляет поиск в еластике
      * по названию города
      *
@@ -56,7 +66,7 @@ class CitySearchService extends AbstractSearchService
 
         $this->setSortingQuery([
 	        $this->_sortingFactory->getFieldSort('_score', 'desc'),
-        	$this->_sortingFactory->getFieldSort(CitySearchMapping::NAME_FIELD)    
+        	//$this->_sortingFactory->getFieldSort(CitySearchMapping::NAME_FIELD)
         ]);
 
         /** Получаем сформированный объект запроса */
@@ -64,5 +74,10 @@ class CitySearchService extends AbstractSearchService
 
         /** поиск документа */
         return $this->searchDocuments($queryMatchResult, CitySearchMapping::CONTEXT);
+    }
+
+    public function getCitiesList($skip = self::DEFAULT_SKIP_CITIES, $count = self::DEFAULT_COUNT_CITIES)
+    {
+
     }
 }

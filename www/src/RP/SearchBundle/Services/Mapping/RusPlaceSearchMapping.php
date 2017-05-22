@@ -5,7 +5,6 @@
 
 namespace RP\SearchBundle\Services\Mapping;
 
-use Common\Core\Constants\ModerationStatus;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 
 abstract class RusPlaceSearchMapping extends PlaceSearchMapping
@@ -22,13 +21,15 @@ abstract class RusPlaceSearchMapping extends PlaceSearchMapping
      */
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return array_merge([
+        return [
             $filterFactory->getTermFilter([parent::IS_RUSSIAN_FIELD => true]),
             $filterFactory->getTermFilter([parent::DISCOUNT_FIELD => 0]),
             $filterFactory->getNotFilter(
                 $filterFactory->getExistsFilter(parent::BONUS_FIELD)
-            )
-        ], AbstractSearchMapping::getVisibleConditions($filterFactory, $userId));
+            ),
+            AbstractSearchMapping::getVisibleCondition($filterFactory, $userId),
+            AbstractSearchMapping::getModerateCondition($filterFactory, $userId),
+        ];
     }
 
     /**

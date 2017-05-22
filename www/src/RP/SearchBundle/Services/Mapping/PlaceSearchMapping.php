@@ -1,8 +1,8 @@
 <?php
+
 namespace RP\SearchBundle\Services\Mapping;
 
 use Common\Core\Constants\ModerationStatus;
-use Common\Core\Constants\Visible;
 use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Elastica\Query\MultiMatch;
@@ -22,7 +22,7 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
     const TYPE_NAME_NGRAM_FIELD = 'type.name._nameNgram';
     const TYPE_NAME_TRANSLIT_FIELD = 'type.name._translit';
     const TYPE_NAME_TRANSLIT_NGRAM_FIELD = 'type.name._translitNgram';
-    const TYPE_WORDS_FIELD    = 'type.name._wordsName';
+    const TYPE_WORDS_FIELD = 'type.name._wordsName';
     const TYPE_WORDS_TRANSLIT_FIELD = 'type.name._wordsTranslitName'; // частичное совпадение имени от 3-х сивмолов в транслите
 
     const TYPE_PREFIX_FIELD = 'type.name._prefix';
@@ -56,7 +56,7 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
             self::NAME_TRANSLIT_FIELD,
             //self::NAME_TRANSLIT_NGRAM_FIELD,
             self::DESCRIPTION_FIELD,
-            self::DESCRIPTION_TRANSLIT_FIELD
+            self::DESCRIPTION_TRANSLIT_FIELD,
         ];
     }
 
@@ -143,7 +143,7 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
             self::TYPE_WORDS_TRANSLIT_FIELD,
 
             self::DESCRIPTION_WORDS_NAME_FIELD,
-            self::DESCRIPTION_WORDS_TRANSLIT_NAME_FIELD
+            self::DESCRIPTION_WORDS_TRANSLIT_NAME_FIELD,
         ];
     }
 
@@ -156,16 +156,23 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
      */
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return array_merge([
+        return [
             $filterFactory->getTermFilter([self::IS_RUSSIAN_FIELD => false]),
             $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
             $filterFactory->getNotFilter(
                 $filterFactory->getExistsFilter(self::BONUS_FIELD)
-            )
-        ], AbstractSearchMapping::getVisibleConditions($filterFactory, $userId));
+            ),
+            AbstractSearchMapping::getVisibleCondition($filterFactory, $userId),
+            // НЕ скидочные места показываются даже если ещё не прошли модерацию
+            // AbstractSearchMapping::getModerateCondition($filterFactory, $userId),
+            $filterFactory->getNotFilter(
+                $filterFactory->getTermsFilter(self::MODERATION_STATUS_FIELD, [
+                    ModerationStatus::REJECTED,
+                    ModerationStatus::DELETED,
+                ])
+            ),
+        ];
     }
-
-
 
     /**
      * Собираем фильтр для поиска
@@ -217,10 +224,9 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
         }
 
         return [
-            $conditionFactory->getDisMaxQuery($queryMatchPhrase)
+            $conditionFactory->getDisMaxQuery($queryMatchPhrase),
         ];
     }
-
 
 
     /**
@@ -256,19 +262,19 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
         return [
             $conditionFactory->getDisMaxQuery(array_merge([
                 $conditionFactory->getMultiMatchQuery()
-                                 ->setFields(array_merge(
-                                     self::getMultiMatchQuerySearchFields(),
-                                     self::getMultiSubMatchQuerySearchFields()
-                                 ))
-                                 ->setQuery($queryString)
-                                 ->setOperator(MultiMatch::OPERATOR_OR)
-                                 ->setType(MultiMatch::TYPE_CROSS_FIELDS)
-            ],$prefixWildCardByTags, $prefixWildCardByName,[
+                    ->setFields(array_merge(
+                        self::getMultiMatchQuerySearchFields(),
+                        self::getMultiSubMatchQuerySearchFields()
+                    ))
+                    ->setQuery($queryString)
+                    ->setOperator(MultiMatch::OPERATOR_OR)
+                    ->setType(MultiMatch::TYPE_CROSS_FIELDS),
+            ], $prefixWildCardByTags, $prefixWildCardByName, [
                     $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString, true, 0.5),
                     $conditionFactory->getMatchPhrasePrefixQuery(self::DESCRIPTION_WORDS_NAME_FIELD, $queryString),
-                    $conditionFactory->getMatchPhrasePrefixQuery(self::DESCRIPTION_WORDS_TRANSLIT_NAME_FIELD, $queryString)
+                    $conditionFactory->getMatchPhrasePrefixQuery(self::DESCRIPTION_WORDS_TRANSLIT_NAME_FIELD, $queryString),
                 ]
-            ))
+            )),
         ];
     }
 
@@ -283,11 +289,11 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
             self::DESCRIPTION_FIELD => [
                 'term_vector'   => 'with_positions_offsets',
                 'no_match_size' => 150,
-                'fragment_size' => 150
+                'fragment_size' => 150,
             ],
-            '*' => [
-                'term_vector' => 'with_positions_offsets'
-            ]
+            '*'                     => [
+                'term_vector' => 'with_positions_offsets',
+            ],
         ];
 
         return $highlight;
@@ -307,7 +313,7 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
         return [
             $conditionFactory->getMatchPhrasePrefixQuery(self::NAME_EXACT_FIELD, $queryString),
             //$conditionFactory->getMatchPhrasePrefixQuery(self::DESCRIPTION_EXACT_FIELD, $queryString),
-            $conditionFactory->getTermQuery('_type', self::CONTEXT)
+            $conditionFactory->getTermQuery('_type', self::CONTEXT),
         ];
     }
 }

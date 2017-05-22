@@ -24,6 +24,11 @@ abstract class AbstractSearchMapping
     const AUTHOR_ID_FIELD = 'author.id';
 
     /**
+     * @const datetime КОгда была созодана сущность
+     */
+    const CREATED_AT_FIELD = 'createdAt';
+
+    /**
      * @const array массив id друзей
      */
     const AUTHOR_FRIENDS_FIELD = 'author.friendList';

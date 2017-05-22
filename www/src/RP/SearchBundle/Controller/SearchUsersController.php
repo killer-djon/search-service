@@ -444,4 +444,25 @@ class SearchUsersController extends ApiController
             return $this->_handleViewWithError($e);
         }
     }
+
+    /**
+     * Показывать подписчиков пользовтаеля
+     * по заданному токену авторизации
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function getUsersFollowersAction(Request $request)
+    {
+        $userId = $this->getRequestUserId();
+        try{
+            $peopleSearchService = $this->getPeopleSearchService();
+            $followers = $peopleSearchService->searchFollowersForUser($userId, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+    }
 }

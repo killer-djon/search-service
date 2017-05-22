@@ -1,14 +1,45 @@
-# Routing который формирует запрос для глобального (общего поиска)
-# пример запроса /api/v1/json/newsfeed/{filter}
-RPSearchBundle_search_newsFeed:
-    path: /v{_version}/{_format}/newsfeed/{filter}
+# Routing который формирует запрос для вывода постов пользователей
+# пример запроса /api/v1/json/newsfeed/posts/{wallId}
+RPSearchBundle_search_newsFeed_posts:
+    path: /v{_version}/{_format}/newsfeed/posts/{wallId}
     defaults:
-        _controller: RPSearchBundle:SearchNewsFeed:getNewsFeedByFilter
+        _controller: RPSearchBundle:SearchNewsFeed:getNewsFeedPosts
         _version: 1
         _format: json
-        template: "RPSearchBundle:SearchNewsFeed:newsfeedbyfilter.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+        template: "RPSearchBundle:SearchNewsFeed:newsfeedPosts.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
     requirements:
         _method: (GET)
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
-        filter: (news|posts)
+        wallId: \w+
+
+# Routing который формирует запрос для вывода поста по ID
+# пример запроса /api/v1/json/newsfeed/posts/id/{postId}
+RPSearchBundle_search_newsFeed_postById:
+    path: /v{_version}/{_format}/newsfeed/posts/id/{postId}
+    defaults:
+        _controller: RPSearchBundle:SearchNewsFeed:getNewsFeedPostById
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchNewsFeed:newsfeedPosts.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        postId: \w+
+
+
+# Routing который формирует запрос для вывода событий пользовательских
+# пример запроса /api/v1/json/newsfeed/userevents/{userId}
+RPSearchBundle_search_newsFeed_userevents:
+    path: /v{_version}/{_format}/newsfeed/userevents/{userId}
+    defaults:
+        _controller: RPSearchBundle:SearchNewsFeed:getNewsFeedUserEvents
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchNewsFeed:newsfeedUserEvents.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        #filter: (posts|userevents|likes)

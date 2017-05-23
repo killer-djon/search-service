@@ -24,6 +24,11 @@ abstract class AbstractSearchMapping
     const AUTHOR_ID_FIELD = 'author.id';
 
     /**
+     * @const datetime КОгда была созодана сущность
+     */
+    const CREATED_AT_FIELD = 'createdAt';
+
+    /**
      * @const array массив id друзей
      */
     const AUTHOR_FRIENDS_FIELD = 'author.friendList';
@@ -206,19 +211,17 @@ abstract class AbstractSearchMapping
 
     /**
      * Формируем условия показа сущностей
-     * по флагам видимости
+     * по флагу видимости (visible)
      *
      * @param FilterFactoryInterface $filterFactory Объект фильтрации
      * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
-     * @return array
+     * @return \Elastica\Filter\AbstractFilter
      */
-    public static function getVisibleConditions(FilterFactoryInterface $filterFactory, $userId = null)
+    public static function getVisibleCondition(FilterFactoryInterface $filterFactory, $userId = null)
     {
         $visible = $filterFactory->getTermFilter([self::VISIBLE_FIELD => Visible::ALL]);
 
-        $moderate = $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::OK]);
-
-        if (is_null($userId) || empty($userId)) {
+        if (!empty($userId)) {
             $visible = $filterFactory->getBoolOrFilter([
                 $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => $userId]),
                 $filterFactory->getTermFilter([self::VISIBLE_FIELD => Visible::ALL]),
@@ -233,7 +236,24 @@ abstract class AbstractSearchMapping
                     $filterFactory->getTermsFilter(self::VISIBLE_FIELD, [Visible::NOT_FRIEND]),
                 ]),
             ]);
+        }
 
+        return $visible;
+    }
+
+    /**
+     * Формируем условия показа сущностей
+     * по флагу модерации (moderate)
+     *
+     * @param FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
+     * @return \Elastica\Filter\AbstractFilter
+     */
+    public static function getModerateCondition(FilterFactoryInterface $filterFactory, $userId = null)
+    {
+        $moderate = $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::OK]);
+
+        if (!empty($userId)) {
             $moderate = $filterFactory->getBoolOrFilter([
                 $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::OK]),
                 $filterFactory->getBoolAndFilter([
@@ -247,10 +267,7 @@ abstract class AbstractSearchMapping
             ]);
         }
 
-        return [
-            $visible,
-            $moderate
-        ];
+        return $moderate;
     }
 
     /**

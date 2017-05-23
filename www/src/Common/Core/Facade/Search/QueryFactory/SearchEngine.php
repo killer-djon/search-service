@@ -25,6 +25,7 @@ use RP\SearchBundle\Services\Mapping\HelpOffersSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceTypeSearchMapping;
+use RP\SearchBundle\Services\Mapping\PostSearchMapping;
 use RP\SearchBundle\Services\Mapping\RusPlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\TagNameSearchMapping;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
@@ -111,6 +112,7 @@ class SearchEngine implements SearchEngineInterface
         TagNameSearchMapping::CONTEXT   => TagNameSearchMapping::class,
         PlaceTypeSearchMapping::CONTEXT => PlaceTypeSearchMapping::class,
         PeopleSearchMapping::CONTEXT    => PeopleSearchMapping::class,
+        PostSearchMapping::CONTEXT      => PostSearchMapping::class,
     ];
 
     /**
@@ -305,7 +307,7 @@ class SearchEngine implements SearchEngineInterface
 
             $this->_paginator = new SearchElasticaAdapter($elasticType, $elasticQuery);
 
-            if (!is_null($context) && !empty($context)) {
+            if (!empty($context)) {
                 $this->_paginator->setIndex($this->availableTypesSearch[$context]::DEFAULT_INDEX);
             }
 

@@ -113,3 +113,7 @@ services:
         parent: rp_search.transform_interface.base
         calls:
             - [ setSearchService, [ "@rp_search.search_service.chat_message" ] ]
+
+    rp_search.search_service.news_feed.posts:
+        class: RP\SearchBundle\Services\NewsFeedSearchService
+        parent: rp_search.search_service.base

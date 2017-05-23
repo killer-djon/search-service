@@ -10,6 +10,7 @@ use Common\Core\Constants\RequestConstant;
 use Common\Core\Facade\Search\QueryFactory\SearchServiceInterface;
 use FOS\RestBundle\Controller\FOSRestController;
 use RP\SearchBundle\Services\AbstractSearchService;
+use RP\SearchBundle\Services\NewsFeedSearchService;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Common\Core\Exceptions\ResponseFormatException;
@@ -596,6 +597,17 @@ abstract class ApiController extends FOSRestController
     public function getChatMessageSearchService()
     {
         return $this->get('rp_search.search_service.chat_message');
+    }
+
+    /**
+     * Получаем сервис поиска постов
+     * через еластик
+     *
+     * @return NewsFeedSearchService
+     */
+    public function getNewsFeedSearchService()
+    {
+        return $this->get('rp_search.search_service.news_feed.posts');
     }
 
     /**

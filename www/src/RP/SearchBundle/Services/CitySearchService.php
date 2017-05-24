@@ -107,6 +107,11 @@ class CitySearchService extends AbstractSearchService
      */
     public function getTopCitiesList($userId, GeoPointServiceInterface $point, $skip = self::DEFAULT_SKIP_CITIES, $count = self::DEFAULT_COUNT_CITIES)
     {
+        /**
+         * Получаем начальную точку на карте Европы
+         * для того чтобы от нее сделать радиус максимальный
+         * по европе только
+         */
         $city = $this->searchCityByName(
             $userId,
             self::DEFAULT_START_CITY,

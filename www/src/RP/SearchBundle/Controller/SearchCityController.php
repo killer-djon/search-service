@@ -55,27 +55,43 @@ class SearchCityController extends ApiController
             /** @var ID пользователя */
             $userId = $this->getRequestUserId();
 
+            $style = 'new'; // or 'old'
+
             $citySearchService = $this->getCitySearchService();
-            $cities = $citySearchService->searchCityByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
 
-            if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
-                $oldFormat = $this->getVersioningData($citySearchService);
+            if ($style === 'old') {
+                // этот кусок кода оставил на всякий случай, если придётся откатываться.
+                // в будущем его можно удалить
+                $cities = $citySearchService->searchCityByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
 
-                $oldFormat = $citySearchService->cityTransformer->transform($oldFormat['results'], CitySearchMapping::CONTEXT);
+                if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                    $oldFormat = $this->getVersioningData($citySearchService);
 
-                return $this->_handleViewWithData(
-                    [self::KEY_FIELD_RESPONSE => $oldFormat],
-                    null,
-                    !self::INCLUDE_IN_CONTEXT
-                );
+                    $oldFormat = $citySearchService->cityTransformer->transform($oldFormat['results'], CitySearchMapping::CONTEXT);
+
+                    return $this->_handleViewWithData(
+                        [self::KEY_FIELD_RESPONSE => $oldFormat],
+                        null,
+                        !self::INCLUDE_IN_CONTEXT
+                    );
+                }
+            } elseif ($style === 'new') {
+                $cities = $citySearchService->searchTopCityByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+
+                if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                    return $this->_handleViewWithData(
+                        [self::KEY_FIELD_RESPONSE => $cities],
+                        null,
+                        !self::INCLUDE_IN_CONTEXT
+                    );
+                }
+            } else {
+                throw new \Exception("Bad selecting style.");
             }
 
-            return $this->_handleViewWithData(array_merge(
-                    [
-                        'info' => $citySearchService->getTotalHits(),
-                    ],
-                    $cities ?: [])
-            );
+            $result = array_merge(['info' => $citySearchService->getTotalHits()], $cities ?: []);
+
+            return $this->_handleViewWithData($result);
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);

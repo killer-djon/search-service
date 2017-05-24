@@ -7,7 +7,7 @@ namespace RP\SearchBundle\Services;
 
 use Common\Core\Constants\Location;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
-use Common\Util\VarDumper;
+use Common\Util\ArrayHelper;
 use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Mapping\AbstractSearchMapping;
 use RP\SearchBundle\Services\Mapping\CitySearchMapping;
@@ -52,50 +52,6 @@ class CitySearchService extends AbstractSearchService
                     Location::CITY_TYPE,
                     //Location::TOWN_TYPE,
                 ]),
-                $this->_queryFilterFactory->getBoolOrFilter([
-                    // события
-                    $this->_queryFilterFactory->getBoolAndFilter([
-                        $this->_queryFilterFactory->getTypeFilter(EventsSearchMapping::CONTEXT),
-                        $this->_queryFilterFactory->getBoolAndFilter(
-                            EventsSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
-                        ),
-                    ]),
-                    // могу помочь
-                    $this->_queryFilterFactory->getBoolAndFilter([
-                        $this->_queryFilterFactory->getTypeFilter(PeopleSearchMapping::CONTEXT),
-                        $this->_queryFilterFactory->getBoolAndFilter(
-                            HelpOffersSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
-                        ),
-                    ]),
-                    // пользователи
-                    /*$this->_queryFilterFactory->getBoolAndFilter([
-                        $this->_queryFilterFactory->getTypeFilter(PeopleSearchMapping::CONTEXT),
-                        $this->_queryFilterFactory->getBoolAndFilter(
-                            PeopleSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
-                        )
-                    ]),
-                    // места БЕЗ скидок
-                    $this->_queryFilterFactory->getBoolAndFilter([
-                        $this->_queryFilterFactory->getTypeFilter(PlaceSearchMapping::CONTEXT),
-                        $this->_queryFilterFactory->getBoolAndFilter(
-                            PlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
-                        )
-                    ]),*/
-                    // скидочные места
-                    $this->_queryFilterFactory->getBoolAndFilter([
-                        $this->_queryFilterFactory->getTypeFilter(PlaceSearchMapping::CONTEXT),
-                        $this->_queryFilterFactory->getBoolAndFilter(
-                            DiscountsSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
-                        ),
-                    ]),
-                    // русские места
-                    $this->_queryFilterFactory->getBoolAndFilter([
-                        $this->_queryFilterFactory->getTypeFilter(PlaceSearchMapping::CONTEXT),
-                        $this->_queryFilterFactory->getBoolAndFilter(
-                            RusPlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
-                        ),
-                    ]),
-                ]),
             ]),
         ]);
 
@@ -125,52 +81,89 @@ class CitySearchService extends AbstractSearchService
         return $this->searchDocuments($queryMatchResult, CitySearchMapping::CONTEXT);
     }
 
+    /**
+     * Метод осуществляет поиск в еластике
+     * по названию города и сортирует выборку по популярности города
+     * (совокупное кол-во )
+     *
+     * @param string $userId ID пользователя который делает запрос к АПИ
+     * @param string $searchText Поисковый запрос
+     * @param GeoPointServiceInterface $point
+     * @param int $skip Кол-во пропускаемых позиций поискового результата
+     * @param int $count Какое кол-во выводим
+     * @return array Массив с найденными результатами
+     */
     public function searchTopCityByName($userId, $searchText, GeoPointServiceInterface $point, $skip = 0, $count = null)
     {
         $cities = $this->searchCityByName($userId, $searchText, $point);
 
+        $cities = ArrayHelper::map($cities[CitySearchMapping::CONTEXT], 'id', function ($item) {
+            $name = [];
+
+            if (isset($item['name']) && !empty($item['name'])) {
+                $name[] = $item['name'];
+            }
+
+            if (isset($item['Country']) && isset($item['Country']['name']) && !empty($item['Country']['name'])) {
+                $name[] = $item['Country']['name'];
+            }
+
+            return [
+                'id'        => $item['id'],
+                'name'      => implode(', ', $name),
+                'latitude'  => $item['CenterPoint']['lat'],
+                'longitude' => $item['CenterPoint']['lon'],
+            ];
+        });
+
+        $filter = $this->_queryFilterFactory;
+
         $this->setFilterQuery([
-            $this->_queryFilterFactory->getBoolOrFilter([
+            $filter->getTermsFilter(
+                AbstractSearchMapping::LOCATION_CITY_ID_FIELD,
+                array_keys($cities)
+            ),
+            $filter->getBoolOrFilter([
                 // события
-                $this->_queryFilterFactory->getBoolAndFilter([
-                    $this->_queryFilterFactory->getTypeFilter(EventsSearchMapping::CONTEXT),
-                    $this->_queryFilterFactory->getBoolAndFilter(
-                        EventsSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
+                $filter->getBoolAndFilter([
+                    $filter->getTypeFilter(EventsSearchMapping::CONTEXT),
+                    $filter->getBoolAndFilter(
+                        EventsSearchMapping::getMarkersSearchFilter($filter, $userId)
                     ),
                 ]),
                 // могу помочь
-                $this->_queryFilterFactory->getBoolAndFilter([
-                    $this->_queryFilterFactory->getTypeFilter(PeopleSearchMapping::CONTEXT),
-                    $this->_queryFilterFactory->getBoolAndFilter(
-                        HelpOffersSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
+                $filter->getBoolAndFilter([
+                    $filter->getTypeFilter(PeopleSearchMapping::CONTEXT),
+                    $filter->getBoolAndFilter(
+                        HelpOffersSearchMapping::getMarkersSearchFilter($filter, $userId)
                     ),
                 ]),
                 // пользователи
-                /*$this->_queryFilterFactory->getBoolAndFilter([
-                    $this->_queryFilterFactory->getTypeFilter(PeopleSearchMapping::CONTEXT),
-                    $this->_queryFilterFactory->getBoolAndFilter(
-                        PeopleSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
+                /*$filter->getBoolAndFilter([
+                    $filter->getTypeFilter(PeopleSearchMapping::CONTEXT),
+                    $filter->getBoolAndFilter(
+                        PeopleSearchMapping::getMarkersSearchFilter($filter, $userId)
                     )
                 ]),
                 // места БЕЗ скидок
-                $this->_queryFilterFactory->getBoolAndFilter([
-                    $this->_queryFilterFactory->getTypeFilter(PlaceSearchMapping::CONTEXT),
-                    $this->_queryFilterFactory->getBoolAndFilter(
-                        PlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
+                $filter->getBoolAndFilter([
+                    $filter->getTypeFilter(PlaceSearchMapping::CONTEXT),
+                    $filter->getBoolAndFilter(
+                        PlaceSearchMapping::getMarkersSearchFilter($filter, $userId)
                     )
                 ]),*/
                 // скидочные места
-                $this->_queryFilterFactory->getBoolAndFilter([
-                    $this->_queryFilterFactory->getTypeFilter(PlaceSearchMapping::CONTEXT),
-                    $this->_queryFilterFactory->getBoolAndFilter(
-                        DiscountsSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
+                $filter->getBoolAndFilter([
+                    $filter->getTypeFilter(PlaceSearchMapping::CONTEXT),
+                    $filter->getBoolAndFilter(
+                        DiscountsSearchMapping::getMarkersSearchFilter($filter, $userId)
                     ),
                 ]),
                 // русские места
-                $this->_queryFilterFactory->getBoolAndFilter([
-                    $this->_queryFilterFactory->getTypeFilter(PlaceSearchMapping::CONTEXT),
-                    $this->_queryFilterFactory->getBoolAndFilter(
-                        RusPlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId)
+                $filter->getBoolAndFilter([
+                    $filter->getTypeFilter(PlaceSearchMapping::CONTEXT),
+                    $filter->getBoolAndFilter(
+                        RusPlaceSearchMapping::getMarkersSearchFilter($filter, $userId)
                     ),
                 ]),
             ]),
@@ -179,19 +172,34 @@ class CitySearchService extends AbstractSearchService
         $this->setAggregationQuery([
             $this->_queryAggregationFactory->getTermsAggregation(
                 AbstractSearchMapping::LOCATION_CITY_ID_FIELD
-            )->setOrder('_count', 'desc'),
+            )->setOrder('_count', 'desc')->setSize($count),
         ]);
 
         $queryMatch = $this->createQuery($skip, $count);
 
-        $docs = $this->searchDocuments($queryMatch);
+        $this->searchDocuments($queryMatch);
 
-        $aggrs = $this->getAggregations();
+        $aggs = $this->getAggregations();
 
-        $cities_id = array_column($aggrs, 'key');
+        $result = [];
 
-        VarDumper::dump($cities);
-        die();
+        if (!empty($aggs)) {
+            foreach ($aggs as $agg) {
+                $city_id = $agg['key'];
+
+                if (isset($cities[$city_id])) {
+                    $result[] = $cities[$city_id];
+
+                    unset($cities[$city_id]);
+                }
+            }
+        }
+
+        if (!empty($cities)) {
+            $result = array_merge($result, $cities);
+        }
+
+        return array_slice($result, $skip, $count);
     }
 
     /**

@@ -327,7 +327,7 @@ class SearchEngine implements SearchEngineInterface
      */
     public function getCountDocuments(\Elastica\Query $elasticQuery, $context = null)
     {
-        $elasticType = $this->_getElasticType($context, $context);
+        $elasticType = $this->_getElasticType($context);
 
         return $elasticType->count($elasticQuery);
     }

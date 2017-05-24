@@ -8,15 +8,11 @@
 
 namespace RP\SearchBundle\Controller;
 
+use Common\Core\Constants\RequestConstant;
 use Common\Core\Controller\ApiController;
 use Common\Core\Exceptions\SearchServiceException;
-use Common\Core\Facade\Service\User\UserProfileService;
-use Elastica\Exception\ElasticsearchException;
-use RP\SearchBundle\Services\CitySearchService;
 use RP\SearchBundle\Services\Mapping\CitySearchMapping;
-use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use Symfony\Component\HttpFoundation\Request;
-use Common\Core\Constants\RequestConstant;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
@@ -45,6 +41,7 @@ class SearchCityController extends ApiController
 
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+
             if (is_null($searchText)) {
                 return $this->_handleViewWithError(
                     new BadRequestHttpException(
@@ -59,12 +56,15 @@ class SearchCityController extends ApiController
             $userId = $this->getRequestUserId();
 
             $citySearchService = $this->getCitySearchService();
-            $cities = $citySearchService->searchCityByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+
+            // старый запрос без сортировки по популярности
+            // $cities = $citySearchService->searchCityByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+
+            // новый запрос с сортировкой по популярности
+            $cities = $citySearchService->searchTopCityByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
-                $oldFormat = $this->getVersioningData($citySearchService);
-
-                $oldFormat = $citySearchService->cityTransformer->transform($oldFormat['results'], CitySearchMapping::CONTEXT);
+                $oldFormat = $citySearchService->cityTransformer->transform($cities, CitySearchMapping::CONTEXT);
 
                 return $this->_handleViewWithData(
                     [self::KEY_FIELD_RESPONSE => $oldFormat],
@@ -73,12 +73,12 @@ class SearchCityController extends ApiController
                 );
             }
 
-            return $this->_handleViewWithData(array_merge(
-                    [
-                        'info' => $citySearchService->getTotalHits(),
-                    ],
-                    $cities ?: [])
+            $result = array_merge(
+                ['info' => $citySearchService->getTotalHits()],
+                $cities ?: []
             );
+
+            return $this->_handleViewWithData($result);
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
@@ -118,7 +118,7 @@ class SearchCityController extends ApiController
 
     /**
      * Получить список порции городов
-     * которые самые популярные 
+     * которые самые популярные
      *
      * @param Request $request Объект запроса
      * @return Response
@@ -138,10 +138,8 @@ class SearchCityController extends ApiController
 
             $citiesData = $citySearchService->getAggregations();
 
-            if(!empty($citiesData))
-            {
-                foreach ($citiesData as &$city)
-                {
+            if (!empty($citiesData)) {
+                foreach ($citiesData as &$city) {
                     $city['city'] = $citySearchService->searchRecordById(
                         CitySearchMapping::CONTEXT,
                         CitySearchMapping::ID_FIELD,

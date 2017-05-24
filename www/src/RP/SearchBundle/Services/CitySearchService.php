@@ -97,24 +97,7 @@ class CitySearchService extends AbstractSearchService
     {
         $cities = $this->searchCityByName($userId, $searchText, $point);
 
-        $cities = ArrayHelper::map($cities[CitySearchMapping::CONTEXT], 'id', function ($item) {
-            $name = [];
-
-            if (isset($item['name']) && !empty($item['name'])) {
-                $name[] = $item['name'];
-            }
-
-            if (isset($item['Country']) && isset($item['Country']['name']) && !empty($item['Country']['name'])) {
-                $name[] = $item['Country']['name'];
-            }
-
-            return [
-                'id'        => $item['id'],
-                'name'      => implode(', ', $name),
-                'latitude'  => $item['CenterPoint']['lat'],
-                'longitude' => $item['CenterPoint']['lon'],
-            ];
-        });
+        $cities = ArrayHelper::index($cities[CitySearchMapping::CONTEXT], 'id');
 
         $filter = $this->_queryFilterFactory;
 
@@ -199,7 +182,7 @@ class CitySearchService extends AbstractSearchService
             $result = array_merge($result, $cities);
         }
 
-        return array_slice($result, $skip, $count);
+        return [CitySearchMapping::CONTEXT => array_slice($result, $skip, $count)];
     }
 
     /**

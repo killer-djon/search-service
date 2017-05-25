@@ -59,14 +59,14 @@ class CitySearchService extends AbstractSearchService
 
         $this->setConditionQueryMust([
             $this->_queryConditionFactory->getMultiMatchQuery()
-                ->setFields([
-                    $this->setBoostField(CitySearchMapping::NAME_FIELD, 5),
-                    $this->setBoostField(CitySearchMapping::INTERNATIONAL_NAME_FIELD, 4),
-                    $this->setBoostField(CitySearchMapping::TRANSLIT_NAME_FIELD, 3),
-                ])
-                ->setQuery($searchText)
-                ->setOperator(MultiMatch::OPERATOR_OR)
-                ->setType(MultiMatch::TYPE_PHRASE_PREFIX),
+                                         ->setFields([
+                                             $this->setBoostField(CitySearchMapping::NAME_FIELD, 5),
+                                             $this->setBoostField(CitySearchMapping::INTERNATIONAL_NAME_FIELD, 4),
+                                             $this->setBoostField(CitySearchMapping::TRANSLIT_NAME_FIELD, 3),
+                                         ])
+                                         ->setQuery($searchText)
+                                         ->setOperator(MultiMatch::OPERATOR_OR)
+                                         ->setType(MultiMatch::TYPE_PHRASE_PREFIX),
         ]);
 
         $this->setSortingQuery([
@@ -203,7 +203,6 @@ class CitySearchService extends AbstractSearchService
      * @param GeoPointServiceInterface $point
      * @param int $skip
      * @param int $count
-     *
      * @return array
      */
     public function getTopCitiesList($userId, GeoPointServiceInterface $point, $skip = self::DEFAULT_SKIP_CITIES, $count = self::DEFAULT_COUNT_CITIES)
@@ -282,7 +281,6 @@ class CitySearchService extends AbstractSearchService
             $this->_queryAggregationFactory->getTermsAggregation(
                 AbstractSearchMapping::LOCATION_CITY_ID_FIELD
             )->setOrder('_count', 'desc')->setSize($count),
-
         ]);
 
         $queryMatch = $this->createQuery($skip, $count);

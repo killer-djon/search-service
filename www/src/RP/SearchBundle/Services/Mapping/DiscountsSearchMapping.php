@@ -41,7 +41,7 @@ abstract class DiscountsSearchMapping extends PlaceSearchMapping
     {
         return [
             $filterFactory->getBoolOrFilter([
-                $filterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 1, 100),
+                $filterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0, 101),
                 $filterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
             ]),
             $filterFactory->getBoolOrFilter([

@@ -30,9 +30,9 @@ RPSearchBundle_search_newsFeed_postById:
 
 
 # Routing который формирует запрос для вывода событий пользовательских
-# пример запроса /api/v1/json/newsfeed/userevents/{userId}
-RPSearchBundle_search_newsFeed_userevents:
-    path: /v{_version}/{_format}/newsfeed/userevents/{userId}
+# пример запроса /api/v1/json/newsfeed/userevents
+RPSearchBundle_search_newsFeed_userevents_list:
+    path: /v{_version}/{_format}/newsfeed/userevents/list
     defaults:
         _controller: RPSearchBundle:SearchNewsFeed:getNewsFeedUserEvents
         _version: 1
@@ -42,4 +42,3 @@ RPSearchBundle_search_newsFeed_userevents:
         _method: (GET)
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
-        #filter: (posts|userevents|likes)

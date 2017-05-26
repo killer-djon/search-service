@@ -62,6 +62,7 @@ class ApiTokenAuthenticator implements SimplePreAuthenticatorInterface
 
         $user = $userProvider->loadUserByUsername($token->getCredentials());
 
+
         return new PreAuthenticatedToken(
             $user,
             $token->getCredentials(),

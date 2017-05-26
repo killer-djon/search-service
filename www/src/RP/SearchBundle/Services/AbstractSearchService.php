@@ -177,13 +177,19 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * Оперделяем проеобразователь для городов
      *
      * @param CityTransformer $cityTransformer
-     * @return void
+     * @return $this
      */
     public function setCityTransformer(CityTransformer $cityTransformer)
     {
         $this->cityTransformer = $cityTransformer;
     }
 
+    /**
+     * Оперделяем проеобразователь для чатов/сообщений
+     *
+     * @param ChatMessageTransformer $chatMessageTransformer
+     * @return $this
+     */
     public function setChatMessagesTransformer(ChatMessageTransformer $chatMessageTransformer)
     {
         $this->chatMessageTransformer = $chatMessageTransformer;
@@ -193,7 +199,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * Оперделяем проеобразователь интересов
      *
      * @param TagNameTransformer $tagNamesTransformer
-     * @return void
+     * @return $this
      */
     public function setTagNamesTransformer(TagNameTransformer $tagNamesTransformer)
     {
@@ -204,7 +210,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * Оперделяем проеобразователь для городов
      *
      * @param PlaceTypeTransformer $placeTypeTransformer
-     * @return void
+     * @return $this
      */
     public function setPlaceTypeTransformer(PlaceTypeTransformer $placeTypeTransformer)
     {
@@ -215,7 +221,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * Оперделяем проеобразователь для городов
      *
      * @param PeopleTransformer $peopleTransformer
-     * @return void
+     * @return $this
      */
     public function setPeopleTransformer(PeopleTransformer $peopleTransformer)
     {
@@ -226,18 +232,20 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * Определяем какой набор полей нам нужно выбрать
      *
      * @param array $fields набор полей для выборки
-     * @return SearchServiceInterface
+     * @return $this
      */
     public function setFieldsQuery(array $fields = [])
     {
         $this->_fieldsSelected = $fields;
     }
 
+
+
     /**
      * Метод который формирует условия запроса
      *
      * @param array $must Массив условий запроса $must
-     * @return SearchServiceInterface
+     * @return $this
      */
     public function setConditionQueryMust(array $must = [])
     {
@@ -248,15 +256,20 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * Ручная очистка полей скриптов
      * необходимо для случая многотипного поиска
      *
-     * @return SearchServiceInterface
+     * @return $this
      */
     public function clearScriptFields()
     {
         $this->_scriptFields = [];
-
-        return $this;
     }
 
+    /**
+     * Устанавливаем скриптовый запрос
+     * по сути это custom запрос со встроенным скриптом
+     *
+     * @param array $options Опции скрипта
+     * @return $this
+     */
     public function setScriptFunctionOption(array $options)
     {
         $this->_scriptFunctionOptions = $options;
@@ -528,13 +541,14 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      */
     private function setQueryOptions(QueryFactoryInterface $query, $skip = 0, $count = null)
     {
+
         return $query->setAggregations($this->_aggregationQueryData)
-            ->setFields($this->_fieldsSelected)
-            ->setScriptFields($this->_scriptFields)
-            ->setHighlight($this->_highlightQueryData)// @todo доработать
-            ->setSort($this->_sortingQueryData)
-            ->setSize(is_null($count) ? self::DEFAULT_SIZE_QUERY : (int)$count)
-            ->setFrom(is_null($skip) ? self::DEFAULT_SKIP_QUERY : $skip);
+                     ->setFields($this->_fieldsSelected)
+                     ->setScriptFields($this->_scriptFields)
+                     ->setHighlight($this->_highlightQueryData)// @todo доработать
+                     ->setSort($this->_sortingQueryData)
+                     ->setSize(is_null($count) ? self::DEFAULT_SIZE_QUERY : (int)$count)
+                     ->setFrom(is_null($skip) ? self::DEFAULT_SKIP_QUERY : $skip);
     }
 
     /**
@@ -626,6 +640,46 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         }
 
         return $fieldName;
+    }
+
+    /**
+     * Получаем ссылку на сервис поиска пользователей
+     *
+     * @return PeopleSearchService|object
+     */
+    protected function getPeopleSearchService()
+    {
+        return $this->container->get('rp_search.search_service.people');
+    }
+
+    /**
+     * Получаем ссылку на сервис поиска мест
+     *
+     * @return PlacesSearchService|object
+     */
+    protected function getPlacesSearchService()
+    {
+        return $this->container->get('rp_search.search_service.places');
+    }
+
+    /**
+     * Получаем ссылку на сервис поиска общего
+     *
+     * @return CommonSearchService|object
+     */
+    protected function getCommonSearchService()
+    {
+        return $this->container->get('rp_search.search_service.common');
+    }
+
+    /**
+     * Получаем ссылку на сервис поиска городов
+     *
+     * @return CitySearchService|object
+     */
+    protected function getCitySearchService()
+    {
+        return $this->container->get('rp_search.search_service.city');
     }
 
 }

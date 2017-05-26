@@ -9,6 +9,7 @@ use Common\Core\Constants\NewsFeedSections;
 use Common\Core\Controller\ApiController;
 use Common\Core\Constants\RequestConstant;
 use RP\SearchBundle\Services\Mapping\PostSearchMapping;
+use RP\SearchBundle\Services\Mapping\UserEventSearchMapping;
 use RP\SearchBundle\Services\NewsFeedSearchService;
 use RP\SearchBundle\Services\Traits\PeopleServiceTrait;
 use Symfony\Component\HttpFoundation\Request;
@@ -150,10 +151,16 @@ class SearchNewsFeedController extends ApiController
             $userEvents = $newsFeedSearchService->searchUserEventsByUserId(
                 $userId,
                 $eventTypes,
-                $friendIds
+                $friendIds,
+                $this->getSkip(),
+                $this->getCount()
             );
 
-            return $this->_handleViewWithData($userEvents);
+            return $this->_handleViewWithData([
+                'info' => $newsFeedSearchService->getTotalHits(),
+                'pagination' => $newsFeedSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
+                'items' => $userEvents[UserEventSearchMapping::CONTEXT]
+            ]);
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

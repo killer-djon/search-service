@@ -618,7 +618,7 @@ class PeopleSearchService extends AbstractSearchService
             ],
             'category2' => [
                 'min'      => 0,
-                'max'      => 100,
+                'max'      => 50,
                 'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX,
             ],
         ];

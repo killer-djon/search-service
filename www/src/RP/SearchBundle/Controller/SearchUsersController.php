@@ -16,6 +16,7 @@ use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * Class SearchUsersController
+ *
  * @package RP\SearchBundle\Controller
  */
 class SearchUsersController extends ApiController
@@ -369,7 +370,7 @@ class SearchUsersController extends ApiController
      * @param string $userId ID пользователя
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function searchPossibleFriendsAction(Request $request, $userId)
+    public function searchPossibleFriendsAction(Request $request, $userId = null)
     {
         $peopleSearchService = $this->getPeopleSearchService();
 
@@ -379,16 +380,17 @@ class SearchUsersController extends ApiController
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
+            $currentUserId = $this->getRequestUserId();
             $peopleSearchService->setFilterQuery([
                 $peopleSearchService->_queryFilterFactory->getNotFilter(
                     $peopleSearchService->_queryFilterFactory->getTermsFilter(PeopleSearchMapping::FRIEND_LIST_FIELD, [
-                        $userId,
+                        $currentUserId,
                     ])
                 ),
             ]);
 
             $possibleFriends = $peopleSearchService->searchPossibleFriendsForUser(
-                $userId,
+                $currentUserId,
                 $this->getGeoPoint(),
                 $searchText,
                 $this->getSkip(),
@@ -425,6 +427,7 @@ class SearchUsersController extends ApiController
                 $this->restructLocationField($data);
                 $data = $this->changeKeysName($data);
                 $data = $this->excludeEmptyValue($data);
+                $this->revertToScalarTagsMatchFields($data);
 
                 return $this->_handleViewWithData(
                     $data,
@@ -433,8 +436,11 @@ class SearchUsersController extends ApiController
                 );
             }
 
+            $this->revertToScalarTagsMatchFields($data);
+
             return $this->_handleViewWithData([
                 'info'                       => $peopleSearchService->getTotalHits(),
+                'pagination'                 => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
                 PeopleSearchMapping::CONTEXT => $data,
             ]);
 
@@ -455,7 +461,7 @@ class SearchUsersController extends ApiController
     public function getUsersFollowersAction(Request $request)
     {
         $userId = $this->getRequestUserId();
-        try{
+        try {
             $peopleSearchService = $this->getPeopleSearchService();
             $followers = $peopleSearchService->searchFollowersForUser($userId, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
 

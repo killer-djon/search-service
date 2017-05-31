@@ -28,6 +28,7 @@ use RP\SearchBundle\Services\Mapping\PlaceTypeSearchMapping;
 use RP\SearchBundle\Services\Mapping\PostSearchMapping;
 use RP\SearchBundle\Services\Mapping\RusPlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\TagNameSearchMapping;
+use RP\SearchBundle\Services\Mapping\UserEventSearchMapping;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -40,6 +41,27 @@ class SearchEngine implements SearchEngineInterface
      * @var boolean $oldFormatVersion
      */
     protected $oldFormatVersion = false;
+
+    /**
+     * Значение данных источников
+     *
+     * @var mixed
+     */
+    protected $_sourceQuery = true;
+
+    /**
+     * Устанавливаем значение данных источников
+     * это может быть массив или булево значение
+     * Массв - означает набор полей коорые нужно вывести в результате
+     * Bool - true-вывести все поля, false-только id записи
+     *
+     * @param mixed $params
+     * @return $this
+     */
+    public function setSourceFields($params = true)
+    {
+        $this->_sourceQuery = $params;
+    }
 
     /**
      * Устанавливаем флаг формата данных для старых версий
@@ -113,6 +135,7 @@ class SearchEngine implements SearchEngineInterface
         PlaceTypeSearchMapping::CONTEXT => PlaceTypeSearchMapping::class,
         PeopleSearchMapping::CONTEXT    => PeopleSearchMapping::class,
         PostSearchMapping::CONTEXT      => PostSearchMapping::class,
+        UserEventSearchMapping::CONTEXT => UserEventSearchMapping::class
     ];
 
     /**
@@ -165,7 +188,7 @@ class SearchEngine implements SearchEngineInterface
      *
      * @var \Symfony\Component\DependencyInjection\ContainerInterface
      */
-    private $container;
+    protected $container;
 
     /**
      * @var \Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface
@@ -293,16 +316,16 @@ class SearchEngine implements SearchEngineInterface
      *
      * @param \Elastica\Query $elasticQuery An \Elastica\Query object
      * @param string $context Search type
-     * @param bool $setSource (default: true) Показать исходные данные объекта в ответе
+     * @param mixed|null $setSource (default: true) Показать исходные данные объекта в ответе
      * @param string|null $keyField Ключ в котором храним данные вывода (необходим при алиасах типов в поиске)
      * @throws ElasticsearchException
      * @return array results
      */
-    public function searchDocuments(\Elastica\Query $elasticQuery, $context = null, $setSource = true, $keyField = null)
+    public function searchDocuments(\Elastica\Query $elasticQuery, $context = null, $setSource = null, $keyField = null)
     {
         try {
             /** устанавливаем все поля по умолчанию */
-            $elasticQuery->setSource((bool)$setSource);
+            $elasticQuery->setSource((is_null($setSource) ? $this->_sourceQuery : $setSource));
             $elasticType = $this->_getElasticType($context);
 
             $this->_paginator = new SearchElasticaAdapter($elasticType, $elasticQuery);
@@ -340,17 +363,17 @@ class SearchEngine implements SearchEngineInterface
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-multi-search.html
      * @param \Elastica\Query[] $elasticQueries An \Elastica\Query array
-     * @param bool $setSource (default: true) Показать исходные данные объекта в ответе
+     * @param mixed|null $setSource (default: true) Показать исходные данные объекта в ответе
      * @throws ElasticsearchException
      * @return array results
      */
-    public function searchMultiTypeDocuments(array $elasticQueries, $setSource = true)
+    public function searchMultiTypeDocuments(array $elasticQueries, $setSource = null)
     {
         try {
             $search = new \Elastica\Multi\Search($this->_elasticaIndex->getClient());
 
             foreach ($elasticQueries as $keyType => $elasticQuery) {
-                $elasticQuery->setSource((bool)$setSource);
+                $elasticQuery->setSource((is_null($setSource) ? $this->_sourceQuery : $setSource));
 
                 $elasticType = $this->_getElasticType($this->searchTypes[$keyType]);
                 $searchItem = $elasticType->createSearch($elasticQuery);
@@ -571,7 +594,7 @@ class SearchEngine implements SearchEngineInterface
      *
      * @param \Elastica\Query $elasticQuery An \Elastica\Query object
      * @param string|null $context Search type
-     * @param bool $setSource (default: true) Показать исходные данные объекта в ответе
+     * @param mixed|null $setSource (default: true) Показать исходные данные объекта в ответе
      * @throws ElasticsearchException
      * @return array|null results
      */
@@ -579,7 +602,7 @@ class SearchEngine implements SearchEngineInterface
     {
         try {
             /** устанавливаем все поля по умолчанию */
-            $elasticQuery->setSource((bool)$setSource);
+            $elasticQuery->setSource($setSource);
 
             $elasticType = $this->_getElasticType($context);
             $elasticQuery->setSize(1);

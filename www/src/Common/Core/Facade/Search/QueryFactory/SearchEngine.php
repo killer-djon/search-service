@@ -135,7 +135,7 @@ class SearchEngine implements SearchEngineInterface
         PlaceTypeSearchMapping::CONTEXT => PlaceTypeSearchMapping::class,
         PeopleSearchMapping::CONTEXT    => PeopleSearchMapping::class,
         PostSearchMapping::CONTEXT      => PostSearchMapping::class,
-        UserEventSearchMapping::CONTEXT => UserEventSearchMapping::class
+        UserEventSearchMapping::CONTEXT => UserEventSearchMapping::class,
     ];
 
     /**
@@ -326,12 +326,16 @@ class SearchEngine implements SearchEngineInterface
         try {
             /** устанавливаем все поля по умолчанию */
             $elasticQuery->setSource((is_null($setSource) ? $this->_sourceQuery : $setSource));
-            $elasticType = $this->_getElasticType($context);
+            $elasticType = $this->_getElasticType((!is_null($context) && !is_array($context) ? $context : null));
 
             $this->_paginator = new SearchElasticaAdapter($elasticType, $elasticQuery);
 
             if (!empty($context)) {
-                $this->_paginator->setIndex($this->availableTypesSearch[$context]::DEFAULT_INDEX);
+                $context = is_string($context) ? explode(",", $context) : $context;
+
+                foreach ($context as $typeIndex) {
+                    $this->_paginator->setIndex($this->availableTypesSearch[$typeIndex]::DEFAULT_INDEX);
+                }
             }
 
             return $this->transformResult($this->_paginator->getResultSet(), $keyField);

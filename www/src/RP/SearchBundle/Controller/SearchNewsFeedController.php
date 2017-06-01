@@ -101,49 +101,11 @@ class SearchNewsFeedController extends ApiController
      */
     public function getNewsFeedUserEventsAction(Request $request)
     {
-        /*$friendIds = $this->_userRelationsReportingService->getFriendIdsFor($userId);
-        $followedUserIds = $this->_userRelationsReportingService->getFollowedUsersIdsFor($userId);
-        // друзья, преследователи и сам пользователь
-        $friendIds = array_merge($friendIds, $followedUserIds, [$userId]);
-        $eventTypes = $this->getUserEventsGroups(NewsFeedSections::FEED_NEWS);
-
-        $criteria = [$this->getUserFeedCriteria($userId, $friendIds, $eventTypes)];
-        $criteria = [new CompositeConditionHack($criteria),];
-
-        $order = [
-            UserEventDocumentMapping::CREATED_AT_FIELD => ReportingSortingDirection::DESC,
-        ];
-
-        //@var $posts LoggableCursor
-        $posts = $this->_reportingRepository->select(
-            UserEventDocumentMapping::CONTEXT,
-            $criteria,
-            $order,
-            $count > 0 ? (int)$count : self::USER_EVENTS_COUNT_ON_PAGE,
-            $skip > 0 ? (int)$skip : 0
-        );
-
-        if ($posts->count(true) < $count) {
-            $isLastPage = true;
-        }
-
-        return $posts;*/
-
         try {
             $userId = $this->getRequestUserId();
 
-            /*$this->getPeopleSearchService()->setSourceFields(['id']);
-            $friendIds = $this->getPeopleSearchService()->searchPeopleFriends(
-                $userId,
-                $userId,
-                ['friends'],
-                $this->getGeoPoint()
-            );*/
-
             $userProfile = $this->getPeopleSearchService()->getUserById($this->getUser()->getUserName());
             $friendIds = $userProfile->getFriendList();
-            // вставляем в массив ID друзей и ID самого себя
-            array_push($friendIds, $userId);
 
             $eventTypes = $this->getUserEventsGroups(NewsFeedSections::FEED_NEWS);
 
@@ -157,9 +119,9 @@ class SearchNewsFeedController extends ApiController
             );
 
             return $this->_handleViewWithData([
-                'info' => $newsFeedSearchService->getTotalHits(),
+                'info'       => $newsFeedSearchService->getTotalHits(),
                 'pagination' => $newsFeedSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
-                'items' => $userEvents[UserEventSearchMapping::CONTEXT]
+                'items'      => $userEvents,
             ]);
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);

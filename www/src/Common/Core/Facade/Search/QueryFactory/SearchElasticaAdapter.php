@@ -2,6 +2,7 @@
 /**
  * Адаптер постраничной навигации
  */
+
 namespace Common\Core\Facade\Search\QueryFactory;
 
 use Elastica\Query;

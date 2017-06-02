@@ -1,8 +1,13 @@
 <?php
+
 namespace RP\SearchBundle\Services\Transformers;
 
 use RP\SearchBundle\Services\Mapping\ChatMessageMapping;
 
+/**
+ * Class ChatMessageTransformer
+ * @package RP\SearchBundle\Services\Transformers
+ */
 class ChatMessageTransformer extends AbstractTransformer implements TransformerInterface
 {
 
@@ -107,14 +112,17 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
     public function trasformSingleResult(array $dataResult, $context, $messagesKey = 'messages', $lastMessageKey = 'lastMessage')
     {
         $result = [];
-        if( isset($dataResult[$context]) && !empty($dataResult[$context]) )
-        {
+        if (isset($dataResult[$context]) && !empty($dataResult[$context])) {
             $chatMessage = $dataResult[$context];
+
             $chat = AbstractTransformer::path($chatMessage['chat'], 'hits.hits.0._source');
+
             $messages = AbstractTransformer::path($chatMessage[$messagesKey], 'hits.hits'); // массив из которого надо извлечь _source
-            $messages = array_filter($messages, function($singleMessage){
+
+            $messages = array_filter($messages, function ($singleMessage) {
                 return $singleMessage['_source'];
             });
+
             $lastMessage = AbstractTransformer::path($chatMessage[$lastMessageKey], 'hits.hits.0._source');
 
             $result = array_merge(
@@ -150,15 +158,16 @@ class ChatMessageTransformer extends AbstractTransformer implements TransformerI
             foreach ($dataResult as $resultItem) {
                 $chatData = AbstractTransformer::path($resultItem[$chatMessageKey], 'hits.hits.0._source');
                 $lastMessage = AbstractTransformer::path($resultItem[$lastMessageKey], 'hits.hits.0._source');
+
                 if (isset($lastMessage[ChatMessageMapping::CHAT_CREATED_AT])) {
                     unset($lastMessage[ChatMessageMapping::CHAT_CREATED_AT]);
                 }
 
-                $result[$context][] = array_merge($chatData, [
-                    'messages_count' => $resultItem['doc_count'],
-                ], [
-                    $lastMessageKey => $lastMessage,
-                ]);
+                $result[$context][] = array_merge(
+                    $chatData,
+                    ['messages_count' => $resultItem['doc_count']],
+                    [$lastMessageKey => $lastMessage]
+                );
             }
         }
 

@@ -266,12 +266,14 @@ class SearchChatMessageController extends ApiController
             $totalMessageCount = 0;
             foreach ($messages[ChatMessageMapping::CONTEXT] as &$chatMessage) {
 
-                $countUndelete = $chatSearchService->getCountUnDeleteMessages($userId, $chatMessage['chatId']);
+                $countUnDeleted = $chatSearchService->getCountUnDeleteMessages($userId, $chatMessage['chatId']);
+
                 /**
                  * Проверяем равно ли кол-во сообщений в чате
-                 * с кол-ом удаленных, если да - это означаем что ым удалили чат
+                 * с кол-ом удаленных, если да - это означаем что чат удалён
                  */
-                if ($countUndelete < $chatMessage['messages_count']) {
+                // if ($countUnDeleted < $chatMessage['messages_count']) {
+                if ($countUnDeleted > 0) {
                     $chatMessage['count'] = $chatSearchService->getCountUnreadMessages($userId, $chatMessage['chatId']);
                     $chatMessages[ChatMessageMapping::CONTEXT][] = $chatMessage;
                     $totalMessageCount += $chatMessage['messages_count'];

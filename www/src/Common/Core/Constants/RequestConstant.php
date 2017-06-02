@@ -188,11 +188,11 @@ abstract class RequestConstant
 
     /**
      * Параметр поисковой строки
-     * id элемента, с которого нужно начать выборку
+     * дата создания элемента, с которого нужно начать выборку
      *
      * @const string SEARCH_FROM_PARAM
      */
-    const SEARCH_FROM_PARAM = 'fromId';
+    const SEARCH_CREATED_FROM_PARAM = 'createdFrom';
 
     /**
      * В случае пустого параметра запроса (коорый необходим или который ожидаем)

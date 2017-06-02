@@ -26,7 +26,7 @@ class SearchChatMessageController extends ApiController
     {
         try {
             $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
-            $from = $request->get(RequestConstant::SEARCH_FROM_PARAM);
+            $createdFrom = $request->get(RequestConstant::SEARCH_CREATED_FROM_PARAM);
 
             /** @var string $searchText Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
@@ -41,6 +41,7 @@ class SearchChatMessageController extends ApiController
                 $userId,
                 $searchText,
                 $chatId,
+                $createdFrom,
                 false,
                 $this->getSkip(),
                 $this->getCount()
@@ -56,10 +57,6 @@ class SearchChatMessageController extends ApiController
 
                 $key = array_search($userId, array_column($chatMessage['recipients'], 'id'));
                 $isDeleted = (isset($chatMessage['recipients'][$key]['isDeleted']) ? $chatMessage['recipients'][$key]['isDeleted'] : false);
-
-                if (!empty($from) && $chatMessage['id'] <= $from) {
-                    continue;
-                }
 
                 if ($chatMessage['recipients'][$key]['id'] == $userId && $isDeleted == false) {
                     $chatMessages[ChatMessageMapping::CONTEXT][] = $chatMessage;
@@ -135,6 +132,7 @@ class SearchChatMessageController extends ApiController
             $chatMessages = $chatSearchService->searchByChatMessage(
                 $userId,
                 $searchText,
+                null,
                 null,
                 false,
                 $this->getSkip(),
@@ -251,6 +249,7 @@ class SearchChatMessageController extends ApiController
                 $userId,
                 null,
                 $chatId,
+                null,
                 true,
                 $this->getSkip(),
                 $this->getCount()

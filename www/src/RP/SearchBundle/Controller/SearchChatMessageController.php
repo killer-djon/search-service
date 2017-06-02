@@ -26,6 +26,7 @@ class SearchChatMessageController extends ApiController
     {
         try {
             $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+            $createdFrom = $request->get(RequestConstant::SEARCH_CREATED_FROM_PARAM);
 
             /** @var string $searchText Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
@@ -40,6 +41,7 @@ class SearchChatMessageController extends ApiController
                 $userId,
                 $searchText,
                 $chatId,
+                $createdFrom,
                 false,
                 $this->getSkip(),
                 $this->getCount()
@@ -130,6 +132,7 @@ class SearchChatMessageController extends ApiController
             $chatMessages = $chatSearchService->searchByChatMessage(
                 $userId,
                 $searchText,
+                null,
                 null,
                 false,
                 $this->getSkip(),
@@ -246,6 +249,7 @@ class SearchChatMessageController extends ApiController
                 $userId,
                 null,
                 $chatId,
+                null,
                 true,
                 $this->getSkip(),
                 $this->getCount()

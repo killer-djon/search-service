@@ -58,6 +58,29 @@ class ChatMessageSearchService extends AbstractSearchService
         return $this->searchDocuments($queryMatchResults);
     }
 
+    /**
+     * Получает сообщение чата по его id
+     *
+     * @param string $messageId
+     * @param string $chatId
+     * @return array|null
+     */
+    public function getMessageById($messageId, $chatId)
+    {
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getTermFilter([
+                ChatMessageMapping::CHAT_ID_FIELD => $chatId,
+            ]),
+            $this->_queryFilterFactory->getTermFilter([
+                ChatMessageMapping::MESSAGE_ID_FIELD => $messageId,
+            ]),
+        ]);
+
+        $queryMatchResults = $this->createQuery();
+
+        return $this->searchSingleDocuments($queryMatchResults);
+    }
+
     public function getCountUnDeleteMessages($recipientId, $chatId)
     {
         $conditionScript = <<<JS
@@ -197,12 +220,13 @@ JS;
      * @param string $userId ID пользователя который делает запрос к АПИ
      * @param string $searchText Поисковый запрос
      * @param string $chatId ID чата по которому будем фильтровать
+     * @param string $createdFrom дата создания сообщения, с которого нужно начать выборку
      * @param bool $groupChat Группировать чат (для группы без поиска - аггрегирование по бакетам)
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchByChatMessage($userId, $searchText = null, $chatId = null, $groupChat = false, $skip = 0, $count = null)
+    public function searchByChatMessage($userId, $searchText = null, $chatId = null, $createdFrom = null, $groupChat = false, $skip = 0, $count = null)
     {
         $filter = $this->_queryFilterFactory;
         $script = $this->_scriptFactory;
@@ -236,6 +260,12 @@ JS;
         if (!is_null($chatId) && !empty($chatId)) {
             $this->setFilterQuery([
                 $filter->getTermFilter([ChatMessageMapping::CHAT_ID_FIELD => $chatId]),
+            ]);
+        }
+
+        if (!empty($createdFrom)) {
+            $this->setFilterQuery([
+                $filter->getGtFilter(ChatMessageMapping::MESSAGE_SEND_AT_FIELD, $createdFrom),
             ]);
         }
 

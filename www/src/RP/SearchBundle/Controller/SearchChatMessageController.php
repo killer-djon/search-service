@@ -26,6 +26,7 @@ class SearchChatMessageController extends ApiController
     {
         try {
             $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+            $from = $request->get(RequestConstant::SEARCH_FROM_PARAM);
 
             /** @var string $searchText Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
@@ -55,6 +56,10 @@ class SearchChatMessageController extends ApiController
 
                 $key = array_search($userId, array_column($chatMessage['recipients'], 'id'));
                 $isDeleted = (isset($chatMessage['recipients'][$key]['isDeleted']) ? $chatMessage['recipients'][$key]['isDeleted'] : false);
+
+                if (!empty($from) && $chatMessage['id'] <= $from) {
+                    continue;
+                }
 
                 if ($chatMessage['recipients'][$key]['id'] == $userId && $isDeleted == false) {
                     $chatMessages[ChatMessageMapping::CONTEXT][] = $chatMessage;

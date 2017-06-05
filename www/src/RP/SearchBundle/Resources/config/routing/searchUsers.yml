@@ -74,7 +74,6 @@ RPSearchBundle_search_users_byinterests:
         _method: (GET)
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
-        userId: \w+
 
 # Routing который формирует запрос для поиска человека по ID
 # пример запроса /api/search/v1/json/users/id/10357

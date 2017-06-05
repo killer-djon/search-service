@@ -11,9 +11,11 @@ security:
         secured_area:
             pattern: ^/api
             stateless: true
+            anonymous: ~
             simple_preauth:
                 authenticator: common.security.api_token_authenticator
             provider: token_provider
 
     access_control:
+        - { path: ^/api/search/v1/json/city/name, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/api, roles: ROLE_USER }

@@ -47,11 +47,9 @@ class CitySearchService extends AbstractSearchService
         $currentUser = $this->getUserById($userId);
 
         $this->setFilterQuery([
-            $this->_queryFilterFactory->getBoolAndFilter([
-                $this->_queryFilterFactory->getTermsFilter(CitySearchMapping::CITY_TYPE_FIELD, [
-                    Location::CITY_TYPE,
-                    //Location::TOWN_TYPE,
-                ]),
+            $this->_queryFilterFactory->getTermsFilter(CitySearchMapping::CITY_TYPE_FIELD, [
+                Location::CITY_TYPE,
+                Location::TOWN_TYPE,
             ]),
         ]);
 
@@ -71,7 +69,7 @@ class CitySearchService extends AbstractSearchService
 
         $this->setSortingQuery([
             $this->_sortingFactory->getFieldSort('_score', 'desc'),
-            //$this->_sortingFactory->getFieldSort(CitySearchMapping::NAME_FIELD)
+            // $this->_sortingFactory->getFieldSort(CitySearchMapping::NAME_FIELD)
         ]);
 
         /** Получаем сформированный объект запроса */

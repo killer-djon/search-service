@@ -24,7 +24,7 @@ class ApiTokenAuthenticator implements SimplePreAuthenticatorInterface
         $apiToken = $request->headers->get('tokenId');
 
         if (is_null($apiToken)) {
-            throw new BadRequestHttpException("Header's TokenId param does not exists, check and try again");
+            // throw new BadRequestHttpException("Header's TokenId param does not exists, check and try again");
         }
 
         if (!$apiToken) {

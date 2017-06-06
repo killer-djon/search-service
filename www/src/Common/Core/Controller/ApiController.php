@@ -4,20 +4,20 @@
  * this controller contains all pre-defined methods
  * which help to you in the futures
  */
+
 namespace Common\Core\Controller;
 
 use Common\Core\Constants\RequestConstant;
+use Common\Core\Exceptions\ResponseFormatException;
 use Common\Core\Facade\Search\QueryFactory\SearchServiceInterface;
+use Common\Core\Serializer\XMLWrapper;
 use FOS\RestBundle\Controller\FOSRestController;
 use RP\SearchBundle\Services\AbstractSearchService;
 use RP\SearchBundle\Services\NewsFeedSearchService;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Common\Core\Exceptions\ResponseFormatException;
-use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
-use Common\Core\Serializer\XMLWrapper;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Основной абстрактный класс контроллера
@@ -120,8 +120,10 @@ abstract class ApiController extends FOSRestController
      */
     protected function setCurrentRequest(Request $request)
     {
+        $user = $this->getUser();
+
         /** @var ID пользователя из объекта security (авторизация по токену) */
-        $this->requestUserId = $this->getUser()->getUsername();
+        $this->requestUserId = empty($user) ? null : $user->getUsername();
         $this->requestCityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
         $this->_request = $request;
 
@@ -161,16 +163,17 @@ abstract class ApiController extends FOSRestController
      */
     public function getRequestUserId()
     {
+        // эта часть кода неправильно передается в контроллер, поэтому закомментирована
+        // если потребуется восстановить exception, нужно раскоментировать блок и заменить return $this->_handleViewWithError на throw
+        // также этот exception не даст делать анонимные запросы (например запрос поиска город можно сделать без авторизации)
 
-        if (is_null($this->requestUserId)) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Не указан userId пользователя',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
-        }
+        // if (is_null($this->requestUserId)) {
+        //     throw new BadRequestHttpException(
+        //         'Не указан userId пользователя',
+        //         null,
+        //         Response::HTTP_BAD_REQUEST
+        //     );
+        // }
 
         return $this->requestUserId;
     }
@@ -182,15 +185,18 @@ abstract class ApiController extends FOSRestController
      */
     public function getRequestCityId()
     {
-        if (is_null($this->requestCityId)) {
-            return $this->_handleViewWithError(
-                new BadRequestHttpException(
-                    'Не задан город для поиска по городу',
-                    null,
-                    Response::HTTP_BAD_REQUEST
-                )
-            );
-        }
+        // эта часть кода неправильно передается в контроллер, поэтому закомментирована
+        // если потребуется восстановить exception, нужно раскоментировать блок и заменить return $this->_handleViewWithError на throw
+
+        // if (is_null($this->requestCityId)) {
+        //     return $this->_handleViewWithError(
+        //         new BadRequestHttpException(
+        //             'Не задан город для поиска по городу',
+        //             null,
+        //             Response::HTTP_BAD_REQUEST
+        //         )
+        //     );
+        // }
 
         return $this->requestCityId;
     }
@@ -376,7 +382,7 @@ abstract class ApiController extends FOSRestController
 
         return [
             'results' => $resultData,
-            'info'    => (isset($resultInfo['searchType']) ? $resultInfo['searchType'] : $resultInfo)
+            'info'    => (isset($resultInfo['searchType']) ? $resultInfo['searchType'] : $resultInfo),
         ];
     }
 
@@ -623,23 +629,21 @@ abstract class ApiController extends FOSRestController
         //willComeUsers
         //willComeFriends
 
-        if( is_null($events) ) return null;
+        if (is_null($events)) {
+            return null;
+        }
 
         $events = AbstractTransformer::is_assoc($events) ? [$events] : $events;
-        foreach ($events as $key => &$event)
-        {
+        foreach ($events as $key => &$event) {
             //$event['willComeFriends'] = [];
-            if( isset($event['willComeUsers']) && !empty($event['willComeUsers']) )
-            {
+            if (isset($event['willComeUsers']) && !empty($event['willComeUsers'])) {
                 $event['willComeUsers'] = array_combine(array_column($event['willComeUsers'], 'id'), $event['willComeUsers']);
                 $willComeFriends = [];
                 $willComeUsers = [];
-                foreach ($event['willComeUsers'] as $idUser => $users)
-                {
-                    if( isset($users['friendList']) && !empty($users['friendList']) && in_array($userId, $users['friendList']) )
-                    {
+                foreach ($event['willComeUsers'] as $idUser => $users) {
+                    if (isset($users['friendList']) && !empty($users['friendList']) && in_array($userId, $users['friendList'])) {
                         $willComeFriends[] = $users;
-                    }else{
+                    } else {
                         $willComeUsers[] = $users;
                     }
                 }

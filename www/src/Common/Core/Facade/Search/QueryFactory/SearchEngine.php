@@ -225,9 +225,9 @@ class SearchEngine implements SearchEngineInterface
     protected $_transformer;
 
     /**
-     * @var \FOS\ElasticaBundle\Elastica\Index $elasticIndex
+     * @var \FOS\ElasticaBundle\Elastica\Index $elasticaIndex
      */
-    protected $_elasticIndex;
+    protected $_elasticaIndex;
 
     /**
      * Объект логгера
@@ -239,7 +239,7 @@ class SearchEngine implements SearchEngineInterface
     /**
      * При создании сервиса необходимо установить все сопутствующие объекты
      *
-     * @param \FOS\ElasticaBundle\Elastica\Index $elasticIndex
+     * @param \FOS\ElasticaBundle\Elastica\Index $elasticaIndex
      * @param \Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface Класс формирующий объект запроса
      * @param \Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface Объект формирования условий запроса
      * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface Оъект добавляющий фильтры к запросу
@@ -248,7 +248,7 @@ class SearchEngine implements SearchEngineInterface
      * @param \Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface Объект создания сортировки в запросе
      */
     public function __construct(
-        Index $elasticIndex,
+        Index $elasticaIndex,
         QueryFactoryInterface $queryFactory,
         ConditionFactoryInterface $queryCondition,
         FilterFactoryInterface $filterFactory,
@@ -256,7 +256,7 @@ class SearchEngine implements SearchEngineInterface
         QueryScriptFactoryInterface $scriptFactory,
         QuerySortFactoryInterface $querySorting
     ) {
-        $this->_elasticIndex = $elasticIndex;
+        $this->_elasticaIndex = $elasticaIndex;
         $this->_queryConditionFactory = $queryCondition;
         $this->_queryFilterFactory = $filterFactory;
         $this->_queryFactory = $queryFactory;
@@ -374,7 +374,7 @@ class SearchEngine implements SearchEngineInterface
     public function searchMultiTypeDocuments(array $elasticQueries, $setSource = null)
     {
         try {
-            $search = new \Elastica\Multi\Search($this->_elasticIndex->getClient());
+            $search = new \Elastica\Multi\Search($this->_elasticaIndex->getClient());
 
             foreach ($elasticQueries as $keyType => $elasticQuery) {
                 $elasticQuery->setSource((is_null($setSource) ? $this->_sourceQuery : $setSource));
@@ -879,23 +879,23 @@ class SearchEngine implements SearchEngineInterface
     protected function _getElasticType($context = null)
     {
         return empty($context)
-            ? $this->getElasticIndex()
-            : $this->getElasticIndex()->getType($context);
+            ? $this->getelasticaIndex()
+            : $this->getelasticaIndex()->getType($context);
     }
 
     /**
      * @return \FOS\ElasticaBundle\Elastica\Index
      */
-    public function getElasticIndex()
+    public function getelasticaIndex()
     {
-        return $this->_elasticIndex;
+        return $this->_elasticaIndex;
     }
 
     /**
-     * @param \FOS\ElasticaBundle\Elastica\Index $elasticIndex
+     * @param \FOS\ElasticaBundle\Elastica\Index $elasticaIndex
      */
-    public function setElasticIndex($elasticIndex)
+    public function setelasticaIndex($elasticaIndex)
     {
-        $this->_elasticIndex = $elasticIndex;
+        $this->_elasticaIndex = $elasticaIndex;
     }
 }

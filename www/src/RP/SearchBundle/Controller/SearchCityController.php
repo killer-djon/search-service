@@ -53,8 +53,8 @@ class SearchCityController extends ApiController
             }
 
             // получаем фильтры и парсим их в нужный вид для дальнейшей работы
-            $countryName = trim(mb_substr($request->get('filterCountry'), 0, 128));
-            $types = $this->getParseFilters($request->get('filterTypes'));
+            $countryName = trim(mb_substr($request->get(RequestConstant::FILTER_COUNTRY), 0, 128));
+            $types = $this->getParseFilters($request->get(RequestConstant::FILTER_TYPES));
 
             /** @var string ID пользователя */
             $userId = $this->getRequestUserId();

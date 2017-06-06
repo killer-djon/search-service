@@ -886,7 +886,7 @@ class SearchEngine implements SearchEngineInterface
     /**
      * @return \FOS\ElasticaBundle\Elastica\Index
      */
-    public function getelasticaIndex()
+    public function getElasticaIndex()
     {
         return $this->_elasticaIndex;
     }
@@ -894,7 +894,7 @@ class SearchEngine implements SearchEngineInterface
     /**
      * @param \FOS\ElasticaBundle\Elastica\Index $elasticaIndex
      */
-    public function setelasticaIndex($elasticaIndex)
+    public function setElasticaIndex($elasticaIndex)
     {
         $this->_elasticaIndex = $elasticaIndex;
     }

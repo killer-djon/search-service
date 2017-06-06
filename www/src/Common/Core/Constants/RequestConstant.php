@@ -237,4 +237,18 @@ abstract class RequestConstant
      * @const string FILTERS_PARAM
      */
     const FILTERS_PARAM = 'filters';
+
+    /**
+     * Параметр фильтра по различным типам
+     *
+     * @const string FILTER_TYPES
+     */
+    const FILTER_TYPES = 'filterTypes';
+
+    /**
+     * Параметр фильтра по названию страны
+     *
+     * @const string FILTER_COUNTRY
+     */
+    const FILTER_COUNTRY = 'filterCountry';
 }

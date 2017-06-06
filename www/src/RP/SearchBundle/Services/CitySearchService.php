@@ -31,41 +31,61 @@ class CitySearchService extends AbstractSearchService
     const DEFAULT_COUNT_CITIES = 3;
 
     /**
+     * @return \FOS\ElasticaBundle\Elastica\Index
+     */
+    private function getElasticaRussianplacePrivateIndex()
+    {
+        return $this->container->get('fos_elastica.index.russianplace_private');
+    }
+
+    /**
      * Метод осуществляет поиск в еластике
      * по названию города
      *
      * @param string $userId ID пользователя который делает запрос к АПИ
      * @param string $searchText Поисковый запрос
-     * @param GeoPointServiceInterface $point
+     * @param string $countryName
+     * @param array $types
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchCityByName($userId, $searchText, GeoPointServiceInterface $point, $skip = 0, $count = null)
+    public function searchCityByName($userId, $searchText, $countryName, $types, $skip = 0, $count = null)
     {
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
 
-        $this->setFilterQuery([
-            $this->_queryFilterFactory->getTermsFilter(CitySearchMapping::CITY_TYPE_FIELD, [
+        if (empty($types)) {
+            $types = [
                 Location::CITY_TYPE,
                 Location::TOWN_TYPE,
-            ]),
+            ];
+        }
+
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getTermsFilter(CitySearchMapping::CITY_TYPE_FIELD, $types),
         ]);
 
-        $searchText = mb_strtolower($searchText);
-
-        $this->setConditionQueryMust([
+        $must = [
             $this->_queryConditionFactory->getMultiMatchQuery()
                                          ->setFields([
                                              $this->setBoostField(CitySearchMapping::NAME_FIELD, 5),
                                              $this->setBoostField(CitySearchMapping::INTERNATIONAL_NAME_FIELD, 4),
                                              $this->setBoostField(CitySearchMapping::TRANSLIT_NAME_FIELD, 3),
                                          ])
-                                         ->setQuery($searchText)
+                                         ->setQuery(mb_strtolower($searchText))
                                          ->setOperator(MultiMatch::OPERATOR_OR)
                                          ->setType(MultiMatch::TYPE_PHRASE_PREFIX),
-        ]);
+        ];
+
+        if (!empty($countryName)) {
+            $must[] = $this->_queryConditionFactory->getNestedQuery(
+                CitySearchMapping::COUNTRY_FIELD,
+                $this->_queryConditionFactory->getMatchQuery(CitySearchMapping::COUNTRY_NAME_FIELD, $countryName)
+            );
+        }
+
+        $this->setConditionQueryMust($must);
 
         $this->setSortingQuery([
             $this->_sortingFactory->getFieldSort('_score', 'desc'),
@@ -74,6 +94,8 @@ class CitySearchService extends AbstractSearchService
 
         /** Получаем сформированный объект запроса */
         $queryMatchResult = $this->createQuery($skip, $count);
+
+        $this->setElasticaIndex($this->getElasticaRussianplacePrivateIndex());
 
         /** поиск документа */
         return $this->searchDocuments($queryMatchResult, CitySearchMapping::CONTEXT);
@@ -86,16 +108,19 @@ class CitySearchService extends AbstractSearchService
      *
      * @param string $userId ID пользователя который делает запрос к АПИ
      * @param string $searchText Поисковый запрос
-     * @param GeoPointServiceInterface $point
+     * @param string $countryName
+     * @param array $types
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchTopCityByName($userId, $searchText, GeoPointServiceInterface $point, $skip = 0, $count = null)
+    public function searchTopCityByName($userId, $searchText, $countryName = null, $types = [], $skip = 0, $count = null)
     {
-        $cities = $this->searchCityByName($userId, $searchText, $point);
+        $cities = $this->searchCityByName($userId, $searchText, $countryName, $types);
 
-        $cities = ArrayHelper::index($cities[CitySearchMapping::CONTEXT], 'id');
+        $cities = isset($cities[CitySearchMapping::CONTEXT])
+            ? ArrayHelper::index($cities[CitySearchMapping::CONTEXT], 'id')
+            : [];
 
         $filter = $this->_queryFilterFactory;
 

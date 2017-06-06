@@ -870,7 +870,7 @@ class SearchEngine implements SearchEngineInterface
     }
 
     /**
-     * Возвращает тип Elastic для заданного контекста
+     * Возвращает тип Elastic для заданного контекста (или индекс Elastic, если контекст не задан)
      *
      * @param string|null $context
      * @return \Elastica\Type|\Elastica\Index
@@ -878,11 +878,24 @@ class SearchEngine implements SearchEngineInterface
      */
     protected function _getElasticType($context = null)
     {
-        if (is_null($context)) {
-            return $this->_elasticaIndex;
-        }
-
-        return $this->_elasticaIndex->getType($context);
+        return empty($context)
+            ? $this->getelasticaIndex()
+            : $this->getelasticaIndex()->getType($context);
     }
 
+    /**
+     * @return \FOS\ElasticaBundle\Elastica\Index
+     */
+    public function getElasticaIndex()
+    {
+        return $this->_elasticaIndex;
+    }
+
+    /**
+     * @param \FOS\ElasticaBundle\Elastica\Index $elasticaIndex
+     */
+    public function setElasticaIndex($elasticaIndex)
+    {
+        $this->_elasticaIndex = $elasticaIndex;
+    }
 }

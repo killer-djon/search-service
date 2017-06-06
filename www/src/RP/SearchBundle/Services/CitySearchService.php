@@ -95,7 +95,7 @@ class CitySearchService extends AbstractSearchService
         /** Получаем сформированный объект запроса */
         $queryMatchResult = $this->createQuery($skip, $count);
 
-        $this->setElasticIndex($this->getElasticaRussianplacePrivateIndex());
+        $this->setElasticaIndex($this->getElasticaRussianplacePrivateIndex());
 
         /** поиск документа */
         return $this->searchDocuments($queryMatchResult, CitySearchMapping::CONTEXT);

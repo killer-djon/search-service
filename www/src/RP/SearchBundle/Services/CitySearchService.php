@@ -46,9 +46,10 @@ class CitySearchService extends AbstractSearchService
      * @param array $types
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
+     * @param bool $fullScan Значение указывает на то, нужно ли сканировать все индексы эластика, или только russianplace_private
      * @return array Массив с найденными результатами
      */
-    public function searchCityByName($searchText, $countryName = null, $types = [], $skip = 0, $count = null)
+    public function searchCityByName($searchText, $countryName = null, $types = [], $skip = 0, $count = null, $fullScan = false)
     {
         if (empty($types)) {
             $types = [
@@ -90,7 +91,9 @@ class CitySearchService extends AbstractSearchService
         /** Получаем сформированный объект запроса */
         $queryMatchResult = $this->createQuery($skip, $count);
 
-        $this->setElasticaIndex($this->getElasticaRussianplacePrivateIndex());
+        if (!$fullScan) {
+            $this->setElasticaIndex($this->getElasticaRussianplacePrivateIndex());
+        }
 
         /** поиск документа */
         return $this->searchDocuments($queryMatchResult, CitySearchMapping::CONTEXT);
@@ -228,7 +231,12 @@ class CitySearchService extends AbstractSearchService
          * по европе только
          */
         $city = $this->searchCityByName(
-            self::DEFAULT_START_CITY
+            self::DEFAULT_START_CITY,
+            null,
+            [],
+            0,
+            null,
+            true
         );
 
         if (empty($city)) {

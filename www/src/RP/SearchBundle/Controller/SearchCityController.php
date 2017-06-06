@@ -56,9 +56,6 @@ class SearchCityController extends ApiController
             $countryName = trim(mb_substr($request->get(RequestConstant::FILTER_COUNTRY), 0, 128));
             $types = $this->getParseFilters($request->get(RequestConstant::FILTER_TYPES));
 
-            /** @var string ID пользователя */
-            $userId = $this->getRequestUserId();
-
             $citySearchService = $this->getCitySearchService();
 
             // старый запрос без сортировки по популярности
@@ -66,7 +63,6 @@ class SearchCityController extends ApiController
 
             // новый запрос с сортировкой по популярности
             $cities = $citySearchService->searchTopCityByName(
-                $userId,
                 $searchText,
                 $countryName,
                 $types,
@@ -141,8 +137,6 @@ class SearchCityController extends ApiController
         try {
             $citySearchService = $this->getCitySearchService();
             $cities = $citySearchService->getTopCitiesList(
-                $this->getRequestUserId(),
-                $this->getGeoPoint(),
                 $this->getSkip(),
                 $this->getCount()
             );

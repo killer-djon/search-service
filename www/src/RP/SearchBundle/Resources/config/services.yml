@@ -43,6 +43,7 @@ services:
         class: RP\SearchBundle\Services\AbstractSearchService
         parent: rp_search.search.engine
         calls:
+            - [ setCountryTransformer, [ "@rp_search.transform_interface.country" ] ]
             - [ setCityTransformer, [ "@rp_search.transform_interface.city" ] ]
             - [ setPeopleTransformer, [ "@rp_search.transform_interface.people" ] ]
             - [ setPlaceTypeTransformer, [ "@rp_search.transform_interface.placetype" ] ]
@@ -69,6 +70,11 @@ services:
         class: RP\SearchBundle\Services\EventsSearchService
         parent: rp_search.search_service.base
 
+    # Сервис поиска стран
+    rp_search.search_service.country:
+        class: RP\SearchBundle\Services\CountrySearchService
+        parent: rp_search.search_service.base
+
     # Сервис поиска городов
     rp_search.search_service.city:
         class: RP\SearchBundle\Services\CitySearchService
@@ -83,6 +89,12 @@ services:
         calls:
             - [ setContainer, [ "@service_container" ] ]
             - [ setElasticaIndex, [ "@fos_elastica.index" ] ]
+
+    rp_search.transform_interface.country:
+        class: RP\SearchBundle\Services\Transformers\CountryTransformer
+        parent: rp_search.transform_interface.base
+        calls:
+            - [ setSearchService, [ "@rp_search.search_service.country" ] ]
 
     rp_search.transform_interface.city:
         class: RP\SearchBundle\Services\Transformers\CityTransformer

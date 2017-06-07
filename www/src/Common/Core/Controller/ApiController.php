@@ -584,6 +584,17 @@ abstract class ApiController extends FOSRestController
     }
 
     /**
+     * Получаем сервис поиска стран
+     * через еластик
+     *
+     * @return \RP\SearchBundle\Services\CountrySearchService
+     */
+    public function getCountrySearchService()
+    {
+        return $this->get('rp_search.search_service.country');
+    }
+
+    /**
      * Получаем сервис поиска городов
      * через еластик
      *

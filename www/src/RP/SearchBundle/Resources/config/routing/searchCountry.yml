@@ -1,0 +1,28 @@
+# Routing который формирует запрос для поиска городов
+# пример запроса /api/search/v1/json/country/name
+RPSearchBundle_search_country_byname:
+    path: /v{_version}/{_format}/country/name
+    defaults:
+        _controller: RPSearchBundle:SearchCountry:searchCountryByName
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchCountry:searchCountryByName.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+
+# Routing который формирует запрос для поиска городов
+# пример запроса /api/search/v1/json/country/name
+RPSearchBundle_search_country_byid:
+    path: /v{_version}/{_format}/country/id/{countryId}
+    defaults:
+        _controller: RPSearchBundle:SearchCountry:searchCountryById
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchCountry:searchCountryById.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        countryId: \w+

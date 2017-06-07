@@ -18,6 +18,7 @@ use FOS\ElasticaBundle\Elastica\Index;
 use Psr\Log\LoggerInterface;
 use RP\SearchBundle\Services\Mapping\ChatMessageMapping;
 use RP\SearchBundle\Services\Mapping\CitySearchMapping;
+use RP\SearchBundle\Services\Mapping\CountrySearchMapping;
 use RP\SearchBundle\Services\Mapping\DiscountsSearchMapping;
 use RP\SearchBundle\Services\Mapping\EventsSearchMapping;
 use RP\SearchBundle\Services\Mapping\FriendsSearchMapping;
@@ -129,6 +130,7 @@ class SearchEngine implements SearchEngineInterface
     ];
 
     protected $availableTypesSearch = [
+        CountrySearchMapping::CONTEXT   => CountrySearchMapping::class,
         CitySearchMapping::CONTEXT      => CitySearchMapping::class,
         ChatMessageMapping::CONTEXT     => ChatMessageMapping::class,
         TagNameSearchMapping::CONTEXT   => TagNameSearchMapping::class,

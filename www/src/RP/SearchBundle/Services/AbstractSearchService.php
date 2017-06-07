@@ -16,6 +16,7 @@ use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use RP\SearchBundle\Services\Transformers\ChatMessageTransformer;
 use RP\SearchBundle\Services\Transformers\CityTransformer;
+use RP\SearchBundle\Services\Transformers\CountryTransformer;
 use RP\SearchBundle\Services\Transformers\PeopleTransformer;
 use RP\SearchBundle\Services\Transformers\PlaceTypeTransformer;
 use RP\SearchBundle\Services\Transformers\TagNameTransformer;
@@ -149,6 +150,11 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     private $_highlightQueryData = [];
 
     /**
+     * @var CountryTransformer $countryTransformer
+     */
+    public $countryTransformer;
+
+    /**
      * @var CityTransformer $cityTransformer
      */
     public $cityTransformer;
@@ -172,6 +178,17 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * @var ChatMessageTransformer $chatMessageTransformer
      */
     public $chatMessageTransformer;
+
+    /**
+     * Оперделяем проеобразователь для стран
+     *
+     * @param CountryTransformer $countryTransformer
+     * @return $this
+     */
+    public function setCountryTransformer(CountryTransformer $countryTransformer)
+    {
+        $this->countryTransformer = $countryTransformer;
+    }
 
     /**
      * Оперделяем проеобразователь для городов
@@ -238,7 +255,6 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     {
         $this->_fieldsSelected = $fields;
     }
-
 
 
     /**

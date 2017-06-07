@@ -52,8 +52,9 @@ class SearchCityController extends ApiController
                 );
             }
 
-            /** @var ID пользователя */
-            $userId = $this->getRequestUserId();
+            // получаем фильтры и парсим их в нужный вид для дальнейшей работы
+            $countryName = trim(mb_substr($request->get(RequestConstant::FILTER_COUNTRY), 0, 128));
+            $types = $this->getParseFilters($request->get(RequestConstant::FILTER_TYPES));
 
             $citySearchService = $this->getCitySearchService();
 
@@ -61,7 +62,13 @@ class SearchCityController extends ApiController
             // $cities = $citySearchService->searchCityByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
 
             // новый запрос с сортировкой по популярности
-            $cities = $citySearchService->searchTopCityByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+            $cities = $citySearchService->searchTopCityByName(
+                $searchText,
+                $countryName,
+                $types,
+                $this->getSkip(),
+                $this->getCount()
+            );
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                 $oldFormat = $citySearchService->cityTransformer->transform($cities, CitySearchMapping::CONTEXT);
@@ -130,8 +137,6 @@ class SearchCityController extends ApiController
         try {
             $citySearchService = $this->getCitySearchService();
             $cities = $citySearchService->getTopCitiesList(
-                $this->getRequestUserId(),
-                $this->getGeoPoint(),
                 $this->getSkip(),
                 $this->getCount()
             );

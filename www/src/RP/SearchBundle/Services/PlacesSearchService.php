@@ -43,12 +43,12 @@ class PlacesSearchService extends AbstractSearchService
 
         $this->setConditionQueryShould([
             $this->_queryConditionFactory->getMultiMatchQuery()
-                ->setQuery($searchText)
-                ->setFields([
-                    PlaceSearchMapping::NAME_FIELD,
-                    PlaceSearchMapping::NAME_TRANSLIT_FIELD,
-                ])
-                ->setType(MultiMatch::TYPE_PHRASE_PREFIX),
+                                         ->setQuery($searchText)
+                                         ->setFields([
+                                             PlaceSearchMapping::NAME_FIELD,
+                                             PlaceSearchMapping::NAME_TRANSLIT_FIELD,
+                                         ])
+                                         ->setType(MultiMatch::TYPE_PHRASE_PREFIX),
             $this->_queryConditionFactory->getFieldQuery(
                 [
                     PlaceSearchMapping::NAME_FIELD,
@@ -100,13 +100,13 @@ class PlacesSearchService extends AbstractSearchService
             $this->setConditionQueryShould([
                 $this->_queryConditionFactory->getDisMaxQuery([
                     $this->_queryConditionFactory->getMultiMatchQuery()
-                        ->setQuery($searchText)
-                        ->setFields([
-                            PlaceTypeSearchMapping::NAME_FIELD,
-                            PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD,
-                        ])
-                        ->setOperator(MultiMatch::OPERATOR_OR)
-                        ->setType(MultiMatch::TYPE_BEST_FIELDS),
+                                                 ->setQuery($searchText)
+                                                 ->setFields([
+                                                     PlaceTypeSearchMapping::NAME_FIELD,
+                                                     PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD,
+                                                 ])
+                                                 ->setOperator(MultiMatch::OPERATOR_OR)
+                                                 ->setType(MultiMatch::TYPE_BEST_FIELDS),
                     $this->_queryConditionFactory->getPrefixQuery(PlaceTypeSearchMapping::NAME_FIELD, $searchText),
                     $this->_queryConditionFactory->getPrefixQuery(PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD, $searchText),
 
@@ -151,12 +151,12 @@ class PlacesSearchService extends AbstractSearchService
         if (!is_null($searchText) && !empty($searchText)) {
             $this->setConditionQueryShould([
                 $this->_queryConditionFactory->getMultiMatchQuery()
-                    ->setQuery($searchText)
-                    ->setFields([
-                        PlaceSearchMapping::NAME_FIELD,
-                        PlaceSearchMapping::NAME_TRANSLIT_FIELD,
-                    ])
-                    ->setType(MultiMatch::TYPE_PHRASE_PREFIX),
+                                             ->setQuery($searchText)
+                                             ->setFields([
+                                                 PlaceSearchMapping::NAME_FIELD,
+                                                 PlaceSearchMapping::NAME_TRANSLIT_FIELD,
+                                             ])
+                                             ->setType(MultiMatch::TYPE_PHRASE_PREFIX),
                 $this->_queryConditionFactory->getFieldQuery(
                     [
                         PlaceSearchMapping::NAME_FIELD,
@@ -211,8 +211,8 @@ class PlacesSearchService extends AbstractSearchService
         if (isset($params['search']) && !empty($params['search'])) {
             $this->setConditionQueryShould([
                 $this->_queryConditionFactory->getMultiMatchQuery()
-                    ->setQuery($params['search'])
-                    ->setFields(PlaceSearchMapping::getMultiMatchQuerySearchFields()),
+                                             ->setQuery($params['search'])
+                                             ->setFields(PlaceSearchMapping::getMultiMatchQuerySearchFields()),
                 $this->_queryConditionFactory->getWildCardQuery(PlaceSearchMapping::NAME_WORDS_NAME_FIELD, "{$params['search']}*"),
                 $this->_queryConditionFactory->getWildCardQuery(PlaceSearchMapping::DESCRIPTION_FIELD, "{$params['search']}*"),
                 $this->_queryConditionFactory->getWildCardQuery(PlaceSearchMapping::BONUS_FIELD, "{$params['search']}*"),
@@ -410,10 +410,15 @@ class PlacesSearchService extends AbstractSearchService
         $filter = $this->_queryFilterFactory;
 
         if (empty($userId)) {
+            $moderate = $filter->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK]);
+
             $discount = $filter->getBoolOrFilter([
-                $filter->getBoolOrFilter([
-                    $filter->getGtFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0),
-                    $filter->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
+                $filter->getBoolAndFilter([
+                    $moderate,
+                    $filter->getBoolOrFilter([
+                        $filter->getGtFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0),
+                        $filter->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
+                    ]),
                 ]),
                 $filter->getBoolAndFilter([
                     $filter->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
@@ -425,18 +430,29 @@ class PlacesSearchService extends AbstractSearchService
 
             $visible = $filter->getTermFilter([PlaceSearchMapping::VISIBLE_FIELD => Visible::ALL]);
 
-            $moderate = $filter->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK]);
-
             $this->setFilterQuery([
-                $filter->getBoolAndFilter([$discount, $visible, $moderate]),
+                $filter->getBoolAndFilter([$discount, $visible]),
             ]);
         } else {
 
             /** получаем текущего ползователя */
             $currentUser = $this->getUserById($userId);
 
+            $moderate = $filter->getBoolOrFilter([
+                $filter->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK]),
+                $filter->getBoolAndFilter([
+                    $filter->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                    $filter->getTermsFilter(PlaceSearchMapping::MODERATION_STATUS_FIELD, [
+                        ModerationStatus::DIRTY,
+                        ModerationStatus::REJECTED,
+                        ModerationStatus::RESTORED,
+                    ]),
+                ]),
+            ]);
+
             $discount = $filter->getBoolOrFilter([
                 $filter->getBoolAndFilter([
+                    $moderate,
                     $filter->getBoolOrFilter([
                         $filter->getGtFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0),
                         $filter->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
@@ -465,20 +481,8 @@ class PlacesSearchService extends AbstractSearchService
                 ]),
             ]);
 
-            $moderate = $filter->getBoolOrFilter([
-                $filter->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK]),
-                $filter->getBoolAndFilter([
-                    $filter->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
-                    $filter->getTermsFilter(PlaceSearchMapping::MODERATION_STATUS_FIELD, [
-                        ModerationStatus::DIRTY,
-                        ModerationStatus::REJECTED,
-                        ModerationStatus::RESTORED,
-                    ]),
-                ]),
-            ]);
-
             $this->setFilterQuery([
-                $filter->getBoolAndFilter([$discount, $visible, $moderate]),
+                $filter->getBoolAndFilter([$discount, $visible]),
             ]);
 
             /** добавляем к условию поиска рассчет по совпадению интересов */

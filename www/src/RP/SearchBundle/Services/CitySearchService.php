@@ -49,28 +49,27 @@ class CitySearchService extends AbstractSearchService
             ];
         }
 
-        $this->setFilterQuery([
-            $this->_queryFilterFactory->getTermsFilter(CitySearchMapping::CITY_TYPE_FIELD, $types),
-        ]);
+        $filters[] = $this->_queryFilterFactory->getTermsFilter(CitySearchMapping::CITY_TYPE_FIELD, $types);
+
+        $searchCityByNameFields = [
+            $this->setBoostField(CitySearchMapping::NAME_FIELD, 5),
+            $this->setBoostField(CitySearchMapping::INTERNATIONAL_NAME_FIELD, 4),
+        ];
+
+        if (!empty($countryName)) {
+
+            $filters[] = $this->_queryFilterFactory->getTermFilter([CitySearchMapping::COUNTRY_NAME_FIELD => $countryName]);
+        } else {
+            $searchCityByNameFields[] = $this->setBoostField(CitySearchMapping::TRANSLIT_NAME_FIELD, 3);
+        }
 
         $must = [
             $this->_queryConditionFactory->getMultiMatchQuery()
-                                         ->setFields([
-                                             $this->setBoostField(CitySearchMapping::NAME_FIELD, 5),
-                                             $this->setBoostField(CitySearchMapping::INTERNATIONAL_NAME_FIELD, 4),
-                                             $this->setBoostField(CitySearchMapping::TRANSLIT_NAME_FIELD, 3),
-                                         ])
+                                         ->setFields($searchCityByNameFields)
                                          ->setQuery(mb_strtolower($searchText))
                                          ->setOperator(MultiMatch::OPERATOR_OR)
                                          ->setType(MultiMatch::TYPE_PHRASE_PREFIX),
         ];
-
-        if (!empty($countryName)) {
-            $must[] = $this->_queryConditionFactory->getNestedQuery(
-                CitySearchMapping::COUNTRY_FIELD,
-                $this->_queryConditionFactory->getMatchQuery(CitySearchMapping::COUNTRY_NAME_FIELD, $countryName)
-            );
-        }
 
         $this->setConditionQueryMust($must);
 
@@ -94,6 +93,7 @@ class CitySearchService extends AbstractSearchService
      * @param string $searchText Поисковый запрос
      * @param string $countryName
      * @param array $types
+     * @param bool $isAggregation Агрегировать ли данные при запросе или вывести списком
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами

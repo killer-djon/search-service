@@ -105,12 +105,13 @@ class SearchEngine implements SearchEngineInterface
      * @var array $filterTypes
      */
     protected $filterTypes = [
-        PeopleSearchMapping::CONTEXT    => PeopleSearchMapping::class,
-        FriendsSearchMapping::CONTEXT   => FriendsSearchMapping::class,
-        PlaceSearchMapping::CONTEXT     => PlaceSearchMapping::class,
-        RusPlaceSearchMapping::CONTEXT  => RusPlaceSearchMapping::class,
-        EventsSearchMapping::CONTEXT    => EventsSearchMapping::class,
-        DiscountsSearchMapping::CONTEXT => DiscountsSearchMapping::class,
+        PeopleSearchMapping::CONTEXT     => PeopleSearchMapping::class,
+        FriendsSearchMapping::CONTEXT    => FriendsSearchMapping::class,
+        PlaceSearchMapping::CONTEXT      => PlaceSearchMapping::class,
+        RusPlaceSearchMapping::CONTEXT   => RusPlaceSearchMapping::class,
+        EventsSearchMapping::CONTEXT     => EventsSearchMapping::class,
+        DiscountsSearchMapping::CONTEXT  => DiscountsSearchMapping::class,
+        HelpOffersSearchMapping::CONTEXT => HelpOffersSearchMapping::class,
     ];
     //[@"people",@"friends",@"places",@"rusPlaces",@"events",@"discounts"];
 

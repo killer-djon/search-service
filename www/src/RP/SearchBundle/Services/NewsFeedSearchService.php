@@ -86,9 +86,6 @@ class NewsFeedSearchService extends AbstractSearchService
         /** @var QueryFactoryInterface */
         $condition = $this->_queryConditionFactory;
 
-        // вычленяем из списка друзей RP пользователя
-        $friendIdsNoRP = array_diff(array_push($friendIds, $userId), [PeopleSearchMapping::RP_USER_ID]);
-
         $personalType = array_map(function ($type) {
             return $this->_queryConditionFactory->getMatchQuery(UserEventSearchMapping::TYPE_FIELD, $type);
         }, $eventTypes[UserEventGroup::PERSONAL]);

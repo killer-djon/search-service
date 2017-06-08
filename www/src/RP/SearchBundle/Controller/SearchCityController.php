@@ -60,6 +60,15 @@ class SearchCityController extends ApiController
 
             // старый запрос без сортировки по популярности
             // $cities = $citySearchService->searchCityByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+            if (!empty($countryName)) {
+                $cities = $citySearchService->searchCityByName($searchText, $countryName, $types, $this->getSkip(), $this->getCount());
+                $result = array_merge(
+                    ['info' => $citySearchService->getTotalHits()],
+                    $cities ?: []
+                );
+
+                return $this->_handleViewWithData($result);
+            }
 
             // новый запрос с сортировкой по популярности
             $cities = $citySearchService->searchTopCityByName(

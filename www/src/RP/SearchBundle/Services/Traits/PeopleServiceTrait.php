@@ -136,8 +136,6 @@ trait PeopleServiceTrait
                     // Только от друзей и самого пользователя
                     'friends'  => [
                         // Только в ленту
-                        //UserEventType::POST,
-                        // Только в ленту
                         UserEventType::NEW_PHOTO_ALBUM,
                         // Только в ленту
                         UserEventType::NEW_PHOTOS,
@@ -154,8 +152,7 @@ trait PeopleServiceTrait
                         // От друзей - в ленту, в уведомления - к нашему событию от незнакомцев
                         UserEventType::WILL_COME,
                         // От друзей - в ленту, в уведомления - в наше место от незнакомцев
-                        //UserEventType::CHECKIN,
-                        UserEventType::CHANGE_LOCATION
+                        UserEventType::CHECKIN,
                     ],
                     'others'   => [
                     ],

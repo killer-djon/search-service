@@ -18,7 +18,7 @@ class AppKernel extends Kernel
             // сторонние бандлы
             new FOS\RestBundle\FOSRestBundle(),
             new JMS\SerializerBundle\JMSSerializerBundle(),
-            new Snc\RedisBundle\SncRedisBundle(),
+            //new Snc\RedisBundle\SncRedisBundle(),
             new FOS\ElasticaBundle\FOSElasticaBundle(),
 
             // personal Bundles,

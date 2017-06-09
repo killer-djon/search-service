@@ -242,7 +242,7 @@ class SearchEngine implements SearchEngineInterface
     /**
      * При создании сервиса необходимо установить все сопутствующие объекты
      *
-     * @param \FOS\ElasticaBundle\Elastica\Index $elasticaIndex
+     * @param \Common\Core\Facade\Search\QueryFactory\CustomSearchIndex $elasticaIndex
      * @param \Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface Класс формирующий объект запроса
      * @param \Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface Объект формирования условий запроса
      * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface Оъект добавляющий фильтры к запросу
@@ -251,7 +251,7 @@ class SearchEngine implements SearchEngineInterface
      * @param \Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface Объект создания сортировки в запросе
      */
     public function __construct(
-        Index $elasticaIndex,
+        CustomSearchIndex $elasticaIndex,
         QueryFactoryInterface $queryFactory,
         ConditionFactoryInterface $queryCondition,
         FilterFactoryInterface $filterFactory,
@@ -314,6 +314,43 @@ class SearchEngine implements SearchEngineInterface
     }
 
     /**
+     * Индекс по умолчанию для клиента еластики
+     *
+     * @const string
+     */
+    const DEFAULT_INDEX = 'russianplace';
+
+    /**
+     * @var array Массив индексов для поиска
+     */
+    protected $_indices;
+
+    /**
+     * Указываем индексы в которых надо проводить поиск
+     * в еластике
+     *
+     * @var array
+     */
+    public function setIndices($indices = [])
+    {
+        $this->_indices[] = self::DEFAULT_INDEX;
+
+        if (!empty($indices)) {
+            $this->_indices = $indices;
+        }
+    }
+
+    /**
+     * ПОлучить массив индексов для поиска
+     *
+     * @return array
+     */
+    public function getIndices()
+    {
+        return $this->_indices;
+    }
+
+    /**
      * Индексный поиск в еластике
      * т.е. поиск на основе индекса fos_elastica.index.%s.%s
      *
@@ -322,10 +359,12 @@ class SearchEngine implements SearchEngineInterface
      * @param mixed|null $setSource (default: true) Показать исходные данные объекта в ответе
      * @param string|null $keyField Ключ в котором храним данные вывода (необходим при алиасах типов в поиске)
      * @throws ElasticsearchException
+     * @throws \Exception
      * @return array results
      */
     public function searchDocuments(\Elastica\Query $elasticQuery, $context = null, $setSource = null, $keyField = null)
     {
+
         try {
             /** устанавливаем все поля по умолчанию */
             $elasticQuery->setSource((is_null($setSource) ? $this->_sourceQuery : $setSource));
@@ -333,18 +372,23 @@ class SearchEngine implements SearchEngineInterface
 
             $this->_paginator = new SearchElasticaAdapter($elasticType, $elasticQuery);
 
+            $indices = [];
             if (!empty($context)) {
                 $context = is_string($context) ? explode(",", $context) : $context;
-
                 foreach ($context as $typeIndex) {
-                    $this->_paginator->setIndex($this->availableTypesSearch[$typeIndex]::DEFAULT_INDEX);
+                    $indices[] = $this->availableTypesSearch[$typeIndex]::DEFAULT_INDEX;
                 }
+            } else {
+                $indices = [self::DEFAULT_INDEX];
             }
+            $this->_paginator->addIndices($indices);
 
             return $this->transformResult($this->_paginator->getResultSet(), $keyField);
 
         } catch (ElasticsearchException $e) {
             throw new ElasticsearchException($e);
+        } catch (\Exception $e) {
+            throw new \Exception($e);
         }
     }
 
@@ -737,7 +781,6 @@ class SearchEngine implements SearchEngineInterface
      */
     private function setTotalHits(\Elastica\ResultSet $resultSets, $keyField = null)
     {
-        //print_r($resultSets->getTotalHits()); die();
         $elipsedTime = $resultSets->getTotalTime() / 1000;
         $this->_totalHits = (!is_null($keyField) && !empty($keyField) ? [
             $keyField => [
@@ -876,18 +919,19 @@ class SearchEngine implements SearchEngineInterface
      * Возвращает тип Elastic для заданного контекста (или индекс Elastic, если контекст не задан)
      *
      * @param string|null $context
-     * @return \Elastica\Type|\Elastica\Index
-     * @throws \InvalidArgumentException
+     * @return CustomSearchIndex|CustomElasticaType
      */
     protected function _getElasticType($context = null)
     {
+        $index = $this->getElasticaIndex();
+
         return empty($context)
-            ? $this->getelasticaIndex()
-            : $this->getelasticaIndex()->getType($context);
+            ? $index
+            : $index->getType($context);
     }
 
     /**
-     * @return \FOS\ElasticaBundle\Elastica\Index
+     * @return CustomSearchIndex
      */
     public function getElasticaIndex()
     {
@@ -895,7 +939,7 @@ class SearchEngine implements SearchEngineInterface
     }
 
     /**
-     * @param \FOS\ElasticaBundle\Elastica\Index $elasticaIndex
+     * @param CustomSearchIndex $elasticaIndex
      */
     public function setElasticaIndex($elasticaIndex)
     {

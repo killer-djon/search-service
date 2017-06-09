@@ -673,6 +673,12 @@ class PeopleSearchService extends AbstractSearchService
                 $this->_queryFilterFactory->getNotFilter(
                     $this->_queryFilterFactory->getTermFilter([PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId])
                 ),
+                $this->_queryFilterFactory->getBoolOrFilter([
+                    $this->_queryFilterFactory->getNotFilter(
+                        $this->_queryFilterFactory->getExistsFilter(PeopleSearchMapping::SETTINGS_PRIVACY_VIEW_GEO_POSITION)
+                    ),
+                    $this->_queryFilterFactory->getTermFilter([PeopleSearchMapping::SETTINGS_PRIVACY_VIEW_GEO_POSITION => PeopleSearchMapping::SETTINGS_YES]),
+                ]),
             ]);
 
             $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);

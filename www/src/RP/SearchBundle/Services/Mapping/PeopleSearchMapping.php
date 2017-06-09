@@ -279,6 +279,14 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
                 $filterFactory->getTermFilter([self::IDENTIFIER_FIELD => $userId])
             ),
             $filterFactory->getTermFilter([self::USER_REMOVED_FIELD => false]),
+            $filterFactory->getBoolOrFilter([
+                $filterFactory->getNotFilter(
+                    $filterFactory->getExistsFilter(self::HELP_OFFERS_LIST_FIELD)
+                ),
+                $filterFactory->getNotFilter(
+                    $filterFactory->getScriptFilter("doc['helpOffers.id'].values.size() < 1")
+                )
+            ])
         ];
     }
 

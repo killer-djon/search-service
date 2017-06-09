@@ -3,7 +3,7 @@ services:
     rp_search.search.engine:
         class: Common\Core\Facade\Search\QueryFactory\SearchEngine
         arguments:
-            - "@fos_elastica.index"
+            - "@rp_search.custom.elastica_index"
             - "@rp_search.search.query_factory"
             - "@rp_search.search.query_condition"
             - "@rp_search.search.query_filter"
@@ -13,6 +13,11 @@ services:
         calls:
             - [ setContainer, [ "@service_container" ] ]
             - [ setLogger, [ "@logger" ] ]
+
+    rp_search.custom.elastica_index:
+        class: Common\Core\Facade\Search\QueryFactory\CustomSearchIndex
+        arguments:
+            - '@fos_elastica.client'
 
     # сервис поиского движка
     rp_search.search.query_factory:
@@ -88,7 +93,7 @@ services:
         class: RP\SearchBundle\Services\Transformers\AbstractTransformer
         calls:
             - [ setContainer, [ "@service_container" ] ]
-            - [ setElasticaIndex, [ "@fos_elastica.index" ] ]
+            - [ setElasticaIndex, [ "@rp_search.custom.elastica_index" ] ]
 
     rp_search.transform_interface.country:
         class: RP\SearchBundle\Services\Transformers\CountryTransformer

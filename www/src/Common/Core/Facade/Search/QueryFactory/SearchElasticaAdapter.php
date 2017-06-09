@@ -22,9 +22,10 @@ class SearchElasticaAdapter implements AdapterInterface
     private $resultSet;
 
     /**
-     * @var SearchableInterface
+     * @var CustomSearchIndex|CustomElasticaType
      */
     private $searchable;
+
 
     public function __construct(SearchableInterface $searchable, Query $query, $options = null)
     {
@@ -54,10 +55,17 @@ class SearchElasticaAdapter implements AdapterInterface
      */
     private $_index = null;
 
+    /**
+     * Несколько индексов поиска
+     *
+     * @var string[]
+     */
+    private $_indices = [];
+
     public function setIndex($indexName = null)
     {
         if (!is_null($indexName)) {
-            $this->_index = $indexName;
+            $this->_indices[] = $indexName;
         }
     }
 
@@ -65,12 +73,30 @@ class SearchElasticaAdapter implements AdapterInterface
      * Получаем значение индекса в котором еще надоискать
      * многоиндексовый поиск
      *
-     * @return string|\Elastica\Index
+     * @depricated
+     * @return string[]
      */
     public function getIndex()
     {
-        return $this->_index;
+        return $this->_indices;
     }
+
+    public function getIndices()
+    {
+        return $this->_indices;
+    }
+
+    /**
+     * Множественное добавление индексов
+     * т.е. поиск в нескольких индексах
+     *
+     * @param array $indices
+     */
+    public function addIndices($indices = [])
+    {
+        $this->_indices = $indices;
+    }
+
 
     /**
      * Returns the Elastica ResultSet. Will return null if getSlice has not yet been
@@ -81,10 +107,9 @@ class SearchElasticaAdapter implements AdapterInterface
     public function getResultSet()
     {
         $ElasticaQuery = $this->searchable->createSearch($this->query);
+        $ElasticaQuery->clearIndices();
 
-        if (!is_null($this->getIndex()) && !$ElasticaQuery->hasIndex($this->getIndex())) {
-            $ElasticaQuery->addIndex($this->getIndex());
-        }
+        $ElasticaQuery->addIndices($this->_indices);
 
         $this->resultSet = $ElasticaQuery->search();
         unset($this->query);

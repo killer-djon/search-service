@@ -9,6 +9,7 @@
 namespace RP\SearchBundle\Services\Transformers;
 
 use Common\Core\Facade\Search\QueryFactory\SearchEngine;
+use Elastica\SearchableInterface;
 use FOS\ElasticaBundle\Elastica\Index;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -47,10 +48,10 @@ class AbstractTransformer
     /**
      * Устанавливаем поисковый движок еластика
      *
-     * @param Index $elasticaIndex
+     * @param SearchableInterface $elasticaIndex
      * @return void
      */
-    public function setElasticaIndex(Index $elasticaIndex)
+    public function setElasticaIndex(SearchableInterface $elasticaIndex)
     {
         $this->elasticaIndex = $elasticaIndex;
     }

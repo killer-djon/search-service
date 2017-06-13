@@ -151,6 +151,22 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     const COMMON_FRIENDS_FILTER = 'commonFriends';
 
     /**
+     * Настройка приватности пользователя
+     * Показывать пользователя на карте или нет
+     *
+     * @const string values: all or none
+     */
+    const SETTINGS_PRIVACY_VIEW_GEO_POSITION = 'settings.privacy.viewGeoposition';
+
+    /**
+     * Константы для зхначений настроек приватности
+     *
+     * @const string
+     */
+    const SETTINGS_YES = 'all';
+    const SETTINGS_NO = 'none';
+
+    /**
      * Получаем поля для поиска
      * сбор полей для формирования объекта запроса
      * multiMatch - без точных условий с возможностью фильтрации
@@ -278,9 +294,12 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             $filterFactory->getNotFilter(
                 $filterFactory->getTermFilter([self::IDENTIFIER_FIELD => $userId])
             ),
-            $filterFactory->getNotFilter(
-                $filterFactory->getTermFilter([self::IDENTIFIER_FIELD => $userId])
-            ),
+            $filterFactory->getBoolOrFilter([
+                $filterFactory->getNotFilter(
+                    $filterFactory->getExistsFilter(self::SETTINGS_PRIVACY_VIEW_GEO_POSITION)
+                ),
+                $filterFactory->getTermFilter([self::SETTINGS_PRIVACY_VIEW_GEO_POSITION => self::SETTINGS_YES]),
+            ]),
             $filterFactory->getTermFilter([self::USER_REMOVED_FIELD => false]),
             $filterFactory->getBoolOrFilter([
                 $filterFactory->getNotFilter(
@@ -288,8 +307,8 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
                 ),
                 $filterFactory->getNotFilter(
                     $filterFactory->getScriptFilter("doc['helpOffers.id'].values.size() < 1")
-                )
-            ])
+                ),
+            ]),
         ];
     }
 
@@ -355,22 +374,22 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
         }
 
         $namePrefixedFields = [];
-        foreach (self::getPrefixedQuerySearchFields() as $field){
+        foreach (self::getPrefixedQuerySearchFields() as $field) {
             $namePrefixedFields[] = $conditionFactory->getPrefixQuery($field, $queryString, 0.1);
         }
 
         return [
             $conditionFactory->getMultiMatchQuery()
-                ->setFields(self::getMultiMatchQuerySearchFields())
-                ->setQuery($queryString)
-                ->setOperator(MultiMatch::OPERATOR_OR)
-                ->setType(MultiMatch::TYPE_BEST_FIELDS),
+                             ->setFields(self::getMultiMatchQuerySearchFields())
+                             ->setQuery($queryString)
+                             ->setOperator(MultiMatch::OPERATOR_OR)
+                             ->setType(MultiMatch::TYPE_BEST_FIELDS),
             $conditionFactory->getBoolQuery([], array_merge($prefixWildCardByName, [
                 $conditionFactory->getMultiMatchQuery()
-                    ->setFields(self::getMultiSubMatchQuerySearchFields())
-                    ->setQuery($queryString)
-                    ->setOperator(MultiMatch::OPERATOR_OR)
-                    ->setType(MultiMatch::TYPE_BEST_FIELDS),
+                                 ->setFields(self::getMultiSubMatchQuerySearchFields())
+                                 ->setQuery($queryString)
+                                 ->setOperator(MultiMatch::OPERATOR_OR)
+                                 ->setType(MultiMatch::TYPE_BEST_FIELDS),
                 $conditionFactory->getBoolQuery([], [
                     $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString, true, 0.5),
                 ], []),
@@ -421,7 +440,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
         return [
             $conditionFactory->getPrefixQuery(self::NAME_EXACT_FIELD, $queryString),
             $conditionFactory->getPrefixQuery(self::SURNAME_EXACT_FIELD, $queryString),
-            $conditionFactory->getTermQuery('_type', self::CONTEXT)
+            $conditionFactory->getTermQuery('_type', self::CONTEXT),
         ];
     }
 

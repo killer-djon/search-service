@@ -431,7 +431,8 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             }
 
             foreach ($this->_scriptFunctions as $key => $scriptFunction) {
-                $key = (is_int($key) || !in_array($key, $this->_allowedScriptFunctions) ? self::FUNCTION_SCRIPT_SCORE : $key);
+                $key = (is_int($key) || !in_array($key,
+                    $this->_allowedScriptFunctions) ? self::FUNCTION_SCRIPT_SCORE : $key);
                 $customScore->addFunction($key, $scriptFunction);
             }
 
@@ -498,7 +499,8 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
             }
 
             foreach ($this->_scriptFunctions as $key => $scriptFunction) {
-                $key = (is_int($key) || !in_array($key, $this->_allowedScriptFunctions) ? self::FUNCTION_SCRIPT_SCORE : $key);
+                $key = (is_int($key) || !in_array($key,
+                    $this->_allowedScriptFunctions) ? self::FUNCTION_SCRIPT_SCORE : $key);
                 $customScore->addFunction($key, $scriptFunction);
             }
 
@@ -559,12 +561,12 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     {
 
         return $query->setAggregations($this->_aggregationQueryData)
-                     ->setFields($this->_fieldsSelected)
-                     ->setScriptFields($this->_scriptFields)
-                     ->setHighlight($this->_highlightQueryData)// @todo доработать
-                     ->setSort($this->_sortingQueryData)
-                     ->setSize(is_null($count) ? self::DEFAULT_SIZE_QUERY : (int)$count)
-                     ->setFrom(is_null($skip) ? self::DEFAULT_SKIP_QUERY : $skip);
+            ->setFields($this->_fieldsSelected)
+            ->setScriptFields($this->_scriptFields)
+            ->setHighlight($this->_highlightQueryData)// @todo доработать
+            ->setSort($this->_sortingQueryData)
+            ->setSize(is_null($count) ? self::DEFAULT_SIZE_QUERY : (int)$count)
+            ->setFrom(is_null($skip) ? self::DEFAULT_SKIP_QUERY : $skip);
     }
 
     /**
@@ -596,7 +598,8 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
     public function getUserById($userId)
     {
         try {
-            $user = $this->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM, "$userId");
+            $user = $this->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
+                "$userId");
 
             if (!is_null($user) && !empty($user)) {
                 return new UserProfileService($user);
@@ -657,6 +660,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
 
         return $fieldName;
     }
+
 
     /**
      * Получаем ссылку на сервис поиска пользователей

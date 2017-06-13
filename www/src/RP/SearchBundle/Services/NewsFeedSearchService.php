@@ -32,21 +32,61 @@ class NewsFeedSearchService extends AbstractSearchService
      *
      * @param string $userId ID пользователя
      * @param string $wallId ID ленты
+     * @param string|null $searchText Текст поиска поста (поиск по тексту и интересу)
      * @param int $skip
      * @param int $count
      * @return array
      */
-    public function searchPostsByWallId($userId, $wallId, $skip = 0, $count = RequestConstant::DEFAULT_SEARCH_LIMIT)
-    {
-        $this->setConditionQueryMust([
-            $this->_queryConditionFactory->getTermQuery(PostSearchMapping::POST_WALL_ID, $wallId),
-        ]);
+    public function searchPostsByWallId(
+        $userId,
+        $wallId,
+        $searchText = null,
+        $skip = 0,
+        $count = RequestConstant::DEFAULT_SEARCH_LIMIT
+    ) {
+
+        if (!empty($searchText)) {
+            $searchText = mb_strtolower($searchText);
+            $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
+
+            $slopPhrase = array_filter(explode(" ", $searchText));
+
+            if (count($slopPhrase) > 1) {
+                // поиск по словосочетанию
+                $this->setConditionQueryMust(PostSearchMapping::getSearchConditionQueryMust(
+                    $this->_queryConditionFactory,
+                    $searchText
+                ));
+            } else {
+                $this->setConditionQueryShould([
+                    $this->_queryConditionFactory->getDisMaxQuery([
+                        $this->_queryConditionFactory->getMultiMatchQuery()
+                            ->setFields(PostSearchMapping::getMultiMatchQuerySearchFields())
+                            ->setQuery($searchText)
+                            ->setOperator(MultiMatch::OPERATOR_OR)
+                            ->setType(MultiMatch::TYPE_CROSS_FIELDS),
+                        $this->_queryConditionFactory->getFieldQuery(
+                            PostSearchMapping::getMultiMatchQuerySearchFields(),
+                            $searchText
+                        ),
+                    ]),
+                ]);
+            }
+
+            $this->setHighlightQuery(PostSearchMapping::getHighlightConditions());
+        }
 
         $this->setFilterQuery([
             $this->_queryFilterFactory->getTermFilter([PostSearchMapping::POST_IS_POSTED => true]),
+            $this->_queryFilterFactory->getTermFilter([PostSearchMapping::POST_WALL_ID => $wallId]),
         ]);
 
-        $this->setSortingQuery($this->_sortingFactory->getFieldSort(AbstractSearchMapping::CREATED_AT_FIELD, 'desc'));
+        $this->setSortingQuery(
+            $this->_sortingFactory->getFieldSort(
+                AbstractSearchMapping::CREATED_AT_FIELD,
+                SortingOrder::SORTING_DESC
+            )
+        );
 
         $queryMatch = $this->createQuery($skip, $count);
 
@@ -180,8 +220,68 @@ class NewsFeedSearchService extends AbstractSearchService
         $this->setFlatFormatResult(true);
         $query = $this->createQuery($skip, $count);
 
-        //print_r($query); die();
-
         return $this->searchDocuments($query, [UserEventSearchMapping::CONTEXT, PostSearchMapping::CONTEXT]);
+    }
+
+    /**
+     * Выводим только посты по заданным критериям
+     * данный метод необходим для группировки постов
+     * под категории (например: путеводитель по риму)
+     *
+     * @param string $userId ID пользователя
+     * @param string $rpUserId ID RP пользователя (от имени кого публиковался пост)
+     * @param string|null $cityId ID города для которого выводим посты
+     * @param string|null $categoryId ID категории постов (например: путеводитель)
+     * @param int $skip
+     * @param int $count
+     *
+     * @return array
+     */
+    public function getPostCategoriesByParams(
+        $userId,
+        $rpUserId = PeopleSearchMapping::RP_USER_ID,
+        $cityId = null,
+        $categoryId = null,
+        $skip = 0,
+        $count = null
+    ) {
+        $userProfile = $this->getUserById($userId);
+
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $rpUserId]),
+            $this->_queryFilterFactory->getTermsFilter(PostSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+        ]);
+
+        if (!empty($categoryId)) {
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getBoolAndFilter([
+                    $this->_queryFilterFactory->getExistsFilter(PostSearchMapping::POST_CATEGORIES_FIELD),
+                    $this->_queryFilterFactory->getTermsFilter(PostSearchMapping::POST_CATEGORIES_FIELD_ID,
+                        [$categoryId])
+                ])
+            ]);
+        }
+
+        if (!empty($cityId)) {
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getBoolAndFilter([
+                    $this->_queryFilterFactory->getExistsFilter(PostSearchMapping::POST_CITY_FIELD),
+                    $this->_queryFilterFactory->getTermsFilter(PostSearchMapping::POST_CITY_FIELD_ID, [$cityId])
+                ])
+            ]);
+
+            $this->setScriptFields([
+                'distance'          => $this->_scriptFactory->getDistanceScript(
+                    PostSearchMapping::POST_CITY_FIELD,
+                    $userProfile->getLocation()
+                )
+            ]);
+        }
+
+        //$this->setGeoPointConditions($userProfile->getLocation(), PostSearchMapping::class);
+
+
+        $queryMatch = $this->createQuery($skip, $count);
+        return $this->searchDocuments($queryMatch, PostSearchMapping::CONTEXT);
     }
 }

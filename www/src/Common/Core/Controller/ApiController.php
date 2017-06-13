@@ -522,6 +522,35 @@ abstract class ApiController extends FOSRestController
     }
 
     /**
+     * ДЛя новыйх версий ответа
+     * необходимо всегда вкладывать в респонс
+     * объекты info,pagination,items
+     *
+     * @param AbstractSearchService $searchService
+     * @param string $context КОнтекст набора данных (ключ)
+     * @return array
+     */
+    public function getNewFormatResponse(AbstractSearchService $searchService, $context)
+    {
+        $result = [];
+        $items = $searchService->getTotalResults();
+        if(!empty($items))
+        {
+            $searchService->revertToScalarTagsMatchFields($items);
+            $result = [
+                'info' => $searchService->getTotalHits(),
+                'pagination' => $searchService->getPaginationAdapter(
+                    $this->getSkip(),
+                    $this->getCount()
+                ),
+                'items' => $items[$context]
+            ];
+        }
+
+        return $result;
+    }
+
+    /**
      * @return \Common\Core\Loader\JSONModelLoader
      */
     protected function getModelLoaderService()

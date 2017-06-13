@@ -25,7 +25,7 @@ class SearchChatMessageController extends ApiController
     public function getChatMessageAction(Request $request, $chatId)
     {
         try {
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
             $createdFrom = $request->get(RequestConstant::SEARCH_CREATED_FROM_PARAM);
 
             /** @var string $searchText Текст запроса */

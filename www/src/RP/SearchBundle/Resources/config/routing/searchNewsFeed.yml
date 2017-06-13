@@ -1,17 +1,37 @@
 # Routing который формирует запрос для вывода постов пользователей
 # пример запроса /api/v1/json/newsfeed/posts/{wallId}
-RPSearchBundle_search_newsFeed_posts:
+RPSearchBundle_search_newsFeed_posts_wallId:
     path: /v{_version}/{_format}/newsfeed/posts/{wallId}
     defaults:
         _controller: RPSearchBundle:SearchNewsFeed:getNewsFeedPosts
         _version: 1
         _format: json
         template: "RPSearchBundle:SearchNewsFeed:newsfeedPosts.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+        cityId: null
+        categoryId: null
     requirements:
         _method: (GET)
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
         wallId: \w+
+
+# Routing который формирует запрос для вывода постов пользователей
+# пример запроса /api/v1/json/newsfeed/posts/{wallId}
+RPSearchBundle_search_newsFeed_posts_params:
+    path: /v{_version}/{_format}/newsfeed/posts/list/{rpUserId}/{categoryId}/{cityId}
+    defaults:
+        _controller: RPSearchBundle:SearchNewsFeed:getCategoryPost
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchNewsFeed:newsfeedPosts.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+        cityId: null
+        categoryId: null
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        rpUserId: \w+
+
 
 # Routing который формирует запрос для вывода поста по ID
 # пример запроса /api/v1/json/newsfeed/posts/id/{postId}
@@ -42,3 +62,4 @@ RPSearchBundle_search_newsFeed_userevents_list:
         _method: (GET)
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
+

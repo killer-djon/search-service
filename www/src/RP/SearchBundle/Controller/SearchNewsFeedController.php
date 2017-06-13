@@ -8,6 +8,7 @@ namespace RP\SearchBundle\Controller;
 use Common\Core\Constants\NewsFeedSections;
 use Common\Core\Controller\ApiController;
 use Common\Core\Constants\RequestConstant;
+use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PostSearchMapping;
 use RP\SearchBundle\Services\Mapping\UserEventSearchMapping;
 use RP\SearchBundle\Services\NewsFeedSearchService;
@@ -28,33 +29,38 @@ class SearchNewsFeedController extends ApiController
      * @param string $wallId
      * @return Response
      */
-    public function getNewsFeedPostsAction(Request $request, $wallId)
+    public function getNewsFeedPostsAction(Request $request, $wallId, $cityId = null, $categoryId = null)
     {
 
         try {
             /** @var ID пользователя */
             $userId = $this->getRequestUserId();
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
+            $searchText = !empty($searchText) ? $searchText : RequestConstant::NULLED_PARAMS;
 
             /** @var NewsFeedSearchService */
             $postSearchService = $this->getNewsFeedSearchService();
-            $posts = $postSearchService->searchPostsByWallId($userId, $wallId, $this->getSkip(), $this->getCount());
+            $posts = $postSearchService->searchPostsByWallId(
+                $userId,
+                $wallId,
+                $searchText,
+                $this->getSkip(),
+                $this->getCount()
+            );
 
             if (empty($posts)) {
                 return $this->_handleViewWithData([]);
             }
 
-            if ($version == RequestConstant::DEFAULT_VERSION) {
-                return $this->_handleViewWithData($posts[PostSearchMapping::CONTEXT]);
-            }
-
             return $this->_handleViewWithData([
-                'info'       => $postSearchService->getTotalHits(),
+                'info' => $postSearchService->getTotalHits(),
                 'pagination' => $postSearchService->getPaginationAdapter(
                     $this->getSkip(),
                     $this->getCount()
                 ),
-                'items'      => $posts[PostSearchMapping::CONTEXT],
+                'items' => $posts[PostSearchMapping::CONTEXT],
             ]);
 
         } catch (SearchServiceException $e) {
@@ -119,9 +125,9 @@ class SearchNewsFeedController extends ApiController
             );
 
             return $this->_handleViewWithData([
-                'info'       => $newsFeedSearchService->getTotalHits(),
+                'info' => $newsFeedSearchService->getTotalHits(),
                 'pagination' => $newsFeedSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
-                'items'      => $userEvents,
+                'items' => $userEvents,
             ]);
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
@@ -129,5 +135,39 @@ class SearchNewsFeedController extends ApiController
             return $this->_handleViewWithError($e);
         }
 
+    }
+
+    /**
+     * Получение постов
+     * по категории и локации
+     *
+     * @param Request $request
+     * @param string $rpUserId
+     * @param string $cityId
+     * @param string $categoryId
+     * @return Response
+     */
+    public function getCategoryPostAction(Request $request, $rpUserId, $categoryId = null, $cityId = null)
+    {
+        try {
+            $userId = $this->getRequestUserId();
+
+            $postService = $this->getNewsFeedSearchService();
+            $posts = $postService->getPostCategoriesByParams(
+                $userId,
+                $rpUserId,
+                $cityId,
+                $categoryId,
+                $this->getSkip(),
+                $this->getCount()
+            );
+
+            return $this->_handleViewWithData($this->getNewFormatResponse($postService, PostSearchMapping::CONTEXT));
+
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
     }
 }

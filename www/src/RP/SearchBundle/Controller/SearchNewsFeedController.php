@@ -152,12 +152,17 @@ class SearchNewsFeedController extends ApiController
         try {
             $userId = $this->getRequestUserId();
 
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
+            $searchText = !empty($searchText) ? $searchText : RequestConstant::NULLED_PARAMS;
+
             $postService = $this->getNewsFeedSearchService();
             $posts = $postService->getPostCategoriesByParams(
                 $userId,
                 $rpUserId,
-                $cityId,
                 $categoryId,
+                $cityId,
+                $searchText,
                 $this->getSkip(),
                 $this->getCount()
             );

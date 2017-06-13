@@ -49,6 +49,7 @@ abstract class PostSearchMapping extends AbstractSearchMapping
     const POST_CITY_FIELD = 'categoriesCity';
     const POST_CITY_FIELD_ID = 'categoriesCity.id';
     const POST_CITY_FIELD_name = 'categoriesCity.name';
+    const POST_CITY_POINT_FIELD = 'categoriesCity.point';
 
     /**
      * Получаем поля для поиска

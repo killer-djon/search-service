@@ -61,6 +61,7 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
     public function getDistanceScript($pointField, $geopoint, $lang = \Elastica\Script::LANG_JS)
     {
         $params = $this->getGeopointParams($geopoint);
+
         try {
             $params = array_merge($params, [
                 'pointField' => $pointField,

@@ -43,7 +43,8 @@ class NewsFeedSearchService extends AbstractSearchService
         $searchText = null,
         $skip = 0,
         $count = RequestConstant::DEFAULT_SEARCH_LIMIT
-    ) {
+    )
+    {
 
         if (!empty($searchText)) {
             $searchText = mb_strtolower($searchText);
@@ -231,6 +232,7 @@ class NewsFeedSearchService extends AbstractSearchService
      * @param string $userId ID пользователя
      * @param string $rpUserId ID RP пользователя (от имени кого публиковался пост)
      * @param string|null $cityId ID города для которого выводим посты
+     * @param string|null $searchText Строка поиска
      * @param string|null $categoryId ID категории постов (например: путеводитель)
      * @param int $skip
      * @param int $count
@@ -240,11 +242,13 @@ class NewsFeedSearchService extends AbstractSearchService
     public function getPostCategoriesByParams(
         $userId,
         $rpUserId = PeopleSearchMapping::RP_USER_ID,
-        $cityId = null,
         $categoryId = null,
+        $cityId = null,
+        $searchText = null,
         $skip = 0,
         $count = null
-    ) {
+    )
+    {
         $userProfile = $this->getUserById($userId);
 
         $this->setFilterQuery([
@@ -255,7 +259,7 @@ class NewsFeedSearchService extends AbstractSearchService
         if (!empty($categoryId)) {
             $this->setFilterQuery([
                 $this->_queryFilterFactory->getBoolAndFilter([
-                    $this->_queryFilterFactory->getExistsFilter(PostSearchMapping::POST_CATEGORIES_FIELD),
+                    $this->_queryFilterFactory->getExistsFilter(PostSearchMapping::POST_CATEGORIES_FIELD_ID),
                     $this->_queryFilterFactory->getTermsFilter(PostSearchMapping::POST_CATEGORIES_FIELD_ID,
                         [$categoryId])
                 ])
@@ -265,23 +269,60 @@ class NewsFeedSearchService extends AbstractSearchService
         if (!empty($cityId)) {
             $this->setFilterQuery([
                 $this->_queryFilterFactory->getBoolAndFilter([
-                    $this->_queryFilterFactory->getExistsFilter(PostSearchMapping::POST_CITY_FIELD),
+                    $this->_queryFilterFactory->getExistsFilter(PostSearchMapping::POST_CITY_FIELD_ID),
                     $this->_queryFilterFactory->getTermsFilter(PostSearchMapping::POST_CITY_FIELD_ID, [$cityId])
                 ])
             ]);
-
-            $this->setScriptFields([
-                'distance'          => $this->_scriptFactory->getDistanceScript(
-                    PostSearchMapping::POST_CITY_FIELD,
-                    $userProfile->getLocation()
-                )
-            ]);
         }
 
-        //$this->setGeoPointConditions($userProfile->getLocation(), PostSearchMapping::class);
+        if (!empty($searchText)) {
+            $searchText = mb_strtolower($searchText);
+            $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
 
+            $slopPhrase = array_filter(explode(" ", $searchText));
+
+            if (count($slopPhrase) > 1) {
+                // поиск по словосочетанию
+                $this->setConditionQueryMust(PostSearchMapping::getSearchConditionQueryMust(
+                    $this->_queryConditionFactory,
+                    $searchText
+                ));
+            } else {
+                $this->setConditionQueryShould([
+                    $this->_queryConditionFactory->getDisMaxQuery([
+                        $this->_queryConditionFactory->getMultiMatchQuery()
+                            ->setFields(PostSearchMapping::getMultiMatchQuerySearchFields())
+                            ->setQuery($searchText)
+                            ->setOperator(MultiMatch::OPERATOR_OR)
+                            ->setType(MultiMatch::TYPE_CROSS_FIELDS),
+                        $this->_queryConditionFactory->getFieldQuery(
+                            PostSearchMapping::getMultiMatchQuerySearchFields(),
+                            $searchText
+                        ),
+                    ]),
+                ]);
+            }
+
+            $this->setHighlightQuery(PostSearchMapping::getHighlightConditions());
+        }
+
+        $this->setScriptFields([
+            'distance' => $this->_scriptFactory->getDistanceScript(
+                PostSearchMapping::POST_CITY_POINT_FIELD,
+                $userProfile->getLocation()
+            )
+        ]);
+
+        $this->setSortingQuery([
+            $this->_sortingFactory->getGeoDistanceSort(
+                PostSearchMapping::POST_CITY_POINT_FIELD,
+                $userProfile->getLocation(),
+                SortingOrder::SORTING_ASC
+            ),
+        ]);
 
         $queryMatch = $this->createQuery($skip, $count);
+
         return $this->searchDocuments($queryMatch, PostSearchMapping::CONTEXT);
     }
 }

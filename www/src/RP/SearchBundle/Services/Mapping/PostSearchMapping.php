@@ -9,6 +9,7 @@
 namespace RP\SearchBundle\Services\Mapping;
 
 use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
+use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 
@@ -16,6 +17,8 @@ abstract class PostSearchMapping extends AbstractSearchMapping
 {
     /** Контекст поиска */
     const CONTEXT = 'posts';
+
+    const POST_CATEGORIES_ID = 1;
 
     /** Индекс еластика по умолчанию */
     const DEFAULT_INDEX = 'newsfeed';
@@ -105,6 +108,34 @@ abstract class PostSearchMapping extends AbstractSearchMapping
                 parent::NAME_WORDS_TRANSLIT_NAME_FIELD
             ])
         ];
+    }
+
+    /**
+     * Для постов отдельная логика по городу
+     *
+     * @var string ID города
+     */
+    public static $_cityId = null;
+
+    /**
+     * Собираем фильтр для поиска
+     *
+     * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface $filterFactory Объект фильтрации
+     * @param string|null $userId ID пользователя (не обязательный параметр для всех фильтров)
+     * @return array
+     */
+    public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
+    {
+        $filter = [];
+        if(!empty(self::$_cityId))
+        {
+            $filter = [
+                $filterFactory->getTermFilter([self::POST_IS_POSTED => true]),
+                $filterFactory->getTermFilter([self::POST_CITY_FIELD_ID => self::$_cityId])
+            ];
+        }
+
+        return $filter;
     }
 
     /**

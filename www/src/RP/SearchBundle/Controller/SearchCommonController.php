@@ -183,7 +183,7 @@ class SearchCommonController extends ApiController
     public function searchInterestsAction(Request $request)
     {
         try {
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
             // получаем из запроса ID пользователя
             $userId = $this->getRequestUserId();
 

@@ -114,7 +114,7 @@ class SearchChatMessageController extends ApiController
     public function searchChatMessageAction(Request $request)
     {
         try {
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
 
             /** @var string $searchText Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
@@ -192,7 +192,7 @@ class SearchChatMessageController extends ApiController
      */
     public function searchSingleChatAction(Request $request, $chatId)
     {
-        $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+        $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
 
         // получаем из запроса ID пользователя
         $userId = $this->getRequestUserId();

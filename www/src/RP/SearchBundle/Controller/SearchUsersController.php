@@ -126,7 +126,7 @@ class SearchUsersController extends ApiController
             /** @var ID профиля которого хотим посмотреть */
             $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $userId);
 
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
             $simpleList = $request->get('simpleList');
 
             /** @var Текст запроса */

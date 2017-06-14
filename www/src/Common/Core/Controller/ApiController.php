@@ -382,7 +382,7 @@ abstract class ApiController extends FOSRestController
 
         return [
             'results' => $resultData,
-            'info'    => (isset($resultInfo['searchType']) ? $resultInfo['searchType'] : $resultInfo),
+            'info' => (isset($resultInfo['searchType']) ? $resultInfo['searchType'] : $resultInfo),
         ];
     }
 
@@ -416,14 +416,14 @@ abstract class ApiController extends FOSRestController
     {
         return [
             self::ERROR => [
-                self::TEXT          => (is_array($message) ? $message : [$message]),
+                self::TEXT => (is_array($message) ? $message : [$message]),
                 self::TEXT_TRANSLIT => (is_array($message) ?
                     array_map(function ($msg) {
                         return $this->_translit($msg);
                     }, $message) :
                     [$this->_translit($message)]
                 ),
-                self::ERROR_CODE    => $code,
+                self::ERROR_CODE => $code,
             ],
         ];
     }
@@ -534,8 +534,7 @@ abstract class ApiController extends FOSRestController
     {
         $result = [];
         $items = $searchService->getTotalResults();
-        if(!empty($items))
-        {
+        if (!empty($items)) {
             $searchService->revertToScalarTagsMatchFields($items);
             $result = [
                 'info' => $searchService->getTotalHits(),
@@ -677,11 +676,14 @@ abstract class ApiController extends FOSRestController
         foreach ($events as $key => &$event) {
             //$event['willComeFriends'] = [];
             if (isset($event['willComeUsers']) && !empty($event['willComeUsers'])) {
-                $event['willComeUsers'] = array_combine(array_column($event['willComeUsers'], 'id'), $event['willComeUsers']);
+                $event['willComeUsers'] = array_combine(array_column($event['willComeUsers'], 'id'),
+                    $event['willComeUsers']);
                 $willComeFriends = [];
                 $willComeUsers = [];
                 foreach ($event['willComeUsers'] as $idUser => $users) {
-                    if (isset($users['friendList']) && !empty($users['friendList']) && in_array($userId, $users['friendList'])) {
+                    if (isset($users['friendList']) && !empty($users['friendList']) && in_array($userId,
+                            $users['friendList'])
+                    ) {
                         $willComeFriends[] = $users;
                     } else {
                         $willComeUsers[] = $users;

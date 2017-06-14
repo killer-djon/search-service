@@ -10,6 +10,7 @@ namespace RP\SearchBundle\Services\Mapping;
 
 use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Elastica\Query\MultiMatch;
+use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 
 abstract class PostSearchMapping extends AbstractSearchMapping
 {
@@ -49,6 +50,7 @@ abstract class PostSearchMapping extends AbstractSearchMapping
     const POST_CITY_FIELD = 'categoriesCity';
     const POST_CITY_FIELD_ID = 'categoriesCity.id';
     const POST_CITY_FIELD_name = 'categoriesCity.name';
+    const POST_CITY_INTERNATIONAL_NAME_FIELD = 'categoriesCity.internationalName';
     const POST_CITY_POINT_FIELD = 'categoriesCity.point';
 
     /**
@@ -67,6 +69,16 @@ abstract class PostSearchMapping extends AbstractSearchMapping
             // вариации поля фамилии
             parent::TAG_NAME_FIELD,
             parent::TAG_NAME_TRANSLIT_FIELD,
+
+            AbstractTransformer::createCompleteKey([
+                self::POST_CITY_FIELD,
+                parent::NAME_FIELD
+            ]),
+            AbstractTransformer::createCompleteKey([
+                self::POST_CITY_FIELD,
+                parent::NAME_TRANSLIT_FIELD
+            ]),
+            self::POST_CITY_INTERNATIONAL_NAME_FIELD
         ];
     }
 
@@ -83,6 +95,15 @@ abstract class PostSearchMapping extends AbstractSearchMapping
 
             self::POST_MESSAGE_WORDS_NAME_FIELD,
             self::POST_MESSAGE_WORDS_TRANSLIT_NAME_FIELD,
+
+            AbstractTransformer::createCompleteKey([
+                self::POST_CITY_FIELD,
+                parent::NAME_WORDS_NAME_FIELD
+            ]),
+            AbstractTransformer::createCompleteKey([
+                self::POST_CITY_FIELD,
+                parent::NAME_WORDS_TRANSLIT_NAME_FIELD
+            ])
         ];
     }
 
@@ -118,7 +139,24 @@ abstract class PostSearchMapping extends AbstractSearchMapping
      */
     public static function getSearchConditionQueryShould(ConditionFactoryInterface $conditionFactory, $queryString)
     {
-
+        return [
+            $conditionFactory->getDisMaxQuery([
+                $conditionFactory->getMultiMatchQuery()
+                    ->setFields(PostSearchMapping::getMultiMatchQuerySearchFields())
+                    ->setQuery($queryString)
+                    ->setOperator(MultiMatch::OPERATOR_OR)
+                    ->setType(MultiMatch::TYPE_CROSS_FIELDS),
+                $conditionFactory->getFieldQuery(
+                    PostSearchMapping::getMultiMatchQuerySearchFields(),
+                    $queryString
+                ),
+                $conditionFactory->getMultiMatchQuery()
+                    ->setFields(PostSearchMapping::getMorphologyQuerySearchFields())
+                    ->setQuery($queryString)
+                    ->setOperator(MultiMatch::OPERATOR_OR)
+                    ->setType(MultiMatch::TYPE_BEST_FIELDS),
+            ])
+        ];
     }
 
     /**
@@ -153,6 +191,10 @@ abstract class PostSearchMapping extends AbstractSearchMapping
                 'term_vector'   => 'with_positions_offsets',
                 'fragment_size' => 150,
             ],
+            self::POST_CITY_FIELD_name => [
+                'term_vector'   => 'with_positions_offsets',
+                'fragment_size' => 150,
+            ]
         ];
     }
 }

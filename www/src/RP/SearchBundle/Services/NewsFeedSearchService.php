@@ -43,8 +43,7 @@ class NewsFeedSearchService extends AbstractSearchService
         $searchText = null,
         $skip = 0,
         $count = RequestConstant::DEFAULT_SEARCH_LIMIT
-    )
-    {
+    ) {
 
         if (!empty($searchText)) {
             $searchText = mb_strtolower($searchText);
@@ -59,19 +58,10 @@ class NewsFeedSearchService extends AbstractSearchService
                     $searchText
                 ));
             } else {
-                $this->setConditionQueryShould([
-                    $this->_queryConditionFactory->getDisMaxQuery([
-                        $this->_queryConditionFactory->getMultiMatchQuery()
-                            ->setFields(PostSearchMapping::getMultiMatchQuerySearchFields())
-                            ->setQuery($searchText)
-                            ->setOperator(MultiMatch::OPERATOR_OR)
-                            ->setType(MultiMatch::TYPE_CROSS_FIELDS),
-                        $this->_queryConditionFactory->getFieldQuery(
-                            PostSearchMapping::getMultiMatchQuerySearchFields(),
-                            $searchText
-                        ),
-                    ]),
-                ]);
+                $this->setConditionQueryShould(PostSearchMapping::getSearchConditionQueryShould(
+                    $this->_queryConditionFactory,
+                    $searchText
+                ));
             }
 
             $this->setHighlightQuery(PostSearchMapping::getHighlightConditions());
@@ -247,8 +237,7 @@ class NewsFeedSearchService extends AbstractSearchService
         $searchText = null,
         $skip = 0,
         $count = null
-    )
-    {
+    ) {
         $userProfile = $this->getUserById($userId);
 
         $this->setFilterQuery([
@@ -288,19 +277,10 @@ class NewsFeedSearchService extends AbstractSearchService
                     $searchText
                 ));
             } else {
-                $this->setConditionQueryShould([
-                    $this->_queryConditionFactory->getDisMaxQuery([
-                        $this->_queryConditionFactory->getMultiMatchQuery()
-                            ->setFields(PostSearchMapping::getMultiMatchQuerySearchFields())
-                            ->setQuery($searchText)
-                            ->setOperator(MultiMatch::OPERATOR_OR)
-                            ->setType(MultiMatch::TYPE_CROSS_FIELDS),
-                        $this->_queryConditionFactory->getFieldQuery(
-                            PostSearchMapping::getMultiMatchQuerySearchFields(),
-                            $searchText
-                        ),
-                    ]),
-                ]);
+                $this->setConditionQueryShould(PostSearchMapping::getSearchConditionQueryShould(
+                    $this->_queryConditionFactory,
+                    $searchText
+                ));
             }
 
             $this->setHighlightQuery(PostSearchMapping::getHighlightConditions());

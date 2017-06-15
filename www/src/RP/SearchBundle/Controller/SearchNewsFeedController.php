@@ -29,7 +29,7 @@ class SearchNewsFeedController extends ApiController
      * @param string $wallId
      * @return Response
      */
-    public function getNewsFeedPostsAction(Request $request, $wallId, $cityId = null, $categoryId = null)
+    public function getNewsFeedPostsAction(Request $request, $wallId)
     {
 
         try {
@@ -54,14 +54,10 @@ class SearchNewsFeedController extends ApiController
                 return $this->_handleViewWithData([]);
             }
 
-            return $this->_handleViewWithData([
-                'info' => $postSearchService->getTotalHits(),
-                'pagination' => $postSearchService->getPaginationAdapter(
-                    $this->getSkip(),
-                    $this->getCount()
-                ),
-                'items' => $posts[PostSearchMapping::CONTEXT],
-            ]);
+
+            return $this->_handleViewWithData(
+                $this->getNewFormatResponse($postSearchService, PostSearchMapping::CONTEXT)
+            );
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
@@ -123,12 +119,9 @@ class SearchNewsFeedController extends ApiController
                 $this->getSkip(),
                 $this->getCount()
             );
-
-            return $this->_handleViewWithData([
-                'info' => $newsFeedSearchService->getTotalHits(),
-                'pagination' => $newsFeedSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
-                'items' => $userEvents,
-            ]);
+            return $this->_handleViewWithData(
+                $this->getNewFormatResponse($newsFeedSearchService, UserEventSearchMapping::CONTEXT)
+            );
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

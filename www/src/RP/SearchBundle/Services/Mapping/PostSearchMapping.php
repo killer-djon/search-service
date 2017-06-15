@@ -32,6 +32,9 @@ abstract class PostSearchMapping extends AbstractSearchMapping
     /** @const Поле удалености поста */
     const POST_IS_REMOVED = 'isRemoved';
 
+    /** @const Поле удалености поста */
+    const POST_IS_DELETED = 'isDeleted';
+
     /** Поле имени пользователя */
     const POST_MESSAGE_FIELD = 'message'; // полное совпадение имени по русски
     const POST_MESSAGE_NGRAM_FIELD = 'message._nameNgram'; // частичное совпадение имени от 3-х сивмолов по русски

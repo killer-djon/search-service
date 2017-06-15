@@ -527,22 +527,23 @@ abstract class ApiController extends FOSRestController
      * объекты info,pagination,items
      *
      * @param AbstractSearchService $searchService
-     * @param string $context КОнтекст набора данных (ключ)
+     * @param string|null $context КОнтекст набора данных (ключ)
      * @return array
      */
-    public function getNewFormatResponse(AbstractSearchService $searchService, $context)
+    public function getNewFormatResponse(AbstractSearchService $searchService, $context = null)
     {
         $result = [];
         $items = $searchService->getTotalResults();
+        $totalHits = $searchService->getTotalHits();
         if (!empty($items)) {
             $searchService->revertToScalarTagsMatchFields($items);
             $result = [
-                'info' => $searchService->getTotalHits(),
+                'info' => !is_null($context) && isset($totalHits[$context]) ? $totalHits[$context] : $totalHits,
                 'pagination' => $searchService->getPaginationAdapter(
                     $this->getSkip(),
                     $this->getCount()
                 ),
-                'items' => $items[$context]
+                'items' => !is_null($context) ? $items[$context] : $items
             ];
         }
 

@@ -60,6 +60,11 @@ class UserProfileService extends ReportingService
     protected $_friendList;
 
     /**
+     * @var string ID стены
+     */
+    protected $_wallId;
+
+    /**
      * @inheritdoc
      */
     public function __construct(array $data)
@@ -79,6 +84,17 @@ class UserProfileService extends ReportingService
         $this->_surname = $data['surname'];
         $this->_fullname = $data['fullname'];
         $this->_friendList = $data['friendList'];
+        $this->_wallId = $data['wallId'];
+    }
+
+    /**
+     * Получаем ID стены пользователя
+     *
+     * @return string
+     */
+    public function getWallId()
+    {
+        return $this->_wallId;
     }
 
     /**
@@ -179,20 +195,20 @@ class UserProfileService extends ReportingService
     public function toArray()
     {
         return [
-            'id'           => $this->getId(),
-            'name'         => $this->getName(),
-            'surname'      => $this->getSurname(),
-            'fullname'     => $this->getFullname(),
-            'gender'       => $this->getGender(),
-            'isOnline'     => $this->getIsOnline(),
+            'id' => $this->getId(),
+            'name' => $this->getName(),
+            'surname' => $this->getSurname(),
+            'fullname' => $this->getFullname(),
+            'gender' => $this->getGender(),
+            'isOnline' => $this->getIsOnline(),
             'lastActivity' => $this->getLastActivity()->format('c'),
-            'location'     => [
+            'location' => [
                 'point' => [
                     'longitude' => $this->getLocation()->getLongitude(),
-                    'latitude'  => $this->getLocation()->getLatitude(),
+                    'latitude' => $this->getLocation()->getLatitude(),
                 ],
             ],
-            'tags'         => $this->getTags(),
+            'tags' => $this->getTags(),
         ];
     }
 }

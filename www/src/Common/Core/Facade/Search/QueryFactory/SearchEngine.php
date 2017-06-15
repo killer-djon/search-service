@@ -381,7 +381,12 @@ class SearchEngine implements SearchEngineInterface
                     $indices[] = $this->availableTypesSearch[$typeIndex]::DEFAULT_INDEX;
                 }
             } else {
-                $indices = [self::DEFAULT_INDEX];
+                if( !empty($this->_indices) )
+                {
+                    $indices = $this->_indices;
+                }else{
+                    $indices = [self::DEFAULT_INDEX];
+                }
             }
             $this->_paginator->addIndices($indices);
 

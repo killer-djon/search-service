@@ -17,5 +17,6 @@ security:
             provider: token_provider
 
     access_control:
+        - { path: ^/api/search/v1/json/country/name, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/api/search/v1/json/city/name, roles: IS_AUTHENTICATED_ANONYMOUSLY }
         - { path: ^/api, roles: ROLE_USER }

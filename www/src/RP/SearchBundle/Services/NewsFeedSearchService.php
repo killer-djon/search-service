@@ -204,13 +204,13 @@ JS;
         }
 
         $this->setFilterQuery([
-            $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
             $filter->getBoolOrFilter(array_merge([
                 $filter->getBoolAndFilter([
                     $filter->getTypeFilter(PostSearchMapping::CONTEXT),
                     // получаекм посты друзей
                     $filter->getBoolAndFilter([
                         $filter->getTermsFilter(PostSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
+                        $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
                     ]),
                 ]),
                 $filter->getBoolAndFilter([
@@ -218,6 +218,7 @@ JS;
                     // получаекм свои посты
                     $filter->getBoolAndFilter([
                         $filter->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                        $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
                     ]),
                 ]),
                 // Personal (читай подробный комментарий в getUserEventsGroups)

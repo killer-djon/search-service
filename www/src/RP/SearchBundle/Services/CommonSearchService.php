@@ -217,6 +217,7 @@ class CommonSearchService extends AbstractSearchService
                         $this->setFilterQuery($type::getMatchSearchFilter($this->_queryFilterFactory, $userId));
                     }
                 } else {
+                    if( $type::CONTEXT === PostSearchMapping::CONTEXT ) continue;
                     $this->setFilterQuery($type::getMatchSearchFilter($this->_queryFilterFactory, $userId));
                 }
 
@@ -325,6 +326,7 @@ class CommonSearchService extends AbstractSearchService
                         $userId));
                 }
             } else {
+                if( $this->filterSearchTypes[$type]::CONTEXT === PostSearchMapping::CONTEXT ) continue;
                 $this->setFilterQuery($this->filterSearchTypes[$type]::getMatchSearchFilter($this->_queryFilterFactory,
                     $userId));
             }

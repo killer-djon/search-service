@@ -1,10 +1,10 @@
 <?php
+
 namespace RP\SearchBundle\Services\Mapping;
 
 use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Elastica\Query\MultiMatch;
-use Elastica\Query\QueryString;
 
 abstract class PeopleSearchMapping extends AbstractSearchMapping
 {
@@ -29,6 +29,8 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     const SURNAME_PREFIX_FIELD = 'surname._prefix';
     const SURNAME_PREFIX_TRANSLIT_FIELD = 'surname._prefixTranslit';
     const SURNAME_STANDARD_FIELD = 'surname._standard';
+    const SURNAME_EXACT_FIELD = 'surname._exactSurname';
+    const SURNAME_EXACT_PREFIX_FIELD = 'surname._exactPrefixName';
 
     // Морфологический разбор поля полного имени
     const FULLNAME_MORPHOLOGY_FIELD = 'fullname';
@@ -147,6 +149,22 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
      * @const string COMMON_FRIENDS_FILTER
      */
     const COMMON_FRIENDS_FILTER = 'commonFriends';
+
+    /**
+     * Настройка приватности пользователя
+     * Показывать пользователя на карте или нет
+     *
+     * @const string values: all or none
+     */
+    const SETTINGS_PRIVACY_VIEW_GEO_POSITION = 'settings.privacy.viewGeoposition';
+
+    /**
+     * Константы для зхначений настроек приватности
+     *
+     * @const string
+     */
+    const SETTINGS_YES = 'all';
+    const SETTINGS_NO = 'none';
 
     /**
      * Получаем поля для поиска
@@ -276,7 +294,19 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
             $filterFactory->getNotFilter(
                 $filterFactory->getTermFilter([self::IDENTIFIER_FIELD => $userId])
             ),
+            $filterFactory->getBoolOrFilter([
+                $filterFactory->getNotFilter(
+                    $filterFactory->getExistsFilter(self::SETTINGS_PRIVACY_VIEW_GEO_POSITION)
+                ),
+                $filterFactory->getTermFilter([self::SETTINGS_PRIVACY_VIEW_GEO_POSITION => self::SETTINGS_YES]),
+            ]),
             $filterFactory->getTermFilter([self::USER_REMOVED_FIELD => false]),
+            $filterFactory->getBoolOrFilter([
+                $filterFactory->getNotFilter(
+                    $filterFactory->getExistsFilter(self::HELP_OFFERS_LIST_FIELD)
+                ),
+                $filterFactory->getScriptFilter("doc['helpOffers.id'].values.size() < 1")
+            ]),
         ];
     }
 
@@ -334,51 +364,19 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
         );
 
         foreach (self::getMultiMatchQuerySearchFields() as $field) {
-            //$prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
             $prefixWildCardByName[] = $conditionFactory->getPrefixQuery($field, $queryString, 0.5);
         }
 
         foreach (self::getMultiSubMatchQuerySearchFields() as $field) {
-            //$prefixWildCard[] = $conditionFactory->getWildCardQuery($field, "{$queryString}*");
             $prefixWildCardByTags[] = $conditionFactory->getPrefixQuery($field, $queryString, 0.2);
         }
 
-        return [
-            /*$conditionFactory->getDisMaxQuery(array_merge([
-                    $conditionFactory->getMultiMatchQuery()
-                                     ->setFields(array_merge(
-                                         self::getMultiMatchQuerySearchFields(),
-                                         self::getMultiSubMatchQuerySearchFields()
-                                     ))
-                                     ->setQuery($queryString)
-                                     ->setOperator(MultiMatch::OPERATOR_OR)
-                                     ->setType(MultiMatch::TYPE_BEST_FIELDS)
-                ],$prefixWildCardByTags, $prefixWildCardByName,[
-                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString, true, 0.5)
-                ]
-            ))*/
+        $namePrefixedFields = [];
+        foreach (self::getPrefixedQuerySearchFields() as $field) {
+            $namePrefixedFields[] = $conditionFactory->getPrefixQuery($field, $queryString, 0.1);
+        }
 
-            /*$conditionFactory->getDisMaxQuery(array_merge(
-                [
-                    $conditionFactory->getMultiMatchQuery()
-                                     ->setFields(self::getMultiMatchQuerySearchFields())
-                                     ->setQuery($queryString)
-                                     ->setOperator(MultiMatch::OPERATOR_OR)
-                                     ->setType(MultiMatch::TYPE_BEST_FIELDS)
-                ],
-                [
-                    $conditionFactory->getMultiMatchQuery()
-                                     ->setFields(self::getMultiSubMatchQuerySearchFields())
-                                     ->setQuery($queryString)
-                                     ->setOperator(MultiMatch::OPERATOR_OR)
-                                     ->setType(MultiMatch::TYPE_BEST_FIELDS)
-                ],
-                $prefixWildCardByName,
-                [
-                    $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString, true, 0.5)
-                ],
-                $prefixWildCardByTags
-            ))*/
+        return [
             $conditionFactory->getMultiMatchQuery()
                              ->setFields(self::getMultiMatchQuerySearchFields())
                              ->setQuery($queryString)
@@ -424,6 +422,24 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
         ];
 
         return $highlight;
+    }
+
+
+    /**
+     * Вспомогательный метод позволяющий
+     * задавать условия для автодополнения
+     *
+     * @param ConditionFactoryInterface $conditionFactory Объект класса билдера условий
+     * @param string $queryString Строка запроса
+     * @return array
+     */
+    public static function getSuggestQueryConditions(ConditionFactoryInterface $conditionFactory, $queryString)
+    {
+        return [
+            $conditionFactory->getPrefixQuery(self::NAME_EXACT_FIELD, $queryString),
+            $conditionFactory->getPrefixQuery(self::SURNAME_EXACT_FIELD, $queryString),
+            $conditionFactory->getTermQuery('_type', self::CONTEXT),
+        ];
     }
 
 }

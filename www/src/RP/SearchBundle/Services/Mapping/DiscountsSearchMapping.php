@@ -39,17 +39,20 @@ abstract class DiscountsSearchMapping extends PlaceSearchMapping
      */
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return [
-            $filterFactory->getBoolOrFilter([
-                $filterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 1, 100),
-                $filterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
-            ]),
-            $filterFactory->getBoolOrFilter([
+        $result = [];
+
+        $result[] = $filterFactory->getBoolOrFilter([
+            $filterFactory->getRangeFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0, 101),
+            $filterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
+        ]);
+
+        if (!empty($userId)) {
+            $result[] = $filterFactory->getBoolOrFilter([
                 $filterFactory->getBoolAndFilter([
                     $filterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
                     $filterFactory->getTermsFilter(PlaceSearchMapping::MODERATION_STATUS_FIELD, [
                         ModerationStatus::DIRTY,
-                        ModerationStatus::OK
+                        ModerationStatus::OK,
                     ]),
                 ]),
                 $filterFactory->getBoolAndFilter([
@@ -57,11 +60,20 @@ abstract class DiscountsSearchMapping extends PlaceSearchMapping
                         $filterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId])
                     ),
                     $filterFactory->getTermFilter([
-                        PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK
-                    ])
+                        PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK,
+                    ]),
                 ]),
-            ])
-        ];
+            ]);
+        } else {
+            $result[] = $filterFactory->getTermFilter([
+                PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK,
+            ]);
+        }
+
+        $result[] = AbstractSearchMapping::getVisibleCondition($filterFactory, $userId);
+        $result[] = AbstractSearchMapping::getModerateCondition($filterFactory, $userId);
+
+        return $result;
     }
 
     /**

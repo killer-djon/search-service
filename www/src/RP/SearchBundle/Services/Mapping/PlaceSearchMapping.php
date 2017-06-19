@@ -1,4 +1,5 @@
 <?php
+
 namespace RP\SearchBundle\Services\Mapping;
 
 use Common\Core\Constants\ModerationStatus;
@@ -14,8 +15,6 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
 
     const PLACE_ID_FIELD = 'id';
 
-    const AUTHOR_ID_FIELD = 'author.id';
-
     /** Тип места */
     const TYPE_FIELD = 'type';
     const TYPE_ID_FIELD = 'type.id';
@@ -23,7 +22,7 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
     const TYPE_NAME_NGRAM_FIELD = 'type.name._nameNgram';
     const TYPE_NAME_TRANSLIT_FIELD = 'type.name._translit';
     const TYPE_NAME_TRANSLIT_NGRAM_FIELD = 'type.name._translitNgram';
-    const TYPE_WORDS_FIELD    = 'type.name._wordsName';
+    const TYPE_WORDS_FIELD = 'type.name._wordsName';
     const TYPE_WORDS_TRANSLIT_FIELD = 'type.name._wordsTranslitName'; // частичное совпадение имени от 3-х сивмолов в транслите
 
     const TYPE_PREFIX_FIELD = 'type.name._prefix';
@@ -41,10 +40,6 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
     const BONUS_FIELD = 'bonus';
     const REMOVED_FIELD = 'isRemoved';
 
-    /** Статус модерации */
-    const MODERATION_STATUS_FIELD = 'moderationStatus';
-    const VISIBLE_FIELD = 'visible';
-
     /**
      * Получаем поля для поиска
      * сбор полей для формирования объекта запроса
@@ -61,7 +56,7 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
             self::NAME_TRANSLIT_FIELD,
             //self::NAME_TRANSLIT_NGRAM_FIELD,
             self::DESCRIPTION_FIELD,
-            self::DESCRIPTION_TRANSLIT_FIELD
+            self::DESCRIPTION_TRANSLIT_FIELD,
         ];
     }
 
@@ -148,7 +143,7 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
             self::TYPE_WORDS_TRANSLIT_FIELD,
 
             self::DESCRIPTION_WORDS_NAME_FIELD,
-            self::DESCRIPTION_WORDS_TRANSLIT_NAME_FIELD
+            self::DESCRIPTION_WORDS_TRANSLIT_NAME_FIELD,
         ];
     }
 
@@ -163,17 +158,21 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
     {
         return [
             $filterFactory->getTermFilter([self::IS_RUSSIAN_FIELD => false]),
-            $filterFactory->getNotFilter(
-                $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
-            ),
             $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
             $filterFactory->getNotFilter(
                 $filterFactory->getExistsFilter(self::BONUS_FIELD)
             ),
+            AbstractSearchMapping::getVisibleCondition($filterFactory, $userId),
+            // НЕ скидочные места показываются даже если ещё не прошли модерацию
+            // AbstractSearchMapping::getModerateCondition($filterFactory, $userId),
+            $filterFactory->getNotFilter(
+                $filterFactory->getTermsFilter(self::MODERATION_STATUS_FIELD, [
+                    ModerationStatus::REJECTED,
+                    ModerationStatus::DELETED,
+                ])
+            ),
         ];
     }
-
-
 
     /**
      * Собираем фильтр для поиска
@@ -184,15 +183,7 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
      */
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return [
-            $filterFactory->getNotFilter(
-                $filterFactory->getTermFilter([self::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
-            ),
-            $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
-            $filterFactory->getNotFilter(
-                $filterFactory->getExistsFilter(self::BONUS_FIELD)
-            ),
-        ];
+        return self::getMarkersSearchFilter($filterFactory, $userId);
     }
 
 
@@ -207,7 +198,7 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
     public static function getFlatMatchSearchFilter(FilterFactoryInterface $filterFactory, $type, $userId = null)
     {
         return array_merge(
-            self::getMatchSearchFilter($filterFactory, $userId),
+            self::getMarkersSearchFilter($filterFactory, $userId),
             [$filterFactory->getTypeFilter($type)]
         );
     }
@@ -233,10 +224,9 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
         }
 
         return [
-            $conditionFactory->getDisMaxQuery($queryMatchPhrase)
+            $conditionFactory->getDisMaxQuery($queryMatchPhrase),
         ];
     }
-
 
 
     /**
@@ -272,19 +262,19 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
         return [
             $conditionFactory->getDisMaxQuery(array_merge([
                 $conditionFactory->getMultiMatchQuery()
-                                 ->setFields(array_merge(
-                                     self::getMultiMatchQuerySearchFields(),
-                                     self::getMultiSubMatchQuerySearchFields()
-                                 ))
-                                 ->setQuery($queryString)
-                                 ->setOperator(MultiMatch::OPERATOR_OR)
-                                 ->setType(MultiMatch::TYPE_CROSS_FIELDS)
-            ],$prefixWildCardByTags, $prefixWildCardByName,[
+                    ->setFields(array_merge(
+                        self::getMultiMatchQuerySearchFields(),
+                        self::getMultiSubMatchQuerySearchFields()
+                    ))
+                    ->setQuery($queryString)
+                    ->setOperator(MultiMatch::OPERATOR_OR)
+                    ->setType(MultiMatch::TYPE_CROSS_FIELDS),
+            ], $prefixWildCardByTags, $prefixWildCardByName, [
                     $conditionFactory->getFieldQuery(self::getMorphologyQuerySearchFields(), $queryString, true, 0.5),
                     $conditionFactory->getMatchPhrasePrefixQuery(self::DESCRIPTION_WORDS_NAME_FIELD, $queryString),
-                    $conditionFactory->getMatchPhrasePrefixQuery(self::DESCRIPTION_WORDS_TRANSLIT_NAME_FIELD, $queryString)
+                    $conditionFactory->getMatchPhrasePrefixQuery(self::DESCRIPTION_WORDS_TRANSLIT_NAME_FIELD, $queryString),
                 ]
-            ))
+            )),
         ];
     }
 
@@ -299,13 +289,31 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
             self::DESCRIPTION_FIELD => [
                 'term_vector'   => 'with_positions_offsets',
                 'no_match_size' => 150,
-                'fragment_size' => 150
+                'fragment_size' => 150,
             ],
-            '*' => [
-                'term_vector' => 'with_positions_offsets'
-            ]
+            '*'                     => [
+                'term_vector' => 'with_positions_offsets',
+            ],
         ];
 
         return $highlight;
+    }
+
+
+    /**
+     * Вспомогательный метод позволяющий
+     * задавать условия для автодополнения
+     *
+     * @param ConditionFactoryInterface $conditionFactory Объект класса билдера условий
+     * @param string $queryString Строка запроса
+     * @return array
+     */
+    public static function getSuggestQueryConditions(ConditionFactoryInterface $conditionFactory, $queryString)
+    {
+        return [
+            $conditionFactory->getMatchPhrasePrefixQuery(self::NAME_EXACT_FIELD, $queryString),
+            //$conditionFactory->getMatchPhrasePrefixQuery(self::DESCRIPTION_EXACT_FIELD, $queryString),
+            $conditionFactory->getTermQuery('_type', self::CONTEXT),
+        ];
     }
 }

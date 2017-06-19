@@ -2,18 +2,22 @@
 /**
  * Сервис осуществления поиска мест с разными параметрами
  */
+
 namespace RP\SearchBundle\Services;
 
 use Common\Core\Constants\ModerationStatus;
+use Common\Core\Constants\SortingOrder;
 use Common\Core\Constants\Visible;
+use Common\Core\Facade\Search\QueryScripting\QueryScriptFactory;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
-use Elastica\Exception\ElasticsearchException;
 use Elastica\Query\MultiMatch;
+use RP\SearchBundle\Helper\BackwardCompatibilityHelper;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceTypeSearchMapping;
 
 class PlacesSearchService extends AbstractSearchService
 {
+
     /**
      * Минимальное значение скора (вес найденного результата)
      *
@@ -40,22 +44,17 @@ class PlacesSearchService extends AbstractSearchService
         $this->setConditionQueryShould([
             $this->_queryConditionFactory->getMultiMatchQuery()
                                          ->setQuery($searchText)
-                                         ->setFields(PlaceSearchMapping::getMultiMatchQuerySearchFields()),
-            $this->_queryConditionFactory->getWildCardQuery(
-                PlaceSearchMapping::DESCRIPTION_FIELD,
-                "{$searchText}*"
-            ),
-            $this->_queryConditionFactory->getWildCardQuery(
-                PlaceSearchMapping::NAME_WORDS_NAME_FIELD,
-                "{$searchText}*"
-            ),
-            $this->_queryConditionFactory->getWildCardQuery(
-                PlaceSearchMapping::TYPE_WORDS_FIELD,
-                "{$searchText}*"
-            ),
-            $this->_queryConditionFactory->getWildCardQuery(
-                PlaceSearchMapping::TAG_WORDS_FIELD,
-                "{$searchText}*"
+                                         ->setFields([
+                                             PlaceSearchMapping::NAME_FIELD,
+                                             PlaceSearchMapping::NAME_TRANSLIT_FIELD,
+                                         ])
+                                         ->setType(MultiMatch::TYPE_PHRASE_PREFIX),
+            $this->_queryConditionFactory->getFieldQuery(
+                [
+                    PlaceSearchMapping::NAME_FIELD,
+                    PlaceSearchMapping::NAME_TRANSLIT_FIELD,
+                ],
+                $searchText
             ),
         ]);
 
@@ -66,7 +65,7 @@ class PlacesSearchService extends AbstractSearchService
         $this->setGeoPointConditions($point, PlaceSearchMapping::class);
 
         /** устанавливаем фильтры только для мест */
-        $this->setFilterPlaces($userId);
+        $this->setFilterQuery(PlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
 
         $queryMatch = $this->createQuery($skip, $count);
 
@@ -97,27 +96,27 @@ class PlacesSearchService extends AbstractSearchService
             $skip, $count
         );*/
 
-        if( !is_null($searchText) && !empty($searchText) ){
+        if (!is_null($searchText) && !empty($searchText)) {
             $this->setConditionQueryShould([
                 $this->_queryConditionFactory->getDisMaxQuery([
                     $this->_queryConditionFactory->getMultiMatchQuery()
-                        ->setQuery($searchText)
-                        ->setFields([
-                            PlaceTypeSearchMapping::NAME_FIELD,
-                            PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD,
-                        ])
-                        ->setOperator(MultiMatch::OPERATOR_OR)
-                        ->setType(MultiMatch::TYPE_BEST_FIELDS),
+                                                 ->setQuery($searchText)
+                                                 ->setFields([
+                                                     PlaceTypeSearchMapping::NAME_FIELD,
+                                                     PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD,
+                                                 ])
+                                                 ->setOperator(MultiMatch::OPERATOR_OR)
+                                                 ->setType(MultiMatch::TYPE_BEST_FIELDS),
                     $this->_queryConditionFactory->getPrefixQuery(PlaceTypeSearchMapping::NAME_FIELD, $searchText),
                     $this->_queryConditionFactory->getPrefixQuery(PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD, $searchText),
 
                     $this->_queryConditionFactory->getFieldQuery(PlaceTypeSearchMapping::NAME_WORDS_NAME_FIELD, $searchText),
-                    $this->_queryConditionFactory->getFieldQuery(PlaceTypeSearchMapping::NAME_WORDS_TRANSLIT_NAME_FIELD, $searchText)
-                ])
+                    $this->_queryConditionFactory->getFieldQuery(PlaceTypeSearchMapping::NAME_WORDS_TRANSLIT_NAME_FIELD, $searchText),
+                ]),
             ]);
 
             $queryMatch = $this->createQuery($skip, $count);
-        }else{
+        } else {
             $queryMatch = $this->createMatchQuery(
                 null, [], $skip, $count
             );
@@ -138,8 +137,14 @@ class PlacesSearchService extends AbstractSearchService
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchPlacesByCity($userId, $cityId, GeoPointServiceInterface $point, $searchText = null, $skip = 0, $count = null)
-    {
+    public function searchPlacesByCity(
+        $userId,
+        $cityId,
+        GeoPointServiceInterface $point,
+        $searchText = null,
+        $skip = 0,
+        $count = null
+    ) {
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
 
@@ -147,22 +152,17 @@ class PlacesSearchService extends AbstractSearchService
             $this->setConditionQueryShould([
                 $this->_queryConditionFactory->getMultiMatchQuery()
                                              ->setQuery($searchText)
-                                             ->setFields(PlaceSearchMapping::getMultiMatchQuerySearchFields()),
-                $this->_queryConditionFactory->getWildCardQuery(
-                    PlaceSearchMapping::DESCRIPTION_FIELD,
-                    "{$searchText}*"
-                ),
-                $this->_queryConditionFactory->getWildCardQuery(
-                    PlaceSearchMapping::NAME_WORDS_NAME_FIELD,
-                    "{$searchText}*"
-                ),
-                $this->_queryConditionFactory->getWildCardQuery(
-                    PlaceSearchMapping::TYPE_WORDS_FIELD,
-                    "{$searchText}*"
-                ),
-                $this->_queryConditionFactory->getWildCardQuery(
-                    PlaceSearchMapping::TAG_WORDS_FIELD,
-                    "{$searchText}*"
+                                             ->setFields([
+                                                 PlaceSearchMapping::NAME_FIELD,
+                                                 PlaceSearchMapping::NAME_TRANSLIT_FIELD,
+                                             ])
+                                             ->setType(MultiMatch::TYPE_PHRASE_PREFIX),
+                $this->_queryConditionFactory->getFieldQuery(
+                    [
+                        PlaceSearchMapping::NAME_FIELD,
+                        PlaceSearchMapping::NAME_TRANSLIT_FIELD,
+                    ],
+                    $searchText
                 ),
             ]);
         }
@@ -178,7 +178,7 @@ class PlacesSearchService extends AbstractSearchService
         $this->setGeoPointConditions($point, PlaceSearchMapping::class);
 
         /** устанавливаем фильтры только для мест */
-        $this->setFilterPlaces($userId);
+        $this->setFilterQuery(PlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
 
         $queryMatch = $this->createQuery($skip, $count);
 
@@ -192,41 +192,42 @@ class PlacesSearchService extends AbstractSearchService
      *
      * @param string $userId ID пользователя который делает запрос к АПИ
      * @param GeoPointServiceInterface $point
-     * @param string $searchText Поисковый запрос
+     * @param array $params параметры запроса
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchPlacesByDiscount($userId, GeoPointServiceInterface $point, $searchText = null, $cityId = null, $skip = 0, $count = null)
-    {
+    public function searchPlacesByDiscount(
+        $userId,
+        GeoPointServiceInterface $point,
+        $params = [],
+        $skip = 0,
+        $count = null
+    ) {
         /** получаем текущего ползователя */
         $currentUser = $this->getUserById($userId);
 
         /** если задан поисковый запрос скидки */
-        if (!is_null($searchText) && !empty($searchText)) {
+        if (isset($params['search']) && !empty($params['search'])) {
             $this->setConditionQueryShould([
                 $this->_queryConditionFactory->getMultiMatchQuery()
-                                             ->setQuery($searchText)
+                                             ->setQuery($params['search'])
                                              ->setFields(PlaceSearchMapping::getMultiMatchQuerySearchFields()),
-                $this->_queryConditionFactory->getWildCardQuery(
-                    PlaceSearchMapping::NAME_WORDS_NAME_FIELD,
-                    "{$searchText}*"
-                ),
-                $this->_queryConditionFactory->getWildCardQuery(
-                    PlaceSearchMapping::DESCRIPTION_FIELD,
-                    "{$searchText}*"
-                ),
-                $this->_queryConditionFactory->getWildCardQuery(
-                    PlaceSearchMapping::BONUS_FIELD,
-                    "{$searchText}*"
-                ),
+                $this->_queryConditionFactory->getWildCardQuery(PlaceSearchMapping::NAME_WORDS_NAME_FIELD, "{$params['search']}*"),
+                $this->_queryConditionFactory->getWildCardQuery(PlaceSearchMapping::DESCRIPTION_FIELD, "{$params['search']}*"),
+                $this->_queryConditionFactory->getWildCardQuery(PlaceSearchMapping::BONUS_FIELD, "{$params['search']}*"),
             ]);
         }
 
-        /** если вдруг захотим искать скидки по городу */
-        if (!is_null($cityId) && !empty($cityId)) {
+        if (isset($params['countryId']) && !empty($params['countryId'])) {
             $this->setConditionQueryMust([
-                $this->_queryConditionFactory->getTermQuery(PlaceSearchMapping::LOCATION_CITY_ID_FIELD, $cityId),
+                $this->_queryConditionFactory->getTermQuery(PlaceSearchMapping::LOCATION_COUNTRY_ID_FIELD, $params['countryId']),
+            ]);
+        }
+
+        if (isset($params['cityId']) && !empty($params['cityId'])) {
+            $this->setConditionQueryMust([
+                $this->_queryConditionFactory->getTermQuery(PlaceSearchMapping::LOCATION_CITY_ID_FIELD, $params['cityId']),
             ]);
         }
 
@@ -241,11 +242,100 @@ class PlacesSearchService extends AbstractSearchService
         $this->setHighlightQuery([
             'description' => [],
         ]);
+
         $queryMatch = $this->createQuery($skip, $count);
 
         return $this->searchDocuments($queryMatch, PlaceSearchMapping::CONTEXT);
     }
 
+    /**
+     * Метод осуществляет поиск в еластике
+     * скидочных мест (для метода promo)
+     *
+     * @param string $userId ID пользователя который делает запрос к АПИ
+     * @param GeoPointServiceInterface $point
+     * @param int|null $skip Кол-во пропускаемых позиций поискового результата
+     * @param int|null $count Какое кол-во выводим
+     * @param int|null $countryId ID страны
+     * @param int|null $cityId ID города
+     * @return array Массив с найденными результатами
+     */
+    public function searchPromoPlaces($userId, GeoPointServiceInterface $point, $skip = null, $count = null, $countryId = null, $cityId = null)
+    {
+        $currentUser = $this->getUserById($userId);
+
+        $userPoint = $currentUser->getLocation();
+
+        if ((!$point->isValid() || $point->isEmpty()) && ($userPoint->isValid() && !$userPoint->isEmpty())) {
+            $point = $userPoint;
+        }
+
+        $aggr = $this->_queryAggregationFactory;
+
+        /** @var QueryScriptFactory $scriptFactory */
+        $scriptFactory = $this->_scriptFactory;
+
+        $script_fields = [
+            'tagsInPercent'     => $scriptFactory->getTagsIntersectInPercentScript(
+                $this->filterTypes[PlaceSearchMapping::CONTEXT]::TAGS_ID_FIELD,
+                $currentUser->getTags()
+            ),
+            'tagsCount'         => $scriptFactory->getTagsIntersectScript(
+                $this->filterTypes[PlaceSearchMapping::CONTEXT]::TAGS_ID_FIELD,
+                $currentUser->getTags()
+            ),
+            'distance'          => $scriptFactory->getDistanceScript(
+                $this->filterTypes[PlaceSearchMapping::CONTEXT]::LOCATION_POINT_FIELD,
+                $point
+            ),
+            'distanceInPercent' => $scriptFactory->getDistanceInPercentScript(
+                $this->filterTypes[PlaceSearchMapping::CONTEXT]::LOCATION_POINT_FIELD,
+                $point
+            ),
+        ];
+
+        if (!empty($countryId)) {
+            $this->setAggregationQuery([
+                $aggr
+                    ->getTermsAggregation(PlaceSearchMapping::LOCATION_COUNTRY_ID_FIELD, null, '_count', 'desc')
+                    ->addAggregation($aggr
+                        ->setAggregationSource(PlaceSearchMapping::CONTEXT, [], $count)
+                    )
+                    ->addAggregation($aggr
+                        ->getTermsAggregation(PlaceSearchMapping::LOCATION_CITY_ID_FIELD, null, '_count', 'desc')
+                        ->addAggregation($aggr
+                            ->setAggregationSource(PlaceSearchMapping::CONTEXT, [], $count, $script_fields)
+                            ->setSort([PlaceSearchMapping::PLACE_ID_FIELD => SortingOrder::SORTING_DESC])
+                            ->setFrom($skip)
+                        )
+                    ),
+            ]);
+        } else {
+            $this->setAggregationQuery([
+                $aggr
+                    ->getTermsAggregation(PlaceSearchMapping::LOCATION_COUNTRY_ID_FIELD, null, '_count', 'desc')
+                    ->addAggregation($aggr
+                        ->setAggregationSource(PlaceSearchMapping::CONTEXT, [], $count, $script_fields)
+                    ),
+            ]);
+        }
+
+        $this->setFilterDiscounts($userId);
+
+        /** добавляем к условию поиска рассчет по совпадению интересов */
+        $this->setScriptTagsConditions($currentUser, PlaceSearchMapping::class);
+
+        /** добавляем к условию поиска рассчет расстояния */
+        $this->setGeoPointConditions($point, PlaceSearchMapping::class);
+
+        $queryMatch = $this->createMatchQuery(null, PlaceSearchMapping::getMultiMatchQuerySearchFields());
+
+        $this->searchDocuments($queryMatch, PlaceSearchMapping::CONTEXT);
+
+        $places = $this->getAggregations();
+
+        return BackwardCompatibilityHelper::preparePromoPlaces($places, $countryId, $cityId);
+    }
 
     /**
      * Установка фильтров для поиска только скидок
@@ -267,17 +357,17 @@ class PlacesSearchService extends AbstractSearchService
                         $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId])
                     ),
                     $this->_queryFilterFactory->getTermFilter([
-                        PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK
-                    ])
+                        PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK,
+                    ]),
                 ]),
                 $this->_queryFilterFactory->getBoolAndFilter([
                     $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
                     $this->_queryFilterFactory->getTermsFilter(PlaceSearchMapping::MODERATION_STATUS_FIELD, [
                         ModerationStatus::DIRTY,
-                        ModerationStatus::OK
+                        ModerationStatus::OK,
                     ]),
-                ])
-            ])
+                ]),
+            ]),
         ]);
     }
 
@@ -291,7 +381,6 @@ class PlacesSearchService extends AbstractSearchService
      */
     private function setFilterPlaces($userId = null)
     {
-
         $this->setFilterQuery([
             $this->_queryFilterFactory->getNotFilter(
                 $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DELETED])
@@ -302,7 +391,7 @@ class PlacesSearchService extends AbstractSearchService
                     $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
                 ),
                 $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
-            ])
+            ]),
         ]);
     }
 
@@ -318,97 +407,93 @@ class PlacesSearchService extends AbstractSearchService
      */
     public function getPlaceById($userId, $context, $fieldId, $recordId, GeoPointServiceInterface $point)
     {
-        if( $userId == 0 )
-        {
-            $this->setFilterQuery([
-                $this->_queryFilterFactory->getBoolOrFilter([
-                    $this->_queryFilterFactory->getBoolAndFilter([
-                        $this->_queryFilterFactory->getBoolOrFilter([
-                            $this->_queryFilterFactory->getGtFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0),
-                            $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
-                        ]),
-                        $this->_queryFilterFactory->getTermFilter([
-                            PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK
-                        ])
+        $filter = $this->_queryFilterFactory;
+
+        if (empty($userId)) {
+            $moderate = $filter->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK]);
+
+            $discount = $filter->getBoolOrFilter([
+                $filter->getBoolAndFilter([
+                    $moderate,
+                    $filter->getBoolOrFilter([
+                        $filter->getGtFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0),
+                        $filter->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
                     ]),
-                    $this->_queryFilterFactory->getBoolOrFilter([
-                        $this->_queryFilterFactory->getBoolAndFilter([
-                            $this->_queryFilterFactory->getNotFilter(
-                                $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
-                            ),
-                            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
-                            $this->_queryFilterFactory->getNotFilter(
-                                $this->_queryFilterFactory->getTermFilter([
-                                    PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DELETED
-                                ])
-                            )
-                        ])
-                    ])
-                ])
+                ]),
+                $filter->getBoolAndFilter([
+                    $filter->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
+                    $filter->getNotFilter(
+                        $filter->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
+                    ),
+                ]),
             ]);
 
-            /** добавляем к условию поиска рассчет расстояния */
-            $this->setGeoPointConditions($point, PlaceSearchMapping::class);
+            $visible = $filter->getTermFilter([PlaceSearchMapping::VISIBLE_FIELD => Visible::ALL]);
 
-            return $this->searchRecordById($context, $fieldId, $recordId);
-        }
+            $this->setFilterQuery([
+                $filter->getBoolAndFilter([$discount, $visible]),
+            ]);
+        } else {
 
-        /** получаем текущего ползователя */
-        $currentUser = $this->getUserById($userId);
+            /** получаем текущего ползователя */
+            $currentUser = $this->getUserById($userId);
 
-        $this->setFilterQuery([
-            $this->_queryFilterFactory->getBoolOrFilter([
-                $this->_queryFilterFactory->getBoolAndFilter([
-                    $this->_queryFilterFactory->getBoolOrFilter([
-                        $this->_queryFilterFactory->getGtFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0),
-                        $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
+            $moderate = $filter->getBoolOrFilter([
+                $filter->getTermFilter([PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK]),
+                $filter->getBoolAndFilter([
+                    $filter->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                    $filter->getTermsFilter(PlaceSearchMapping::MODERATION_STATUS_FIELD, [
+                        ModerationStatus::DIRTY,
+                        ModerationStatus::REJECTED,
+                        ModerationStatus::RESTORED,
                     ]),
-                    $this->_queryFilterFactory->getBoolOrFilter([
-                        $this->_queryFilterFactory->getBoolAndFilter([
-                            $this->_queryFilterFactory->getNotFilter(
-                                $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId])
-                            ),
-                            $this->_queryFilterFactory->getTermFilter([
-                                PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::OK
-                            ])
-                        ]),
-                        $this->_queryFilterFactory->getBoolAndFilter([
-                            $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
-                            $this->_queryFilterFactory->getTermsFilter(PlaceSearchMapping::MODERATION_STATUS_FIELD, [
-                                ModerationStatus::OK,
-                                ModerationStatus::DIRTY,
-                                ModerationStatus::REJECTED,
-                                ModerationStatus::RESTORED
-                            ])
-                        ])
-                    ])
                 ]),
-                $this->_queryFilterFactory->getBoolOrFilter([
-                    $this->_queryFilterFactory->getBoolAndFilter([
-                        $this->_queryFilterFactory->getNotFilter(
-                            $this->_queryFilterFactory->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
-                        ),
-                        $this->_queryFilterFactory->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
-                        $this->_queryFilterFactory->getNotFilter(
-                            $this->_queryFilterFactory->getTermFilter([
-                                PlaceSearchMapping::MODERATION_STATUS_FIELD => ModerationStatus::DELETED
-                            ])
-                        )
-                    ])
-                ])
-            ])
-        ]);
+            ]);
 
-        /** добавляем к условию поиска рассчет по совпадению интересов */
-        $this->setScriptTagsConditions($currentUser, PlaceSearchMapping::class);
+            $discount = $filter->getBoolOrFilter([
+                $filter->getBoolAndFilter([
+                    $moderate,
+                    $filter->getBoolOrFilter([
+                        $filter->getGtFilter(PlaceSearchMapping::DISCOUNT_FIELD, 0),
+                        $filter->getExistsFilter(PlaceSearchMapping::BONUS_FIELD),
+                    ]),
+                ]),
+                $filter->getBoolAndFilter([
+                    $filter->getTermFilter([PlaceSearchMapping::DISCOUNT_FIELD => 0]),
+                    $filter->getNotFilter(
+                        $filter->getExistsFilter(PlaceSearchMapping::BONUS_FIELD)
+                    ),
+                ]),
+            ]);
+
+            $visible = $filter->getBoolOrFilter([
+                $filter->getTermFilter([PlaceSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                $filter->getTermFilter([PlaceSearchMapping::VISIBLE_FIELD => Visible::ALL]),
+                $filter->getBoolAndFilter([
+                    $filter->getTermsFilter(PlaceSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
+                    $filter->getTermsFilter(PlaceSearchMapping::VISIBLE_FIELD, [Visible::FRIEND]),
+                ]),
+                $filter->getBoolAndFilter([
+                    $filter->getNotFilter(
+                        $filter->getTermsFilter(PlaceSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                    ),
+                    $filter->getTermsFilter(PlaceSearchMapping::VISIBLE_FIELD, [Visible::NOT_FRIEND]),
+                ]),
+            ]);
+
+            $this->setFilterQuery([
+                $filter->getBoolAndFilter([$discount, $visible]),
+            ]);
+
+            /** добавляем к условию поиска рассчет по совпадению интересов */
+            $this->setScriptTagsConditions($currentUser, PlaceSearchMapping::class);
+        }
 
         /** добавляем к условию поиска рассчет расстояния */
         $this->setGeoPointConditions($point, PlaceSearchMapping::class);
 
         return $this->searchRecordById($context, $fieldId, $recordId);
     }
-
-
 
     /**
      * Поиск скидки по его ID с учетом фильтров

@@ -1,41 +1,47 @@
 <?php
+
 namespace Common\Core\Constants;
 
+/**
+ * Class RequestConstant
+ * @package Common\Core\Constants
+ */
 abstract class RequestConstant
 {
+
     /**
      * Параметр запроса представляющий платформу
      * с которой был совершен запрос
      *
-     * @var string PLATFORM_PARAM
+     * @const string PLATFORM_PARAM
      */
     const PLATFORM_PARAM = 'platform';
 
     /**
      * Платформа Android
      *
-     * @var string PLATFORM_ANDROID
+     * @const string PLATFORM_ANDROID
      */
     const PLATFORM_ANDROID = 'android';
 
     /**
      * Платформа IOS
      *
-     * @var string PLATFORM_IOS
+     * @const string PLATFORM_IOS
      */
     const PLATFORM_IOS = 'ios';
 
     /**
      * Платформа WEB
      *
-     * @var string PLATFORM_WEB
+     * @const string PLATFORM_WEB
      */
     const PLATFORM_WEB = 'web';
 
     /**
      * Параметр запроса класстерных данных
      *
-     * @var bool IS_CLUSTER_PARAM
+     * @const bool IS_CLUSTER_PARAM
      */
     const IS_CLUSTER_PARAM = 'isCluster';
 
@@ -44,7 +50,7 @@ abstract class RequestConstant
      * выводить ли одноуровневый/склеенный массив или нет
      * по умолчанию false - не выводить
      *
-     * @var bool IS_FLAT_PARAM
+     * @const bool IS_FLAT_PARAM
      */
     const IS_FLAT_PARAM = 'isFlat';
 
@@ -52,7 +58,7 @@ abstract class RequestConstant
      * Параметр запроса версии
      * необходимо для поддержки старых приложений
      *
-     * @var string VERSION_PARAM
+     * @const string VERSION_PARAM
      */
     const VERSION_PARAM = 'version';
 
@@ -60,7 +66,7 @@ abstract class RequestConstant
      * Параметр запроса версии
      * номер версии
      *
-     * @var int DEFAULT_VERSION
+     * @const int DEFAULT_VERSION
      */
     const DEFAULT_VERSION = 3;
 
@@ -68,7 +74,7 @@ abstract class RequestConstant
      * Параметр запроса версии
      * номер версии (новая фишка)
      *
-     * @var int NEW_DEFAULT_VERSION
+     * @const int NEW_DEFAULT_VERSION
      */
     const NEW_DEFAULT_VERSION = 4;
 
@@ -76,7 +82,7 @@ abstract class RequestConstant
      * Параметр запроса долготы
      * короткое представление
      *
-     * @var string LONGITUTE_PARAM
+     * @const string LONGITUTE_PARAM
      */
     const SHORT_LONGITUTE_PARAM = 'lon';
 
@@ -84,7 +90,7 @@ abstract class RequestConstant
      * Параметр запроса широты
      * короткое представление
      *
-     * @var string LATITUDE_PARAM
+     * @const string LATITUDE_PARAM
      */
     const SHORT_LATITUDE_PARAM = 'lat';
 
@@ -92,7 +98,7 @@ abstract class RequestConstant
      * Параметр запроса долготы
      * длинное представление
      *
-     * @var string LONG_LONGITUTE_PARAM
+     * @const string LONG_LONGITUTE_PARAM
      */
     const LONG_LONGITUTE_PARAM = 'longitude';
 
@@ -100,14 +106,14 @@ abstract class RequestConstant
      * Параметр запроса широты
      * длинное представление
      *
-     * @var string LONG_LATITUDE_PARAM
+     * @const string LONG_LATITUDE_PARAM
      */
     const LONG_LATITUDE_PARAM = 'latitude';
 
     /**
      * Параметр запроса радиуса
      *
-     * @var string RADIUS_PARAM
+     * @const string RADIUS_PARAM
      */
     const RADIUS_PARAM = 'radius';
 
@@ -115,7 +121,7 @@ abstract class RequestConstant
      * Параметр поисковой строки
      * для поиска по контексту
      *
-     * @conts string SEARCH_TEXT_PARAM
+     * @const string SEARCH_TEXT_PARAM
      */
     const SEARCH_TEXT_PARAM = 'searchText';
 
@@ -123,7 +129,7 @@ abstract class RequestConstant
      * Параметр поисковой строки
      * id пользователя
      *
-     * @conts string USER_ID_PARAM
+     * @const string USER_ID_PARAM
      */
     const USER_ID_PARAM = 'userId';
 
@@ -131,9 +137,16 @@ abstract class RequestConstant
      * Параметр поисковой строки
      * id пользователя который хотим просмотреть (не равен текущему пользователю)
      *
-     * @conts string TARGET_USER_ID_PARAM
+     * @const string TARGET_USER_ID_PARAM
      */
     const TARGET_USER_ID_PARAM = 'targetUserId';
+
+    /**
+     * Параметр поиска при запросе по стране
+     *
+     * @const string COUNTRY_SEARCH_PARAM
+     */
+    const COUNTRY_SEARCH_PARAM = 'countryId';
 
     /**
      * Параметр поиска при запросе по городу
@@ -151,9 +164,17 @@ abstract class RequestConstant
 
     /**
      * Параметр поисковой строки
+     * способ сортировки
+     *
+     * @const string SEARCH_SORT_PARAM
+     */
+    const SEARCH_SORT_PARAM = 'sort';
+
+    /**
+     * Параметр поисковой строки
      * кол-во пропускаемых записей поиска
      *
-     * @conts string SEARCH_SKIP_PARAM
+     * @const string SEARCH_SKIP_PARAM
      */
     const SEARCH_SKIP_PARAM = 'skip';
 
@@ -161,9 +182,17 @@ abstract class RequestConstant
      * Параметр поисковой строки
      * кол-во искомых записей
      *
-     * @conts string SEARCH_LIMIT_PARAM
+     * @const string SEARCH_LIMIT_PARAM
      */
     const SEARCH_LIMIT_PARAM = 'count';
+
+    /**
+     * Параметр поисковой строки
+     * дата создания элемента, с которого нужно начать выборку
+     *
+     * @const string SEARCH_FROM_PARAM
+     */
+    const SEARCH_CREATED_FROM_PARAM = 'createdFrom';
 
     /**
      * В случае пустого параметра запроса (коорый необходим или который ожидаем)
@@ -208,4 +237,18 @@ abstract class RequestConstant
      * @const string FILTERS_PARAM
      */
     const FILTERS_PARAM = 'filters';
+
+    /**
+     * Параметр фильтра по различным типам
+     *
+     * @const string FILTER_TYPES
+     */
+    const FILTER_TYPES = 'filterTypes';
+
+    /**
+     * Параметр фильтра по названию страны
+     *
+     * @const string FILTER_COUNTRY
+     */
+    const FILTER_COUNTRY = 'filterCountry';
 }

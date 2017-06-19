@@ -2,6 +2,7 @@
 /**
  * Класс представляющий из себя конструктор аггрегированных условий
  */
+
 namespace Common\Core\Facade\Search\QueryAggregation;
 
 use Common\Core\Facade\Service\Geo\GeoPointService;
@@ -322,6 +323,18 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
     }
 
     /**
+     * Считает кол-во документов по заданному полю
+     *
+     * @param string $name Название аггрегированной функции
+     * @param string $fieldName Название поля для подсчета
+     * @return \Elastica\Aggregation\AbstractAggregation
+     */
+    public function getValueCountAggregation($name, $fieldName)
+    {
+        return new \Elastica\Aggregation\ValueCount($name, $fieldName);
+    }
+
+    /**
      * Базовый класс аггрегации для простых выражений
      *
      * @param string $fieldName Название поле аггрегации
@@ -343,7 +356,6 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
      * уникальных значений (не повторяющихся)
      *
      * @link https://www.elastic.co/guide/en/elasticsearch/guide/current/cardinality.html
-     *
      * @param string $name Название функции аггрегирования
      * @param string $fieldName Название поля по которому выбираем уникальные значения
      * @param int $threshold Целочисленное значение

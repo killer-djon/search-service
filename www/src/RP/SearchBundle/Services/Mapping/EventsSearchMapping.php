@@ -51,7 +51,7 @@ class EventsSearchMapping extends AbstractSearchMapping
      */
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return [];
+        return self::getMatchSearchFilter($filterFactory, $userId);
     }
 
     /**
@@ -87,6 +87,17 @@ class EventsSearchMapping extends AbstractSearchMapping
             self::DESCRIPTION_FIELD,
 
             self::DESCRIPTION_TRANSLIT_FIELD
+        ];
+    }
+
+    public static function getPrefixedQuerySearchFields()
+    {
+        return [
+            self::NAME_PREFIX_FIELD,
+            self::NAME_PREFIX_TRANSLIT_FIELD,
+
+            self::TAG_PREFIX_FIELD,
+            self::TAG_PREFIX_TRANSLIT_FIELD,
         ];
     }
 
@@ -180,4 +191,22 @@ class EventsSearchMapping extends AbstractSearchMapping
 
         return $highlight;
     }
+
+    /**
+     * Вспомогательный метод позволяющий
+     * задавать условия для автодополнения
+     *
+     * @param ConditionFactoryInterface $conditionFactory Объект класса билдера условий
+     * @param string $queryString Строка запроса
+     * @return array
+     */
+    public static function getSuggestQueryConditions(ConditionFactoryInterface $conditionFactory, $queryString)
+    {
+        return [
+            $conditionFactory->getPrefixQuery(self::NAME_EXACT_FIELD, $queryString),
+            //$conditionFactory->getPrefixQuery(self::DESCRIPTION_EXACT_FIELD, $queryString),
+            $conditionFactory->getTermQuery('_type', self::CONTEXT)
+        ];
+    }
+
 }

@@ -1,9 +1,11 @@
+# This file is auto-generated during the composer install
 parameters:
     locale: ru
-    secret: c10433b11dc4ad101034379ec10c8b451bb
+    secret: c10433b11dc4ad101034379ec10c8b451b
     mongodb.host: localhost
     mongodb.port: 27146
-    mongodb.dsn: 'mongodb://localhost:27017,localhost2:27017'
+    mongodb.dsn: 'mongodb://10.20.20.31:27017,10.20.20.32:27017,10.20.20.33:27017/?replicaSet=RPTestReplica&readPreference=nearest'
+
     mailer_transport: mail
     mailer_host: 127.0.0.1
     mailer_user: do-not-reply@russianplace.com
@@ -11,10 +13,16 @@ parameters:
     mailer_port: 25
     mailer_security: null
 
-    mongodb.main_storage.database: rp_main
-    mongodb.token_storage.database: rp_token
-    
-    redis.host: localhost
+    redis.host: 10.20.20.91
     redis.port: 6379
-    elasticsearch.host: 172.28.128.3
+
+    elasticsearch.host: 10.20.20.41
     elasticsearch.port: 9200
+
+    mongodb.main_storage: '%mongodb.dsn%'
+    mongodb.main_storage.database: rp_com
+    mongodb.main_storage.user_collection: UserAccount
+
+    mongodb.token_storage: '%mongodb.dsn%'
+    mongodb.token_storage.database: rp_com_token
+    mongodb.token_storage.token_collection: Token

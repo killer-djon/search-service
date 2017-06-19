@@ -1,9 +1,11 @@
 <?php
 /**
  * Сервис предоставляющий геттеры/сеттеры для профиля пользователя
+ *
  * @todo геттеры/сеттеры можно добавлять по мере поступления задачи
  * на текущий момент это все что необходимо для работы
  */
+
 namespace Common\Core\Facade\Service\User;
 
 use Common\Core\Facade\Service\Geo\GeoPointService;
@@ -52,8 +54,15 @@ class UserProfileService extends ReportingService
      */
     protected $_fullname;
 
+    /**
+     * @var array список ID друзей пользователя
+     */
+    protected $_friendList;
 
-
+    /**
+     * @var string ID стены
+     */
+    protected $_wallId;
 
     /**
      * @inheritdoc
@@ -61,6 +70,7 @@ class UserProfileService extends ReportingService
     public function __construct(array $data)
     {
         parent::__construct($data);
+
         $this->_isOnline = (bool)$data['onlineStatus']['isOnline'];
         $this->_lastActivity = new \DateTime($data['onlineStatus']['lastActivity']);
 
@@ -73,10 +83,33 @@ class UserProfileService extends ReportingService
         $this->_name = $data['name'];
         $this->_surname = $data['surname'];
         $this->_fullname = $data['fullname'];
+        $this->_friendList = $data['friendList'];
+        $this->_wallId = $data['wallId'];
+    }
+
+    /**
+     * Получаем ID стены пользователя
+     *
+     * @return string
+     */
+    public function getWallId()
+    {
+        return $this->_wallId;
+    }
+
+    /**
+     * Получаем массив ID друзей пользователя
+     *
+     * @return array
+     */
+    public function getFriendList()
+    {
+        return $this->_friendList;
     }
 
     /**
      * Получаем статус пользователя в текущий момент
+     *
      * @return boolean
      */
     public function getIsOnline()
@@ -86,6 +119,7 @@ class UserProfileService extends ReportingService
 
     /**
      * Получаем время последнего посещения пользователя
+     *
      * @return \DateTime
      */
     public function getLastActivity()
@@ -95,6 +129,7 @@ class UserProfileService extends ReportingService
 
     /**
      * Получаем пол пользователя
+     *
      * @return string (M|F)
      */
     public function getGender()
@@ -104,6 +139,7 @@ class UserProfileService extends ReportingService
 
     /**
      * Получаем плокацию пользователя
+     *
      * @return GeoPointServiceInterface
      */
     public function getLocation()
@@ -113,6 +149,7 @@ class UserProfileService extends ReportingService
 
     /**
      * Получаем интересы пользователя
+     *
      * @return array
      */
     public function getTags()
@@ -122,6 +159,7 @@ class UserProfileService extends ReportingService
 
     /**
      * Получаем имя пользователя
+     *
      * @return string
      */
     public function getName()
@@ -131,6 +169,7 @@ class UserProfileService extends ReportingService
 
     /**
      * Получаем фамилию пользователя
+     *
      * @return string
      */
     public function getSurname()
@@ -140,6 +179,7 @@ class UserProfileService extends ReportingService
 
     /**
      * Получаем полное имя/фамилию пользователя
+     *
      * @return string
      */
     public function getFullname()
@@ -149,6 +189,7 @@ class UserProfileService extends ReportingService
 
     /**
      * Преобразуем в читабельный массив для вывода на экран
+     *
      * @return array Массив данных
      */
     public function toArray()
@@ -164,8 +205,8 @@ class UserProfileService extends ReportingService
             'location' => [
                 'point' => [
                     'longitude' => $this->getLocation()->getLongitude(),
-                    'latitude' => $this->getLocation()->getLatitude()
-                ]
+                    'latitude' => $this->getLocation()->getLatitude(),
+                ],
             ],
             'tags' => $this->getTags(),
         ];

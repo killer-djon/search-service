@@ -7,15 +7,18 @@ namespace Common\Core\Facade\Search\QueryFactory;
 
 use Common\Core\Constants\Location;
 use Common\Core\Controller\ControllerTrait;
+use Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface;
+use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
+use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Common\Core\Facade\Search\QueryScripting\QueryScriptFactoryInterface;
+use Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface;
 use Common\Core\Facade\Service\Geo\GeoPointService;
 use Elastica\Exception\ElasticsearchException;
 use FOS\ElasticaBundle\Elastica\Index;
-use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
-use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Psr\Log\LoggerInterface;
 use RP\SearchBundle\Services\Mapping\ChatMessageMapping;
 use RP\SearchBundle\Services\Mapping\CitySearchMapping;
+use RP\SearchBundle\Services\Mapping\CountrySearchMapping;
 use RP\SearchBundle\Services\Mapping\DiscountsSearchMapping;
 use RP\SearchBundle\Services\Mapping\EventsSearchMapping;
 use RP\SearchBundle\Services\Mapping\FriendsSearchMapping;
@@ -23,12 +26,12 @@ use RP\SearchBundle\Services\Mapping\HelpOffersSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceTypeSearchMapping;
+use RP\SearchBundle\Services\Mapping\PostSearchMapping;
 use RP\SearchBundle\Services\Mapping\RusPlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\TagNameSearchMapping;
+use RP\SearchBundle\Services\Mapping\UserEventSearchMapping;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Common\Core\Facade\Search\QueryAggregation\QueryAggregationFactoryInterface;
-use Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface;
 
 class SearchEngine implements SearchEngineInterface
 {
@@ -39,6 +42,27 @@ class SearchEngine implements SearchEngineInterface
      * @var boolean $oldFormatVersion
      */
     protected $oldFormatVersion = false;
+
+    /**
+     * Значение данных источников
+     *
+     * @var mixed
+     */
+    protected $_sourceQuery = true;
+
+    /**
+     * Устанавливаем значение данных источников
+     * это может быть массив или булево значение
+     * Массв - означает набор полей коорые нужно вывести в результате
+     * Bool - true-вывести все поля, false-только id записи
+     *
+     * @param mixed $params
+     * @return $this
+     */
+    public function setSourceFields($params = true)
+    {
+        $this->_sourceQuery = $params;
+    }
 
     /**
      * Устанавливаем флаг формата данных для старых версий
@@ -81,12 +105,13 @@ class SearchEngine implements SearchEngineInterface
      * @var array $filterTypes
      */
     protected $filterTypes = [
-        PeopleSearchMapping::CONTEXT    => PeopleSearchMapping::class,
-        FriendsSearchMapping::CONTEXT   => FriendsSearchMapping::class,
-        PlaceSearchMapping::CONTEXT     => PlaceSearchMapping::class,
-        RusPlaceSearchMapping::CONTEXT  => RusPlaceSearchMapping::class,
-        EventsSearchMapping::CONTEXT    => EventsSearchMapping::class,
+        PeopleSearchMapping::CONTEXT => PeopleSearchMapping::class,
+        FriendsSearchMapping::CONTEXT => FriendsSearchMapping::class,
+        PlaceSearchMapping::CONTEXT => PlaceSearchMapping::class,
+        RusPlaceSearchMapping::CONTEXT => RusPlaceSearchMapping::class,
+        EventsSearchMapping::CONTEXT => EventsSearchMapping::class,
         DiscountsSearchMapping::CONTEXT => DiscountsSearchMapping::class,
+        HelpOffersSearchMapping::CONTEXT => HelpOffersSearchMapping::class,
     ];
     //[@"people",@"friends",@"places",@"rusPlaces",@"events",@"discounts"];
 
@@ -96,21 +121,25 @@ class SearchEngine implements SearchEngineInterface
      * @var array $filterSearchTypes
      */
     protected $filterSearchTypes = [
-        PeopleSearchMapping::CONTEXT            => PeopleSearchMapping::class,
-        PlaceSearchMapping::CONTEXT             => PlaceSearchMapping::class,
+        PeopleSearchMapping::CONTEXT => PeopleSearchMapping::class,
+        PlaceSearchMapping::CONTEXT => PlaceSearchMapping::class,
         HelpOffersSearchMapping::CONTEXT_MARKER => HelpOffersSearchMapping::class,
-        DiscountsSearchMapping::CONTEXT         => DiscountsSearchMapping::class,
-        EventsSearchMapping::CONTEXT            => EventsSearchMapping::class,
-        RusPlaceSearchMapping::CONTEXT          => RusPlaceSearchMapping::class,
-        FriendsSearchMapping::CONTEXT           => FriendsSearchMapping::class,
+        DiscountsSearchMapping::CONTEXT => DiscountsSearchMapping::class,
+        EventsSearchMapping::CONTEXT => EventsSearchMapping::class,
+        RusPlaceSearchMapping::CONTEXT => RusPlaceSearchMapping::class,
+        FriendsSearchMapping::CONTEXT => FriendsSearchMapping::class,
+        PostSearchMapping::CONTEXT => PostSearchMapping::class
     ];
 
     protected $availableTypesSearch = [
-        CitySearchMapping::CONTEXT      => CitySearchMapping::class,
-        ChatMessageMapping::CONTEXT     => ChatMessageMapping::class,
-        TagNameSearchMapping::CONTEXT   => TagNameSearchMapping::class,
+        CountrySearchMapping::CONTEXT => CountrySearchMapping::class,
+        CitySearchMapping::CONTEXT => CitySearchMapping::class,
+        ChatMessageMapping::CONTEXT => ChatMessageMapping::class,
+        TagNameSearchMapping::CONTEXT => TagNameSearchMapping::class,
         PlaceTypeSearchMapping::CONTEXT => PlaceTypeSearchMapping::class,
-        PeopleSearchMapping::CONTEXT    => PeopleSearchMapping::class,
+        PeopleSearchMapping::CONTEXT => PeopleSearchMapping::class,
+        PostSearchMapping::CONTEXT => PostSearchMapping::class,
+        UserEventSearchMapping::CONTEXT => UserEventSearchMapping::class,
     ];
 
     /**
@@ -119,15 +148,16 @@ class SearchEngine implements SearchEngineInterface
      * но при этом использовать всего-лишь фильтр
      */
     protected $searchTypes = [
-        'people'        => 'people',
-        'places'        => 'places',
-        'helpOffers'    => 'people',
-        'help'          => 'people',
-        'discounts'     => 'places',
-        'rusPlaces'     => 'places',
-        'events'        => 'events',
-        'friends'       => 'people',
+        'people' => 'people',
+        'places' => 'places',
+        'helpOffers' => 'people',
+        'help' => 'people',
+        'discounts' => 'places',
+        'rusPlaces' => 'places',
+        'events' => 'events',
+        'friends' => 'people',
         'commonFriends' => 'people',
+        'posts' => 'posts'
     ];
 
     /**
@@ -163,7 +193,7 @@ class SearchEngine implements SearchEngineInterface
      *
      * @var \Symfony\Component\DependencyInjection\ContainerInterface
      */
-    private $container;
+    protected $container;
 
     /**
      * @var \Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface
@@ -214,7 +244,7 @@ class SearchEngine implements SearchEngineInterface
     /**
      * При создании сервиса необходимо установить все сопутствующие объекты
      *
-     * @param \FOS\ElasticaBundle\Elastica\Index $elasticaIndex
+     * @param \Common\Core\Facade\Search\QueryFactory\CustomSearchIndex $elasticaIndex
      * @param \Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface Класс формирующий объект запроса
      * @param \Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface Объект формирования условий запроса
      * @param \Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface Оъект добавляющий фильтры к запросу
@@ -223,7 +253,7 @@ class SearchEngine implements SearchEngineInterface
      * @param \Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface Объект создания сортировки в запросе
      */
     public function __construct(
-        Index $elasticaIndex,
+        CustomSearchIndex $elasticaIndex,
         QueryFactoryInterface $queryFactory,
         ConditionFactoryInterface $queryCondition,
         FilterFactoryInterface $filterFactory,
@@ -286,33 +316,86 @@ class SearchEngine implements SearchEngineInterface
     }
 
     /**
+     * Индекс по умолчанию для клиента еластики
+     *
+     * @const string
+     */
+    const DEFAULT_INDEX = 'russianplace';
+
+    /**
+     * @var array Массив индексов для поиска
+     */
+    protected $_indices;
+
+    /**
+     * Указываем индексы в которых надо проводить поиск
+     * в еластике
+     *
+     * @var array
+     */
+    public function setIndices($indices = [])
+    {
+        $this->_indices[] = self::DEFAULT_INDEX;
+
+        if (!empty($indices)) {
+            $this->_indices = $indices;
+        }
+    }
+
+    /**
+     * ПОлучить массив индексов для поиска
+     *
+     * @return array
+     */
+    public function getIndices()
+    {
+        return $this->_indices;
+    }
+
+    /**
      * Индексный поиск в еластике
      * т.е. поиск на основе индекса fos_elastica.index.%s.%s
      *
      * @param \Elastica\Query $elasticQuery An \Elastica\Query object
      * @param string $context Search type
-     * @param bool $setSource (default: true) Показать исходные данные объекта в ответе
+     * @param mixed|null $setSource (default: true) Показать исходные данные объекта в ответе
      * @param string|null $keyField Ключ в котором храним данные вывода (необходим при алиасах типов в поиске)
      * @throws ElasticsearchException
+     * @throws \Exception
      * @return array results
      */
-    public function searchDocuments(\Elastica\Query $elasticQuery, $context = null, $setSource = true, $keyField = null)
+    public function searchDocuments(\Elastica\Query $elasticQuery, $context = null, $setSource = null, $keyField = null)
     {
+
         try {
             /** устанавливаем все поля по умолчанию */
-            $elasticQuery->setSource((bool)$setSource);
-            $elasticType = $this->_getElasticType($context);
+            $elasticQuery->setSource((is_null($setSource) ? $this->_sourceQuery : $setSource));
+            $elasticType = $this->_getElasticType((!is_null($context) && !is_array($context) ? $context : null));
 
             $this->_paginator = new SearchElasticaAdapter($elasticType, $elasticQuery);
 
-            if (!is_null($context) && !empty($context)) {
-                $this->_paginator->setIndex($this->availableTypesSearch[$context]::DEFAULT_INDEX);
+            $indices = [];
+            if (!empty($context)) {
+                $context = is_string($context) ? explode(",", $context) : $context;
+                foreach ($context as $typeIndex) {
+                    $indices[] = $this->availableTypesSearch[$typeIndex]::DEFAULT_INDEX;
+                }
+            } else {
+                if( !empty($this->_indices) )
+                {
+                    $indices = $this->_indices;
+                }else{
+                    $indices = [self::DEFAULT_INDEX];
+                }
             }
+            $this->_paginator->addIndices($indices);
 
             return $this->transformResult($this->_paginator->getResultSet(), $keyField);
 
         } catch (ElasticsearchException $e) {
             throw new ElasticsearchException($e);
+        } catch (\Exception $e) {
+            throw new \Exception($e);
         }
     }
 
@@ -325,7 +408,7 @@ class SearchEngine implements SearchEngineInterface
      */
     public function getCountDocuments(\Elastica\Query $elasticQuery, $context = null)
     {
-        $elasticType = $this->_getElasticType($context, $context);
+        $elasticType = $this->_getElasticType($context);
 
         return $elasticType->count($elasticQuery);
     }
@@ -338,17 +421,17 @@ class SearchEngine implements SearchEngineInterface
      *
      * @link http://www.elastic.co/guide/en/elasticsearch/reference/current/search-multi-search.html
      * @param \Elastica\Query[] $elasticQueries An \Elastica\Query array
-     * @param bool $setSource (default: true) Показать исходные данные объекта в ответе
+     * @param mixed|null $setSource (default: true) Показать исходные данные объекта в ответе
      * @throws ElasticsearchException
      * @return array results
      */
-    public function searchMultiTypeDocuments(array $elasticQueries, $setSource = true)
+    public function searchMultiTypeDocuments(array $elasticQueries, $setSource = null)
     {
         try {
             $search = new \Elastica\Multi\Search($this->_elasticaIndex->getClient());
 
             foreach ($elasticQueries as $keyType => $elasticQuery) {
-                $elasticQuery->setSource((bool)$setSource);
+                $elasticQuery->setSource((is_null($setSource) ? $this->_sourceQuery : $setSource));
 
                 $elasticType = $this->_getElasticType($this->searchTypes[$keyType]);
                 $searchItem = $elasticType->createSearch($elasticQuery);
@@ -394,8 +477,8 @@ class SearchEngine implements SearchEngineInterface
 
                     $searchingType[$key] = $hits[$key];
                     $info = [
-                        'totalHits'  => $totalHits,
-                        'totalTime'  => $totalTime . 'ms',
+                        'totalHits' => $totalHits,
+                        'totalTime' => $totalTime . 'ms',
                         'searchType' => $searchingType,
                     ];
                     $items[$key] = $dataItem[$key][$this->searchTypes[$key]];
@@ -474,9 +557,9 @@ class SearchEngine implements SearchEngineInterface
 
                     $item = [
                         'doc_count' => $docCount,
-                        'type'      => $typeKey,
-                        $keyField   => [
-                            Location::LONG_LATITUDE  => $currentItem['centroid'][$keyField][Location::LATITUDE],
+                        'type' => $typeKey,
+                        $keyField => [
+                            Location::LONG_LATITUDE => $currentItem['centroid'][$keyField][Location::LATITUDE],
                             Location::LONG_LONGITUDE => $currentItem['centroid'][$keyField][Location::LONGITUDE],
                         ],
                     ];
@@ -513,11 +596,11 @@ class SearchEngine implements SearchEngineInterface
 
             if ($sumDocCount > 0) {
                 $resultItem = [
-                    'key'       => $keyHash,
+                    'key' => $keyHash,
                     'doc_count' => $sumDocCount,
-                    'types'     => implode(',', $docTypes),
+                    'types' => implode(',', $docTypes),
                     //'location' => $location
-                    'location'  => GeoPointService::GetCenterFromDegrees($location),
+                    'location' => GeoPointService::GetCenterFromDegrees($location),
                 ];
 
                 if ($sumDocCount == 1) {
@@ -569,7 +652,7 @@ class SearchEngine implements SearchEngineInterface
      *
      * @param \Elastica\Query $elasticQuery An \Elastica\Query object
      * @param string|null $context Search type
-     * @param bool $setSource (default: true) Показать исходные данные объекта в ответе
+     * @param mixed|null $setSource (default: true) Показать исходные данные объекта в ответе
      * @throws ElasticsearchException
      * @return array|null results
      */
@@ -577,7 +660,7 @@ class SearchEngine implements SearchEngineInterface
     {
         try {
             /** устанавливаем все поля по умолчанию */
-            $elasticQuery->setSource((bool)$setSource);
+            $elasticQuery->setSource($setSource);
 
             $elasticType = $this->_getElasticType($context);
             $elasticQuery->setSize(1);
@@ -645,11 +728,11 @@ class SearchEngine implements SearchEngineInterface
             $page = intval($skip / $count) + 1;
 
             return [
-                'count'      => (int)$totalCount,
-                'offset'     => (int)$skip,
-                'limit'      => (int)$count,
+                'count' => (int)$totalCount,
+                'offset' => (int)$skip,
+                'limit' => (int)$count,
                 'page_count' => (int)$pageCount,
-                'page'       => (int)$page,
+                'page' => (int)$page,
             ];
         }
     }
@@ -705,7 +788,6 @@ class SearchEngine implements SearchEngineInterface
      */
     private function setTotalHits(\Elastica\ResultSet $resultSets, $keyField = null)
     {
-        //print_r($resultSets->getTotalHits()); die();
         $elipsedTime = $resultSets->getTotalTime() / 1000;
         $this->_totalHits = (!is_null($keyField) && !empty($keyField) ? [
             $keyField => [
@@ -781,7 +863,7 @@ class SearchEngine implements SearchEngineInterface
             if ($this->getOldFormat() === true) {
                 $items[$type][] = [
                     'item' => $record[$type],
-                    'hit'  => $record[$type]['hit'],
+                    'hit' => $record[$type]['hit'],
                 ];
 
             } else {
@@ -794,9 +876,17 @@ class SearchEngine implements SearchEngineInterface
 
         $this->_totalResults = $items;
 
-        if ($this->flatFormatData === true) {
+        if ($this->flatFormatData === true && !empty($items)) {
 
-            $this->_totalResults = current($items);
+            $flatArray = [];
+            foreach ($items as $key => $item) {
+                $flatArray = array_merge(
+                    $flatArray,
+                    $item
+                );
+            }
+
+            $this->_totalResults = $flatArray;
         }
 
         return $this->getTotalResults();
@@ -833,19 +923,33 @@ class SearchEngine implements SearchEngineInterface
     }
 
     /**
-     * Возвращает тип Elastic для заданного контекста
+     * Возвращает тип Elastic для заданного контекста (или индекс Elastic, если контекст не задан)
      *
      * @param string|null $context
-     * @return \Elastica\Type|\Elastica\Index
-     * @throws \InvalidArgumentException
+     * @return CustomSearchIndex|CustomElasticaType
      */
     protected function _getElasticType($context = null)
     {
-        if (is_null($context)) {
-            return $this->_elasticaIndex;
-        }
+        $index = $this->getElasticaIndex();
 
-        return $this->_elasticaIndex->getType($context);
+        return empty($context)
+            ? $index
+            : $index->getType($context);
     }
 
+    /**
+     * @return CustomSearchIndex
+     */
+    public function getElasticaIndex()
+    {
+        return $this->_elasticaIndex;
+    }
+
+    /**
+     * @param CustomSearchIndex $elasticaIndex
+     */
+    public function setElasticaIndex($elasticaIndex)
+    {
+        $this->_elasticaIndex = $elasticaIndex;
+    }
 }

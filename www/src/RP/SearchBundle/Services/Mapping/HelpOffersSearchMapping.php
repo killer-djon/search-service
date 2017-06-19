@@ -123,9 +123,7 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
      */
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return [
-            $filterFactory->getExistsFilter(self::HELP_OFFERS_LIST_FIELD),
-        ];
+        return self::getMatchSearchFilter($filterFactory, $userId);
     }
 
     /**
@@ -139,6 +137,7 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
     {
         return [
             $filterFactory->getExistsFilter(self::HELP_OFFERS_LIST_FIELD),
+            $filterFactory->getScriptFilter("doc['helpOffers.id'].values.size() >= 1")
         ];
     }
 

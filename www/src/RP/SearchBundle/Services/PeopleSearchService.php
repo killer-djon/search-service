@@ -2,22 +2,22 @@
 /**
  * Сервис поиска в коллекции пользователей
  */
+
 namespace RP\SearchBundle\Services;
 
-use Common\Core\Constants\SortingOrder;
-use Common\Core\Constants\Visible;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
-use Common\Core\Facade\Service\User\UserProfileService;
-use Elastica\Exception\ElasticsearchException;
 use Elastica\Query\FunctionScore;
 use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Mapping\HelpOffersSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
-use Common\Core\Facade\Service\Geo\GeoPointService;
 
+/**
+ * Class PeopleSearchService
+ *
+ * @package RP\SearchBundle\Services
+ */
 class PeopleSearchService extends AbstractSearchService
 {
-
     /**
      * Минимальное значение скора (вес найденного результата)
      *
@@ -131,8 +131,14 @@ class PeopleSearchService extends AbstractSearchService
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchPeopleByCityId($userId, $cityId, GeoPointServiceInterface $point, $searchText = null, $skip = 0, $count = null)
-    {
+    public function searchPeopleByCityId(
+        $userId,
+        $cityId,
+        GeoPointServiceInterface $point,
+        $searchText = null,
+        $skip = 0,
+        $count = null
+    ) {
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
 
@@ -184,10 +190,11 @@ class PeopleSearchService extends AbstractSearchService
      * @param string $userId ID пользователя который делает запрос к АПИ
      * @param string $targetUserId ID профиля
      * @param array $filters фильтры запроса (friends,commonFriends)
-     * @param string $searchText Поисковый запрос
      * @param GeoPointServiceInterface $point
+     * @param string $searchText Поисковый запрос
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
+     * @param array|null $sort Порядок сортировки результатов
      * @return array Массив с найденными результатами
      */
     public function searchPeopleFriends(
@@ -197,7 +204,8 @@ class PeopleSearchService extends AbstractSearchService
         GeoPointServiceInterface $point,
         $searchText = null,
         $skip = 0,
-        $count = null
+        $count = null,
+        $sort = null
     ) {
         $queryMatchResults = [];
 
@@ -214,8 +222,8 @@ class PeopleSearchService extends AbstractSearchService
             if (is_int($key)) {
                 unset($filters[$key]);
             }
-
         }
+
         $friendsFilter = [];
 
         if ($userId != $targetUserId) {
@@ -282,14 +290,48 @@ class PeopleSearchService extends AbstractSearchService
                 $this->setFilterQuery($friendsFilter[PeopleSearchMapping::FRIENDS_FILTER]);
             }
 
-            if ($point->isValid()) {
-                /** формируем условия сортировки */
-                $this->setSortingQuery(
-                    $this->_sortingFactory->getGeoDistanceSort(
-                        PeopleSearchMapping::LOCATION_POINT_FIELD,
-                        $point
-                    )
-                );
+            /** формируем условия сортировки */
+            $sortStack = [];
+
+            $defaultSort = $this->getGeoDistanceSorting($point);
+
+            if (empty($sort)) {
+                if (!empty($defaultSort)) {
+                    $sortStack[] = $defaultSort;
+                }
+            } else {
+                $order = $sort[1] === SORT_DESC ? 'desc' : 'asc';
+
+                $sof = $this->_sortingFactory;
+
+                switch ($sort[0]) {
+                    case 'name':
+                        $sortStack[] = $sof->getFieldSort(
+                            PeopleSearchMapping::NAME_FIELD,
+                            $order
+                        );
+
+                        if (!empty($defaultSort)) {
+                            $sortStack[] = $defaultSort;
+                        }
+                        break;
+                    case 'distance':
+                        $geoSort = $this->getGeoDistanceSorting($point, $order);
+
+                        if (!empty($geoSort)) {
+                            $sortStack[] = $geoSort;
+                        }
+                        break;
+                    default:
+                        if (!empty($defaultSort)) {
+                            $sortStack[] = $defaultSort;
+                        }
+                        break;
+                }
+            }
+
+            if (!empty($sortStack)) {
+                $this->setSortingQuery($sortStack);
             }
 
             if (!is_null($searchText) && !empty($searchText)) {
@@ -344,10 +386,21 @@ class PeopleSearchService extends AbstractSearchService
                 /** Получаем сформированный объект запроса */
                 $queryMatchResults[$filter] = $this->createMatchQuery(null, [], $skip, $count);
             }
-
         }
 
         return $this->searchMultiTypeDocuments($queryMatchResults);
+    }
+
+    private function getGeoDistanceSorting(GeoPointServiceInterface $point, $order = 'asc')
+    {
+        $result = null;
+
+        if ($point->isValid()) {
+            $result = $this->_sortingFactory
+                ->getGeoDistanceSort(PeopleSearchMapping::LOCATION_POINT_FIELD, $point, $order);
+        }
+
+        return $result;
     }
 
     /**
@@ -361,8 +414,13 @@ class PeopleSearchService extends AbstractSearchService
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function oldSearchPeopleFriends($userId, GeoPointServiceInterface $point, $searchText = null, $skip = 0, $count = null)
-    {
+    public function oldSearchPeopleFriends(
+        $userId,
+        GeoPointServiceInterface $point,
+        $searchText = null,
+        $skip = 0,
+        $count = null
+    ) {
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
 
@@ -450,8 +508,13 @@ class PeopleSearchService extends AbstractSearchService
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchPeopleHelpOffers($userId, GeoPointServiceInterface $point, $searchText = null, $skip = 0, $count = null)
-    {
+    public function searchPeopleHelpOffers(
+        $userId,
+        GeoPointServiceInterface $point,
+        $searchText = null,
+        $skip = 0,
+        $count = null
+    ) {
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
 
@@ -537,8 +600,13 @@ class PeopleSearchService extends AbstractSearchService
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchPossibleFriendsForUser($userId, GeoPointServiceInterface $point, $searchText = null, $skip = 0, $count = null)
-    {
+    public function searchPossibleFriendsForUser(
+        $userId,
+        GeoPointServiceInterface $point,
+        $searchText = null,
+        $skip = 0,
+        $count = null
+    ) {
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
 
@@ -550,7 +618,7 @@ class PeopleSearchService extends AbstractSearchService
             ],
             'category2' => [
                 'min'      => 0,
-                'max'      => 100,
+                'max'      => 50,
                 'distance' => self::DEFAULT_POSSIBLE_FRIENDS_RADIUS_MAX,
             ],
         ];
@@ -605,6 +673,12 @@ class PeopleSearchService extends AbstractSearchService
                 $this->_queryFilterFactory->getNotFilter(
                     $this->_queryFilterFactory->getTermFilter([PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM => $userId])
                 ),
+                $this->_queryFilterFactory->getBoolOrFilter([
+                    $this->_queryFilterFactory->getNotFilter(
+                        $this->_queryFilterFactory->getExistsFilter(PeopleSearchMapping::SETTINGS_PRIVACY_VIEW_GEO_POSITION)
+                    ),
+                    $this->_queryFilterFactory->getTermFilter([PeopleSearchMapping::SETTINGS_PRIVACY_VIEW_GEO_POSITION => PeopleSearchMapping::SETTINGS_YES]),
+                ]),
             ]);
 
             $this->setScriptTagsConditions($currentUser, PeopleSearchMapping::class);
@@ -693,5 +767,19 @@ class PeopleSearchService extends AbstractSearchService
         $query = $this->createQuery(0, 1);
 
         return $this->searchDocuments($query, PeopleSearchMapping::CONTEXT);
+    }
+
+    /**
+     * Поиск по базе подписчиков пользхователя по его ID
+     *
+     * @param string $userId
+     * @param GeoPointServiceInterface $point
+     * @param int $skip Кол-во пропускаемых позиций поискового результата
+     * @param int $count Какое кол-во выводим
+     * @return array
+     */
+    public function searchFollowersForUser($userId, GeoPointServiceInterface $point, $skip = 0, $count = null)
+    {
+        // @todo данный функционал не реализован
     }
 }

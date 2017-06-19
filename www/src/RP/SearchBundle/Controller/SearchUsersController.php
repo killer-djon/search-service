@@ -2,22 +2,26 @@
 /**
  * Основной контроллер поиска по людям
  */
+
 namespace RP\SearchBundle\Controller;
 
+use Common\Core\Constants\RequestConstant;
 use Common\Core\Controller\ApiController;
 use Common\Core\Exceptions\SearchServiceException;
-use Common\Core\Facade\Service\User\UserProfileService;
-use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use RP\SearchBundle\Services\Traits\PeopleServiceTrait;
-use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\HttpFoundation\Request;
-use Common\Core\Constants\RequestConstant;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
+/**
+ * Class SearchUsersController
+ *
+ * @package RP\SearchBundle\Controller
+ */
 class SearchUsersController extends ApiController
 {
+
     use PeopleServiceTrait;
 
     /**
@@ -122,14 +126,13 @@ class SearchUsersController extends ApiController
             /** @var ID профиля которого хотим посмотреть */
             $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $userId);
 
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
             $simpleList = $request->get('simpleList');
 
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
             $filtersType = $request->get(RequestConstant::FILTERS_PARAM);
-
 
             if (is_null($filtersType) || empty($filtersType)) {
                 /*return $this->_handleViewWithError(
@@ -172,7 +175,8 @@ class SearchUsersController extends ApiController
                 $this->getGeoPoint(),
                 $searchText,
                 $this->getSkip(),
-                $this->getCount()
+                $this->getCount(),
+                $this->getSort()
             );
 
             if (empty($peopleSearchService->getTotalResults())) {
@@ -204,6 +208,7 @@ class SearchUsersController extends ApiController
             }
 
             $pagination = [];
+
             foreach ($people['info']['searchType'] as $keyItems => $infoItems) {
                 $pagination[$keyItems] = $peopleSearchService->getPaginationAdapter(
                     $this->getSkip(),
@@ -212,11 +217,10 @@ class SearchUsersController extends ApiController
                 );
             }
 
+            $result = array_merge($people, ['pagination' => $pagination]);
+
             /** выводим результат */
-            return $this->_handleViewWithData(array_merge(
-                $people,
-                ['pagination' => $pagination]
-            ));
+            return $this->_handleViewWithData($result);
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {
@@ -240,6 +244,7 @@ class SearchUsersController extends ApiController
             $userId = $this->getRequestUserId();
 
             $peopleSearchService = $this->getPeopleSearchService();
+
             $peopleHelpOffers = $peopleSearchService->searchPeopleHelpOffers(
                 $userId,
                 $this->getGeoPoint(),
@@ -267,15 +272,16 @@ class SearchUsersController extends ApiController
     public function searchUsersByIdAction(Request $request, $userId)
     {
         $peopleSearchService = $this->getPeopleSearchService();
-        $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+        $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
 
         try {
-            $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $userId);
+            //$targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $userId);
+            $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $this->getRequestUserId());
 
             $userContext = null;
-            if ($targetUserId != $userId) {
+            if ($targetUserId != $this->getRequestUserId()) {
 
-                $userContext = $peopleSearchService->searchProfileById($userId, $targetUserId, $this->getGeoPoint());
+                $userContext = $peopleSearchService->searchProfileById($this->getRequestUserId(), $targetUserId, $this->getGeoPoint());
                 $userContext = !empty($userContext[PeopleSearchMapping::CONTEXT]) ? current($userContext[PeopleSearchMapping::CONTEXT]) : [];
 
                 if (isset($userContext['matchingInterests']) && !empty($userContext['matchingInterests'])) {
@@ -293,7 +299,7 @@ class SearchUsersController extends ApiController
                 $userContext = $peopleSearchService->searchRecordById(
                     PeopleSearchMapping::CONTEXT,
                     PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
-                    $userId
+                    $this->getRequestUserId()
                 );
             }
 
@@ -325,23 +331,25 @@ class SearchUsersController extends ApiController
                     }
                 }
 
-                if ($userId != $targetUserId && (isset($userContext['relations']) && !empty($userContext['relations']))) {
-                    $userContext['relation'] = $this->setRelations($userContext['relations'], $userId);
+                if ($this->getRequestUserId() != $targetUserId && (isset($userContext['relations']) && !empty($userContext['relations']))) {
+                    $userContext['relation'] = $this->setRelations($userContext['relations'], $this->getRequestUserId());
                     unset($userContext['relations']);
                 }
 
                 $userContext = $this->revertToScalarTagsMatchFields($userContext);
+
                 return $this->_handleViewWithData($userContext);
             }
 
             if (!is_null($userContext)) {
                 $this->restructLocationField($userContext);
-                if ($userId != $targetUserId && (isset($userContext['relations']) && !empty($userContext['relations']))) {
-                    $userContext['relation'] = $this->setRelations($userContext['relations'], $userId);
+                if ($this->getRequestUserId() != $targetUserId && (isset($userContext['relations']) && !empty($userContext['relations']))) {
+                    $userContext['relation'] = $this->setRelations($userContext['relations'], $this->getRequestUserId());
                     unset($userContext['relations']);
                 }
 
                 $userContext = $this->revertToScalarTagsMatchFields($userContext);
+
                 return $this->_handleViewWithData($userContext);
             }
 
@@ -362,7 +370,7 @@ class SearchUsersController extends ApiController
      * @param string $userId ID пользователя
      * @return \Symfony\Component\HttpFoundation\Response
      */
-    public function searchPossibleFriendsAction(Request $request, $userId)
+    public function searchPossibleFriendsAction(Request $request, $userId = null)
     {
         $peopleSearchService = $this->getPeopleSearchService();
 
@@ -372,21 +380,23 @@ class SearchUsersController extends ApiController
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
+            $currentUserId = $this->getRequestUserId();
             $peopleSearchService->setFilterQuery([
                 $peopleSearchService->_queryFilterFactory->getNotFilter(
                     $peopleSearchService->_queryFilterFactory->getTermsFilter(PeopleSearchMapping::FRIEND_LIST_FIELD, [
-                        $userId,
+                        $currentUserId,
                     ])
                 ),
             ]);
 
             $possibleFriends = $peopleSearchService->searchPossibleFriendsForUser(
-                $userId,
+                $currentUserId,
                 $this->getGeoPoint(),
                 $searchText,
                 $this->getSkip(),
                 $this->getCount()
             );
+
             $data = [];
 
             foreach ($possibleFriends as $keyCategory => $possibleFriend) {
@@ -417,6 +427,7 @@ class SearchUsersController extends ApiController
                 $this->restructLocationField($data);
                 $data = $this->changeKeysName($data);
                 $data = $this->excludeEmptyValue($data);
+                $this->revertToScalarTagsMatchFields($data);
 
                 return $this->_handleViewWithData(
                     $data,
@@ -425,8 +436,11 @@ class SearchUsersController extends ApiController
                 );
             }
 
+            $this->revertToScalarTagsMatchFields($data);
+
             return $this->_handleViewWithData([
                 'info'                       => $peopleSearchService->getTotalHits(),
+                'pagination'                 => $peopleSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
                 PeopleSearchMapping::CONTEXT => $data,
             ]);
 
@@ -437,4 +451,24 @@ class SearchUsersController extends ApiController
         }
     }
 
+    /**
+     * Показывать подписчиков пользовтаеля
+     * по заданному токену авторизации
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function getUsersFollowersAction(Request $request)
+    {
+        $userId = $this->getRequestUserId();
+        try {
+            $peopleSearchService = $this->getPeopleSearchService();
+            $followers = $peopleSearchService->searchFollowersForUser($userId, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+    }
 }

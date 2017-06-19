@@ -1,4 +1,4 @@
-# routing поиск пользователей
+# routing поиска пользователей
 rp_search_users:
     resource: routing/searchUsers.yml
     prefix:   /api/search
@@ -10,19 +10,25 @@ rp_search_places:
     prefix:   /api/search
     type: rest
 
-# routing поиска мест
+# routing поиска событий
 rp_search_events:
     resource: routing/searchEvent.yml
     prefix:   /api/search
     type: rest
 
-# routing поиска мест
+# routing поиска стран
+rp_search_country:
+    resource: routing/searchCountry.yml
+    prefix:   /api/search
+    type: rest
+
+# routing поиска городов
 rp_search_city:
     resource: routing/searchCity.yml
     prefix:   /api/search
     type: rest
 
-# routing поиска мест
+# routing поиска маркеров
 rp_search_markers:
     resource: routing/searchMarkers.yml
     prefix:   /api/search
@@ -34,9 +40,14 @@ rp_search_messages:
     prefix:   /api/search
     type: rest
 
-# routing поиска мест
+# routing поиска
 rp_search_common:
     resource: routing/searchCommon.yml
     prefix:   /api/search
     type: rest
 
+# routing поиска постов ленты
+rp_search_newsFeed:
+    resource: routing/searchNewsFeed.yml
+    prefix:   /api/search
+    type: rest

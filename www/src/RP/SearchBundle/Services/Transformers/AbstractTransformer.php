@@ -9,6 +9,7 @@
 namespace RP\SearchBundle\Services\Transformers;
 
 use Common\Core\Facade\Search\QueryFactory\SearchEngine;
+use Elastica\SearchableInterface;
 use FOS\ElasticaBundle\Elastica\Index;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -47,10 +48,10 @@ class AbstractTransformer
     /**
      * Устанавливаем поисковый движок еластика
      *
-     * @param Index $elasticaIndex
+     * @param SearchableInterface $elasticaIndex
      * @return void
      */
-    public function setElasticaIndex(Index $elasticaIndex)
+    public function setElasticaIndex(SearchableInterface $elasticaIndex)
     {
         $this->elasticaIndex = $elasticaIndex;
     }
@@ -80,7 +81,7 @@ class AbstractTransformer
      *     // Returns FALSE
      *     Arr::is_assoc('foo', 'bar');
      *
-     * @param   array   $array  array to check
+     * @param   array $array array to check
      * @return  boolean
      */
     public static function is_assoc(array $array)
@@ -224,8 +225,7 @@ class AbstractTransformer
      */
     public static function createCompleteKey(array $fields, $delimiter = null)
     {
-        if ( ! $delimiter)
-        {
+        if (!$delimiter) {
             // Use the default delimiter
             $delimiter = AbstractTransformer::$delimiter;
         }
@@ -243,13 +243,17 @@ class AbstractTransformer
      * @param string $childNodesField Key name for the element for placement children
      * @return array
      */
-    public static function convertToTree(array $flat, $idField = 'id', $parentIdField = 'parentId', $childNodesField = 'children')
-    {
+    public static function convertToTree(
+        array $flat,
+        $idField = 'id',
+        $parentIdField = 'parentId',
+        $childNodesField = 'children'
+    ) {
         $flat = array_merge([
             [
-                $idField       => 1,
+                $idField => 1,
                 $parentIdField => 0,
-                'name'     => 'Root',
+                'name' => 'Root',
             ],
         ], $flat);
         $indexed = [];
@@ -294,9 +298,9 @@ class AbstractTransformer
     /**
      * Remove any elements where the callback returns true
      *
-     * @param  array    $array    the array to walk
+     * @param  array $array the array to walk
      * @param  callable $callback callback takes ($value, $key, $userdata)
-     * @param  mixed    $userdata additional data passed to the callback.
+     * @param  mixed $userdata additional data passed to the callback.
      * @return array
      */
     public static function array_walk_recursive_delete(array &$array, callable $callback, $userdata = null)

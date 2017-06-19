@@ -2,15 +2,15 @@
 /**
  * Основной контроллер поиска по местам
  */
+
 namespace RP\SearchBundle\Controller;
 
+use Common\Core\Constants\RequestConstant;
 use Common\Core\Controller\ApiController;
 use Common\Core\Exceptions\SearchServiceException;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceTypeSearchMapping;
-use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\HttpFoundation\Request;
-use Common\Core\Constants\RequestConstant;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
@@ -118,16 +118,16 @@ class SearchPlacesController extends ApiController
     public function searchPlacesByDiscountAction(Request $request)
     {
         try {
-            /** @var ID пользователя */
+            /** @var string ID пользователя */
             $userId = $this->getRequestUserId();
 
-            $cityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
-
-            /** @var Текст запроса */
-            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+            $params = [
+                'search' => $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS),
+                'cityId' => $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS),
+            ];
 
             $placeSearchService = $this->getPlacesSearchService();
-            $places = $placeSearchService->searchPlacesByDiscount($userId, $this->getGeoPoint(), $searchText, $cityId, $this->getSkip(), $this->getCount());
+            $places = $placeSearchService->searchPlacesByDiscount($userId, $this->getGeoPoint(), $params, $this->getSkip(), $this->getCount());
 
             return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
         } catch (SearchServiceException $e) {
@@ -135,7 +135,33 @@ class SearchPlacesController extends ApiController
         } catch (\HttpResponseException $e) {
             return $this->_handleViewWithError($e);
         }
+    }
 
+    /**
+     * Поиск скидочных мест под старый формат api (для rp-front)
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function searchPlacesByPromoAction(Request $request)
+    {
+        try {
+            $userId = $this->getRequestUserId();
+            $skip = (int)$this->getSkip();
+            $count = (int)$this->getCount();
+            $point = $this->getGeoPoint();
+            $countryId = (int)$request->get(RequestConstant::COUNTRY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
+            $cityId = (int)$request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
+
+            $result = $this->getPlacesSearchService()
+                ->searchPromoPlaces($userId, $point, $skip, $count, $countryId, $cityId);
+
+            return $this->_handleViewWithData($result);
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
     }
 
     /**
@@ -219,9 +245,7 @@ class SearchPlacesController extends ApiController
                 $searchText
             );
 
-
-
-            if( !is_null($placesType) && !empty($placesType) ){
+            if (!is_null($placesType) && !empty($placesType)) {
                 if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
                     $oldFormat = $this->getVersioningData($placeSearchService);
 
@@ -233,6 +257,7 @@ class SearchPlacesController extends ApiController
                         !self::INCLUDE_IN_CONTEXT
                     );
                 }
+
                 return $this->_handleViewWithData($placesType);
             }
 

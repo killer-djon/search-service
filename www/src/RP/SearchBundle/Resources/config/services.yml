@@ -3,7 +3,7 @@ services:
     rp_search.search.engine:
         class: Common\Core\Facade\Search\QueryFactory\SearchEngine
         arguments:
-            - "@fos_elastica.index"
+            - "@rp_search.custom.elastica_index"
             - "@rp_search.search.query_factory"
             - "@rp_search.search.query_condition"
             - "@rp_search.search.query_filter"
@@ -13,6 +13,11 @@ services:
         calls:
             - [ setContainer, [ "@service_container" ] ]
             - [ setLogger, [ "@logger" ] ]
+
+    rp_search.custom.elastica_index:
+        class: Common\Core\Facade\Search\QueryFactory\CustomSearchIndex
+        arguments:
+            - '@fos_elastica.client'
 
     # сервис поиского движка
     rp_search.search.query_factory:
@@ -43,6 +48,7 @@ services:
         class: RP\SearchBundle\Services\AbstractSearchService
         parent: rp_search.search.engine
         calls:
+            - [ setCountryTransformer, [ "@rp_search.transform_interface.country" ] ]
             - [ setCityTransformer, [ "@rp_search.transform_interface.city" ] ]
             - [ setPeopleTransformer, [ "@rp_search.transform_interface.people" ] ]
             - [ setPlaceTypeTransformer, [ "@rp_search.transform_interface.placetype" ] ]
@@ -69,6 +75,11 @@ services:
         class: RP\SearchBundle\Services\EventsSearchService
         parent: rp_search.search_service.base
 
+    # Сервис поиска стран
+    rp_search.search_service.country:
+        class: RP\SearchBundle\Services\CountrySearchService
+        parent: rp_search.search_service.base
+
     # Сервис поиска городов
     rp_search.search_service.city:
         class: RP\SearchBundle\Services\CitySearchService
@@ -82,7 +93,13 @@ services:
         class: RP\SearchBundle\Services\Transformers\AbstractTransformer
         calls:
             - [ setContainer, [ "@service_container" ] ]
-            - [ setElasticaIndex, [ "@fos_elastica.index" ] ]
+            - [ setElasticaIndex, [ "@rp_search.custom.elastica_index" ] ]
+
+    rp_search.transform_interface.country:
+        class: RP\SearchBundle\Services\Transformers\CountryTransformer
+        parent: rp_search.transform_interface.base
+        calls:
+            - [ setSearchService, [ "@rp_search.search_service.country" ] ]
 
     rp_search.transform_interface.city:
         class: RP\SearchBundle\Services\Transformers\CityTransformer
@@ -113,3 +130,7 @@ services:
         parent: rp_search.transform_interface.base
         calls:
             - [ setSearchService, [ "@rp_search.search_service.chat_message" ] ]
+
+    rp_search.search_service.news_feed.posts:
+        class: RP\SearchBundle\Services\NewsFeedSearchService
+        parent: rp_search.search_service.base

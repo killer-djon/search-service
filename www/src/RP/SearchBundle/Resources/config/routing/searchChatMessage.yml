@@ -1,3 +1,17 @@
+# Routing который формирует запрос поиска сообщений в чате
+# пример запроса /api/search/v1/json/chat/list
+RPSearchBundle_search_chats:
+    path: /v{_version}/{_format}/chat/list
+    defaults:
+        _controller: RPSearchBundle:SearchChatMessage:searchChats
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchChatMessage:searchChatMessage.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+
 # Routing который формирует запрос вывода всех сообщений чата
 # пример запроса /api/search/v1/json/chat/messages
 RPSearchBundle_search_chatmessage:
@@ -27,20 +41,6 @@ RPSearchBundle_search_search_chatmessage:
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
 
-# Routing который формирует запрос поиска сообщений в чате
-# пример запроса /api/search/v1/json/chat/messages
-RPSearchBundle_search_chats:
-    path: /v{_version}/{_format}/chat/list
-    defaults:
-        _controller: RPSearchBundle:SearchChatMessage:searchChats
-        _version: 1
-        _format: json
-        template: "RPSearchBundle:SearchChatMessage:searchChatMessage.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
-    requirements:
-        _method: (GET)
-        _format: (json|xml|html|plist)
-        _version: '1' # устанавливаем обязательную версию
-
 # Routing который формирует запрос поиска одного чата
 # пример запроса /api/search/v1/json/chat/id/{chatId}
 RPSearchBundle_search_chatbyID:
@@ -55,4 +55,3 @@ RPSearchBundle_search_chatbyID:
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
         chatId: \w+
-

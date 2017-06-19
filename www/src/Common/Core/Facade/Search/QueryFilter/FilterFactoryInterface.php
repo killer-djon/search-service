@@ -4,6 +4,7 @@
  */
 namespace Common\Core\Facade\Search\QueryFilter;
 
+use Elastica\Query\AbstractQuery;
 use Elastica\Filter\AbstractFilter;
 
 interface FilterFactoryInterface
@@ -214,4 +215,13 @@ interface FilterFactoryInterface
      * @return AbstractFilter $filter
      */
     public function getNestedFilter($path, AbstractFilter $filter);
+
+    /**
+     * Query filter.
+     * Запрос в фильтре
+     *
+     * @param AbstractQuery $query
+     * @return AbstractFilter $filter
+     */
+    public function getQueryFilter(AbstractQuery $query);
 }

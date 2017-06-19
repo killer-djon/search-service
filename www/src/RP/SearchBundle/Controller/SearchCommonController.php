@@ -2,6 +2,7 @@
 /**
  * Класс общего поиска по всем коллекциям
  */
+
 namespace RP\SearchBundle\Controller;
 
 use Common\Core\Controller\ApiController;
@@ -30,9 +31,9 @@ class SearchCommonController extends ApiController
      * Метод осуществляющий глобальный поиск
      * в контексте всех имеющихся типов в базе еластика
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
+     * @param Request $request Объект запроса
      * @param string|null $filterType Категория запроса (people,places,discounts...)
-     * @return \Symfony\Component\HttpFoundation\Response Возвращаем ответ
+     * @return Response Возвращаем ответ
      */
     public function searchCommonByFilterAction(Request $request, $filterType)
     {
@@ -64,17 +65,14 @@ class SearchCommonController extends ApiController
                 return $this->_handleViewWithData([]);
             }
 
-            if( !is_null($searchText) && mb_strlen($searchText) < 3 )
-            {
+            if (!is_null($searchText) && mb_strlen($searchText) < 3) {
                 return $this->_handleViewWithData([]);
             }
 
             $isFlat = $this->getBoolRequestParam($request->get(RequestConstant::IS_FLAT_PARAM, false));
 
-            if( $isFlat === true )
-            {
-                if( is_null($filterType) || empty($filterType) )
-                {
+            if ($isFlat === true) {
+                if (is_null($filterType) || empty($filterType)) {
                     return $this->_handleViewWithError(
                         new BadRequestHttpException(
                             'Необходимо указать параметры фильтров',
@@ -94,14 +92,16 @@ class SearchCommonController extends ApiController
                 );
 
                 return $this->_handleViewWithData(array_merge(
-	                ['info'  => $commonSearchService->getTotalHits()],
-	                ['pagination' => $commonSearchService->getPaginationAdapter(
-		                $this->getSkip(),
-                        $this->getCount(),
-                        (isset($searchData['info']) ? $searchData['info']['totalHits'] : null)
-	                )],
-	                ['items' => ($searchData ? $this->revertToScalarTagsMatchFields($searchData) : [])]
-	            ));
+                    ['info' => $commonSearchService->getTotalHits()],
+                    [
+                        'pagination' => $commonSearchService->getPaginationAdapter(
+                            $this->getSkip(),
+                            $this->getCount(),
+                            (isset($searchData['info']) ? $searchData['info']['totalHits'] : null)
+                        ),
+                    ],
+                    ['items' => ($searchData ? $this->revertToScalarTagsMatchFields($searchData) : [])]
+                ));
             }
 
             $searchData = $commonSearchService->commonSearchByFilters(
@@ -114,12 +114,12 @@ class SearchCommonController extends ApiController
                 $this->getCount()
             );
 
-            foreach( $searchData['items'] as $key => &$searchItemInfo )
-            {
+            foreach ($searchData['items'] as $key => &$searchItemInfo) {
 
-                if( !empty($searchItemInfo) )
-                {
-                    if( $key == EventsSearchMapping::CONTEXT ) $this->extractWillComeFriends($searchItemInfo, $userId);
+                if (!empty($searchItemInfo)) {
+                    if ($key == EventsSearchMapping::CONTEXT) {
+                        $this->extractWillComeFriends($searchItemInfo, $userId);
+                    }
                     $item[$key] = $searchItemInfo;
                     $searchData['pagination'][$key] = $commonSearchService->getPaginationAdapter(
                         $this->getSkip(),
@@ -128,7 +128,6 @@ class SearchCommonController extends ApiController
                     );
                 }
             }
-
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
 
@@ -148,9 +147,9 @@ class SearchCommonController extends ApiController
                     }
 
                     $data = [
-                        'results' => (!empty($data) ? $data : new \stdClass),
-                        'info'    => $oldFormat['info'],
-                        'pagination' => isset($searchData['pagination']) ? $searchData['pagination'] : null
+                        'results'    => (!empty($data) ? $data : new \stdClass),
+                        'info'       => $oldFormat['info'],
+                        'pagination' => isset($searchData['pagination']) ? $searchData['pagination'] : null,
                     ];
                 }
 
@@ -178,13 +177,13 @@ class SearchCommonController extends ApiController
     /**
      * Вывод ТОП n интересов
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
-     * @return \Symfony\Component\HttpFoundation\Response Возвращаем ответ
+     * @param Request $request Объект запроса
+     * @return Response Возвращаем ответ
      */
     public function searchInterestsAction(Request $request)
     {
         try {
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
             // получаем из запроса ID пользователя
             $userId = $this->getRequestUserId();
 
@@ -215,8 +214,8 @@ class SearchCommonController extends ApiController
     /**
      * Поиск интересов
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
-     * @return \Symfony\Component\HttpFoundation\Response Возвращаем ответ
+     * @param Request $request Объект запроса
+     * @return Response Возвращаем ответ
      */
     public function searchInterestsByNameAction(Request $request)
     {
@@ -265,6 +264,42 @@ class SearchCommonController extends ApiController
                 TagNameSearchMapping::CONTEXT => $resultInterests,
             ]);
         } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+    }
+
+    /**
+     * Поиск с автодополнением
+     *
+     * @param Request $request
+     * @param string $searchText
+     * @return Response Возвращаем ответ
+     */
+    public function searchSuggestAction(Request $request, $searchText)
+    {
+        try{
+            $commonSearchService = $this->getCommonSearchService();
+            $suggests = $commonSearchService->suggestSearch($searchText, $this->getSkip(), $this->getCount());
+
+            if( is_null($suggests) || empty($suggests) )
+            {
+                return $this->_handleViewWithData([]);
+            }
+
+            $info = $commonSearchService->getTotalHits();
+
+            return $this->_handleViewWithData([
+                'info' => $info,
+                'pagination' => $commonSearchService->getPaginationAdapter(
+                    $this->getSkip(),
+                    $this->getCount()
+                ),
+                'items' => $suggests,
+
+            ]);
+        }catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {
             return $this->_handleViewWithError($e);

@@ -8,15 +8,11 @@
 
 namespace RP\SearchBundle\Controller;
 
+use Common\Core\Constants\RequestConstant;
 use Common\Core\Controller\ApiController;
 use Common\Core\Exceptions\SearchServiceException;
-use Common\Core\Facade\Service\User\UserProfileService;
-use Elastica\Exception\ElasticsearchException;
-use RP\SearchBundle\Services\CitySearchService;
 use RP\SearchBundle\Services\Mapping\CitySearchMapping;
-use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 use Symfony\Component\HttpFoundation\Request;
-use Common\Core\Constants\RequestConstant;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
@@ -35,16 +31,17 @@ class SearchCityController extends ApiController
      * применяется во вногих местах где нам необходимо получить город
      * надо в старом API спроксировать запрос
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @param Request $request Объект запроса
+     * @return Response
      */
     public function searchCityByNameAction(Request $request)
     {
         try {
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
 
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
+
             if (is_null($searchText)) {
                 return $this->_handleViewWithError(
                     new BadRequestHttpException(
@@ -55,16 +52,35 @@ class SearchCityController extends ApiController
                 );
             }
 
-            /** @var ID пользователя */
-            $userId = $this->getRequestUserId();
+            // получаем фильтры и парсим их в нужный вид для дальнейшей работы
+            $countryName = trim(mb_substr($request->get(RequestConstant::FILTER_COUNTRY), 0, 128));
+            $types = $this->getParseFilters($request->get(RequestConstant::FILTER_TYPES));
 
             $citySearchService = $this->getCitySearchService();
-            $cities = $citySearchService->searchCityByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+
+            // старый запрос без сортировки по популярности
+            // $cities = $citySearchService->searchCityByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+            if (!empty($countryName)) {
+                $cities = $citySearchService->searchCityByName($searchText, $countryName, $types, $this->getSkip(), $this->getCount());
+                $result = array_merge(
+                    ['info' => $citySearchService->getTotalHits()],
+                    $cities ?: []
+                );
+
+                return $this->_handleViewWithData($result);
+            }
+
+            // новый запрос с сортировкой по популярности
+            $cities = $citySearchService->searchTopCityByName(
+                $searchText,
+                $countryName,
+                $types,
+                $this->getSkip(),
+                $this->getCount()
+            );
 
             if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
-                $oldFormat = $this->getVersioningData($citySearchService);
-
-                $oldFormat = $citySearchService->cityTransformer->transform($oldFormat['results'], CitySearchMapping::CONTEXT);
+                $oldFormat = $citySearchService->cityTransformer->transform($cities, CitySearchMapping::CONTEXT);
 
                 return $this->_handleViewWithData(
                     [self::KEY_FIELD_RESPONSE => $oldFormat],
@@ -73,12 +89,12 @@ class SearchCityController extends ApiController
                 );
             }
 
-            return $this->_handleViewWithData(array_merge(
-                    [
-                        'info' => $citySearchService->getTotalHits(),
-                    ],
-                    $cities ?: [])
+            $result = array_merge(
+                ['info' => $citySearchService->getTotalHits()],
+                $cities ?: []
             );
+
+            return $this->_handleViewWithData($result);
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
@@ -90,9 +106,9 @@ class SearchCityController extends ApiController
     /**
      * Получить город по его ID
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
+     * @param Request $request Объект запроса
      * @param string $cityId
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @return Response
      */
     public function searchCityByIdAction(Request $request, $cityId)
     {
@@ -118,10 +134,10 @@ class SearchCityController extends ApiController
 
     /**
      * Получить список порции городов
+     * которые самые популярные
      *
-     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
-     * @param string $cityId
-     * @return \Symfony\Component\HttpFoundation\Response
+     * @param Request $request Объект запроса
+     * @return Response
      */
     public function getCitiesListAction(Request $request)
     {
@@ -129,12 +145,24 @@ class SearchCityController extends ApiController
 
         try {
             $citySearchService = $this->getCitySearchService();
-            $cities = $citySearchService->getCitiesList(
+            $cities = $citySearchService->getTopCitiesList(
                 $this->getSkip(),
                 $this->getCount()
             );
-
             $data = $cities;
+            $citiesData = $citySearchService->getAggregations();
+
+            if (!empty($citiesData)) {
+                foreach ($citiesData as &$city) {
+                    $city['city'] = $citySearchService->searchRecordById(
+                        CitySearchMapping::CONTEXT,
+                        CitySearchMapping::ID_FIELD,
+                        $city['key']
+                    );
+                }
+            }
+
+            $data = $citiesData;
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

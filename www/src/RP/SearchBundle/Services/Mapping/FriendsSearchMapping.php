@@ -26,7 +26,13 @@ class FriendsSearchMapping extends PeopleSearchMapping
     {
         return [
             $filterFactory->getTermsFilter(self::FRIEND_LIST_FIELD, [$userId]),
-            $filterFactory->getTermFilter([self::USER_REMOVED_FIELD => false])
+            $filterFactory->getTermFilter([self::USER_REMOVED_FIELD => false]),
+            $filterFactory->getBoolOrFilter([
+                $filterFactory->getNotFilter(
+                    $filterFactory->getExistsFilter(self::SETTINGS_PRIVACY_VIEW_GEO_POSITION)
+                ),
+                $filterFactory->getTermFilter([self::SETTINGS_PRIVACY_VIEW_GEO_POSITION => self::SETTINGS_YES]),
+            ]),
         ];
     }
 

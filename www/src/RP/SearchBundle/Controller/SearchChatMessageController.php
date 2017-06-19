@@ -5,16 +5,12 @@
 
 namespace RP\SearchBundle\Controller;
 
+use Common\Core\Constants\RequestConstant;
 use Common\Core\Controller\ApiController;
 use Common\Core\Exceptions\SearchServiceException;
-use Common\Core\Facade\Service\User\UserProfileService;
-use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\ChatMessageMapping;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\HttpFoundation\Request;
-use Common\Core\Constants\RequestConstant;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 class SearchChatMessageController extends ApiController
 {
@@ -29,9 +25,10 @@ class SearchChatMessageController extends ApiController
     public function getChatMessageAction(Request $request, $chatId)
     {
         try {
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
+            $createdFrom = $request->get(RequestConstant::SEARCH_CREATED_FROM_PARAM);
 
-            /** @var Текст запроса */
+            /** @var string $searchText Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
             $searchText = (!is_null($searchText) && !empty($searchText) ? $searchText : RequestConstant::NULLED_PARAMS);
 
@@ -44,6 +41,7 @@ class SearchChatMessageController extends ApiController
                 $userId,
                 $searchText,
                 $chatId,
+                $createdFrom,
                 false,
                 $this->getSkip(),
                 $this->getCount()
@@ -54,6 +52,7 @@ class SearchChatMessageController extends ApiController
             }
 
             $chatMessages = [];
+
             foreach ($messages[ChatMessageMapping::CONTEXT] as &$chatMessage) {
 
                 $key = array_search($userId, array_column($chatMessage['recipients'], 'id'));
@@ -94,9 +93,7 @@ class SearchChatMessageController extends ApiController
 
             return $this->_handleViewWithData(array_merge(
                 [
-                    'info' => $totalHits,
-                ],
-                [
+                    'info'       => $totalHits,
                     'pagination' => $chatSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
                 ],
                 $chatMessages ?: []
@@ -117,9 +114,9 @@ class SearchChatMessageController extends ApiController
     public function searchChatMessageAction(Request $request)
     {
         try {
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
 
-            /** @var Текст запроса */
+            /** @var string $searchText Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
             $searchText = (!is_null($searchText) && !empty($searchText) ? $searchText : RequestConstant::NULLED_PARAMS);
 
@@ -135,6 +132,7 @@ class SearchChatMessageController extends ApiController
             $chatMessages = $chatSearchService->searchByChatMessage(
                 $userId,
                 $searchText,
+                null,
                 null,
                 false,
                 $this->getSkip(),
@@ -171,9 +169,7 @@ class SearchChatMessageController extends ApiController
 
             return $this->_handleViewWithData(array_merge(
                 [
-                    'info' => $chatSearchService->getTotalHits(),
-                ],
-                [
+                    'info'       => $chatSearchService->getTotalHits(),
                     'pagination' => $chatSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
                 ],
                 $chatMessages ?: []
@@ -196,7 +192,7 @@ class SearchChatMessageController extends ApiController
      */
     public function searchSingleChatAction(Request $request, $chatId)
     {
-        $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+        $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
 
         // получаем из запроса ID пользователя
         $userId = $this->getRequestUserId();
@@ -220,8 +216,7 @@ class SearchChatMessageController extends ApiController
             ChatMessageMapping::CONTEXT
         );
 
-        if( empty($chatWithMessages) )
-        {
+        if (empty($chatWithMessages)) {
             return $this->_handleViewWithData([]);
         }
 
@@ -240,9 +235,9 @@ class SearchChatMessageController extends ApiController
     public function searchChatsAction(Request $request)
     {
         try {
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
 
-            /** @var ID чата в котором можем искать */
+            /** @var string $chatId ID чата в котором можем искать */
             $chatId = $request->get(RequestConstant::CHAT_ID_PARAM);
 
             // получаем из запроса ID пользователя
@@ -254,6 +249,7 @@ class SearchChatMessageController extends ApiController
                 $userId,
                 null,
                 $chatId,
+                null,
                 true,
                 $this->getSkip(),
                 $this->getCount()
@@ -269,18 +265,19 @@ class SearchChatMessageController extends ApiController
             if (empty($messages)) {
                 return $this->_handleViewWithData([]);
             }
-            
+
             $chatMessages = [];
             $totalMessageCount = 0;
             foreach ($messages[ChatMessageMapping::CONTEXT] as &$chatMessage) {
 
-                $countUndelete = $chatSearchService->getCountUnDeleteMessages($userId, $chatMessage['chatId']);
+                $countUnDeleted = $chatSearchService->getCountUnDeleteMessages($userId, $chatMessage['chatId']);
+
                 /**
                  * Проверяем равно ли кол-во сообщений в чате
-                 * с кол-ом удаленных, если да - это означаем что ым удалили чат
+                 * с кол-ом удаленных, если да - это означаем что чат удалён
                  */
-                if( $countUndelete < $chatMessage['messages_count'] )
-                {
+                // if ($countUnDeleted < $chatMessage['messages_count']) {
+                if ($countUnDeleted > 0) {
                     $chatMessage['count'] = $chatSearchService->getCountUnreadMessages($userId, $chatMessage['chatId']);
                     $chatMessages[ChatMessageMapping::CONTEXT][] = $chatMessage;
                     $totalMessageCount += $chatMessage['messages_count'];
@@ -313,14 +310,10 @@ class SearchChatMessageController extends ApiController
 
             return $this->_handleViewWithData(array_merge(
                 [
-                    'info' => array_merge(
-                        [
-                            'totalHits' => $totalMessageCount,
-                        ],
-                        [
-                            'totalChats' => count($chatMessages[ChatMessageMapping::CONTEXT]),
-                        ]
-                    ),
+                    'info' => [
+                        'totalHits'  => $totalMessageCount,
+                        'totalChats' => count($chatMessages[ChatMessageMapping::CONTEXT]),
+                    ],
                 ],
                 $chatMessages ?: []
             ));

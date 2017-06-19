@@ -1,4 +1,5 @@
 <?php
+
 namespace Common\Core\Facade\Service\Geo;
 
 /**
@@ -26,6 +27,9 @@ class GeoPointService implements GeoPointServiceInterface
 
     /** Максимальное значение для долготы координаты */
     const LONGITUDE_MAX = 180.0;
+
+    /** Радиус по умолчанию для карты */
+    const DEFAULT_MARKERS_MAP_RADIUS_M = 18000;
 
     /* ---------------- \ Constraints parameters ---------------- */
 
@@ -98,6 +102,24 @@ class GeoPointService implements GeoPointServiceInterface
     }
 
     /**
+     * @param float $lon
+     * @return $this
+     */
+    public function setLongitude(float $lon)
+    {
+        $this->_longitude = $lon;
+    }
+
+    /**
+     * @param float $lat
+     * @return float
+     */
+    public function setLatitude(float $lat)
+    {
+        $this->_latitude = $lat;
+    }
+
+    /**
      * Возвращает радиус поиска
      *
      * @return null|int
@@ -113,6 +135,14 @@ class GeoPointService implements GeoPointServiceInterface
     public function isValid()
     {
         return $this->getLatitude() !== null && $this->getLongitude() !== null;
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isEmpty()
+    {
+        return (int)$this->getLatitude() === 0 && (int)$this->getLongitude() === 0;
     }
 
     /**
@@ -138,7 +168,19 @@ class GeoPointService implements GeoPointServiceInterface
      */
     private function _setRadius($radius)
     {
-        $this->_radius = $radius;
+        $this->_radius = (int)$radius;
+    }
+
+    /**
+     * Устанавливаем радиус по умолчанию
+     *
+     * @param int|null $radius
+     */
+    public function setRadius($radius = null)
+    {
+        if (!is_null($radius)) {
+            $this->_setRadius($radius);
+        }
     }
 
     /**

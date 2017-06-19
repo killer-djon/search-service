@@ -161,7 +161,7 @@ class SearchCityController extends ApiController
                 foreach ($searchedCities as $city) {
                     $result[] = [
                         'key'       => $city['id'],
-                        'doc_count' => null, // этот параметр нужен для совместимости с данными из агрегации топ мест
+                        'doc_count' => false, // этот параметр нужен для совместимости с данными из агрегации топ мест
                         'city'      => $citySearchService->searchRecordById(
                             CitySearchMapping::CONTEXT,
                             CitySearchMapping::ID_FIELD,

@@ -198,6 +198,7 @@ JS;
                     $filter->getTypeFilter(PostSearchMapping::CONTEXT),
                     $filter->getBoolAndFilter([
                         $filter->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => PeopleSearchMapping::RP_USER_ID]),
+                        $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
                     ]),
                 ]),
             ];

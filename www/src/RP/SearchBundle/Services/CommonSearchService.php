@@ -217,7 +217,9 @@ class CommonSearchService extends AbstractSearchService
                         $this->setFilterQuery($type::getMatchSearchFilter($this->_queryFilterFactory, $userId));
                     }
                 } else {
-                    if( $type::CONTEXT === PostSearchMapping::CONTEXT ) continue;
+                    if ($type::CONTEXT === PostSearchMapping::CONTEXT) {
+                        continue;
+                    }
                     $this->setFilterQuery($type::getMatchSearchFilter($this->_queryFilterFactory, $userId));
                 }
 
@@ -326,7 +328,9 @@ class CommonSearchService extends AbstractSearchService
                         $userId));
                 }
             } else {
-                if( $this->filterSearchTypes[$type]::CONTEXT === PostSearchMapping::CONTEXT ) continue;
+                if ($this->filterSearchTypes[$type]::CONTEXT === PostSearchMapping::CONTEXT) {
+                    continue;
+                }
                 $this->setFilterQuery($this->filterSearchTypes[$type]::getMatchSearchFilter($this->_queryFilterFactory,
                     $userId));
             }
@@ -508,6 +512,19 @@ class CommonSearchService extends AbstractSearchService
                             ],
                             $point->getRadius(),
                             'm'
+                        )->addAggregation(
+                            $this->_queryAggregationFactory->getTermsAggregation(
+                                'onlineStatus.isOnline',
+                                $this->_scriptFactory->getScript(
+                                    "
+                                    var i=0;
+                                    if( doc['onlineStatus.isOnline'].value == true ){
+                                        i++;
+                                    }
+                                    parseInt(i);
+                                    "
+                                )
+                            )
                         )->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
                         ))->addAggregation($this->_queryAggregationFactory->setAggregationSource(

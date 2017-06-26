@@ -85,6 +85,13 @@ class SearchNewsFeedController extends ApiController
                 return $this->_handleViewWithData(new \stdClass());
             }
 
+            /** Временный костыль, убираем HTML из текста для мобильных платформ */
+            $headerUserAgent = $request->headers->get('platform', $request->headers->get('User-Agent'));
+
+            if (preg_match('/(ios|android)/i', $headerUserAgent)) {
+                $post['message'] = (!empty($post['message']) ? strip_tags($post['message']) : '');
+            }
+
             return $this->_handleViewWithData($post);
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
@@ -125,8 +132,9 @@ class SearchNewsFeedController extends ApiController
                 UserEventSearchMapping::CONTEXT
             );
 
-            $headerUserAgent = $request->headers->get('User-Agent', $request->headers->get('platform'));
-            
+            /** Временный костыль, убираем HTML из текста для мобильных платформ */
+            $headerUserAgent = $request->headers->get('platform', $request->headers->get('User-Agent'));
+
             if (!empty($result) && preg_match('/(ios|android)/i', $headerUserAgent)) {
                 array_walk($result['items'], function (&$item) {
                     $item['message'] = (!empty($item['message']) ? strip_tags($item['message']) : '');

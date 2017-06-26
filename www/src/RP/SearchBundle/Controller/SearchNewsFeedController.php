@@ -119,9 +119,20 @@ class SearchNewsFeedController extends ApiController
                 $this->getSkip(),
                 $this->getCount()
             );
-            return $this->_handleViewWithData(
-                $this->getNewFormatResponse($newsFeedSearchService, UserEventSearchMapping::CONTEXT)
+
+            $result = $this->getNewFormatResponse(
+                $newsFeedSearchService,
+                    UserEventSearchMapping::CONTEXT
             );
+
+            $headerUserAgent = $request->headers->get('User-Agent');
+            if (!empty($result) && preg_match('/(ios|android)/i', $headerUserAgent) ) {
+                array_walk($result['items'], function (&$item) {
+                    $item['message'] = (!empty($item['message']) ? strip_tags($item['message']) : '');
+                });
+            }
+
+            return $this->_handleViewWithData($result);
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

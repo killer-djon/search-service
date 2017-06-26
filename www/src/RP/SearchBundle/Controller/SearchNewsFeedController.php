@@ -122,11 +122,12 @@ class SearchNewsFeedController extends ApiController
 
             $result = $this->getNewFormatResponse(
                 $newsFeedSearchService,
-                    UserEventSearchMapping::CONTEXT
+                UserEventSearchMapping::CONTEXT
             );
 
-            $headerUserAgent = $request->headers->get('User-Agent');
-            if (!empty($result) && preg_match('/(ios|android)/i', $headerUserAgent) ) {
+            $headerUserAgent = $request->headers->get('User-Agent', $request->headers->get('platform'));
+            
+            if (!empty($result) && preg_match('/(ios|android)/i', $headerUserAgent)) {
                 array_walk($result['items'], function (&$item) {
                     $item['message'] = (!empty($item['message']) ? strip_tags($item['message']) : '');
                 });

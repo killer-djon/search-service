@@ -157,6 +157,7 @@ class SearchCityController extends ApiController
                 $count
             );
 
+
             if (!empty($searchedCities)) {
                 foreach ($searchedCities as $city) {
                     $result[] = [

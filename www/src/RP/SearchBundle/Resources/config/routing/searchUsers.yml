@@ -89,3 +89,18 @@ RPSearchBundle_search_users_byid:
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
         userId: \w+
+
+# Routing который формирует запрос для поиска человека по токену авторизации
+# пример запроса /api/search/v1/json/users/id/10357
+RPSearchBundle_search_current_user:
+    path: /v{_version}/{_format}/user/current
+    defaults:
+        _controller: RPSearchBundle:SearchUsers:searchCurrentUser
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchUsers:searchCurrentUserAction.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (OPTIONS|GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+        userId: \w+

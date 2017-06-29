@@ -223,6 +223,10 @@ class CitySearchService extends AbstractSearchService
 
         if (!empty($history['search_history'])) {
             foreach ($history['search_history'] as $item) {
+                if (empty($item['city'])) {
+                    continue;
+                }
+
                 if (!isset($cities[$item['city']['id']])) {
                     $cities[$item['city']['id']] = $item['city'];
                 }

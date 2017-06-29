@@ -271,12 +271,29 @@ class SearchUsersController extends ApiController
      */
     public function searchUsersByIdAction(Request $request, $userId)
     {
-        $peopleSearchService = $this->getPeopleSearchService();
+        $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
+        $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $this->getRequestUserId());
+
+        return $this->searchUserById($targetUserId, $version);
+    }
+
+    /**
+     * Поиск пользователя по токену авторизации
+     *
+     * @param \Symfony\Component\HttpFoundation\Request $request Объект запроса
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function searchCurrentUserAction(Request $request)
+    {
         $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
 
+        return $this->searchUserById($this->getRequestUserId(), $version);
+    }
+
+    private function searchUserById($targetUserId, $version = RequestConstant::NEW_DEFAULT_VERSION)
+    {
         try {
-            //$targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $userId);
-            $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $this->getRequestUserId());
+            $peopleSearchService = $this->getPeopleSearchService();
 
             $userContext = null;
             if ($targetUserId != $this->getRequestUserId()) {

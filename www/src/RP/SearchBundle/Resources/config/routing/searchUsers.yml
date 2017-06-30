@@ -91,7 +91,7 @@ RPSearchBundle_search_users_byid:
         userId: \w+
 
 # Routing который формирует запрос для поиска человека по токену авторизации
-# пример запроса /api/search/v1/json/users/id/10357
+# пример запроса /api/search/v1/json/user/current
 RPSearchBundle_search_current_user:
     path: /v{_version}/{_format}/user/current
     defaults:
@@ -103,4 +103,3 @@ RPSearchBundle_search_current_user:
         _method: (OPTIONS|GET)
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
-        userId: \w+

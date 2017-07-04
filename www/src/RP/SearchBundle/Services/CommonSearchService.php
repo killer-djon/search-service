@@ -7,9 +7,7 @@
 namespace RP\SearchBundle\Services;
 
 use Common\Core\Constants\SortingOrder;
-use Common\Core\Facade\Service\Geo\GeoPointService;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
-use Elastica\Aggregation\GeoDistance;
 use Elastica\Query\FunctionScore;
 use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Mapping\AbstractSearchMapping;
@@ -68,7 +66,7 @@ class CommonSearchService extends AbstractSearchService
             $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$type]);
 
             $this->setScriptFields([
-                'distance' => $this->_scriptFactory->getDistanceScript(
+                'distance'          => $this->_scriptFactory->getDistanceScript(
                     $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
                     $point
                 ),
@@ -191,7 +189,7 @@ class CommonSearchService extends AbstractSearchService
                 $this->clearQueryFactory();
                 $this->setScriptTagsConditions($currentUser, $type);
                 $this->setScriptFields([
-                    'distance' => $this->_scriptFactory->getDistanceScript(
+                    'distance'          => $this->_scriptFactory->getDistanceScript(
                         $type::LOCATION_POINT_FIELD,
                         $point
                     ),
@@ -230,9 +228,9 @@ class CommonSearchService extends AbstractSearchService
                     FunctionScore::DECAY_LINEAR => [
                         $type::LOCATION_POINT_FIELD => [
                             'origin' => "{$point->getLongitude()}, {$point->getLatitude()}",
-                            'scale' => '1km',
+                            'scale'  => '1km',
                             'offset' => '0km',
-                            'decay' => 0.2,
+                            'decay'  => 0.2,
                         ],
                     ],
                 ]);
@@ -337,7 +335,7 @@ class CommonSearchService extends AbstractSearchService
 
             $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$type]);
             $this->setScriptFields([
-                'distance' => $this->_scriptFactory->getDistanceScript(
+                'distance'          => $this->_scriptFactory->getDistanceScript(
                     $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
                     $point
                 ),
@@ -355,9 +353,9 @@ class CommonSearchService extends AbstractSearchService
                     FunctionScore::DECAY_GAUSS => [
                         $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD => [
                             'origin' => "{$point->getLongitude()}, {$point->getLatitude()}",
-                            'scale' => '1km',
+                            'scale'  => '1km',
                             'offset' => '0km',
-                            'decay' => 0.33,
+                            'decay'  => 0.33,
                         ],
                     ],
                 ]);
@@ -365,7 +363,7 @@ class CommonSearchService extends AbstractSearchService
                 $this->setScriptFunctionOption([
                     'scoreMode' => 'multiply',
                     'boostMode' => 'multiply',
-                    'maxBoost' => 10,
+                    'maxBoost'  => 10,
                 ]);
 
                 $this->setSortingQuery([
@@ -492,7 +490,7 @@ class CommonSearchService extends AbstractSearchService
                                 ],
                                 [
                                     'from' => "{$geoDistanceRange[0]}m",
-                                    'to' => "{$geoDistanceRange[1]}m",
+                                    'to'   => "{$geoDistanceRange[1]}m",
                                 ]
                             ),
                         ]);
@@ -530,15 +528,15 @@ class CommonSearchService extends AbstractSearchService
                         ))->addAggregation($this->_queryAggregationFactory->setAggregationSource(
                             $this->filterTypes[$keyType]::LOCATION_FIELD,
                             [], 1, [
-                                'tagsInPercent' => $this->_scriptFactory->getTagsIntersectInPercentScript(
+                                'tagsInPercent'     => $this->_scriptFactory->getTagsIntersectInPercentScript(
                                     $this->filterTypes[$keyType]::TAGS_ID_FIELD,
                                     $currentUser->getTags()
                                 ),
-                                'tagsCount' => $this->_scriptFactory->getTagsIntersectScript(
+                                'tagsCount'         => $this->_scriptFactory->getTagsIntersectScript(
                                     $this->filterTypes[$keyType]::TAGS_ID_FIELD,
                                     $currentUser->getTags()
                                 ),
-                                'distance' => $this->_scriptFactory->getDistanceScript(
+                                'distance'          => $this->_scriptFactory->getDistanceScript(
                                     $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
                                     $point
                                 ),
@@ -698,13 +696,13 @@ class CommonSearchService extends AbstractSearchService
         $this->setConditionQueryMust([
             $this->_queryConditionFactory->getDisMaxQuery([
                 $this->_queryConditionFactory->getMultiMatchQuery()
-                    ->setFields([
-                        TagNameSearchMapping::NAME_FIELD,
-                        TagNameSearchMapping::NAME_TRANSLIT_FIELD,
-                        TagNameSearchMapping::RUS_TRANSLITERATE_NAME,
-                    ])
-                    ->setOperator(MultiMatch::OPERATOR_OR)
-                    ->setQuery($searchText),
+                                             ->setFields([
+                                                 TagNameSearchMapping::NAME_FIELD,
+                                                 TagNameSearchMapping::NAME_TRANSLIT_FIELD,
+                                                 TagNameSearchMapping::RUS_TRANSLITERATE_NAME,
+                                             ])
+                                             ->setOperator(MultiMatch::OPERATOR_OR)
+                                             ->setQuery($searchText),
                 $this->_queryConditionFactory->getFieldQuery([
                     TagNameSearchMapping::NAME_FIELD,
                     TagNameSearchMapping::NAME_TRANSLIT_FIELD,

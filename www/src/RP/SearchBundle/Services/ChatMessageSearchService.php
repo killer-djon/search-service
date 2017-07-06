@@ -55,7 +55,9 @@ class ChatMessageSearchService extends AbstractSearchService
 
         $queryMatchResults = $this->createQuery($skip, $count);
 
-        return $this->searchDocuments($queryMatchResults);
+        return $this->searchDocuments($queryMatchResults, null, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
     }
 
     /**
@@ -78,7 +80,9 @@ class ChatMessageSearchService extends AbstractSearchService
 
         $queryMatchResults = $this->createQuery();
 
-        return $this->searchSingleDocuments($queryMatchResults);
+        return $this->searchSingleDocuments($queryMatchResults, null, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
     }
 
     public function getCountUnDeleteMessages($recipientId, $chatId)
@@ -208,7 +212,9 @@ JS;
 
         $queryMatchResults = $this->createQuery();
 
-        return $this->searchDocuments($queryMatchResults);
+        return $this->searchDocuments($queryMatchResults, null, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
     }
 
     /**
@@ -296,7 +302,13 @@ JS;
                 )->addAggregation(
                     $aggr->setAggregationSource(
                         ChatMessageMapping::LAST_CHAT_MESSAGE,
-                        [],
+                        [
+                            'excludes' => [
+                                'friendList',
+                                'relations',
+                                '*.friendList'
+                            ]
+                        ],
                         1
                     )->setSort([
                         ChatMessageMapping::MESSAGE_SEND_AT_FIELD => SortingOrder::SORTING_DESC,
@@ -305,12 +317,19 @@ JS;
                     $aggr->setAggregationSource(
                         ChatMessageMapping::CONTEXT,
                         [
-                            ChatMessageMapping::IDENTIFIER_FIELD,
-                            ChatMessageMapping::CHAT_ID_FIELD,
-                            ChatMessageMapping::CHAT_CREATED_AT,
-                            ChatMessageMapping::CHAT_IS_DIALOG,
-                            ChatMessageMapping::RECIPIENTS_MESSAGE_IS_DELETED,
-                            ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD,
+                            'includes' => [
+                                ChatMessageMapping::IDENTIFIER_FIELD,
+                                ChatMessageMapping::CHAT_ID_FIELD,
+                                ChatMessageMapping::CHAT_CREATED_AT,
+                                ChatMessageMapping::CHAT_IS_DIALOG,
+                                ChatMessageMapping::RECIPIENTS_MESSAGE_IS_DELETED,
+                                ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD,
+                            ],
+                            'excludes' => [
+                                'friendList',
+                                'relations',
+                                '*.friendList'
+                            ]
                         ], 1
                     )->setSort([
                         ChatMessageMapping::MESSAGE_SEND_AT_FIELD => SortingOrder::SORTING_DESC,
@@ -362,6 +381,8 @@ JS;
 
         }
 
-        return $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT);
+        return $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
     }
 }

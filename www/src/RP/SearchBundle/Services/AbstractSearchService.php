@@ -595,11 +595,15 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * @throws SearchServiceException
      * @return UserProfileService|null
      */
-    public function getUserById($userId)
+    public function getUserById($userId, $source = true)
     {
         try {
-            $user = $this->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
-                "$userId");
+            $user = $this->searchRecordById(
+                PeopleSearchMapping::CONTEXT,
+                PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
+                "$userId",
+                $source
+            );
 
             if (!is_null($user) && !empty($user)) {
                 return new UserProfileService($user);

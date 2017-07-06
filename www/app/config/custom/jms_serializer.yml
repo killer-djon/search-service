@@ -10,7 +10,7 @@ jms_serializer:
         file_cache:
             dir: '%kernel.cache_dir%/jms_serializer'
         auto_detection: true
-        infer_types_from_doctrine_metadata: true
+        infer_types_from_doctrine_metadata: false
         directories:
             Symfony:
                 namespace_prefix: "Symfony"

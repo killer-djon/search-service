@@ -272,7 +272,7 @@ class SearchUsersController extends ApiController
     public function searchUsersByIdAction(Request $request, $userId)
     {
         $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
-        $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $this->getRequestUserId());
+        $targetUserId = $this->getRequestUserId() != $userId ? $userId : $request->get(RequestConstant::TARGET_USER_ID_PARAM, $this->getRequestUserId());
 
         return $this->searchUserById($targetUserId, $version);
     }
@@ -316,7 +316,10 @@ class SearchUsersController extends ApiController
                 $userContext = $peopleSearchService->searchRecordById(
                     PeopleSearchMapping::CONTEXT,
                     PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
-                    $this->getRequestUserId()
+                    $this->getRequestUserId(),
+                    [
+                        'excludes' => ['friendList', 'relations']
+                    ]
                 );
             }
 

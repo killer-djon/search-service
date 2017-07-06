@@ -1,5 +1,4 @@
 jms_serializer:
-    enable_short_alias: false
     handlers:
         datetime:
             default_format: "Y-m-d\\TH:i:sO" # ISO8601
@@ -12,8 +11,8 @@ jms_serializer:
         auto_detection: true
         infer_types_from_doctrine_metadata: false
         directories:
-            Symfony:
-                namespace_prefix: "Symfony"
-                path: "@CommonBundle/Resources/config/symfony"
+            FOSRP:
+                namespace_prefix: "RP\\RPSearchBundle"
+                path: "%kernel.root_dir%/serializer/FOSRP"
 
     property_naming: ~

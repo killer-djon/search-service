@@ -125,8 +125,14 @@ class SearchNewsFeedController extends ApiController
         try {
             $userId = $this->getRequestUserId();
 
-            $userProfile = $this->getPeopleSearchService()->getUserById($this->getUser()->getUserName());
-            $friendIds = $userProfile->getFriendList();
+            $userProfile = $this->getPeopleSearchService()->getUserById(
+                $this->getUser()->getUserName(),
+                $userId != PeopleSearchMapping::RP_USER_ID ? true : [
+                    'excludes' => ['friendList', 'relations']
+                ]
+            );
+
+            $friendIds = $userProfile->getFriendList() ?: [PeopleSearchMapping::RP_USER_ID];
 
             $eventTypes = $this->getUserEventsGroups(NewsFeedSections::FEED_NEWS);
 

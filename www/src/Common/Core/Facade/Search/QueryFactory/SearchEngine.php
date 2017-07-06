@@ -371,6 +371,7 @@ class SearchEngine implements SearchEngineInterface
         try {
             /** устанавливаем все поля по умолчанию */
             $elasticQuery->setSource((is_null($setSource) ? $this->_sourceQuery : $setSource));
+
             $elasticType = $this->_getElasticType((!is_null($context) && !is_array($context) ? $context : null));
 
             $this->_paginator = new SearchElasticaAdapter($elasticType, $elasticQuery);

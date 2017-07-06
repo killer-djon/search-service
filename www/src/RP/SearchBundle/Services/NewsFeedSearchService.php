@@ -177,7 +177,7 @@ JS;
      * @param int $count
      * @return array
      */
-    public function searchUserEventsByUserId($userId, $eventTypes, $friendIds, $skip = 0, $count = null)
+    public function searchUserEventsByUserId($userId, $eventTypes, $friendIds = [], $skip = 0, $count = null)
     {
         $userProfile = $this->getUserById($userId);
 
@@ -193,6 +193,7 @@ JS;
         $friendsType = array_map(function ($type) {
             return $this->_queryConditionFactory->getMatchQuery(UserEventSearchMapping::TYPE_FIELD, $type);
         }, $eventTypes[UserEventGroup::FRIENDS]);
+
 
         $rpPostsFilter = [];
         if (in_array(PeopleSearchMapping::RP_USER_ID, $friendIds)) {

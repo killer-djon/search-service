@@ -49,17 +49,24 @@ class CitySearchService extends AbstractSearchService
                 Location::TOWN_TYPE,
             ];
         }
+
+        $filter = $this->_queryFilterFactory;
+
         $this->setFilterQuery([
-            $this->_queryFilterFactory->getTermsFilter(CitySearchMapping::CITY_TYPE_FIELD, $types),
+            $filter->getTermsFilter(CitySearchMapping::CITY_TYPE_FIELD, $types),
+            $filter->getNestedFilter(
+                CitySearchMapping::COUNTRY_FIELD,
+                $filter->getExistsFilter(CitySearchMapping::COUNTRY_ID_FIELD)
+            ),
         ]);
 
         if (!empty($countryName)) {
             $this->setFilterQuery([
-                $this->_queryFilterFactory->getQueryFilter(
+                $filter->getQueryFilter(
                     $this->_queryConditionFactory->getNestedQuery(
-                        'Country',
+                        CitySearchMapping::COUNTRY_FIELD,
                         $this->_queryConditionFactory->getMatchQuery(
-                            'Country.name',
+                            CitySearchMapping::COUNTRY_NAME_FIELD,
                             $countryName
                         )
                     )

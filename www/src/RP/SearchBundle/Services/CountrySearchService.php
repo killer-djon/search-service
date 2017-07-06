@@ -5,8 +5,6 @@
 
 namespace RP\SearchBundle\Services;
 
-use Common\Core\Constants\Location;
-use Common\Util\VarDumper;
 use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Mapping\CountrySearchMapping;
 
@@ -60,7 +58,7 @@ class CountrySearchService extends AbstractSearchService
 
         $this->setSortingQuery([
             // $this->_sortingFactory->getFieldSort('_score', 'desc'),
-            $this->_sortingFactory->getFieldSort(CountrySearchMapping::NAME_FIELD)
+            $this->_sortingFactory->getFieldSort(CountrySearchMapping::NAME_FIELD),
         ]);
 
         /** Получаем сформированный объект запроса */

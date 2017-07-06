@@ -99,6 +99,7 @@ abstract class AbstractSearchMapping
     const LOCATION_CITY_INTERNATIONAL_NAME_FIELD = 'location.city.internationalName';
 
     /** Страна местоположения */
+    const LOCATION_COUNTRY_FIELD = 'location.country';
     const LOCATION_COUNTRY_ID_FIELD = 'location.country.id';
     const LOCATION_COUNTRY_NAME_FIELD = 'location.country.name';
     const LOCATION_COUNTRY_NAME_TRANSLIT_FIELD = 'location.country._translit';

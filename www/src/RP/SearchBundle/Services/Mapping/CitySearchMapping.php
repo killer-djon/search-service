@@ -1,4 +1,5 @@
 <?php
+
 namespace RP\SearchBundle\Services\Mapping;
 
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
@@ -18,6 +19,9 @@ abstract class CitySearchMapping extends AbstractSearchMapping
 
     /** Поле названия страны */
     const COUNTRY_FIELD = 'Country';
+
+    /** Поле id страны */
+    const COUNTRY_ID_FIELD = 'Country.id';
 
     /** Поле названия страны */
     const COUNTRY_NAME_FIELD = 'Country.name';

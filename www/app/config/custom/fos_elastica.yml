@@ -6,7 +6,7 @@ fos_elastica:
             port: '%elasticsearch.port%'
             logger: true
     serializer:
-        serializer: jms_serializer
+        serializer: serializer
     default_manager: mongodb
     indexes:
         russianplace:

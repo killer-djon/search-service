@@ -304,7 +304,9 @@ class CommonSearchService extends AbstractSearchService
              * поисков НЕТ необходимости передавать контекст поиска
              * т.е. тип в котором ищем, надо искать везде
              */
-            return $this->searchMultiTypeDocuments($queryMatchResults);
+            return $this->searchMultiTypeDocuments($queryMatchResults, [
+                'excludes' => ['friendList', 'relations', '*.friendList']
+            ]);
         }
 
         $queryMatchResults = [];
@@ -424,7 +426,9 @@ class CommonSearchService extends AbstractSearchService
             }
         }
 
-        return $this->searchMultiTypeDocuments($queryMatchResults);
+        return $this->searchMultiTypeDocuments($queryMatchResults, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
     }
 
     /**
@@ -610,7 +614,9 @@ class CommonSearchService extends AbstractSearchService
              * поисков НЕТ необходимости передавать контекст поиска
              * т.е. тип в котором ищем, надо искать везде
              */
-            $documents = $this->searchMultiTypeDocuments($queryMatchResults);
+            $documents = $this->searchMultiTypeDocuments($queryMatchResults, [
+                'excludes' => ['friendList', 'relations', '*.friendList']
+            ]);
 
             if ($isCluster == true) {
                 if ($this->getClusterGrouped() == true) {

@@ -425,7 +425,7 @@ class SearchEngine implements SearchEngineInterface
      * @throws ElasticsearchException
      * @return array results
      */
-    public function searchMultiTypeDocuments(array $elasticQueries, $setSource = null)
+    public function searchMultiTypeDocuments(array $elasticQueries, $setSource = true)
     {
         try {
             $search = new \Elastica\Multi\Search($this->_elasticaIndex->getClient());

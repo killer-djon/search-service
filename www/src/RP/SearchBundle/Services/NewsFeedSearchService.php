@@ -112,7 +112,9 @@ JS;
 
         $queryMatch = $this->createQuery($skip, $count);
 
-        return $this->searchDocuments($queryMatch, PostSearchMapping::CONTEXT);
+        return $this->searchDocuments($queryMatch, PostSearchMapping::CONTEXT, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
     }
 
     /**
@@ -160,7 +162,9 @@ JS;
             )
         ]);
 
-        return $this->searchRecordById(PostSearchMapping::CONTEXT, AbstractSearchMapping::IDENTIFIER_FIELD, $postId);
+        return $this->searchRecordById(PostSearchMapping::CONTEXT, AbstractSearchMapping::IDENTIFIER_FIELD, $postId, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
     }
 
     /**
@@ -312,7 +316,10 @@ JS;
         $this->setIndices([
             PostSearchMapping::DEFAULT_INDEX
         ]);
-        return $this->searchDocuments($query, null, null, UserEventSearchMapping::CONTEXT);
+
+        return $this->searchDocuments($query, null, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ], UserEventSearchMapping::CONTEXT);
     }
 
     /**
@@ -404,6 +411,8 @@ JS;
 
         $queryMatch = $this->createQuery($skip, $count);
 
-        return $this->searchDocuments($queryMatch, PostSearchMapping::CONTEXT);
+        return $this->searchDocuments($queryMatch, PostSearchMapping::CONTEXT, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
     }
 }

@@ -45,6 +45,8 @@ class NewsFeedSearchService extends AbstractSearchService
         $count = RequestConstant::DEFAULT_SEARCH_LIMIT
     ) {
 
+        $userProfile = $this->getUserById($userId);
+
         if (!empty($searchText)) {
             $searchText = mb_strtolower($searchText);
             $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
@@ -69,7 +71,36 @@ class NewsFeedSearchService extends AbstractSearchService
 
         $this->setFilterQuery([
             $this->_queryFilterFactory->getTermFilter([PostSearchMapping::POST_IS_POSTED => true]),
+            $this->_queryFilterFactory->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
             $this->_queryFilterFactory->getTermFilter([PostSearchMapping::POST_WALL_ID => $wallId]),
+        ]);
+
+        $canBeDeletedEdit = <<<JS
+                var result = false;
+if(doc['type'].value == 'post')
+{   
+    if(doc['author.id'].value == userId || doc['wallId'].value == wallId){
+        result = true;
+    }
+}
+                // return
+                result;
+JS;
+        $this->setScriptFields([
+            'canBeDeleted' => $this->_scriptFactory->getScript(
+                $canBeDeletedEdit,
+                [
+                    'userId' => $userId,
+                    'wallId' => $userProfile->getWallId()
+                ]
+            ),
+            'canBeEdit' => $this->_scriptFactory->getScript(
+                $canBeDeletedEdit,
+                [
+                    'userId' => $userId,
+                    'wallId' => $userProfile->getWallId()
+                ]
+            )
         ]);
 
         $this->setSortingQuery(
@@ -81,7 +112,9 @@ class NewsFeedSearchService extends AbstractSearchService
 
         $queryMatch = $this->createQuery($skip, $count);
 
-        return $this->searchDocuments($queryMatch, PostSearchMapping::CONTEXT);
+        return $this->searchDocuments($queryMatch, PostSearchMapping::CONTEXT, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
     }
 
     /**
@@ -93,11 +126,45 @@ class NewsFeedSearchService extends AbstractSearchService
      */
     public function searchPostById($userId, $postId)
     {
+        $userProfile = $this->getUserById($userId);
+
         $this->setFilterQuery([
             $this->_queryFilterFactory->getTermFilter([PostSearchMapping::POST_IS_POSTED => true]),
+            $this->_queryFilterFactory->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
         ]);
 
-        return $this->searchRecordById(PostSearchMapping::CONTEXT, AbstractSearchMapping::IDENTIFIER_FIELD, $postId);
+        $canBeDeletedEdit = <<<JS
+                var result = false;
+if(doc['type'].value == 'post')
+{   
+    if(doc['author.id'].value == userId || doc['wallId'].value == wallId){
+        result = true;
+    }
+}
+                // return
+                result;
+JS;
+
+        $this->setScriptFields([
+            'canBeDeleted' => $this->_scriptFactory->getScript(
+                $canBeDeletedEdit,
+                [
+                    'userId' => $userId,
+                    'wallId' => $userProfile->getWallId()
+                ]
+            ),
+            'canBeEdit' => $this->_scriptFactory->getScript(
+                $canBeDeletedEdit,
+                [
+                    'userId' => $userId,
+                    'wallId' => $userProfile->getWallId()
+                ]
+            )
+        ]);
+
+        return $this->searchRecordById(PostSearchMapping::CONTEXT, AbstractSearchMapping::IDENTIFIER_FIELD, $postId, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
     }
 
     /**
@@ -110,8 +177,10 @@ class NewsFeedSearchService extends AbstractSearchService
      * @param int $count
      * @return array
      */
-    public function searchUserEventsByUserId($userId, $eventTypes, $friendIds, $skip = 0, $count = null)
+    public function searchUserEventsByUserId($userId, $eventTypes, $friendIds = [], $skip = 0, $count = null)
     {
+        $userProfile = $this->getUserById($userId);
+
         /** @var FilterFactoryInterface */
         $filter = $this->_queryFilterFactory;
         /** @var QueryFactoryInterface */
@@ -125,6 +194,7 @@ class NewsFeedSearchService extends AbstractSearchService
             return $this->_queryConditionFactory->getMatchQuery(UserEventSearchMapping::TYPE_FIELD, $type);
         }, $eventTypes[UserEventGroup::FRIENDS]);
 
+
         $rpPostsFilter = [];
         if (in_array(PeopleSearchMapping::RP_USER_ID, $friendIds)) {
             // Посты от Друзей и самого ползователя
@@ -133,6 +203,7 @@ class NewsFeedSearchService extends AbstractSearchService
                     $filter->getTypeFilter(PostSearchMapping::CONTEXT),
                     $filter->getBoolAndFilter([
                         $filter->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => PeopleSearchMapping::RP_USER_ID]),
+                        $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
                     ]),
                 ]),
             ];
@@ -145,6 +216,7 @@ class NewsFeedSearchService extends AbstractSearchService
                     // получаекм посты друзей
                     $filter->getBoolAndFilter([
                         $filter->getTermsFilter(PostSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
+                        $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
                     ]),
                 ]),
                 $filter->getBoolAndFilter([
@@ -152,6 +224,7 @@ class NewsFeedSearchService extends AbstractSearchService
                     // получаекм свои посты
                     $filter->getBoolAndFilter([
                         $filter->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                        $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
                     ]),
                 ]),
                 // Personal (читай подробный комментарий в getUserEventsGroups)
@@ -204,14 +277,50 @@ class NewsFeedSearchService extends AbstractSearchService
             ], $rpPostsFilter)),
         ]);
 
+        $canBeDeletedEdit = <<<JS
+                var result = false;
+if(doc['type'].value == 'post')
+{   
+    if(doc['author.id'].value == userId || doc['wallId'].value == wallId){
+        result = true;
+    }
+}
+                // return
+                result;
+JS;
+        $this->setScriptFields([
+            'canBeDeleted' => $this->_scriptFactory->getScript(
+                $canBeDeletedEdit,
+                [
+                    'userId' => $userId,
+                    'wallId' => $userProfile->getWallId()
+                ]
+            ),
+            'canBeEdit' => $this->_scriptFactory->getScript(
+                $canBeDeletedEdit,
+                [
+                    'userId' => $userId,
+                    'wallId' => $userProfile->getWallId()
+                ]
+            )
+        ]);
+
         $this->setSortingQuery(
-            $this->_sortingFactory->getFieldSort(AbstractSearchMapping::CREATED_AT_FIELD, SortingOrder::SORTING_DESC)
+            $this->_sortingFactory->getFieldSort(
+                AbstractSearchMapping::CREATED_AT_FIELD,
+                SortingOrder::SORTING_DESC
+            )
         );
 
-        $this->setFlatFormatResult(true);
         $query = $this->createQuery($skip, $count);
 
-        return $this->searchDocuments($query, [UserEventSearchMapping::CONTEXT, PostSearchMapping::CONTEXT]);
+        $this->setIndices([
+            PostSearchMapping::DEFAULT_INDEX
+        ]);
+
+        return $this->searchDocuments($query, null, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ], UserEventSearchMapping::CONTEXT);
     }
 
     /**
@@ -303,6 +412,8 @@ class NewsFeedSearchService extends AbstractSearchService
 
         $queryMatch = $this->createQuery($skip, $count);
 
-        return $this->searchDocuments($queryMatch, PostSearchMapping::CONTEXT);
+        return $this->searchDocuments($queryMatch, PostSearchMapping::CONTEXT, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
     }
 }

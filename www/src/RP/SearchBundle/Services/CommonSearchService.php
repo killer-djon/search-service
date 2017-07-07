@@ -7,9 +7,7 @@
 namespace RP\SearchBundle\Services;
 
 use Common\Core\Constants\SortingOrder;
-use Common\Core\Facade\Service\Geo\GeoPointService;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
-use Elastica\Aggregation\GeoDistance;
 use Elastica\Query\FunctionScore;
 use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Mapping\AbstractSearchMapping;
@@ -66,7 +64,17 @@ class CommonSearchService extends AbstractSearchService
                     $this->searchTypes[$type], $userId)
             );
             $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$type]);
-            $this->setGeoPointConditions($point, $this->filterSearchTypes[$type]);
+
+            $this->setScriptFields([
+                'distance'          => $this->_scriptFactory->getDistanceScript(
+                    $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
+                    $point
+                ),
+                'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
+                    $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
+                    $point
+                ),
+            ]);
         }
 
         $this->setFilterQuery([$this->_queryFilterFactory->getBoolOrFilter($searchFilters)]);
@@ -180,7 +188,17 @@ class CommonSearchService extends AbstractSearchService
             foreach ($this->filterSearchTypes as $keyType => $type) {
                 $this->clearQueryFactory();
                 $this->setScriptTagsConditions($currentUser, $type);
-                $this->setGeoPointConditions($point, $type);
+                $this->setScriptFields([
+                    'distance'          => $this->_scriptFactory->getDistanceScript(
+                        $type::LOCATION_POINT_FIELD,
+                        $point
+                    ),
+                    'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
+                        $type::LOCATION_POINT_FIELD,
+                        $point
+                    ),
+                ]);
+
 
                 if (!empty($cityId)) {
                     if ($type::CONTEXT !== PostSearchMapping::CONTEXT) {
@@ -197,26 +215,12 @@ class CommonSearchService extends AbstractSearchService
                         $this->setFilterQuery($type::getMatchSearchFilter($this->_queryFilterFactory, $userId));
                     }
                 } else {
+                    if ($type::CONTEXT === PostSearchMapping::CONTEXT) {
+                        continue;
+                    }
                     $this->setFilterQuery($type::getMatchSearchFilter($this->_queryFilterFactory, $userId));
-                    $this->setFilterQuery([
-                        $this->_queryFilterFactory->getTermFilter([
-                            $type::LOCATION_CITY_ID_FIELD => $cityId,
-                        ]),
-                    ]);
                 }
 
-                if ($point->isValid() && !is_null($point->getRadius())) {
-                    $this->setAggregationQuery([
-                        $this->_queryAggregationFactory->getGeoHashAggregation(
-                            $type::LOCATION_POINT_FIELD,
-                            [
-                                "lat" => $point->getLatitude(),
-                                "lon" => $point->getLongitude(),
-                            ],
-                            $point->getRadius()
-                        ),
-                    ]);
-                }
 
                 $this->setHighlightQuery($type::getHighlightConditions());
 
@@ -224,9 +228,9 @@ class CommonSearchService extends AbstractSearchService
                     FunctionScore::DECAY_LINEAR => [
                         $type::LOCATION_POINT_FIELD => [
                             'origin' => "{$point->getLongitude()}, {$point->getLatitude()}",
-                            'scale' => '1km',
+                            'scale'  => '1km',
                             'offset' => '0km',
-                            'decay' => 0.2,
+                            'decay'  => 0.2,
                         ],
                     ],
                 ]);
@@ -300,7 +304,9 @@ class CommonSearchService extends AbstractSearchService
              * поисков НЕТ необходимости передавать контекст поиска
              * т.е. тип в котором ищем, надо искать везде
              */
-            return $this->searchMultiTypeDocuments($queryMatchResults);
+            return $this->searchMultiTypeDocuments($queryMatchResults, [
+                'excludes' => ['friendList', 'relations', '*.friendList']
+            ]);
         }
 
         $queryMatchResults = [];
@@ -322,17 +328,24 @@ class CommonSearchService extends AbstractSearchService
                         $userId));
                 }
             } else {
+                if ($this->filterSearchTypes[$type]::CONTEXT === PostSearchMapping::CONTEXT) {
+                    continue;
+                }
                 $this->setFilterQuery($this->filterSearchTypes[$type]::getMatchSearchFilter($this->_queryFilterFactory,
                     $userId));
-                $this->setFilterQuery([
-                    $this->_queryFilterFactory->getTermFilter([
-                        $this->filterSearchTypes[$type]::LOCATION_CITY_ID_FIELD => $cityId,
-                    ]),
-                ]);
             }
 
             $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$type]);
-            $this->setGeoPointConditions($point, $this->filterSearchTypes[$type]);
+            $this->setScriptFields([
+                'distance'          => $this->_scriptFactory->getDistanceScript(
+                    $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
+                    $point
+                ),
+                'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
+                    $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
+                    $point
+                ),
+            ]);
 
             $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
 
@@ -341,14 +354,10 @@ class CommonSearchService extends AbstractSearchService
                 $this->setScriptFunctions([
                     FunctionScore::DECAY_GAUSS => [
                         $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD => [
-                            /*'origin' => [
-                                'lat' => $point->getLatitude(),
-                                'lon' => $point->getLongitude(),
-                            ],*/
                             'origin' => "{$point->getLongitude()}, {$point->getLatitude()}",
-                            'scale' => '1km',
+                            'scale'  => '1km',
                             'offset' => '0km',
-                            'decay' => 0.33,
+                            'decay'  => 0.33,
                         ],
                     ],
                 ]);
@@ -356,7 +365,7 @@ class CommonSearchService extends AbstractSearchService
                 $this->setScriptFunctionOption([
                     'scoreMode' => 'multiply',
                     'boostMode' => 'multiply',
-                    'maxBoost' => 10,
+                    'maxBoost'  => 10,
                 ]);
 
                 $this->setSortingQuery([
@@ -417,7 +426,9 @@ class CommonSearchService extends AbstractSearchService
             }
         }
 
-        return $this->searchMultiTypeDocuments($queryMatchResults);
+        return $this->searchMultiTypeDocuments($queryMatchResults, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
     }
 
     /**
@@ -483,7 +494,7 @@ class CommonSearchService extends AbstractSearchService
                                 ],
                                 [
                                     'from' => "{$geoDistanceRange[0]}m",
-                                    'to' => "{$geoDistanceRange[1]}m",
+                                    'to'   => "{$geoDistanceRange[1]}m",
                                 ]
                             ),
                         ]);
@@ -503,20 +514,33 @@ class CommonSearchService extends AbstractSearchService
                             ],
                             $point->getRadius(),
                             'm'
+                        )->addAggregation(
+                            $this->_queryAggregationFactory->getTermsAggregation(
+                                'onlineStatus.isOnline',
+                                $this->_scriptFactory->getScript(
+                                    "
+                                    var i=0;
+                                    if( doc['onlineStatus.isOnline'].value == true ){
+                                        i++;
+                                    }
+                                    parseInt(i);
+                                    "
+                                )
+                            )
                         )->addAggregation($this->_queryAggregationFactory->getGeoCentroidAggregation(
                             $this->filterTypes[$keyType]::LOCATION_POINT_FIELD
                         ))->addAggregation($this->_queryAggregationFactory->setAggregationSource(
                             $this->filterTypes[$keyType]::LOCATION_FIELD,
                             [], 1, [
-                                'tagsInPercent' => $this->_scriptFactory->getTagsIntersectInPercentScript(
+                                'tagsInPercent'     => $this->_scriptFactory->getTagsIntersectInPercentScript(
                                     $this->filterTypes[$keyType]::TAGS_ID_FIELD,
                                     $currentUser->getTags()
                                 ),
-                                'tagsCount' => $this->_scriptFactory->getTagsIntersectScript(
+                                'tagsCount'         => $this->_scriptFactory->getTagsIntersectScript(
                                     $this->filterTypes[$keyType]::TAGS_ID_FIELD,
                                     $currentUser->getTags()
                                 ),
-                                'distance' => $this->_scriptFactory->getDistanceScript(
+                                'distance'          => $this->_scriptFactory->getDistanceScript(
                                     $this->filterTypes[$keyType]::LOCATION_POINT_FIELD,
                                     $point
                                 ),
@@ -590,7 +614,9 @@ class CommonSearchService extends AbstractSearchService
              * поисков НЕТ необходимости передавать контекст поиска
              * т.е. тип в котором ищем, надо искать везде
              */
-            $documents = $this->searchMultiTypeDocuments($queryMatchResults);
+            $documents = $this->searchMultiTypeDocuments($queryMatchResults, [
+                'excludes' => ['friendList', 'relations', '*.friendList']
+            ]);
 
             if ($isCluster == true) {
                 if ($this->getClusterGrouped() == true) {
@@ -676,13 +702,13 @@ class CommonSearchService extends AbstractSearchService
         $this->setConditionQueryMust([
             $this->_queryConditionFactory->getDisMaxQuery([
                 $this->_queryConditionFactory->getMultiMatchQuery()
-                    ->setFields([
-                        TagNameSearchMapping::NAME_FIELD,
-                        TagNameSearchMapping::NAME_TRANSLIT_FIELD,
-                        TagNameSearchMapping::RUS_TRANSLITERATE_NAME,
-                    ])
-                    ->setOperator(MultiMatch::OPERATOR_OR)
-                    ->setQuery($searchText),
+                                             ->setFields([
+                                                 TagNameSearchMapping::NAME_FIELD,
+                                                 TagNameSearchMapping::NAME_TRANSLIT_FIELD,
+                                                 TagNameSearchMapping::RUS_TRANSLITERATE_NAME,
+                                             ])
+                                             ->setOperator(MultiMatch::OPERATOR_OR)
+                                             ->setQuery($searchText),
                 $this->_queryConditionFactory->getFieldQuery([
                     TagNameSearchMapping::NAME_FIELD,
                     TagNameSearchMapping::NAME_TRANSLIT_FIELD,

@@ -13,6 +13,7 @@ use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Common\Core\Facade\Search\QueryScripting\QueryScriptFactoryInterface;
 use Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface;
 use Common\Core\Facade\Service\Geo\GeoPointService;
+use Common\Util\ArrayHelper;
 use Elastica\Exception\ElasticsearchException;
 use FOS\ElasticaBundle\Elastica\Index;
 use Psr\Log\LoggerInterface;
@@ -370,6 +371,7 @@ class SearchEngine implements SearchEngineInterface
         try {
             /** устанавливаем все поля по умолчанию */
             $elasticQuery->setSource((is_null($setSource) ? $this->_sourceQuery : $setSource));
+
             $elasticType = $this->_getElasticType((!is_null($context) && !is_array($context) ? $context : null));
 
             $this->_paginator = new SearchElasticaAdapter($elasticType, $elasticQuery);
@@ -381,7 +383,11 @@ class SearchEngine implements SearchEngineInterface
                     $indices[] = $this->availableTypesSearch[$typeIndex]::DEFAULT_INDEX;
                 }
             } else {
-                $indices = [self::DEFAULT_INDEX];
+                if (!empty($this->_indices)) {
+                    $indices = $this->_indices;
+                } else {
+                    $indices = [self::DEFAULT_INDEX];
+                }
             }
             $this->_paginator->addIndices($indices);
 
@@ -420,7 +426,7 @@ class SearchEngine implements SearchEngineInterface
      * @throws ElasticsearchException
      * @return array results
      */
-    public function searchMultiTypeDocuments(array $elasticQueries, $setSource = null)
+    public function searchMultiTypeDocuments(array $elasticQueries, $setSource = true)
     {
         try {
             $search = new \Elastica\Multi\Search($this->_elasticaIndex->getClient());
@@ -550,9 +556,19 @@ class SearchEngine implements SearchEngineInterface
 
                 if ((int)$docCount > 0) {
 
+                    $isOnlineCount = 0;
+                    $online = $currentItem['term_aggregation']['buckets'];
+                    if (!empty($online) && count($online) > 0) {
+                        $onlineCountAsKey = ArrayHelper::index($online, 'key_as_string');
+                    }
+
+                    $isCurrentOnlineCount = (isset($onlineCountAsKey['true']) ? $onlineCountAsKey['true']['doc_count'] : 0);
+
                     $item = [
                         'doc_count' => $docCount,
                         'type' => $typeKey,
+                        'isOnline' => $isCurrentOnlineCount,
+                        'isOffline' => ($docCount - $isCurrentOnlineCount),
                         $keyField => [
                             Location::LONG_LATITUDE => $currentItem['centroid'][$keyField][Location::LATITUDE],
                             Location::LONG_LONGITUDE => $currentItem['centroid'][$keyField][Location::LONGITUDE],
@@ -573,6 +589,7 @@ class SearchEngine implements SearchEngineInterface
             }
         }
 
+
         // 2. Затем группируем все по ключам класстера
         $bucketItems = [];
         // для начала сводим это в единный массив разных типов
@@ -589,12 +606,17 @@ class SearchEngine implements SearchEngineInterface
             $docTypes = array_unique(array_column($bucketItem, 'type'));
             $location = array_column($bucketItem, 'location');
 
+            $isOnline = ArrayHelper::getValue(ArrayHelper::getColumn($bucketItem, 'isOnline'), 0);
+            $isOffLine = ArrayHelper::getValue(ArrayHelper::getColumn($bucketItem, 'isOffline'), 0);
+
+            //$isOffLine = $bucketItem['isOffline'];
             if ($sumDocCount > 0) {
                 $resultItem = [
                     'key' => $keyHash,
                     'doc_count' => $sumDocCount,
                     'types' => implode(',', $docTypes),
-                    //'location' => $location
+                    'isOnline' => $isOnline,
+                    'isOffline' => $isOffLine,
                     'location' => GeoPointService::GetCenterFromDegrees($location),
                 ];
 

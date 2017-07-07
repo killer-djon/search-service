@@ -150,11 +150,12 @@ class SearchPlacesController extends ApiController
             $skip = (int)$this->getSkip();
             $count = (int)$this->getCount();
             $point = $this->getGeoPoint();
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
             $countryId = (int)$request->get(RequestConstant::COUNTRY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
             $cityId = (int)$request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
 
             $result = $this->getPlacesSearchService()
-                ->searchPromoPlaces($userId, $point, $skip, $count, $countryId, $cityId);
+                           ->searchPromoPlaces($userId, $point, $searchText, $skip, $count, $countryId, $cityId);
 
             return $this->_handleViewWithData($result);
         } catch (SearchServiceException $e) {

@@ -8,28 +8,35 @@ namespace RP\SearchBundle\Services;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Common\Core\Facade\Service\User\UserProfileService;
 
+/**
+ * Trait SearchServiceTrait
+ * @package RP\SearchBundle\Services
+ */
 trait SearchServiceTrait
 {
+
     /**
      * Часто используемое условие получения поля скрипта
      * для рассчета совпадения по интересу
      *
-     * @param \Common\Core\Facade\Service\User\UserProfileService $currentUser Объект текущего пользователя
+     * @param \Common\Core\Facade\Service\User\UserProfileService|null $currentUser Объект текущего пользователя
      * @param object $classMapping Класс маппинга
      * @return void
      */
-    public function setScriptTagsConditions(UserProfileService $currentUser, $classMapping)
+    public function setScriptTagsConditions($currentUser, $classMapping)
     {
-        $this->setScriptFields([
-            'tagsInPercent' => $this->_scriptFactory->getTagsIntersectInPercentScript(
-                $classMapping::TAGS_ID_FIELD,
-                $currentUser->getTags()
-            ),
-            'tagsCount'     => $this->_scriptFactory->getTagsIntersectScript(
-                $classMapping::TAGS_ID_FIELD,
-                $currentUser->getTags()
-            ),
-        ]);
+        if (!empty($currentUser)) {
+            $this->setScriptFields([
+                'tagsInPercent' => $this->_scriptFactory->getTagsIntersectInPercentScript(
+                    $classMapping::TAGS_ID_FIELD,
+                    $currentUser->getTags()
+                ),
+                'tagsCount'     => $this->_scriptFactory->getTagsIntersectScript(
+                    $classMapping::TAGS_ID_FIELD,
+                    $currentUser->getTags()
+                ),
+            ]);
+        }
     }
 
     /**
@@ -46,7 +53,7 @@ trait SearchServiceTrait
             'matchingInterests' => $this->_scriptFactory->getMatchingInterestsScript(
                 $classMapping::TAGS_ID_FIELD,
                 $currentUser->getTags()
-            )
+            ),
         ]);
     }
 

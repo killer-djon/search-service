@@ -49,23 +49,26 @@ class CitySearchService extends AbstractSearchService
                 Location::TOWN_TYPE,
             ];
         }
+
+        $filter = $this->_queryFilterFactory;
+
         $this->setFilterQuery([
-            $this->_queryFilterFactory->getTermsFilter(CitySearchMapping::CITY_TYPE_FIELD, $types),
+            $filter->getTermsFilter(CitySearchMapping::CITY_TYPE_FIELD, $types),
+            $filter->getNestedFilter(
+                CitySearchMapping::COUNTRY_FIELD,
+                $filter->getExistsFilter(CitySearchMapping::COUNTRY_ID_FIELD)
+            ),
         ]);
 
         if (!empty($countryName)) {
             $this->setFilterQuery([
-                $this->_queryFilterFactory->getQueryFilter(
+                $filter->getQueryFilter(
                     $this->_queryConditionFactory->getNestedQuery(
                         CitySearchMapping::COUNTRY_FIELD,
-                        $this->_queryConditionFactory->getMultiMatchQuery()
-                                                     ->setFields([
-                                                         $this->setBoostField(CitySearchMapping::COUNTRY_NAME_FIELD, 5),
-                                                         $this->setBoostField(CitySearchMapping::COUNTRY_INTERNATIONAL_NAME_FIELD, 4),
-                                                     ])
-                                                     ->setQuery(mb_strtolower($countryName))
-                                                     ->setOperator(MultiMatch::OPERATOR_OR)
-                                                     ->setType(MultiMatch::TYPE_PHRASE_PREFIX)
+                        $this->_queryConditionFactory->getMatchQuery(
+                            CitySearchMapping::COUNTRY_NAME_FIELD,
+                            $countryName
+                        )
                     )
                 ),
             ]);
@@ -203,6 +206,44 @@ class CitySearchService extends AbstractSearchService
     }
 
     /**
+     * Метод выозвращает список последних городов, которые исклал пользователя
+     *
+     * @param string $userId ID пользователя
+     * @param int $skip
+     * @param int $count
+     * @return array
+     */
+    public function getLastSearchedCitiesList($userId, $skip = self::DEFAULT_SKIP_CITIES, $count = self::DEFAULT_COUNT_CITIES)
+    {
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getTermFilter([AbstractSearchMapping::AUTHOR_ID_FIELD => $userId]),
+        ]);
+
+        $this->setSortingQuery($this->_sortingFactory->getFieldSort(AbstractSearchMapping::IDENTIFIER_FIELD, 'desc'));
+
+        $queryMatch = $this->createQuery($skip, $count);
+        $this->setIndices();
+
+        $history = $this->searchDocuments($queryMatch);
+
+        $cities = [];
+
+        if (!empty($history['search_history'])) {
+            foreach ($history['search_history'] as $item) {
+                if (empty($item['city'])) {
+                    continue;
+                }
+
+                if (!isset($cities[$item['city']['id']])) {
+                    $cities[$item['city']['id']] = $item['city'];
+                }
+            }
+        }
+
+        return array_values($cities);
+    }
+
+    /**
      * Стартовый город от которого
      * мы будем по радиусу определять 3 самых
      * популярных городов
@@ -216,11 +257,12 @@ class CitySearchService extends AbstractSearchService
      * популярность будет определяться суммой
      * (пользователей + мест + скидок) / коефициент
      *
+     * @param array $exclude исключить эти города из выборки
      * @param int $skip
      * @param int $count
      * @return array
      */
-    public function getTopCitiesList($skip = self::DEFAULT_SKIP_CITIES, $count = self::DEFAULT_COUNT_CITIES)
+    public function getTopCitiesList($exclude = [], $skip = self::DEFAULT_SKIP_CITIES, $count = self::DEFAULT_COUNT_CITIES)
     {
         /**
          * Получаем начальную точку на карте Европы
@@ -246,6 +288,14 @@ class CitySearchService extends AbstractSearchService
             ),
             $this->getTopSummaryEntities(),
         ]);
+
+        if (!empty($exclude)) {
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getNotFilter(
+                    $this->_queryFilterFactory->getTermsFilter(AbstractSearchMapping::LOCATION_CITY_ID_FIELD, $exclude)
+                ),
+            ]);
+        }
 
         $this->setAggregationQuery([
             $this->_queryAggregationFactory->getTermsAggregation(

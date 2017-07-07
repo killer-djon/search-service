@@ -29,7 +29,7 @@ class SearchNewsFeedController extends ApiController
      * @param string $wallId
      * @return Response
      */
-    public function getNewsFeedPostsAction(Request $request, $wallId, $cityId = null, $categoryId = null)
+    public function getNewsFeedPostsAction(Request $request, $wallId)
     {
 
         try {
@@ -54,14 +54,22 @@ class SearchNewsFeedController extends ApiController
                 return $this->_handleViewWithData([]);
             }
 
-            return $this->_handleViewWithData([
-                'info' => $postSearchService->getTotalHits(),
-                'pagination' => $postSearchService->getPaginationAdapter(
-                    $this->getSkip(),
-                    $this->getCount()
-                ),
-                'items' => $posts[PostSearchMapping::CONTEXT],
-            ]);
+            $result = $this->getNewFormatResponse(
+                $postSearchService,
+                PostSearchMapping::CONTEXT
+            );
+
+            /** Временный костыль, убираем HTML из текста для мобильных платформ */
+            $headerUserAgent = $request->headers->get('platform', $request->headers->get('User-Agent'));
+
+            if (!empty($result) && preg_match('/(ios|android)/i', $headerUserAgent)) {
+                array_walk($result['items'], function (&$item) {
+                    $item['message'] = (!empty($item['message']) ? strip_tags($item['message']) : '');
+                });
+            }
+
+
+            return $this->_handleViewWithData($result);
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
@@ -89,6 +97,13 @@ class SearchNewsFeedController extends ApiController
                 return $this->_handleViewWithData(new \stdClass());
             }
 
+            /** Временный костыль, убираем HTML из текста для мобильных платформ */
+            $headerUserAgent = $request->headers->get('platform', $request->headers->get('User-Agent'));
+
+            if (preg_match('/(ios|android)/i', $headerUserAgent)) {
+                $post['message'] = (!empty($post['message']) ? strip_tags($post['message']) : '');
+            }
+
             return $this->_handleViewWithData($post);
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
@@ -110,8 +125,14 @@ class SearchNewsFeedController extends ApiController
         try {
             $userId = $this->getRequestUserId();
 
-            $userProfile = $this->getPeopleSearchService()->getUserById($this->getUser()->getUserName());
-            $friendIds = $userProfile->getFriendList();
+            $userProfile = $this->getPeopleSearchService()->getUserById(
+                $this->getUser()->getUserName(),
+                $userId != PeopleSearchMapping::RP_USER_ID ? true : [
+                    'excludes' => ['friendList', 'relations']
+                ]
+            );
+
+            $friendIds = $userProfile->getFriendList() ?: [PeopleSearchMapping::RP_USER_ID];
 
             $eventTypes = $this->getUserEventsGroups(NewsFeedSections::FEED_NEWS);
 
@@ -124,11 +145,25 @@ class SearchNewsFeedController extends ApiController
                 $this->getCount()
             );
 
-            return $this->_handleViewWithData([
-                'info' => $newsFeedSearchService->getTotalHits(),
-                'pagination' => $newsFeedSearchService->getPaginationAdapter($this->getSkip(), $this->getCount()),
-                'items' => $userEvents,
-            ]);
+            if (empty($userEvents)) {
+                return $this->_handleViewWithData([]);
+            }
+
+            $result = $this->getNewFormatResponse(
+                $newsFeedSearchService,
+                UserEventSearchMapping::CONTEXT
+            );
+
+            /** Временный костыль, убираем HTML из текста для мобильных платформ */
+            $headerUserAgent = $request->headers->get('platform', $request->headers->get('User-Agent'));
+
+            if (!empty($result) && preg_match('/(ios|android)/i', $headerUserAgent)) {
+                array_walk($result['items'], function (&$item) {
+                    $item['message'] = (!empty($item['message']) ? strip_tags($item['message']) : '');
+                });
+            }
+
+            return $this->_handleViewWithData($result);
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {
@@ -167,7 +202,25 @@ class SearchNewsFeedController extends ApiController
                 $this->getCount()
             );
 
-            return $this->_handleViewWithData($this->getNewFormatResponse($postService, PostSearchMapping::CONTEXT));
+            if (empty($posts)) {
+                return $this->_handleViewWithData([]);
+            }
+
+            $result = $this->getNewFormatResponse(
+                $postService,
+                PostSearchMapping::CONTEXT
+            );
+
+            /** Временный костыль, убираем HTML из текста для мобильных платформ */
+            $headerUserAgent = $request->headers->get('platform', $request->headers->get('User-Agent'));
+
+            if (!empty($result) && preg_match('/(ios|android)/i', $headerUserAgent)) {
+                array_walk($result['items'], function (&$item) {
+                    $item['message'] = (!empty($item['message']) ? strip_tags($item['message']) : '');
+                });
+            }
+
+            return $this->_handleViewWithData($result);
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);

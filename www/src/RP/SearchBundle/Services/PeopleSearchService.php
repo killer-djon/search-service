@@ -766,7 +766,9 @@ class PeopleSearchService extends AbstractSearchService
 
         $query = $this->createQuery(0, 1);
 
-        return $this->searchDocuments($query, PeopleSearchMapping::CONTEXT);
+        return $this->searchDocuments($query, PeopleSearchMapping::CONTEXT, [
+            'excludes' => ['friendList']
+        ]);
     }
 
     /**

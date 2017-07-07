@@ -305,9 +305,7 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
                 $filterFactory->getNotFilter(
                     $filterFactory->getExistsFilter(self::HELP_OFFERS_LIST_FIELD)
                 ),
-                $filterFactory->getNotFilter(
-                    $filterFactory->getScriptFilter("doc['helpOffers.id'].values.size() < 1")
-                ),
+                $filterFactory->getScriptFilter("doc['helpOffers.id'].values.size() < 1")
             ]),
         ];
     }

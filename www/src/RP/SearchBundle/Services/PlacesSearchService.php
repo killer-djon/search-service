@@ -254,13 +254,14 @@ class PlacesSearchService extends AbstractSearchService
      *
      * @param string $userId ID пользователя который делает запрос к АПИ
      * @param GeoPointServiceInterface $point
+     * @param string $searchText Поисковый запрос
      * @param int|null $skip Кол-во пропускаемых позиций поискового результата
      * @param int|null $count Какое кол-во выводим
      * @param int|null $countryId ID страны
      * @param int|null $cityId ID города
      * @return array Массив с найденными результатами
      */
-    public function searchPromoPlaces($userId, GeoPointServiceInterface $point, $skip = null, $count = null, $countryId = null, $cityId = null)
+    public function searchPromoPlaces($userId, GeoPointServiceInterface $point, $searchText = null, $skip = null, $count = null, $countryId = null, $cityId = null)
     {
         $currentUser = $this->getUserById($userId);
 
@@ -328,7 +329,9 @@ class PlacesSearchService extends AbstractSearchService
         /** добавляем к условию поиска рассчет расстояния */
         $this->setGeoPointConditions($point, PlaceSearchMapping::class);
 
-        $queryMatch = $this->createMatchQuery(null, PlaceSearchMapping::getMultiMatchQuerySearchFields());
+        $searchText = empty($searchText) ? null : $searchText;
+
+        $queryMatch = $this->createMatchQuery($searchText, PlaceSearchMapping::getMultiMatchQuerySearchFields());
 
         $this->searchDocuments($queryMatch, PlaceSearchMapping::CONTEXT);
 

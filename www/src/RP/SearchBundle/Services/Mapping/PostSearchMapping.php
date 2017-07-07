@@ -32,6 +32,9 @@ abstract class PostSearchMapping extends AbstractSearchMapping
     /** @const Поле удалености поста */
     const POST_IS_REMOVED = 'isRemoved';
 
+    /** @const Поле удалености поста */
+    const POST_IS_DELETED = 'isDeleted';
+
     /** Поле имени пользователя */
     const POST_MESSAGE_FIELD = 'message'; // полное совпадение имени по русски
     const POST_MESSAGE_NGRAM_FIELD = 'message._nameNgram'; // частичное совпадение имени от 3-х сивмолов по русски
@@ -126,13 +129,14 @@ abstract class PostSearchMapping extends AbstractSearchMapping
      */
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        $filter = [];
+        $filter = [
+            $filterFactory->getTermFilter([self::POST_IS_POSTED => true]),
+            $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => PeopleSearchMapping::RP_USER_ID]),
+            $filterFactory->getTermFilter([self::POST_IS_DELETED => false]),
+        ];
         if(!empty(self::$_cityId))
         {
-            $filter = [
-                $filterFactory->getTermFilter([self::POST_IS_POSTED => true]),
-                $filterFactory->getTermFilter([self::POST_CITY_FIELD_ID => self::$_cityId])
-            ];
+            $filter[] = $filterFactory->getTermFilter([self::POST_CITY_FIELD_ID => self::$_cityId]);
         }
 
         return $filter;

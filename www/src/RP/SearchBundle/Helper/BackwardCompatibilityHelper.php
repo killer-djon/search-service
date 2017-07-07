@@ -137,6 +137,12 @@ class BackwardCompatibilityHelper
 //                    'tagsPct'     => $fields['tagsInPercent'][0],
                 ];
 
+                if (!isset($data['location']['country']['shortName']) && isset($data['location']['country']['code'])) {
+                    $data['location']['country']['shortName'] = $data['location']['country']['code'];
+                } elseif (isset($data['location']['country']['shortName']) && !isset($data['location']['country']['code'])) {
+                    $data['location']['country']['code'] = $data['location']['country']['shortName'];
+                }
+
                 $result[] = $data;
             }
         }

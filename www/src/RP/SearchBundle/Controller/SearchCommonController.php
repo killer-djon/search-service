@@ -11,6 +11,7 @@ use Common\Core\Facade\Service\User\UserProfileService;
 use Elastica\Exception\ElasticsearchException;
 use RP\SearchBundle\Services\Mapping\EventsSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
+use RP\SearchBundle\Services\Mapping\PostSearchMapping;
 use RP\SearchBundle\Services\Mapping\TagNameSearchMapping;
 use Symfony\Component\HttpFoundation\Request;
 use Common\Core\Constants\RequestConstant;
@@ -160,12 +161,25 @@ class SearchCommonController extends ApiController
                 );
             }
 
-            return $this->_handleViewWithData(array_merge(
-                [
-                    'info' => $commonSearchService->getTotalHits(),
-                ],
-                $searchData ? $this->revertToScalarTagsMatchFields($searchData) : []
-            ));
+            $result = $this->getNewFormatResponse(
+                $commonSearchService
+            );
+
+
+
+            /** Временный костыль, убираем HTML из текста для мобильных платформ */
+            $headerUserAgent = $request->headers->get('platform', $request->headers->get('User-Agent'));
+
+            if (!empty($result) && isset($result['items'][PostSearchMapping::CONTEXT]) && preg_match('/(ios|android)/i', $headerUserAgent)) {
+                array_walk($result['items'][PostSearchMapping::CONTEXT], function (&$item) {
+                    $item['message'] = (!empty($item['message']) ? strip_tags($item['message']) : '');
+
+                });
+            }
+
+            $this->revertToScalarTagsMatchFields($result);
+
+            return $this->_handleViewWithData($result);
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);

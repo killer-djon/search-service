@@ -170,9 +170,9 @@ trait ControllerTrait
      * @var array
      */
     protected $fieldsMap = [
-        'fullname'          => 'fullName',
-        'tagsInPercent'     => 'matchingInterestsInPercents',
-        'tagsCount'         => 'tagsPct',
+        'fullname' => 'fullName',
+        'tagsInPercent' => 'matchingInterestsInPercents',
+        'tagsCount' => 'tagsPct',
         'distanceInPercent' => 'distancePct',
     ];
 
@@ -184,10 +184,10 @@ trait ControllerTrait
      * @var array
      */
     private $neededKeys = [
-        'surname'           => ' ',
-        'text'              => ' ',
-        'allCheckinsCount'  => ' ',
-        'distance'          => 0,
+        'surname' => ' ',
+        'text' => ' ',
+        'allCheckinsCount' => ' ',
+        'distance' => 0,
         'distanceInPercent' => 0,
         'emailEnabled'      => 'false',
         'description'       => ''
@@ -234,8 +234,9 @@ trait ControllerTrait
      * @param array
      */
     private $tagsMatchFields = [
-        'tagsInPercent'               => 'intval',
+        'tagsInPercent' => 'intval',
         'matchingInterestsInPercents' => 'intval',
+
         'tagsCount'                   => 'intval',
         'tagsPct'                     => 'intval',
         'distanceInPercent'           => 'intval',

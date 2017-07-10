@@ -38,7 +38,7 @@ class SearchNewsFeedController extends ApiController
 
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
-            $searchText = !empty($searchText) ? $searchText : RequestConstant::NULLED_PARAMS;
+            $searchText = $searchText ?? RequestConstant::NULLED_PARAMS;
 
             /** @var NewsFeedSearchService */
             $postSearchService = $this->getNewsFeedSearchService();

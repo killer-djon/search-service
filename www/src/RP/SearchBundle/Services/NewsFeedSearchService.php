@@ -94,7 +94,7 @@ JS;
                     'wallId' => $userProfile->getWallId()
                 ]
             ),
-            'canBeEdit' => $this->_scriptFactory->getScript(
+            'canBeEdit'    => $this->_scriptFactory->getScript(
                 $canBeDeletedEdit,
                 [
                     'userId' => $userId,
@@ -153,7 +153,7 @@ JS;
                     'wallId' => $userProfile->getWallId()
                 ]
             ),
-            'canBeEdit' => $this->_scriptFactory->getScript(
+            'canBeEdit'    => $this->_scriptFactory->getScript(
                 $canBeDeletedEdit,
                 [
                     'userId' => $userId,
@@ -172,13 +172,20 @@ JS;
      *
      * @param string $userId
      * @param array $eventTypes Типы возвращаемых новостей в ленту
+     * @param string|null $searchText Поисковый запрос
      * @param array $friendIds Список id Друзей
      * @param int $skip
      * @param int $count
      * @return array
      */
-    public function searchUserEventsByUserId($userId, $eventTypes, $friendIds = [], $skip = 0, $count = null)
-    {
+    public function searchUserEventsByUserId(
+        $userId,
+        $eventTypes,
+        $searchText = null,
+        $friendIds = [],
+        $skip = 0,
+        $count = null
+    ) {
         $userProfile = $this->getUserById($userId);
 
         /** @var FilterFactoryInterface */
@@ -209,73 +216,131 @@ JS;
             ];
         }
 
-        $this->setFilterQuery([
-            $filter->getBoolOrFilter(array_merge([
-                $filter->getBoolAndFilter([
-                    $filter->getTypeFilter(PostSearchMapping::CONTEXT),
-                    // получаекм посты друзей
+
+        if (!empty($searchText)) {
+            $this->setFilterQuery([
+                $filter->getBoolOrFilter(array_merge([
                     $filter->getBoolAndFilter([
-                        $filter->getTermsFilter(PostSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
-                        $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
-                    ]),
-                ]),
-                $filter->getBoolAndFilter([
-                    $filter->getTypeFilter(PostSearchMapping::CONTEXT),
-                    // получаекм свои посты
-                    $filter->getBoolAndFilter([
-                        $filter->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $userId]),
-                        $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
-                    ]),
-                ]),
-                // Personal (читай подробный комментарий в getUserEventsGroups)
-                $filter->getBoolAndFilter([
-                    $filter->getTypeFilter(UserEventSearchMapping::CONTEXT),
-                    $filter->getBoolAndFilter([
-                        // события по типу
-                        $filter->getQueryFilter(
-                            $condition->getDisMaxQuery($personalType)
-                        ),
-                        // Только события от друзей и самого пользователя
-                        $filter->getBoolOrFilter([
-                            $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
-                            $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId]),
-                        ]),
-                        // только события направленные пользователю
-                        $filter->getTermFilter([UserEventSearchMapping::RECEIVER_USER_ID_FIELD => $userId]),
-                    ]),
-                ]),
-                // Friends и сам пользователь
-                $filter->getBoolAndFilter([
-                    $filter->getTypeFilter(UserEventSearchMapping::CONTEXT),
-                    $filter->getBoolAndFilter([
-                        // события по типу
-                        $filter->getQueryFilter(
-                            $condition->getDisMaxQuery($friendsType)
-                        ),
-                        // Только события от друзей и самого пользователя
-                        $filter->getBoolOrFilter([
-                            $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
-                            $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                        $filter->getTypeFilter(PostSearchMapping::CONTEXT),
+                        // получаекм посты друзей
+                        $filter->getBoolAndFilter([
+                            $filter->getTermsFilter(PostSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
+                            $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
                         ]),
                     ]),
-                ]),
-                // События от друзей о новых друзьях
-                $filter->getBoolAndFilter([
-                    $filter->getTypeFilter(UserEventSearchMapping::CONTEXT),
                     $filter->getBoolAndFilter([
-                        $filter->getQueryFilter(
-                            $condition->getMatchQuery(UserEventSearchMapping::TYPE_FIELD, UserEventType::NEW_FRIEND)
-                        ),
-                        // Авторы - друзья ползователя
-                        $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
-                        // Не надо нам в ленте показывать событие добавления друга, которого мы сами и добавили
-                        $filter->getNotFilter(
-                            $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
-                        ),
+                        $filter->getTypeFilter(PostSearchMapping::CONTEXT),
+                        // получаекм свои посты
+                        $filter->getBoolAndFilter([
+                            $filter->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                            $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
+                        ]),
                     ]),
-                ]),
-            ], $rpPostsFilter)),
-        ]);
+                ], $rpPostsFilter))
+            ]);
+
+            $searchText = mb_strtolower($searchText);
+            $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
+
+            $slopPhrase = array_filter(explode(" ", $searchText));
+            $must = $should = [];
+
+            if (count($slopPhrase) > 1) {
+
+                /**
+                 * Поиск по точному воспадению искомого словосочетания
+                 */
+                $queryMust = PostSearchMapping::getSearchConditionQueryMust($condition, $searchText);
+
+                if (!empty($queryMust)) {
+                    $this->setConditionQueryMust($queryMust);
+                }
+
+            } else {
+                $queryShould = PostSearchMapping::getSearchConditionQueryShould(
+                    $condition, $searchText
+                );
+
+                if (!empty($queryShould)) {
+                    /**
+                     * Ищем по частичному совпадению поисковой фразы
+                     */
+                    $this->setConditionQueryShould($queryShould);
+                }
+            }
+
+            $this->setHighlightQuery(PostSearchMapping::getHighlightConditions());
+        } else {
+
+            $this->setFilterQuery([
+                $filter->getBoolOrFilter(array_merge([
+                    $filter->getBoolAndFilter([
+                        $filter->getTypeFilter(PostSearchMapping::CONTEXT),
+                        // получаекм посты друзей
+                        $filter->getBoolAndFilter([
+                            $filter->getTermsFilter(PostSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
+                            $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
+                        ]),
+                    ]),
+                    $filter->getBoolAndFilter([
+                        $filter->getTypeFilter(PostSearchMapping::CONTEXT),
+                        // получаекм свои посты
+                        $filter->getBoolAndFilter([
+                            $filter->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                            $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
+                        ]),
+                    ]),
+                    // Personal (читай подробный комментарий в getUserEventsGroups)
+                    $filter->getBoolAndFilter([
+                        $filter->getTypeFilter(UserEventSearchMapping::CONTEXT),
+                        $filter->getBoolAndFilter([
+                            // события по типу
+                            $filter->getQueryFilter(
+                                $condition->getDisMaxQuery($personalType)
+                            ),
+                            // Только события от друзей и самого пользователя
+                            $filter->getBoolOrFilter([
+                                $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
+                                $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                            ]),
+                            // только события направленные пользователю
+                            $filter->getTermFilter([UserEventSearchMapping::RECEIVER_USER_ID_FIELD => $userId]),
+                        ]),
+                    ]),
+                    // Friends и сам пользователь
+                    $filter->getBoolAndFilter([
+                        $filter->getTypeFilter(UserEventSearchMapping::CONTEXT),
+                        $filter->getBoolAndFilter([
+                            // события по типу
+                            $filter->getQueryFilter(
+                                $condition->getDisMaxQuery($friendsType)
+                            ),
+                            // Только события от друзей и самого пользователя
+                            $filter->getBoolOrFilter([
+                                $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
+                                $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                            ]),
+                        ]),
+                    ]),
+                    // События от друзей о новых друзьях
+                    $filter->getBoolAndFilter([
+                        $filter->getTypeFilter(UserEventSearchMapping::CONTEXT),
+                        $filter->getBoolAndFilter([
+                            $filter->getQueryFilter(
+                                $condition->getMatchQuery(UserEventSearchMapping::TYPE_FIELD, UserEventType::NEW_FRIEND)
+                            ),
+                            // Авторы - друзья ползователя
+                            $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
+                            // Не надо нам в ленте показывать событие добавления друга, которого мы сами и добавили
+                            $filter->getNotFilter(
+                                $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                            ),
+                        ]),
+                    ]),
+                ], $rpPostsFilter)),
+            ]);
+        }
+
 
         $canBeDeletedEdit = <<<JS
                 var result = false;
@@ -296,7 +361,7 @@ JS;
                     'wallId' => $userProfile->getWallId()
                 ]
             ),
-            'canBeEdit' => $this->_scriptFactory->getScript(
+            'canBeEdit'    => $this->_scriptFactory->getScript(
                 $canBeDeletedEdit,
                 [
                     'userId' => $userId,

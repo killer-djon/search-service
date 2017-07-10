@@ -132,7 +132,9 @@ class SearchNewsFeedController extends ApiController
                 ]
             );
 
-            $friendIds = $userProfile->getFriendList() ?: [PeopleSearchMapping::RP_USER_ID];
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
+
+            $friendIds = $userProfile->getFriendList() ?? [PeopleSearchMapping::RP_USER_ID];
 
             $eventTypes = $this->getUserEventsGroups(NewsFeedSections::FEED_NEWS);
 
@@ -140,6 +142,7 @@ class SearchNewsFeedController extends ApiController
             $userEvents = $newsFeedSearchService->searchUserEventsByUserId(
                 $userId,
                 $eventTypes,
+                $searchText ?? null,
                 $friendIds,
                 $this->getSkip(),
                 $this->getCount()

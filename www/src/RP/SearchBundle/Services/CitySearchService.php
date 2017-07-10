@@ -66,10 +66,14 @@ class CitySearchService extends AbstractSearchService
                 $filter->getQueryFilter(
                     $this->_queryConditionFactory->getNestedQuery(
                         CitySearchMapping::COUNTRY_FIELD,
-                        $this->_queryConditionFactory->getMatchQuery(
-                            CitySearchMapping::COUNTRY_NAME_FIELD,
-                            $countryName
-                        )
+                        $this->_queryConditionFactory->getMultiMatchQuery()
+                                                     ->setFields([
+                                                         $this->setBoostField(CitySearchMapping::COUNTRY_NAME_FIELD, 5),
+                                                         $this->setBoostField(CitySearchMapping::COUNTRY_INTERNATIONAL_NAME_FIELD, 4),
+                                                     ])
+                                                     ->setQuery(mb_strtolower($countryName))
+                                                     ->setOperator(MultiMatch::OPERATOR_OR)
+                                                     ->setType(MultiMatch::TYPE_PHRASE_PREFIX)
                     )
                 ),
             ]);

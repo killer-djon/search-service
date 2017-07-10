@@ -21,7 +21,7 @@ class ApiTokenAuthenticator implements SimplePreAuthenticatorInterface
      */
     public function createToken(Request $request, $providerKey)
     {
-        $apiToken = $request->headers->get('tokenId');
+        $apiToken = $request->headers->get('tokenId', $request->headers->get('token_id'));
 
         if (is_null($apiToken)) {
             // throw new BadRequestHttpException("Header's TokenId param does not exists, check and try again");
@@ -61,7 +61,6 @@ class ApiTokenAuthenticator implements SimplePreAuthenticatorInterface
     {
 
         $user = $userProvider->loadUserByUsername($token->getCredentials());
-
 
         return new PreAuthenticatedToken(
             $user,

@@ -339,7 +339,7 @@ abstract class ApiController extends FOSRestController
      */
     protected function _handleViewWithError($errorMessage, $errorCode = Response::HTTP_INTERNAL_SERVER_ERROR)
     {
-        if ($errorMessage instanceof \Exception) {
+        if ($errorMessage) {
             $generatedErrorCode = ($errorMessage->getCode() == 0 ? $errorCode : $errorMessage->getCode());
 
             return $this->_handleViewWithData(
@@ -417,12 +417,6 @@ abstract class ApiController extends FOSRestController
         return [
             self::ERROR => [
                 self::TEXT => (is_array($message) ? $message : [$message]),
-                self::TEXT_TRANSLIT => (is_array($message) ?
-                    array_map(function ($msg) {
-                        return $this->_translit($msg);
-                    }, $message) :
-                    [$this->_translit($message)]
-                ),
                 self::ERROR_CODE => $code,
             ],
         ];

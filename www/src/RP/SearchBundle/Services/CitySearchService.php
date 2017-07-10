@@ -6,6 +6,7 @@
 namespace RP\SearchBundle\Services;
 
 use Common\Core\Constants\Location;
+use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Common\Util\ArrayHelper;
 use Elastica\Filter\AbstractFilter;
 use Elastica\Query\MultiMatch;
@@ -361,5 +362,41 @@ class CitySearchService extends AbstractSearchService
                 ),
             ]),
         ]);
+    }
+
+    /**
+     * @param \Common\Core\Facade\Service\Geo\GeoPointServiceInterface $point
+     * @return array
+     */
+    public function getCityByGeoPoint(GeoPointServiceInterface $point)
+    {
+        $coordinates = $point->export();
+
+        $radius = (int)$point->getRadius();
+        $radius = empty($radius) ? 15 : $radius;
+
+        $filter = $this->_queryFilterFactory;
+
+        $this->setFilterQuery([
+            $filter->getGeoDistanceFilter(CitySearchMapping::CENTER_CITY_POINT_FIELD, $coordinates, $radius, 'km'),
+        ]);
+
+        $this->setScriptFields([
+            'distance' => $this->_scriptFactory->getDistanceScript(
+                'CenterPoint',
+                $point
+            ),
+        ]);
+
+        $this->setSortingQuery([
+            $this->_sortingFactory->getGeoDistanceSort(CitySearchMapping::CENTER_CITY_POINT_FIELD, $point),
+        ]);
+
+        $queryMatch = $this->createQuery(0, 1);
+        $this->setIndices([
+            CitySearchMapping::DEFAULT_INDEX,
+        ]);
+
+        return $this->searchDocuments($queryMatch);
     }
 }

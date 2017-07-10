@@ -33,10 +33,25 @@ RPSearchBundle_search_city_byid:
 RPSearchBundle_search_city_list:
     path: /v{_version}/{_format}/city/list
     defaults:
-        _controller: RPSearchBundle:SearchCity:getCitiesList
+        _controller: RPSearchBundle:SearchCity:searchCitiesList
         _version: 1
         _format: json
         template: "RPSearchBundle:SearchCity:citiesList.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию
+
+# Routing который формирует запрос
+# на получение города по координатам
+# пример запроса /api/search/v1/json/city/position
+RPSearchBundle_search_city_position:
+    path: /v{_version}/{_format}/city/position
+    defaults:
+        _controller: RPSearchBundle:SearchCity:searchCityByPosition
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchCity:cityByPosition.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
     requirements:
         _method: (GET)
         _format: (json|xml|html|plist)

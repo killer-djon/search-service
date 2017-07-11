@@ -49,7 +49,8 @@
         "white-october/pagerfanta-bundle": "^1.0",
         "symfony/serializer": "^3.3",
         "jms/serializer-bundle": "^2.0",
-        "phpunit/phpunit": "^6.2"
+        "phpunit/phpunit": "^6.2",
+        "symfony/phpunit-bridge": "^3.3"
     },
     "repositories": [
         {
@@ -58,8 +59,7 @@
         }
     ],
     "require-dev": {
-        "sensio/generator-bundle": "^3.0",
-        "symfony/phpunit-bridge": "^3.3"
+        "sensio/generator-bundle": "^3.0"
     },
     "scripts": {
         "post-install-cmd": [

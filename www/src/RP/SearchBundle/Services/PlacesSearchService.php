@@ -65,7 +65,7 @@ class PlacesSearchService extends AbstractSearchService
         $this->setGeoPointConditions($point, PlaceSearchMapping::class);
 
         /** устанавливаем фильтры только для мест */
-        $this->setFilterQuery(PlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
+        $this->setFilterQuery(PlaceSearchMapping::getMatchSearchFilter($this->_queryFilterFactory, $userId));
 
         $queryMatch = $this->createQuery($skip, $count);
 
@@ -178,7 +178,7 @@ class PlacesSearchService extends AbstractSearchService
         $this->setGeoPointConditions($point, PlaceSearchMapping::class);
 
         /** устанавливаем фильтры только для мест */
-        $this->setFilterQuery(PlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
+        $this->setFilterQuery(PlaceSearchMapping::getMatchSearchFilter($this->_queryFilterFactory, $userId));
 
         $queryMatch = $this->createQuery($skip, $count);
 

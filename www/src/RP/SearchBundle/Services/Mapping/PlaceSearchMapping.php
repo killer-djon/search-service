@@ -183,7 +183,21 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
      */
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
-        return self::getMarkersSearchFilter($filterFactory, $userId);
+        return [
+            $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
+            $filterFactory->getNotFilter(
+                $filterFactory->getExistsFilter(self::BONUS_FIELD)
+            ),
+            AbstractSearchMapping::getVisibleCondition($filterFactory, $userId),
+            // НЕ скидочные места показываются даже если ещё не прошли модерацию
+            // AbstractSearchMapping::getModerateCondition($filterFactory, $userId),
+            $filterFactory->getNotFilter(
+                $filterFactory->getTermsFilter(self::MODERATION_STATUS_FIELD, [
+                    ModerationStatus::REJECTED,
+                    ModerationStatus::DELETED,
+                ])
+            ),
+        ];
     }
 
 

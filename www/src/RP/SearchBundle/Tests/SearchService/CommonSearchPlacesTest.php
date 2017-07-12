@@ -1,16 +1,24 @@
 <?php
+
 namespace RP\SearchBundle\Tests\SearchService;
 
-use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
+use Common\Core\Facade\Service\Geo\GeoPointService;
+use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Elastica\Client;
 use Elastica\Document;
 use Elastica\Filter\Term;
 use Elastica\Query;
 use Elastica\Type;
 use PHPUnit\Framework\TestCase;
+use RP\SearchBundle\Controller\SearchCommonController;
 use RP\SearchBundle\Services\CommonSearchService;
 use Elastica\Type as ElasticType;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
+use Symfony\Bundle\FrameworkBundle\Client as RequestClient;
+use Symfony\Bundle\FrameworkBundle\Test\WebTestCase;
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\RequestStack;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Created by PhpStorm.
@@ -18,8 +26,21 @@ use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
  * Date: 11.07.17
  * Time: 14:01
  */
-class CommonSearchPlacesTest extends TestCase
+class CommonSearchPlacesTest extends WebTestCase
 {
+    /**
+     * @const string
+     */
+    const SERVICE_BASE_URL = '//app_dev.php/api/search/v1/json/common/places';
+
+    /**
+     * Токен по умолчанию от имени которого
+     * мы делаем запросы к сервису
+     *
+     * @const string
+     */
+    const TOKEN_ID = '539097f774f01a57b7826e4e';
+
     /**
      * Host поискового сервиса
      * по умолчанию
@@ -38,6 +59,13 @@ class CommonSearchPlacesTest extends TestCase
     const DEFAULT_PORT = 9200;
 
     /**
+     * Id пользователя RussianPlace
+     *
+     * @const string
+     */
+    const USER_RP = '4092';
+
+    /**
      * Исходные объект данных
      * где содержиться русское и не русское место
      *
@@ -45,18 +73,18 @@ class CommonSearchPlacesTest extends TestCase
      */
     private $testPlacesDocuments = [
         [
-            'id' => 'test0001',
-            'name' => 'Place 0001',
+            'id'        => 'test0001',
+            'name'      => 'Place 0001',
             'isRussian' => true
         ],
         [
-            'id' => 'test0002',
-            'name' => 'Place 0002',
+            'id'        => 'test0002',
+            'name'      => 'Place 0002',
             'isRussian' => true
         ],
         [
-            'id' => 'test0003',
-            'name' => 'Place 0003',
+            'id'        => 'test0003',
+            'name'      => 'Place 0003',
             'isRussian' => false
         ]
     ];
@@ -66,6 +94,7 @@ class CommonSearchPlacesTest extends TestCase
      */
     private $searchType;
 
+
     /**
      * Сервис глобального поиска данных
      * по сущностям
@@ -74,12 +103,12 @@ class CommonSearchPlacesTest extends TestCase
      */
     private $commonSearchService;
 
-    private function _getClient(array $params = array(), $callback = null)
+    private function _getClient(array $params = [], $callback = null)
     {
-        $config = array(
+        $config = [
             'host' => self::DEFAULT_HOST,
             'port' => self::DEFAULT_PORT,
-        );
+        ];
 
         $config = array_merge($config, $params);
 
@@ -92,15 +121,14 @@ class CommonSearchPlacesTest extends TestCase
     public function setUp()
     {
         $client = $this->_getClient();
-        
+
         $index = $client->getIndex('zero');
-        $index->create(array('index' => array('number_of_shards' => 1, 'number_of_replicas' => 0)), true);
+        $index->create(['index' => ['number_of_shards' => 1, 'number_of_replicas' => 0]], true);
 
         /** @var Type\ */
         $this->searchType = $index->getType('zeroType');
 
-        foreach ($this->testPlacesDocuments as $docId => $placesDocument)
-        {
+        foreach ($this->testPlacesDocuments as $docId => $placesDocument) {
             $this->searchType->addDocument(
                 new Document($docId, $placesDocument)
             );
@@ -108,6 +136,7 @@ class CommonSearchPlacesTest extends TestCase
 
         $index->refresh();
     }
+
 
     /**
      * Поиск только мест без русских мест
@@ -187,5 +216,6 @@ class CommonSearchPlacesTest extends TestCase
         $client = $this->_getClient();
         $client->getIndex('zero')->delete();
     }
+
 
 }

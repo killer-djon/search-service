@@ -382,7 +382,7 @@ abstract class ApiController extends FOSRestController
 
         return [
             'results' => $resultData,
-            'info' => (isset($resultInfo['searchType']) ? $resultInfo['searchType'] : $resultInfo),
+            'info'    => (isset($resultInfo['searchType']) ? $resultInfo['searchType'] : $resultInfo),
         ];
     }
 
@@ -416,14 +416,14 @@ abstract class ApiController extends FOSRestController
     {
         return [
             self::ERROR => [
-                self::TEXT => (is_array($message) ? $message : [$message]),
+                self::TEXT          => (is_array($message) ? $message : [$message]),
                 self::TEXT_TRANSLIT => (is_array($message) ?
                     array_map(function ($msg) {
                         return $this->_translit($msg);
                     }, $message) :
                     [$this->_translit($message)]
                 ),
-                self::ERROR_CODE => $code,
+                self::ERROR_CODE    => $code,
             ],
         ];
     }
@@ -535,15 +535,17 @@ abstract class ApiController extends FOSRestController
         $result = [];
         $items = $searchService->getTotalResults();
         $totalHits = $searchService->getTotalHits();
+
+
         if (!empty($items)) {
             $searchService->revertToScalarTagsMatchFields($items);
             $result = [
-                'info' => !is_null($context) && isset($totalHits[$context]) ? $totalHits[$context] : $totalHits,
+                'info'       => !is_null($context) && isset($totalHits[$context]) ? $totalHits[$context] : $totalHits,
                 'pagination' => $searchService->getPaginationAdapter(
                     $this->getSkip(),
                     $this->getCount()
                 ),
-                'items' => !is_null($context) ? $items[$context] : $items
+                'items'      => !is_null($context) ? $items[$context] : $items
             ];
         }
 

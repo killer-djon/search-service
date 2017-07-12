@@ -8,8 +8,10 @@ namespace RP\SearchBundle\Controller;
 use Common\Core\Constants\RequestConstant;
 use Common\Core\Controller\ApiController;
 use Common\Core\Exceptions\SearchServiceException;
+use Common\Util\ArrayHelper;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceTypeSearchMapping;
+use RP\SearchBundle\Services\Transformers\AbstractTransformer;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
@@ -73,7 +75,8 @@ class SearchPlacesController extends ApiController
             $userId = $this->getRequestUserId();
 
             $placeSearchService = $this->getPlacesSearchService();
-            $places = $placeSearchService->searchPlacesByName($userId, $searchText, $this->getGeoPoint(), $this->getSkip(), $this->getCount());
+            $places = $placeSearchService->searchPlacesByName($userId, $searchText, $this->getGeoPoint(),
+                $this->getSkip(), $this->getCount());
 
             return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
         } catch (SearchServiceException $e) {
@@ -104,7 +107,8 @@ class SearchPlacesController extends ApiController
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
             $placeSearchService = $this->getPlacesSearchService();
-            $places = $placeSearchService->searchPlacesByCity($userId, $cityId, $this->getGeoPoint(), $searchText, $this->getSkip(), $this->getCount());
+            $places = $placeSearchService->searchPlacesByCity($userId, $cityId, $this->getGeoPoint(), $searchText,
+                $this->getSkip(), $this->getCount());
 
             return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
         } catch (SearchServiceException $e) {
@@ -127,7 +131,8 @@ class SearchPlacesController extends ApiController
             ];
 
             $placeSearchService = $this->getPlacesSearchService();
-            $places = $placeSearchService->searchPlacesByDiscount($userId, $this->getGeoPoint(), $params, $this->getSkip(), $this->getCount());
+            $places = $placeSearchService->searchPlacesByDiscount($userId, $this->getGeoPoint(), $params,
+                $this->getSkip(), $this->getCount());
 
             return $this->returnDataResult($placeSearchService, self::KEY_FIELD_RESPONSE);
         } catch (SearchServiceException $e) {
@@ -155,7 +160,7 @@ class SearchPlacesController extends ApiController
             $cityId = (int)$request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
 
             $result = $this->getPlacesSearchService()
-                           ->searchPromoPlaces($userId, $point, $searchText, $skip, $count, $countryId, $cityId);
+                ->searchPromoPlaces($userId, $point, $searchText, $skip, $count, $countryId, $cityId);
 
             return $this->_handleViewWithData($result);
         } catch (SearchServiceException $e) {
@@ -211,7 +216,8 @@ class SearchPlacesController extends ApiController
         try {
             /** @var ID пользователя */
             $userId = $this->getRequestUserId();
-            $place = $placeSearchService->getDiscountById($userId, PlaceSearchMapping::CONTEXT, PlaceSearchMapping::PLACE_ID_FIELD, $discountId);
+            $place = $placeSearchService->getDiscountById($userId, PlaceSearchMapping::CONTEXT,
+                PlaceSearchMapping::PLACE_ID_FIELD, $discountId);
 
             return $this->_handleViewWithData($place);
 
@@ -231,7 +237,10 @@ class SearchPlacesController extends ApiController
     public function searchPlaceTypeByNameAction(Request $request)
     {
         try {
-            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NULLED_PARAMS);
+            $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
+
+            /** @var bool Получение параметра типа ответа данных, либо дерево либо flat массив */
+            $isFlat = $this->getBoolRequestParam($request->get(RequestConstant::IS_FLAT_PARAM), false);
 
             /** @var ID пользователя */
             $userId = $this->getRequestUserId();
@@ -241,28 +250,41 @@ class SearchPlacesController extends ApiController
             $searchText = empty($searchText) ? RequestConstant::NULLED_PARAMS : $searchText;
 
             $placeSearchService = $this->getPlacesSearchService();
+
             $placesType = $placeSearchService->searchPlacesTypeByName(
                 $userId,
                 $searchText
             );
 
-            if (!is_null($placesType) && !empty($placesType)) {
-                if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
-                    $oldFormat = $this->getVersioningData($placeSearchService);
-
-                    $oldFormat = $placeSearchService->placeTypeTransformer->transform($oldFormat['results'], PlaceTypeSearchMapping::CONTEXT);
-
-                    return $this->_handleViewWithData(
-                        $oldFormat,
-                        null,
-                        !self::INCLUDE_IN_CONTEXT
-                    );
-                }
-
-                return $this->_handleViewWithData($placesType);
+            if (empty($placesType)) {
+                return $this->_handleViewWithData([]);
             }
 
-            return $this->_handleViewWithData([]);
+            if (!is_null($version) && (int)$version === RequestConstant::DEFAULT_VERSION) {
+                $oldFormat = $this->getVersioningData($placeSearchService);
+
+                $oldFormat = $placeSearchService->placeTypeTransformer->transform($oldFormat['results'],
+                    PlaceTypeSearchMapping::CONTEXT);
+
+                return $this->_handleViewWithData(
+                    $oldFormat,
+                    null,
+                    !self::INCLUDE_IN_CONTEXT
+                );
+            }
+
+
+            if (!$isFlat) {
+                $tree = AbstractTransformer::convertToTree($placesType[PlaceTypeSearchMapping::CONTEXT]);
+                $placeSearchService->initTotalResults([PlaceTypeSearchMapping::CONTEXT => $tree]);
+            }
+
+            return $this->_handleViewWithData(
+                $this->getNewFormatResponse(
+                    $placeSearchService,
+                    PlaceTypeSearchMapping::CONTEXT
+                )
+            );
 
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);

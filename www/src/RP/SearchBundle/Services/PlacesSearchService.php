@@ -87,15 +87,6 @@ class PlacesSearchService extends AbstractSearchService
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
 
-        /*$queryMatch = $this->createMatchQuery(
-            $searchText,
-            [
-                PlaceTypeSearchMapping::NAME_FIELD,
-                PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD
-            ],
-            $skip, $count
-        );*/
-
         if (!is_null($searchText) && !empty($searchText)) {
             $this->setConditionQueryShould([
                 $this->_queryConditionFactory->getDisMaxQuery([

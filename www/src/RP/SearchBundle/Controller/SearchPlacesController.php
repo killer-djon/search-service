@@ -245,7 +245,7 @@ class SearchPlacesController extends ApiController
             /** @var ID пользователя */
             $userId = $this->getRequestUserId();
 
-            /** @var Текст запроса */
+            /** @var string Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
             $searchText = empty($searchText) ? RequestConstant::NULLED_PARAMS : $searchText;
 
@@ -267,7 +267,11 @@ class SearchPlacesController extends ApiController
                     PlaceTypeSearchMapping::CONTEXT);
 
                 return $this->_handleViewWithData(
-                    $oldFormat,
+                    [
+                        'data' => [
+                            'result' => $oldFormat
+                        ]
+                    ],
                     null,
                     !self::INCLUDE_IN_CONTEXT
                 );

@@ -56,4 +56,16 @@ class AppKernel extends Kernel
     {
         $loader->load($this->getRootDir().'/config/config_'.$this->getEnvironment().'.yml');
     }
+
+    /**
+     * @return string
+     */
+    protected function getContainerBaseClass()
+    {
+        if ('test' == $this->getEnvironment()) {
+            return '\RP\SearchBundle\Tests\DependencyInjection\MockerContainer';
+        }
+
+        return parent::getContainerBaseClass();
+    }
 }

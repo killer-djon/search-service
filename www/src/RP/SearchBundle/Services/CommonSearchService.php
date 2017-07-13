@@ -174,6 +174,7 @@ class CommonSearchService extends AbstractSearchService
         $count = null
     ) {
         $currentUser = $this->getUserById($userId);
+
         if (is_null($filterType)) {
             /**
              * Массив объектов запроса
@@ -188,17 +189,6 @@ class CommonSearchService extends AbstractSearchService
             foreach ($this->filterSearchTypes as $keyType => $type) {
                 $this->clearQueryFactory();
                 $this->setScriptTagsConditions($currentUser, $type);
-                $this->setScriptFields([
-                    'distance'          => $this->_scriptFactory->getDistanceScript(
-                        $type::LOCATION_POINT_FIELD,
-                        $point
-                    ),
-                    'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
-                        $type::LOCATION_POINT_FIELD,
-                        $point
-                    ),
-                ]);
-
 
                 if (!empty($cityId)) {
                     if ($type::CONTEXT !== PostSearchMapping::CONTEXT) {
@@ -224,28 +214,42 @@ class CommonSearchService extends AbstractSearchService
 
                 $this->setHighlightQuery($type::getHighlightConditions());
 
-                $this->setScriptFunctions([
-                    FunctionScore::DECAY_LINEAR => [
-                        $type::LOCATION_POINT_FIELD => [
-                            'origin' => "{$point->getLongitude()}, {$point->getLatitude()}",
-                            'scale'  => '1km',
-                            'offset' => '0km',
-                            'decay'  => 0.2,
+                if(!is_null($point))
+                {
+                    $this->setScriptFields([
+                        'distance'          => $this->_scriptFactory->getDistanceScript(
+                            $type::LOCATION_POINT_FIELD,
+                            $point
+                        ),
+                        'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
+                            $type::LOCATION_POINT_FIELD,
+                            $point
+                        ),
+                    ]);
+
+                    $this->setScriptFunctions([
+                        FunctionScore::DECAY_LINEAR => [
+                            $type::LOCATION_POINT_FIELD => [
+                                'origin' => "{$point->getLongitude()}, {$point->getLatitude()}",
+                                'scale'  => '1km',
+                                'offset' => '0km',
+                                'decay'  => 0.2,
+                            ],
                         ],
-                    ],
-                ]);
+                    ]);
 
-                $this->setScriptFunctionOption([
-                    'scoreMode' => 'multiply',
-                    'boostMode' => 'multiply',
-                ]);
+                    $this->setScriptFunctionOption([
+                        'scoreMode' => 'multiply',
+                        'boostMode' => 'multiply',
+                    ]);
 
-                $this->setSortingQuery([
-                    $this->_sortingFactory->getGeoDistanceSort(
-                        $type::LOCATION_POINT_FIELD,
-                        $point
-                    ),
-                ]);
+                    $this->setSortingQuery([
+                        $this->_sortingFactory->getGeoDistanceSort(
+                            $type::LOCATION_POINT_FIELD,
+                            $point
+                        ),
+                    ]);
+                }
 
                 if (!is_null($searchText)) {
                     $searchText = mb_strtolower($searchText);
@@ -283,12 +287,16 @@ class CommonSearchService extends AbstractSearchService
                     //print_r($queryMatchResults); die();
 
                 } else {
-                    $this->setSortingQuery([
-                        $this->_sortingFactory->getGeoDistanceSort(
-                            $type::LOCATION_POINT_FIELD,
-                            $point
-                        ),
-                    ]);
+                    if(!is_null($point))
+                    {
+                        $this->setSortingQuery([
+                            $this->_sortingFactory->getGeoDistanceSort(
+                                $type::LOCATION_POINT_FIELD,
+                                $point
+                            ),
+                        ]);
+                    }
+
                     $queryMatchResults[$keyType] = $this->createMatchQuery(
                         $searchText,
                         $type::getMultiMatchQuerySearchFields(),
@@ -336,20 +344,20 @@ class CommonSearchService extends AbstractSearchService
             }
 
             $this->setScriptTagsConditions($currentUser, $this->filterSearchTypes[$type]);
-            $this->setScriptFields([
-                'distance'          => $this->_scriptFactory->getDistanceScript(
-                    $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
-                    $point
-                ),
-                'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
-                    $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
-                    $point
-                ),
-            ]);
-
             $this->setHighlightQuery($this->filterSearchTypes[$type]::getHighlightConditions());
 
-            if (!is_null($searchText)) {
+            if(!is_null($point))
+            {
+                $this->setScriptFields([
+                    'distance'          => $this->_scriptFactory->getDistanceScript(
+                        $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
+                        $point
+                    ),
+                    'distanceInPercent' => $this->_scriptFactory->getDistanceInPercentScript(
+                        $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
+                        $point
+                    ),
+                ]);
 
                 $this->setScriptFunctions([
                     FunctionScore::DECAY_GAUSS => [
@@ -374,6 +382,9 @@ class CommonSearchService extends AbstractSearchService
                         $point
                     ),
                 ]);
+            }
+
+            if (!is_null($searchText)) {
 
                 $searchText = mb_strtolower($searchText);
                 $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
@@ -410,12 +421,15 @@ class CommonSearchService extends AbstractSearchService
                 $queryMatchResults[$type] = $this->createQuery($skip, $count);
 
             } else {
-                $this->setSortingQuery([
-                    $this->_sortingFactory->getGeoDistanceSort(
-                        $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
-                        $point
-                    ),
-                ]);
+                if(!is_null($point))
+                {
+                    $this->setSortingQuery([
+                        $this->_sortingFactory->getGeoDistanceSort(
+                            $this->filterSearchTypes[$type]::LOCATION_POINT_FIELD,
+                            $point
+                        ),
+                    ]);
+                }
 
                 $queryMatchResults[$type] = $this->createMatchQuery(
                     $searchText,

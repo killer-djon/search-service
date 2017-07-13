@@ -220,32 +220,34 @@ class CitySearchService extends AbstractSearchService
      */
     public function getLastSearchedCitiesList($userId, $skip = self::DEFAULT_SKIP_CITIES, $count = self::DEFAULT_COUNT_CITIES)
     {
-        $this->setFilterQuery([
-            $this->_queryFilterFactory->getTermFilter([AbstractSearchMapping::AUTHOR_ID_FIELD => $userId]),
-        ]);
-
-        $this->setSortingQuery($this->_sortingFactory->getFieldSort(AbstractSearchMapping::IDENTIFIER_FIELD, 'desc'));
-
-        $queryMatch = $this->createQuery($skip, $count);
-        $this->setIndices();
-
-        $history = $this->searchDocuments($queryMatch);
-
         $cities = [];
 
-        if (!empty($history['search_history'])) {
-            foreach ($history['search_history'] as $item) {
-                if (empty($item['city'])) {
-                    continue;
-                }
+        if (!empty($userId)) {
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getTermFilter([AbstractSearchMapping::AUTHOR_ID_FIELD => $userId]),
+            ]);
 
-                if (!isset($cities[$item['city']['id']])) {
-                    $cities[$item['city']['id']] = $item['city'];
+            $this->setSortingQuery($this->_sortingFactory->getFieldSort(AbstractSearchMapping::IDENTIFIER_FIELD, 'desc'));
+
+            $queryMatch = $this->createQuery($skip, $count);
+            $this->setIndices();
+
+            $history = $this->searchDocuments($queryMatch);
+
+            if (!empty($history['search_history'])) {
+                foreach ($history['search_history'] as $item) {
+                    if (empty($item['city'])) {
+                        continue;
+                    }
+
+                    if (!isset($cities[$item['city']['id']])) {
+                        $cities[$item['city']['id']] = $item['city'];
+                    }
                 }
             }
         }
 
-        return array_values($cities);
+        return empty($cities) ? [] : array_values($cities);
     }
 
     /**

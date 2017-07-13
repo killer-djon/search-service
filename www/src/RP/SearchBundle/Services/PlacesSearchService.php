@@ -65,7 +65,7 @@ class PlacesSearchService extends AbstractSearchService
         $this->setGeoPointConditions($point, PlaceSearchMapping::class);
 
         /** устанавливаем фильтры только для мест */
-        $this->setFilterQuery(PlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
+        $this->setFilterQuery(PlaceSearchMapping::getMatchSearchFilter($this->_queryFilterFactory, $userId));
 
         $queryMatch = $this->createQuery($skip, $count);
 
@@ -86,15 +86,6 @@ class PlacesSearchService extends AbstractSearchService
     {
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
-
-        /*$queryMatch = $this->createMatchQuery(
-            $searchText,
-            [
-                PlaceTypeSearchMapping::NAME_FIELD,
-                PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD
-            ],
-            $skip, $count
-        );*/
 
         if (!is_null($searchText) && !empty($searchText)) {
             $this->setConditionQueryShould([
@@ -178,7 +169,7 @@ class PlacesSearchService extends AbstractSearchService
         $this->setGeoPointConditions($point, PlaceSearchMapping::class);
 
         /** устанавливаем фильтры только для мест */
-        $this->setFilterQuery(PlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
+        $this->setFilterQuery(PlaceSearchMapping::getMatchSearchFilter($this->_queryFilterFactory, $userId));
 
         $queryMatch = $this->createQuery($skip, $count);
 
@@ -267,9 +258,22 @@ class PlacesSearchService extends AbstractSearchService
 
         $userPoint = $currentUser->getLocation();
 
-        if ((!$point->isValid() || $point->isEmpty()) && ($userPoint->isValid() && !$userPoint->isEmpty())) {
+        /**
+         * Логика должна быть наоборот
+         * если есть приходящие данные в параметрах
+         * тогда учитываем их, ибо они не зря заданы явно в параметрах
+         * иначе мы берем уже данные пользователя
+         *
+         * по другому у нас не будет учитываться радиус
+         * а задавать его явно при таком условии безсмыслено
+         */
+        /*if ((!$point->isValid() || $point->isEmpty()) && ($userPoint->isValid() && !$userPoint->isEmpty())) {
             $point = $userPoint;
-        }
+        }*/
+
+
+        $userPoint = $point->isValid() && !$point->isEmpty() ? $point : $currentUser->getLocation();
+        $userPoint->setRadius($point->getRadius());
 
         $aggr = $this->_queryAggregationFactory;
 
@@ -287,11 +291,11 @@ class PlacesSearchService extends AbstractSearchService
             ),
             'distance'          => $scriptFactory->getDistanceScript(
                 $this->filterTypes[PlaceSearchMapping::CONTEXT]::LOCATION_POINT_FIELD,
-                $point
+                $userPoint
             ),
             'distanceInPercent' => $scriptFactory->getDistanceInPercentScript(
                 $this->filterTypes[PlaceSearchMapping::CONTEXT]::LOCATION_POINT_FIELD,
-                $point
+                $userPoint
             ),
         ];
 
@@ -299,6 +303,13 @@ class PlacesSearchService extends AbstractSearchService
             $this->setAggregationQuery([
                 $aggr
                     ->getTermsAggregation(PlaceSearchMapping::LOCATION_COUNTRY_ID_FIELD, null, '_count', 'desc')
+                    ->addAggregation($aggr
+                        ->getFilterAggregation('country',
+                            $this->_queryFilterFactory->getTermFilter([
+                                PlaceSearchMapping::LOCATION_COUNTRY_ID_FIELD => $countryId
+                            ])
+                        )
+                    )
                     ->addAggregation($aggr
                         ->setAggregationSource(PlaceSearchMapping::CONTEXT, [], $count)
                     )
@@ -327,7 +338,22 @@ class PlacesSearchService extends AbstractSearchService
         $this->setScriptTagsConditions($currentUser, PlaceSearchMapping::class);
 
         /** добавляем к условию поиска рассчет расстояния */
-        $this->setGeoPointConditions($point, PlaceSearchMapping::class);
+        // зачем это услоие если выше уже указаны скриптовые поля ?
+        //$this->setGeoPointConditions($userPoint, PlaceSearchMapping::class);
+        if(!empty($userPoint->getRadius()))
+        {
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getGeoDistanceFilter(
+                    PlaceSearchMapping::LOCATION_POINT_FIELD,
+                    [
+                        'lat' => $userPoint->getLatitude(),
+                        'lon' => $userPoint->getLongitude(),
+                    ],
+                    $userPoint->getRadius(),
+                    'm'
+                ),
+            ]);
+        }
 
         $searchText = empty($searchText) ? null : $searchText;
 

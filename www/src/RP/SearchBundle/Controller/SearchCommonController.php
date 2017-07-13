@@ -105,11 +105,13 @@ class SearchCommonController extends ApiController
                 ));
             }
 
+            $point = $this->getGeoPoint();
+
             $searchData = $commonSearchService->commonSearchByFilters(
                 $userId,
                 $searchText,
                 $cityId,
-                $this->getGeoPoint(),
+                $point->isValid() && !$point->isEmpty() ? $point : null,
                 $filterType,
                 $this->getSkip(),
                 $this->getCount()

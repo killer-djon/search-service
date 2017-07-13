@@ -81,7 +81,7 @@ class GeoPointService implements GeoPointServiceInterface
     public function __construct($latitude, $longitude, $radius = null)
     {
         $this->_setLatitude($latitude);
-        $this->_setLongitude((float)$longitude);
+        $this->_setLongitude($longitude);
         $this->_setRadius($radius);
     }
 

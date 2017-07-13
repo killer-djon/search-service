@@ -174,6 +174,7 @@ class CommonSearchService extends AbstractSearchService
         $count = null
     ) {
         $currentUser = $this->getUserById($userId);
+
         if (is_null($filterType)) {
             /**
              * Массив объектов запроса
@@ -188,8 +189,6 @@ class CommonSearchService extends AbstractSearchService
             foreach ($this->filterSearchTypes as $keyType => $type) {
                 $this->clearQueryFactory();
                 $this->setScriptTagsConditions($currentUser, $type);
-
-
 
                 if (!empty($cityId)) {
                     if ($type::CONTEXT !== PostSearchMapping::CONTEXT) {

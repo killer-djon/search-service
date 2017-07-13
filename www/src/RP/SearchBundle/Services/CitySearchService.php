@@ -32,6 +32,11 @@ class CitySearchService extends AbstractSearchService
     const DEFAULT_COUNT_CITIES = 3;
 
     /**
+     * @const int радиус поиска ближайшего города по координатам
+     */
+    const DEFAULT_NEAR_CITY_RADIUS = 15;
+
+    /**
      * Метод осуществляет поиск в еластике
      * по названию города
      *
@@ -218,8 +223,11 @@ class CitySearchService extends AbstractSearchService
      * @param int $count
      * @return array
      */
-    public function getLastSearchedCitiesList($userId, $skip = self::DEFAULT_SKIP_CITIES, $count = self::DEFAULT_COUNT_CITIES)
-    {
+    public function getLastSearchedCitiesList(
+        $userId,
+        $skip = self::DEFAULT_SKIP_CITIES,
+        $count = self::DEFAULT_COUNT_CITIES
+    ) {
         $cities = [];
 
         if (!empty($userId)) {
@@ -269,8 +277,11 @@ class CitySearchService extends AbstractSearchService
      * @param int $count
      * @return array
      */
-    public function getTopCitiesList($exclude = [], $skip = self::DEFAULT_SKIP_CITIES, $count = self::DEFAULT_COUNT_CITIES)
-    {
+    public function getTopCitiesList(
+        $exclude = [],
+        $skip = self::DEFAULT_SKIP_CITIES,
+        $count = self::DEFAULT_COUNT_CITIES
+    ) {
         /**
          * Получаем начальную точку на карте Европы
          * для того чтобы от нее сделать радиус максимальный
@@ -379,7 +390,7 @@ class CitySearchService extends AbstractSearchService
         $coordinates = $point->export();
 
         $radius = (int)$point->getRadius();
-        $radius = empty($radius) ? 15 : $radius;
+        $radius = empty($radius) ? static::DEFAULT_NEAR_CITY_RADIUS : $radius;
 
         $filter = $this->_queryFilterFactory;
 

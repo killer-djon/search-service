@@ -63,9 +63,20 @@ class SearchNewsFeedController extends ApiController
             $headerUserAgent = $request->headers->get('platform', $request->headers->get('User-Agent'));
 
             if (!empty($result) && preg_match('/(ios|android)/i', $headerUserAgent)) {
-                array_walk($result['items'], function (&$item) {
-                    $item['message'] = (!empty($item['message']) ? strip_tags($item['message']) : '');
-                });
+                function unTagsMessage(&$array)
+                {
+                    foreach ($array as $key => & $item) {
+                        if (stripos($key, 'message') !== false && !empty($item)) {
+                            $item = is_string($item) ? strip_tags($item, '<em>') : [strip_tags(current($item), '<em>')];
+                        }
+
+                        if (is_array($item)) {
+                            unTagsMessage($item);
+                        }
+                    }
+                }
+
+                unTagsMessage($result['items']);
             }
 
 
@@ -161,9 +172,21 @@ class SearchNewsFeedController extends ApiController
             $headerUserAgent = $request->headers->get('platform', $request->headers->get('User-Agent'));
 
             if (!empty($result) && preg_match('/(ios|android)/i', $headerUserAgent)) {
-                array_walk($result['items'], function (&$item) {
-                    $item['message'] = (!empty($item['message']) ? strip_tags($item['message']) : '');
-                });
+
+                function unTagsMessage(&$array)
+                {
+                    foreach ($array as $key => & $item) {
+                        if (stripos($key, 'message') !== false && !empty($item)) {
+                            $item = is_string($item) ? strip_tags($item, '<em>') : [strip_tags(current($item), '<em>')];
+                        }
+
+                        if (is_array($item)) {
+                            unTagsMessage($item);
+                        }
+                    }
+                }
+
+                unTagsMessage($result['items']);
             }
 
             return $this->_handleViewWithData($result);
@@ -218,9 +241,20 @@ class SearchNewsFeedController extends ApiController
             $headerUserAgent = $request->headers->get('platform', $request->headers->get('User-Agent'));
 
             if (!empty($result) && preg_match('/(ios|android)/i', $headerUserAgent)) {
-                array_walk($result['items'], function (&$item) {
-                    $item['message'] = (!empty($item['message']) ? strip_tags($item['message']) : '');
-                });
+                function unTagsMessage(&$array)
+                {
+                    foreach ($array as $key => & $item) {
+                        if (stripos($key, 'message') !== false && !empty($item)) {
+                            $item = is_string($item) ? strip_tags($item, '<em>') : [strip_tags(current($item), '<em>')];
+                        }
+
+                        if (is_array($item)) {
+                            unTagsMessage($item);
+                        }
+                    }
+                }
+
+                unTagsMessage($result['items']);
             }
 
             return $this->_handleViewWithData($result);

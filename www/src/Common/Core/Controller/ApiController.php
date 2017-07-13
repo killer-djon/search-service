@@ -527,10 +527,11 @@ abstract class ApiController extends FOSRestController
      * объекты info,pagination,items
      *
      * @param AbstractSearchService $searchService
-     * @param string|null $context КОнтекст набора данных (ключ)
+     * @param string|null $context КОнтекст набора данных (ключ объекта где лежат данные на входе)
+     * @param array $params Допнительные данные для выдачи результата (склеиваем )
      * @return array
      */
-    public function getNewFormatResponse(AbstractSearchService $searchService, $context = null)
+    public function getNewFormatResponse(AbstractSearchService $searchService, $context = null, $params = [])
     {
         $result = [];
         $items = $searchService->getTotalResults();
@@ -549,7 +550,10 @@ abstract class ApiController extends FOSRestController
             ];
         }
 
-        return $result;
+        return array_merge(
+            $result,
+            $params
+        );
     }
 
     /**

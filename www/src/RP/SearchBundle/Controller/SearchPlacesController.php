@@ -9,6 +9,7 @@ use Common\Core\Constants\RequestConstant;
 use Common\Core\Controller\ApiController;
 use Common\Core\Exceptions\SearchServiceException;
 use Common\Util\ArrayHelper;
+use RP\SearchBundle\Services\Mapping\DiscountsSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceSearchMapping;
 use RP\SearchBundle\Services\Mapping\PlaceTypeSearchMapping;
 use RP\SearchBundle\Services\Transformers\AbstractTransformer;
@@ -156,11 +157,42 @@ class SearchPlacesController extends ApiController
             $count = (int)$this->getCount();
             $point = $this->getGeoPoint();
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
-            $countryId = (int)$request->get(RequestConstant::COUNTRY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
-            $cityId = (int)$request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
 
-            $result = $this->getPlacesSearchService()
-                ->searchPromoPlaces($userId, $point, $searchText, $skip, $count, $countryId, $cityId);
+            /**
+             * Если для skip/count можно указать явно тип данных
+             * то для countryId и cityId НЕТ таких стран/городов как 0
+             *
+             * так как (int)NULL = 0
+             */
+            $countryId = $request->get(RequestConstant::COUNTRY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
+            $cityId = $request->get(RequestConstant::CITY_SEARCH_PARAM, RequestConstant::NULLED_PARAMS);
+
+            /**
+             * Этот хак нужен для нового формата данных
+             * так как текущий формат уже устарел
+             *
+             * По умолчанию старая версия для совместимости 3
+             */
+            $version = (int)$request->get(RequestConstant::VERSION_PARAM, RequestConstant::DEFAULT_VERSION);
+
+            $placeSearchService = $this->getPlacesSearchService();
+
+            $result = $placeSearchService->searchPromoPlaces($userId, $point, $searchText, $skip, $count, $countryId, $cityId);
+
+            if( $version == RequestConstant::NEW_DEFAULT_VERSION )
+            {
+                $placeSearchService->initTotalResults(
+                    $result['list']
+                );
+
+                return $this->_handleViewWithData(
+                    $this->getNewFormatResponse(
+                        $placeSearchService,
+                        null,
+                        $result['meta']
+                    )
+                );
+            }
 
             return $this->_handleViewWithData($result);
         } catch (SearchServiceException $e) {

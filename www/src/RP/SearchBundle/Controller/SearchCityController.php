@@ -139,7 +139,7 @@ class SearchCityController extends ApiController
      * @param Request $request Объект запроса
      * @return Response
      */
-    public function getCitiesListAction(Request $request)
+    public function searchCitiesListAction(Request $request)
     {
         try {
             $result = [];
@@ -202,6 +202,25 @@ class SearchCityController extends ApiController
                     }
                 }
             }
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+
+        return $this->_handleViewWithData($result);
+    }
+
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function searchCityByPositionAction(Request $request)
+    {
+        try {
+            $citySearchService = $this->getCitySearchService();
+
+            $result = $citySearchService->getCityByGeoPoint($this->getGeoPoint());
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {

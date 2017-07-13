@@ -6,6 +6,7 @@
 namespace RP\SearchBundle\Services;
 
 use Common\Core\Constants\Location;
+use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Common\Util\ArrayHelper;
 use Elastica\Filter\AbstractFilter;
 use Elastica\Query\MultiMatch;
@@ -29,6 +30,11 @@ class CitySearchService extends AbstractSearchService
      * @const int
      */
     const DEFAULT_COUNT_CITIES = 3;
+
+    /**
+     * @const int радиус поиска ближайшего города по координатам
+     */
+    const DEFAULT_NEAR_CITY_RADIUS = 15;
 
     /**
      * Метод осуществляет поиск в еластике
@@ -217,8 +223,11 @@ class CitySearchService extends AbstractSearchService
      * @param int $count
      * @return array
      */
-    public function getLastSearchedCitiesList($userId, $skip = self::DEFAULT_SKIP_CITIES, $count = self::DEFAULT_COUNT_CITIES)
-    {
+    public function getLastSearchedCitiesList(
+        $userId,
+        $skip = self::DEFAULT_SKIP_CITIES,
+        $count = self::DEFAULT_COUNT_CITIES
+    ) {
         $cities = [];
 
         if (!empty($userId)) {
@@ -268,8 +277,11 @@ class CitySearchService extends AbstractSearchService
      * @param int $count
      * @return array
      */
-    public function getTopCitiesList($exclude = [], $skip = self::DEFAULT_SKIP_CITIES, $count = self::DEFAULT_COUNT_CITIES)
-    {
+    public function getTopCitiesList(
+        $exclude = [],
+        $skip = self::DEFAULT_SKIP_CITIES,
+        $count = self::DEFAULT_COUNT_CITIES
+    ) {
         /**
          * Получаем начальную точку на карте Европы
          * для того чтобы от нее сделать радиус максимальный
@@ -367,5 +379,41 @@ class CitySearchService extends AbstractSearchService
                 ),
             ]),
         ]);
+    }
+
+    /**
+     * @param \Common\Core\Facade\Service\Geo\GeoPointServiceInterface $point
+     * @return array
+     */
+    public function getCityByGeoPoint(GeoPointServiceInterface $point)
+    {
+        $coordinates = $point->export();
+
+        $radius = (int)$point->getRadius();
+        $radius = empty($radius) ? static::DEFAULT_NEAR_CITY_RADIUS : $radius;
+
+        $filter = $this->_queryFilterFactory;
+
+        $this->setFilterQuery([
+            $filter->getGeoDistanceFilter(CitySearchMapping::CENTER_CITY_POINT_FIELD, $coordinates, $radius, 'km'),
+        ]);
+
+        $this->setScriptFields([
+            'distance' => $this->_scriptFactory->getDistanceScript(
+                'CenterPoint',
+                $point
+            ),
+        ]);
+
+        $this->setSortingQuery([
+            $this->_sortingFactory->getGeoDistanceSort(CitySearchMapping::CENTER_CITY_POINT_FIELD, $point),
+        ]);
+
+        $queryMatch = $this->createQuery(0, 1);
+        $this->setIndices([
+            CitySearchMapping::DEFAULT_INDEX,
+        ]);
+
+        return $this->searchDocuments($queryMatch);
     }
 }

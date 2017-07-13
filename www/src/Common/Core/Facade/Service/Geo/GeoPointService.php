@@ -86,6 +86,24 @@ class GeoPointService implements GeoPointServiceInterface
     }
 
     /**
+     * @param bool $radius
+     * @return array
+     */
+    public function export($radius = false)
+    {
+        $result = [
+            'lat' => $this->getLatitude(),
+            'lon' => $this->getLongitude(),
+        ];
+
+        if ($radius) {
+            $result['radius'] = $this->getRadius();
+        }
+
+        return $result;
+    }
+
+    /**
      * @return float
      */
     public function getLongitude()

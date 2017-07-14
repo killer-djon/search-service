@@ -404,8 +404,9 @@ JS;
      */
     public function getChatIdBetweenUsers($userId, $profileId, $skip = 0, $count = null)
     {
-        $this->setConditionQueryShould([
-            $this->_queryConditionFactory->getTermsQuery('recipients.id', [$profileId, $userId])
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getTermsFilter('recipients.id', [$userId]),
+            $this->_queryFilterFactory->getTermsFilter('recipients.id', [$profileId]),
         ]);
 
         $this->setAggregationQuery([
@@ -425,6 +426,7 @@ JS;
         ]);
 
         $chatBucket = !empty($documents) ? $this->getAggregations(0) : [];
+
         return !empty($chatBucket) ? $chatBucket['key'] : [];
     }
 }

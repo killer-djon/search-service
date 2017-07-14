@@ -185,15 +185,17 @@ class SearchCommonController extends ApiController
             $env = $this->container->get('kernel')->getEnvironment();
             $apiUrl = $env !== 'prod' ? $this->container->getParameter('serviceApiDev') : $this->container->getParameter('serviceApiProd');
             $apiClient = new \GuzzleHttp\Client();
-            $searchHistoryRequest = new \GuzzleHttp\Psr7\Request('POST', $apiUrl, [
-                'tokenId' => $request->headers->get('tokenId'),
-                'Content-Type' => 'application/json'
-            ], \GuzzleHttp\json_encode([
-                'cityId' => $cityId,
-                'searchText' => $searchText
-            ]));
 
-            $apiClient->sendAsync($searchHistoryRequest);
+            $apiClient->request('POST', $apiUrl, [
+                'headers' => [
+                    'tokenId' => $request->headers->get('tokenId'),
+                ],
+                'form_params' => [
+                    'cityId' => $cityId,
+                    'searchText' => $searchText
+                ]
+            ]);
+
 
             return $this->_handleViewWithData($result);
 

@@ -181,6 +181,20 @@ class SearchCommonController extends ApiController
 
             $this->revertToScalarTagsMatchFields($result);
 
+            /** Отправляем запрос на АПИ для сохранения истории поиска */
+            $env = $this->container->get('kernel')->getEnvironment();
+            $apiUrl = $env !== 'prod' ? $this->container->getParameter('serviceApiDev') : $this->container->getParameter('serviceApiProd');
+            $apiClient = new \GuzzleHttp\Client();
+            $searchHistoryRequest = new \GuzzleHttp\Psr7\Request('POST', $apiUrl, [
+                'tokenId' => $request->headers->get('tokenId'),
+                'Content-Type' => 'application/json'
+            ], \GuzzleHttp\json_encode([
+                'cityId' => $cityId,
+                'searchText' => $searchText
+            ]));
+
+            $apiClient->sendAsync($searchHistoryRequest);
+
             return $this->_handleViewWithData($result);
 
         } catch (SearchServiceException $e) {

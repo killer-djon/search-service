@@ -26,3 +26,5 @@ parameters:
     mongodb.token_storage: '%mongodb.dsn%'
     mongodb.token_storage.database: rp_com_token
     mongodb.token_storage.token_collection: Token
+    serviceApiProd: 'http://rp-prod-api.rp/api/search/history'
+    serviceApiDev: 'http://rp-test-api2.rp/api/search/history'

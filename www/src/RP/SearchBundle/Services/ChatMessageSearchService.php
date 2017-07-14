@@ -232,8 +232,15 @@ JS;
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchByChatMessage($userId, $searchText = null, $chatId = null, $createdFrom = null, $groupChat = false, $skip = 0, $count = null)
-    {
+    public function searchByChatMessage(
+        $userId,
+        $searchText = null,
+        $chatId = null,
+        $createdFrom = null,
+        $groupChat = false,
+        $skip = 0,
+        $count = null
+    ) {
         $filter = $this->_queryFilterFactory;
         $script = $this->_scriptFactory;
         $sorting = $this->_sortingFactory;
@@ -358,7 +365,8 @@ JS;
                 /**
                  * Поиск по точному воспадению искомого словосочетания
                  */
-                $queryMust = ChatMessageMapping::getSearchConditionQueryMust($this->_queryConditionFactory, $searchText);
+                $queryMust = ChatMessageMapping::getSearchConditionQueryMust($this->_queryConditionFactory,
+                    $searchText);
 
                 if (!empty($queryMust)) {
                     $this->setConditionQueryMust($queryMust);
@@ -384,5 +392,39 @@ JS;
         return $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT, [
             'excludes' => ['friendList', 'relations', '*.friendList']
         ]);
+    }
+
+    /**
+     * Получить чат между двумя пользователями
+     * @param string $userId ID запрасившего пользователя
+     * @param string ID профиля с кем надо вывести чат
+     * @param int $skip Кол-во пропускаемых позиций поискового результата
+     * @param int $count Какое кол-во выводим
+     * @return array
+     */
+    public function getChatIdBetweenUsers($userId, $profileId, $skip = 0, $count = null)
+    {
+        $this->setConditionQueryMust([
+            $this->_queryConditionFactory->getTermsQuery('recipients.id', [$userId]),
+            $this->_queryConditionFactory->getTermsQuery('recipients.id', [$profileId])
+        ]);
+
+        $this->setAggregationQuery([
+            $this->_queryAggregationFactory->getTermsAggregation(
+                ChatMessageMapping::CHAT_ID_FIELD
+            )
+        ]);
+
+        $queryMatchResults = $this->createQuery($skip, $count);
+        $documents = $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT, [
+            'excludes' => [
+                'friendList',
+                'relations',
+                '*.friendList'
+            ]
+        ]);
+
+        $chatBucket = !empty($documents) ? $this->getAggregations(0) : [];
+        return !empty($chatBucket) ? $chatBucket['key'] : [];
     }
 }

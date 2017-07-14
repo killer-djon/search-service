@@ -301,6 +301,13 @@ class SearchUsersController extends ApiController
                 $userContext = $peopleSearchService->searchProfileById($this->getRequestUserId(), $targetUserId, $this->getGeoPoint());
                 $userContext = !empty($userContext[PeopleSearchMapping::CONTEXT]) ? current($userContext[PeopleSearchMapping::CONTEXT]) : [];
 
+                // получаем ID чата между пользователями
+                $chatId = $this->getChatMessageSearchService()->getChatIdBetweenUsers($this->getRequestUserId(), $targetUserId);
+                if(!empty($userContext))
+                {
+                    $userContext['chatId'] = $chatId;
+                }
+
                 if (isset($userContext['matchingInterests']) && !empty($userContext['matchingInterests'])) {
 
                     $tagsArray = explode(',', $userContext['matchingInterests']);

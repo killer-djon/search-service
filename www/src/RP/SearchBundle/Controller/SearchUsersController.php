@@ -274,6 +274,7 @@ class SearchUsersController extends ApiController
         $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
         $targetUserId = $this->getRequestUserId() != $userId ? $userId : $request->get(RequestConstant::TARGET_USER_ID_PARAM, $this->getRequestUserId());
 
+
         return $this->searchUserById($targetUserId, $version);
     }
 

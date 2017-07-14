@@ -196,7 +196,6 @@ class SearchCommonController extends ApiController
                 ]
             ]);
 
-
             return $this->_handleViewWithData($result);
 
         } catch (SearchServiceException $e) {

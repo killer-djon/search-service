@@ -404,9 +404,8 @@ JS;
      */
     public function getChatIdBetweenUsers($userId, $profileId, $skip = 0, $count = null)
     {
-        $this->setConditionQueryMust([
-            $this->_queryConditionFactory->getTermsQuery('recipients.id', [$userId]),
-            $this->_queryConditionFactory->getTermsQuery('recipients.id', [$profileId])
+        $this->setConditionQueryShould([
+            $this->_queryConditionFactory->getTermsQuery('recipients.id', [$profileId, $userId])
         ]);
 
         $this->setAggregationQuery([
@@ -416,6 +415,7 @@ JS;
         ]);
 
         $queryMatchResults = $this->createQuery($skip, $count);
+
         $documents = $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT, [
             'excludes' => [
                 'friendList',

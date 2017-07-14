@@ -933,11 +933,12 @@ class SearchEngine implements SearchEngineInterface
     /**
      * Получить результат аггрегированных данных
      *
+     * @param int|null $index Если набор данных не пустой бере по индексу
      * @return array
      */
-    public function getAggregations()
+    public function getAggregations($index = null)
     {
-        return $this->_aggregationsResult;
+        return !is_null($index) && !empty($this->_aggregationsResult) ? $this->_aggregationsResult[(int)$index] : $this->_aggregationsResult;
     }
 
     /**

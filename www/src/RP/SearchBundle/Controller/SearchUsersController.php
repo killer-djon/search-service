@@ -272,7 +272,8 @@ class SearchUsersController extends ApiController
     public function searchUsersByIdAction(Request $request, $userId)
     {
         $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
-        $targetUserId = $request->get(RequestConstant::TARGET_USER_ID_PARAM, $this->getRequestUserId());
+        $targetUserId = $this->getRequestUserId() != $userId ? $userId : $request->get(RequestConstant::TARGET_USER_ID_PARAM, $this->getRequestUserId());
+
 
         return $this->searchUserById($targetUserId, $version);
     }
@@ -301,6 +302,13 @@ class SearchUsersController extends ApiController
                 $userContext = $peopleSearchService->searchProfileById($this->getRequestUserId(), $targetUserId, $this->getGeoPoint());
                 $userContext = !empty($userContext[PeopleSearchMapping::CONTEXT]) ? current($userContext[PeopleSearchMapping::CONTEXT]) : [];
 
+                // получаем ID чата между пользователями
+                $chatId = $this->getChatMessageSearchService()->getChatIdBetweenUsers($this->getRequestUserId(), $targetUserId);
+                if(!empty($userContext))
+                {
+                    $userContext['chatId'] = $chatId;
+                }
+
                 if (isset($userContext['matchingInterests']) && !empty($userContext['matchingInterests'])) {
 
                     $tagsArray = explode(',', $userContext['matchingInterests']);
@@ -316,7 +324,10 @@ class SearchUsersController extends ApiController
                 $userContext = $peopleSearchService->searchRecordById(
                     PeopleSearchMapping::CONTEXT,
                     PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
-                    $this->getRequestUserId()
+                    $this->getRequestUserId(),
+                    [
+                        'excludes' => ['friendList', 'relations']
+                    ]
                 );
             }
 

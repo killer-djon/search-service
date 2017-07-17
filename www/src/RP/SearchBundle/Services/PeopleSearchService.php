@@ -8,6 +8,7 @@ namespace RP\SearchBundle\Services;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
 use Elastica\Query\FunctionScore;
 use Elastica\Query\MultiMatch;
+use RP\SearchBundle\Services\Mapping\ChatMessageMapping;
 use RP\SearchBundle\Services\Mapping\HelpOffersSearchMapping;
 use RP\SearchBundle\Services\Mapping\PeopleSearchMapping;
 
@@ -764,9 +765,17 @@ class PeopleSearchService extends AbstractSearchService
             $this->_queryConditionFactory->getTermQuery(PeopleSearchMapping::IDENTIFIER_FIELD, $profileId),
         ]);
 
+        $this->setIndices([
+            'russianplace'
+        ]);
+
         $query = $this->createQuery(0, 1);
 
-        return $this->searchDocuments($query, PeopleSearchMapping::CONTEXT);
+        $result = $this->searchDocuments($query, PeopleSearchMapping::CONTEXT, [
+            'excludes' => ['friendList']
+        ]);
+
+        return $result;
     }
 
     /**

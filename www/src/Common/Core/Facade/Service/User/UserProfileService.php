@@ -83,7 +83,7 @@ class UserProfileService extends ReportingService
         $this->_name = $data['name'];
         $this->_surname = $data['surname'];
         $this->_fullname = $data['fullname'];
-        $this->_friendList = $data['friendList'];
+        $this->_friendList = !empty($data['friendList']) ? $data['friendList'] : [];
         $this->_wallId = $data['wallId'];
     }
 

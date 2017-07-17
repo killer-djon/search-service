@@ -131,7 +131,8 @@ abstract class PostSearchMapping extends AbstractSearchMapping
     {
         $filter = [
             $filterFactory->getTermFilter([self::POST_IS_POSTED => true]),
-            $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => PeopleSearchMapping::RP_USER_ID])
+            $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => PeopleSearchMapping::RP_USER_ID]),
+            $filterFactory->getTermFilter([self::POST_IS_DELETED => false]),
         ];
         if(!empty(self::$_cityId))
         {

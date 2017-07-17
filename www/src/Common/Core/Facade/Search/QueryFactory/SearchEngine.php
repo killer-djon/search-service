@@ -13,6 +13,7 @@ use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Common\Core\Facade\Search\QueryScripting\QueryScriptFactoryInterface;
 use Common\Core\Facade\Search\QuerySorting\QuerySortFactoryInterface;
 use Common\Core\Facade\Service\Geo\GeoPointService;
+use Common\Util\ArrayHelper;
 use Elastica\Exception\ElasticsearchException;
 use FOS\ElasticaBundle\Elastica\Index;
 use Psr\Log\LoggerInterface;
@@ -105,12 +106,12 @@ class SearchEngine implements SearchEngineInterface
      * @var array $filterTypes
      */
     protected $filterTypes = [
-        PeopleSearchMapping::CONTEXT => PeopleSearchMapping::class,
-        FriendsSearchMapping::CONTEXT => FriendsSearchMapping::class,
-        PlaceSearchMapping::CONTEXT => PlaceSearchMapping::class,
-        RusPlaceSearchMapping::CONTEXT => RusPlaceSearchMapping::class,
-        EventsSearchMapping::CONTEXT => EventsSearchMapping::class,
-        DiscountsSearchMapping::CONTEXT => DiscountsSearchMapping::class,
+        PeopleSearchMapping::CONTEXT     => PeopleSearchMapping::class,
+        FriendsSearchMapping::CONTEXT    => FriendsSearchMapping::class,
+        PlaceSearchMapping::CONTEXT      => PlaceSearchMapping::class,
+        RusPlaceSearchMapping::CONTEXT   => RusPlaceSearchMapping::class,
+        EventsSearchMapping::CONTEXT     => EventsSearchMapping::class,
+        DiscountsSearchMapping::CONTEXT  => DiscountsSearchMapping::class,
         HelpOffersSearchMapping::CONTEXT => HelpOffersSearchMapping::class,
     ];
     //[@"people",@"friends",@"places",@"rusPlaces",@"events",@"discounts"];
@@ -121,24 +122,24 @@ class SearchEngine implements SearchEngineInterface
      * @var array $filterSearchTypes
      */
     protected $filterSearchTypes = [
-        PeopleSearchMapping::CONTEXT => PeopleSearchMapping::class,
-        PlaceSearchMapping::CONTEXT => PlaceSearchMapping::class,
+        PeopleSearchMapping::CONTEXT            => PeopleSearchMapping::class,
+        PlaceSearchMapping::CONTEXT             => PlaceSearchMapping::class,
         HelpOffersSearchMapping::CONTEXT_MARKER => HelpOffersSearchMapping::class,
-        DiscountsSearchMapping::CONTEXT => DiscountsSearchMapping::class,
-        EventsSearchMapping::CONTEXT => EventsSearchMapping::class,
-        RusPlaceSearchMapping::CONTEXT => RusPlaceSearchMapping::class,
-        FriendsSearchMapping::CONTEXT => FriendsSearchMapping::class,
-        PostSearchMapping::CONTEXT => PostSearchMapping::class
+        DiscountsSearchMapping::CONTEXT         => DiscountsSearchMapping::class,
+        EventsSearchMapping::CONTEXT            => EventsSearchMapping::class,
+        RusPlaceSearchMapping::CONTEXT          => RusPlaceSearchMapping::class,
+        FriendsSearchMapping::CONTEXT           => FriendsSearchMapping::class,
+        PostSearchMapping::CONTEXT              => PostSearchMapping::class
     ];
 
     protected $availableTypesSearch = [
-        CountrySearchMapping::CONTEXT => CountrySearchMapping::class,
-        CitySearchMapping::CONTEXT => CitySearchMapping::class,
-        ChatMessageMapping::CONTEXT => ChatMessageMapping::class,
-        TagNameSearchMapping::CONTEXT => TagNameSearchMapping::class,
+        CountrySearchMapping::CONTEXT   => CountrySearchMapping::class,
+        CitySearchMapping::CONTEXT      => CitySearchMapping::class,
+        ChatMessageMapping::CONTEXT     => ChatMessageMapping::class,
+        TagNameSearchMapping::CONTEXT   => TagNameSearchMapping::class,
         PlaceTypeSearchMapping::CONTEXT => PlaceTypeSearchMapping::class,
-        PeopleSearchMapping::CONTEXT => PeopleSearchMapping::class,
-        PostSearchMapping::CONTEXT => PostSearchMapping::class,
+        PeopleSearchMapping::CONTEXT    => PeopleSearchMapping::class,
+        PostSearchMapping::CONTEXT      => PostSearchMapping::class,
         UserEventSearchMapping::CONTEXT => UserEventSearchMapping::class,
     ];
 
@@ -148,16 +149,16 @@ class SearchEngine implements SearchEngineInterface
      * но при этом использовать всего-лишь фильтр
      */
     protected $searchTypes = [
-        'people' => 'people',
-        'places' => 'places',
-        'helpOffers' => 'people',
-        'help' => 'people',
-        'discounts' => 'places',
-        'rusPlaces' => 'places',
-        'events' => 'events',
-        'friends' => 'people',
+        'people'        => 'people',
+        'places'        => 'places',
+        'helpOffers'    => 'people',
+        'help'          => 'people',
+        'discounts'     => 'places',
+        'rusPlaces'     => 'places',
+        'events'        => 'events',
+        'friends'       => 'people',
         'commonFriends' => 'people',
-        'posts' => 'posts'
+        'posts'         => 'posts'
     ];
 
     /**
@@ -273,6 +274,26 @@ class SearchEngine implements SearchEngineInterface
 
     }
 
+    /**
+     * Инициируем по умолчанию данные реузльатат поиска
+     *
+     * @param array $totalResultsData
+     */
+    public function initTotalResults(array $totalResultsData)
+    {
+        $this->_totalResults = $totalResultsData;
+    }
+
+    /**
+     * Инициируем по умолчанию данные по инфе поиска
+     *
+     * @param array $totalHits
+     */
+    public function initTotalHits(array $totalHits)
+    {
+        $this->_totalHits = $totalHits;
+    }
+
     public function getFilterTypes()
     {
         return $this->filterTypes;
@@ -370,6 +391,7 @@ class SearchEngine implements SearchEngineInterface
         try {
             /** устанавливаем все поля по умолчанию */
             $elasticQuery->setSource((is_null($setSource) ? $this->_sourceQuery : $setSource));
+
             $elasticType = $this->_getElasticType((!is_null($context) && !is_array($context) ? $context : null));
 
             $this->_paginator = new SearchElasticaAdapter($elasticType, $elasticQuery);
@@ -381,10 +403,9 @@ class SearchEngine implements SearchEngineInterface
                     $indices[] = $this->availableTypesSearch[$typeIndex]::DEFAULT_INDEX;
                 }
             } else {
-                if( !empty($this->_indices) )
-                {
+                if (!empty($this->_indices)) {
                     $indices = $this->_indices;
-                }else{
+                } else {
                     $indices = [self::DEFAULT_INDEX];
                 }
             }
@@ -425,7 +446,7 @@ class SearchEngine implements SearchEngineInterface
      * @throws ElasticsearchException
      * @return array results
      */
-    public function searchMultiTypeDocuments(array $elasticQueries, $setSource = null)
+    public function searchMultiTypeDocuments(array $elasticQueries, $setSource = true)
     {
         try {
             $search = new \Elastica\Multi\Search($this->_elasticaIndex->getClient());
@@ -477,8 +498,8 @@ class SearchEngine implements SearchEngineInterface
 
                     $searchingType[$key] = $hits[$key];
                     $info = [
-                        'totalHits' => $totalHits,
-                        'totalTime' => $totalTime . 'ms',
+                        'totalHits'  => $totalHits,
+                        'totalTime'  => $totalTime . 'ms',
                         'searchType' => $searchingType,
                     ];
                     $items[$key] = $dataItem[$key][$this->searchTypes[$key]];
@@ -555,11 +576,21 @@ class SearchEngine implements SearchEngineInterface
 
                 if ((int)$docCount > 0) {
 
+                    $isOnlineCount = 0;
+                    $online = $currentItem['term_aggregation']['buckets'];
+                    if (!empty($online) && count($online) > 0) {
+                        $onlineCountAsKey = ArrayHelper::index($online, 'key_as_string');
+                    }
+
+                    $isCurrentOnlineCount = (isset($onlineCountAsKey['true']) ? $onlineCountAsKey['true']['doc_count'] : 0);
+
                     $item = [
                         'doc_count' => $docCount,
-                        'type' => $typeKey,
-                        $keyField => [
-                            Location::LONG_LATITUDE => $currentItem['centroid'][$keyField][Location::LATITUDE],
+                        'type'      => $typeKey,
+                        'isOnline'  => $isCurrentOnlineCount,
+                        'isOffline' => ($docCount - $isCurrentOnlineCount),
+                        $keyField   => [
+                            Location::LONG_LATITUDE  => $currentItem['centroid'][$keyField][Location::LATITUDE],
                             Location::LONG_LONGITUDE => $currentItem['centroid'][$keyField][Location::LONGITUDE],
                         ],
                     ];
@@ -578,6 +609,7 @@ class SearchEngine implements SearchEngineInterface
             }
         }
 
+
         // 2. Затем группируем все по ключам класстера
         $bucketItems = [];
         // для начала сводим это в единный массив разных типов
@@ -594,13 +626,18 @@ class SearchEngine implements SearchEngineInterface
             $docTypes = array_unique(array_column($bucketItem, 'type'));
             $location = array_column($bucketItem, 'location');
 
+            $isOnline = ArrayHelper::getValue(ArrayHelper::getColumn($bucketItem, 'isOnline'), 0);
+            $isOffLine = ArrayHelper::getValue(ArrayHelper::getColumn($bucketItem, 'isOffline'), 0);
+
+            //$isOffLine = $bucketItem['isOffline'];
             if ($sumDocCount > 0) {
                 $resultItem = [
-                    'key' => $keyHash,
+                    'key'       => $keyHash,
                     'doc_count' => $sumDocCount,
-                    'types' => implode(',', $docTypes),
-                    //'location' => $location
-                    'location' => GeoPointService::GetCenterFromDegrees($location),
+                    'types'     => implode(',', $docTypes),
+                    'isOnline'  => $isOnline,
+                    'isOffline' => $isOffLine,
+                    'location'  => GeoPointService::GetCenterFromDegrees($location),
                 ];
 
                 if ($sumDocCount == 1) {
@@ -728,11 +765,11 @@ class SearchEngine implements SearchEngineInterface
             $page = intval($skip / $count) + 1;
 
             return [
-                'count' => (int)$totalCount,
-                'offset' => (int)$skip,
-                'limit' => (int)$count,
+                'count'      => (int)$totalCount,
+                'offset'     => (int)$skip,
+                'limit'      => (int)$count,
                 'page_count' => (int)$pageCount,
-                'page' => (int)$page,
+                'page'       => (int)$page,
             ];
         }
     }
@@ -821,6 +858,7 @@ class SearchEngine implements SearchEngineInterface
         $this->flatFormatData = $flag;
     }
 
+
     /**
      * Устанавливаем общие данные запроса
      *
@@ -863,7 +901,7 @@ class SearchEngine implements SearchEngineInterface
             if ($this->getOldFormat() === true) {
                 $items[$type][] = [
                     'item' => $record[$type],
-                    'hit' => $record[$type]['hit'],
+                    'hit'  => $record[$type]['hit'],
                 ];
 
             } else {
@@ -895,11 +933,12 @@ class SearchEngine implements SearchEngineInterface
     /**
      * Получить результат аггрегированных данных
      *
+     * @param int|null $index Если набор данных не пустой бере по индексу
      * @return array
      */
-    public function getAggregations()
+    public function getAggregations($index = null)
     {
-        return $this->_aggregationsResult;
+        return !is_null($index) && !empty($this->_aggregationsResult) ? $this->_aggregationsResult[(int)$index] : $this->_aggregationsResult;
     }
 
     /**

@@ -55,7 +55,9 @@ class ChatMessageSearchService extends AbstractSearchService
 
         $queryMatchResults = $this->createQuery($skip, $count);
 
-        return $this->searchDocuments($queryMatchResults);
+        return $this->searchDocuments($queryMatchResults, null, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
     }
 
     /**
@@ -78,7 +80,9 @@ class ChatMessageSearchService extends AbstractSearchService
 
         $queryMatchResults = $this->createQuery();
 
-        return $this->searchSingleDocuments($queryMatchResults);
+        return $this->searchSingleDocuments($queryMatchResults, null, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
     }
 
     public function getCountUnDeleteMessages($recipientId, $chatId)
@@ -208,7 +212,9 @@ JS;
 
         $queryMatchResults = $this->createQuery();
 
-        return $this->searchDocuments($queryMatchResults);
+        return $this->searchDocuments($queryMatchResults, null, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
     }
 
     /**
@@ -226,8 +232,15 @@ JS;
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchByChatMessage($userId, $searchText = null, $chatId = null, $createdFrom = null, $groupChat = false, $skip = 0, $count = null)
-    {
+    public function searchByChatMessage(
+        $userId,
+        $searchText = null,
+        $chatId = null,
+        $createdFrom = null,
+        $groupChat = false,
+        $skip = 0,
+        $count = null
+    ) {
         $filter = $this->_queryFilterFactory;
         $script = $this->_scriptFactory;
         $sorting = $this->_sortingFactory;
@@ -296,7 +309,13 @@ JS;
                 )->addAggregation(
                     $aggr->setAggregationSource(
                         ChatMessageMapping::LAST_CHAT_MESSAGE,
-                        [],
+                        [
+                            'excludes' => [
+                                'friendList',
+                                'relations',
+                                '*.friendList'
+                            ]
+                        ],
                         1
                     )->setSort([
                         ChatMessageMapping::MESSAGE_SEND_AT_FIELD => SortingOrder::SORTING_DESC,
@@ -305,12 +324,19 @@ JS;
                     $aggr->setAggregationSource(
                         ChatMessageMapping::CONTEXT,
                         [
-                            ChatMessageMapping::IDENTIFIER_FIELD,
-                            ChatMessageMapping::CHAT_ID_FIELD,
-                            ChatMessageMapping::CHAT_CREATED_AT,
-                            ChatMessageMapping::CHAT_IS_DIALOG,
-                            ChatMessageMapping::RECIPIENTS_MESSAGE_IS_DELETED,
-                            ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD,
+                            'includes' => [
+                                ChatMessageMapping::IDENTIFIER_FIELD,
+                                ChatMessageMapping::CHAT_ID_FIELD,
+                                ChatMessageMapping::CHAT_CREATED_AT,
+                                ChatMessageMapping::CHAT_IS_DIALOG,
+                                ChatMessageMapping::RECIPIENTS_MESSAGE_IS_DELETED,
+                                ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD,
+                            ],
+                            'excludes' => [
+                                'friendList',
+                                'relations',
+                                '*.friendList'
+                            ]
                         ], 1
                     )->setSort([
                         ChatMessageMapping::MESSAGE_SEND_AT_FIELD => SortingOrder::SORTING_DESC,
@@ -339,7 +365,8 @@ JS;
                 /**
                  * Поиск по точному воспадению искомого словосочетания
                  */
-                $queryMust = ChatMessageMapping::getSearchConditionQueryMust($this->_queryConditionFactory, $searchText);
+                $queryMust = ChatMessageMapping::getSearchConditionQueryMust($this->_queryConditionFactory,
+                    $searchText);
 
                 if (!empty($queryMust)) {
                     $this->setConditionQueryMust($queryMust);
@@ -362,6 +389,44 @@ JS;
 
         }
 
-        return $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT);
+        return $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
+    }
+
+    /**
+     * Получить чат между двумя пользователями
+     * @param string $userId ID запрасившего пользователя
+     * @param string ID профиля с кем надо вывести чат
+     * @param int $skip Кол-во пропускаемых позиций поискового результата
+     * @param int $count Какое кол-во выводим
+     * @return array
+     */
+    public function getChatIdBetweenUsers($userId, $profileId, $skip = 0, $count = null)
+    {
+        $this->setFilterQuery([
+            $this->_queryFilterFactory->getTermsFilter('recipients.id', [$userId]),
+            $this->_queryFilterFactory->getTermsFilter('recipients.id', [$profileId]),
+        ]);
+
+        $this->setAggregationQuery([
+            $this->_queryAggregationFactory->getTermsAggregation(
+                ChatMessageMapping::CHAT_ID_FIELD
+            )
+        ]);
+
+        $queryMatchResults = $this->createQuery($skip, $count);
+
+        $documents = $this->searchDocuments($queryMatchResults, ChatMessageMapping::CONTEXT, [
+            'excludes' => [
+                'friendList',
+                'relations',
+                '*.friendList'
+            ]
+        ]);
+
+        $chatBucket = !empty($documents) ? $this->getAggregations(0) : [];
+
+        return !empty($chatBucket) ? $chatBucket['key'] : [];
     }
 }

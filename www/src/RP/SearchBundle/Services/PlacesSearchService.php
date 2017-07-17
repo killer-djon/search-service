@@ -65,7 +65,7 @@ class PlacesSearchService extends AbstractSearchService
         $this->setGeoPointConditions($point, PlaceSearchMapping::class);
 
         /** устанавливаем фильтры только для мест */
-        $this->setFilterQuery(PlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
+        $this->setFilterQuery(PlaceSearchMapping::getMatchSearchFilter($this->_queryFilterFactory, $userId));
 
         $queryMatch = $this->createQuery($skip, $count);
 
@@ -86,15 +86,6 @@ class PlacesSearchService extends AbstractSearchService
     {
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
-
-        /*$queryMatch = $this->createMatchQuery(
-            $searchText,
-            [
-                PlaceTypeSearchMapping::NAME_FIELD,
-                PlaceTypeSearchMapping::NAME_TRANSLIT_FIELD
-            ],
-            $skip, $count
-        );*/
 
         if (!is_null($searchText) && !empty($searchText)) {
             $this->setConditionQueryShould([
@@ -178,7 +169,7 @@ class PlacesSearchService extends AbstractSearchService
         $this->setGeoPointConditions($point, PlaceSearchMapping::class);
 
         /** устанавливаем фильтры только для мест */
-        $this->setFilterQuery(PlaceSearchMapping::getMarkersSearchFilter($this->_queryFilterFactory, $userId));
+        $this->setFilterQuery(PlaceSearchMapping::getMatchSearchFilter($this->_queryFilterFactory, $userId));
 
         $queryMatch = $this->createQuery($skip, $count);
 
@@ -254,21 +245,35 @@ class PlacesSearchService extends AbstractSearchService
      *
      * @param string $userId ID пользователя который делает запрос к АПИ
      * @param GeoPointServiceInterface $point
+     * @param string $searchText Поисковый запрос
      * @param int|null $skip Кол-во пропускаемых позиций поискового результата
      * @param int|null $count Какое кол-во выводим
      * @param int|null $countryId ID страны
      * @param int|null $cityId ID города
      * @return array Массив с найденными результатами
      */
-    public function searchPromoPlaces($userId, GeoPointServiceInterface $point, $skip = null, $count = null, $countryId = null, $cityId = null)
+    public function searchPromoPlaces($userId, GeoPointServiceInterface $point, $searchText = null, $skip = null, $count = null, $countryId = null, $cityId = null)
     {
         $currentUser = $this->getUserById($userId);
 
         $userPoint = $currentUser->getLocation();
 
-        if ((!$point->isValid() || $point->isEmpty()) && ($userPoint->isValid() && !$userPoint->isEmpty())) {
+        /**
+         * Логика должна быть наоборот
+         * если есть приходящие данные в параметрах
+         * тогда учитываем их, ибо они не зря заданы явно в параметрах
+         * иначе мы берем уже данные пользователя
+         *
+         * по другому у нас не будет учитываться радиус
+         * а задавать его явно при таком условии безсмыслено
+         */
+        /*if ((!$point->isValid() || $point->isEmpty()) && ($userPoint->isValid() && !$userPoint->isEmpty())) {
             $point = $userPoint;
-        }
+        }*/
+
+
+        $userPoint = $point->isValid() && !$point->isEmpty() ? $point : $currentUser->getLocation();
+        $userPoint->setRadius($point->getRadius());
 
         $aggr = $this->_queryAggregationFactory;
 
@@ -286,11 +291,11 @@ class PlacesSearchService extends AbstractSearchService
             ),
             'distance'          => $scriptFactory->getDistanceScript(
                 $this->filterTypes[PlaceSearchMapping::CONTEXT]::LOCATION_POINT_FIELD,
-                $point
+                $userPoint
             ),
             'distanceInPercent' => $scriptFactory->getDistanceInPercentScript(
                 $this->filterTypes[PlaceSearchMapping::CONTEXT]::LOCATION_POINT_FIELD,
-                $point
+                $userPoint
             ),
         ];
 
@@ -298,6 +303,13 @@ class PlacesSearchService extends AbstractSearchService
             $this->setAggregationQuery([
                 $aggr
                     ->getTermsAggregation(PlaceSearchMapping::LOCATION_COUNTRY_ID_FIELD, null, '_count', 'desc')
+                    ->addAggregation($aggr
+                        ->getFilterAggregation('country',
+                            $this->_queryFilterFactory->getTermFilter([
+                                PlaceSearchMapping::LOCATION_COUNTRY_ID_FIELD => $countryId
+                            ])
+                        )
+                    )
                     ->addAggregation($aggr
                         ->setAggregationSource(PlaceSearchMapping::CONTEXT, [], $count)
                     )
@@ -326,9 +338,26 @@ class PlacesSearchService extends AbstractSearchService
         $this->setScriptTagsConditions($currentUser, PlaceSearchMapping::class);
 
         /** добавляем к условию поиска рассчет расстояния */
-        $this->setGeoPointConditions($point, PlaceSearchMapping::class);
+        // зачем это услоие если выше уже указаны скриптовые поля ?
+        //$this->setGeoPointConditions($userPoint, PlaceSearchMapping::class);
+        if(!empty($userPoint->getRadius()))
+        {
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getGeoDistanceFilter(
+                    PlaceSearchMapping::LOCATION_POINT_FIELD,
+                    [
+                        'lat' => $userPoint->getLatitude(),
+                        'lon' => $userPoint->getLongitude(),
+                    ],
+                    $userPoint->getRadius(),
+                    'm'
+                ),
+            ]);
+        }
 
-        $queryMatch = $this->createMatchQuery(null, PlaceSearchMapping::getMultiMatchQuerySearchFields());
+        $searchText = empty($searchText) ? null : $searchText;
+
+        $queryMatch = $this->createMatchQuery($searchText, PlaceSearchMapping::getMultiMatchQuerySearchFields());
 
         $this->searchDocuments($queryMatch, PlaceSearchMapping::CONTEXT);
 

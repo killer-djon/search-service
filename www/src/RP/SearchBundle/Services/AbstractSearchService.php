@@ -595,11 +595,15 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * @throws SearchServiceException
      * @return UserProfileService|null
      */
-    public function getUserById($userId)
+    public function getUserById($userId, $source = true)
     {
         try {
-            $user = $this->searchRecordById(PeopleSearchMapping::CONTEXT, PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
-                "$userId");
+            $user = $this->searchRecordById(
+                PeopleSearchMapping::CONTEXT,
+                PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
+                "$userId",
+                $source
+            );
 
             if (!is_null($user) && !empty($user)) {
                 return new UserProfileService($user);
@@ -617,9 +621,10 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
      * @param string $context Контекст поиска
      * @param string $fieldId Поле идентификатора
      * @param string $recordId ID искомой записи
+     * @param array|bool $source Fields from source (excludes, includes) in query Results
      * @return array|null Найденный результат или ничего
      */
-    public function searchRecordById($context, $fieldId, $recordId)
+    public function searchRecordById($context, $fieldId, $recordId, $source = true)
     {
         /** указываем условия запроса */
         $this->setConditionQueryMust([
@@ -632,10 +637,10 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
         ]);
 
         /** генерируем объект запроса */
-        $query = $this->createQuery();
+        $query = $this->createQuery(0, 1);
 
         /** находим документ в базе еластика по его ID */
-        $document = $this->searchSingleDocuments($query, $context);
+        $document = $this->searchSingleDocuments($query, $context, $source);
 
         /** Возращаем документ */
         return $document;

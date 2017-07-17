@@ -105,11 +105,13 @@ class SearchCommonController extends ApiController
                 ));
             }
 
+            $point = $this->getGeoPoint();
+
             $searchData = $commonSearchService->commonSearchByFilters(
                 $userId,
                 $searchText,
                 $cityId,
-                $this->getGeoPoint(),
+                $point->isValid() && !$point->isEmpty() ? $point : null,
                 $filterType,
                 $this->getSkip(),
                 $this->getCount()
@@ -178,6 +180,21 @@ class SearchCommonController extends ApiController
             }
 
             $this->revertToScalarTagsMatchFields($result);
+
+            /** Отправляем запрос на АПИ для сохранения истории поиска */
+            $env = $this->container->get('kernel')->getEnvironment();
+            $apiUrl = $env !== 'prod' ? $this->container->getParameter('serviceApiDev') : $this->container->getParameter('serviceApiProd');
+            $apiClient = new \GuzzleHttp\Client();
+
+            $apiClient->request('POST', $apiUrl, [
+                'headers' => [
+                    'tokenId' => $request->headers->get('tokenId'),
+                ],
+                'form_params' => [
+                    'cityId' => $cityId,
+                    'searchText' => $searchText
+                ]
+            ]);
 
             return $this->_handleViewWithData($result);
 

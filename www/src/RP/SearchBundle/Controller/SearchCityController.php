@@ -139,36 +139,94 @@ class SearchCityController extends ApiController
      * @param Request $request Объект запроса
      * @return Response
      */
-    public function getCitiesListAction(Request $request)
+    public function searchCitiesListAction(Request $request)
     {
-        $data = [];
-
         try {
-            $citySearchService = $this->getCitySearchService();
-            $cities = $citySearchService->getTopCitiesList(
-                $this->getSkip(),
-                $this->getCount()
-            );
-            $data = $cities;
-            $citiesData = $citySearchService->getAggregations();
+            $result = [];
 
-            if (!empty($citiesData)) {
-                foreach ($citiesData as &$city) {
-                    $city['city'] = $citySearchService->searchRecordById(
-                        CitySearchMapping::CONTEXT,
-                        CitySearchMapping::ID_FIELD,
-                        $city['key']
-                    );
+            $skip = $this->getSkip();
+            $count = $this->getCount();
+
+            $userId = $this->getRequestUserId();
+
+            $citySearchService = $this->getCitySearchService();
+
+            $searchedCities = $citySearchService->getLastSearchedCitiesList(
+                $userId,
+                $skip,
+                $count
+            );
+
+            if (!empty($searchedCities)) {
+                foreach ($searchedCities as $city) {
+                    $result[] = [
+                        'key'       => $city['id'],
+                        'doc_count' => false, // этот параметр нужен для совместимости с данными из агрегации топ мест
+                        'city'      => $citySearchService->searchRecordById(
+                            CitySearchMapping::CONTEXT,
+                            CitySearchMapping::ID_FIELD,
+                            $city['id']
+                        ),
+                    ];
+
+                    if (count($result) >= $count) {
+                        break;
+                    }
                 }
             }
 
-            $data = $citiesData;
+            $alreadyInResult = array_column($result, 'key');
+
+            if (count($result) < $count) {
+                $citySearchService->getTopCitiesList(
+                    $alreadyInResult,
+                    $skip,
+                    $count
+                );
+
+                $topCities = $citySearchService->getAggregations();
+
+                if (!empty($topCities)) {
+                    foreach ($topCities as $city) {
+                        $city['city'] = $citySearchService->searchRecordById(
+                            CitySearchMapping::CONTEXT,
+                            CitySearchMapping::ID_FIELD,
+                            $city['key']
+                        );
+
+                        $result[] = $city;
+
+                        if (count($result) >= $count) {
+                            break;
+                        }
+                    }
+                }
+            }
         } catch (SearchServiceException $e) {
             return $this->_handleViewWithError($e);
         } catch (\HttpResponseException $e) {
             return $this->_handleViewWithError($e);
         }
 
-        return $this->_handleViewWithData($data);
+        return $this->_handleViewWithData($result);
+    }
+
+    /**
+     * @param \Symfony\Component\HttpFoundation\Request $request
+     * @return \Symfony\Component\HttpFoundation\Response
+     */
+    public function searchCityByPositionAction(Request $request)
+    {
+        try {
+            $citySearchService = $this->getCitySearchService();
+
+            $result = $citySearchService->getCityByGeoPoint($this->getGeoPoint());
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+
+        return $this->_handleViewWithData($result);
     }
 }

@@ -7,6 +7,13 @@ namespace Common\Core\Facade\Service\Geo;
  */
 interface GeoPointServiceInterface
 {
+
+    /**
+     * @param bool $radius
+     * @return array
+     */
+    public function export($radius=false);
+
     /**
      * Возвращает широту координаты
      *

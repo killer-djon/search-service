@@ -68,8 +68,14 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
      * @param string $format Формат времени
      * @return \Elastica\Aggregation\AbstractSimpleAggregation
      */
-    public function getDateHistogramAggregation($fieldName, $interval, $count = null, $timezone = null, $offset = null, $format = null)
-    {
+    public function getDateHistogramAggregation(
+        $fieldName,
+        $interval,
+        $count = null,
+        $timezone = null,
+        $offset = null,
+        $format = null
+    ) {
         $dateHistogram = new \Elastica\Aggregation\DateHistogram('date_histogram', $fieldName, $interval);
         if (!is_null($count)) {
             $dateHistogram->setMinimumDocumentCount($count);
@@ -262,8 +268,13 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
      * @param int|null $minDocCount Минимальное кол-во документов в букете
      * @return \Elastica\Aggregation\Terms
      */
-    public function getTermsAggregation($fieldName = null, $script = null, $order = '_term', $direction = 'asc', $minDocCount = null)
-    {
+    public function getTermsAggregation(
+        $fieldName = null,
+        $script = null,
+        $order = '_term',
+        $direction = 'asc',
+        $minDocCount = null
+    ) {
         $terms = new \Elastica\Aggregation\Terms('term_aggregation');
         if (!is_null($minDocCount) && (int)$minDocCount > 0) {
             $terms->setMinimumDocumentCount($minDocCount);
@@ -318,8 +329,10 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
     public function getAvgAggregation($fieldName, $script = null)
     {
         $aggType = new \Elastica\Aggregation\Avg('avg');
+        $aggType->setField($fieldName);
+        $aggType->setScript($script);
 
-        return $this->getSimpleAggregation($aggType, $fieldName, $script);
+        return $aggType;
     }
 
     /**
@@ -341,8 +354,11 @@ class QueryAggregationFactory implements QueryAggregationFactoryInterface
      * @param string|\Elastica\Script $script
      * @return \Elastica\Aggregation\AbstractSimpleAggregation
      */
-    private function getSimpleAggregation(\Elastica\Aggregation\AbstractSimpleAggregation $aggType, $fieldName, $script = null)
-    {
+    private function getSimpleAggregation(
+        \Elastica\Aggregation\AbstractSimpleAggregation $aggType,
+        $fieldName,
+        $script = null
+    ) {
         $aggType->setField($fieldName);
         if (!is_null($script)) {
             $aggType->setScript($script);

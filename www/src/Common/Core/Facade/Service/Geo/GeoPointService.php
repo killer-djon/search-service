@@ -80,9 +80,27 @@ class GeoPointService implements GeoPointServiceInterface
      */
     public function __construct($latitude, $longitude, $radius = null)
     {
-        $this->_setLatitude((float)$latitude);
-        $this->_setLongitude((float)$longitude);
+        $this->_setLatitude($latitude);
+        $this->_setLongitude($longitude);
         $this->_setRadius($radius);
+    }
+
+    /**
+     * @param bool $radius
+     * @return array
+     */
+    public function export($radius = false)
+    {
+        $result = [
+            'lat' => $this->getLatitude(),
+            'lon' => $this->getLongitude(),
+        ];
+
+        if ($radius) {
+            $result['radius'] = $this->getRadius();
+        }
+
+        return $result;
     }
 
     /**
@@ -142,7 +160,7 @@ class GeoPointService implements GeoPointServiceInterface
      */
     public function isEmpty()
     {
-        return (int)$this->getLatitude() === 0 && (int)$this->getLongitude() === 0;
+        return (float)$this->getLatitude() < self::LATITUDE_MIN && (float)$this->getLongitude() < self::LONGITUDE_MIN;
     }
 
     /**
@@ -151,7 +169,7 @@ class GeoPointService implements GeoPointServiceInterface
     private function _setLatitude($latitude)
     {
         $this->validateLatitude($latitude);
-        $this->_latitude = $latitude;
+        //$this->_latitude = $latitude;
     }
 
     /**
@@ -160,7 +178,7 @@ class GeoPointService implements GeoPointServiceInterface
     private function _setLongitude($longitude)
     {
         $this->validateLongitude($longitude);
-        $this->_longitude = $longitude;
+        //$this->_longitude = $longitude;
     }
 
     /**
@@ -191,17 +209,23 @@ class GeoPointService implements GeoPointServiceInterface
      */
     protected function validateLatitude($latitude)
     {
-        // Проверить тип данных
-        if (!is_float($latitude)) {
-            throw new \InvalidArgumentException(self::LATITUDE_TYPE_VIOLATION);
-        }
+        if(!is_null($latitude))
+        {
+            $latitude = (float)$latitude;
+            // Проверить тип данных
+            if (!is_float($latitude)) {
+                throw new \InvalidArgumentException(self::LATITUDE_TYPE_VIOLATION);
+            }
 
-        // Широта должна быть в пределах от -90 до 90
-        if ($latitude > self::LATITUDE_MAX) {
-            throw new \InvalidArgumentException(self::LATITUDE_MAX_RANGE_VIOLATION);
-        }
-        if ($latitude < self::LATITUDE_MIN) {
-            throw new \InvalidArgumentException(self::LATITUDE_MIN_RANGE_VIOLATION);
+            // Широта должна быть в пределах от -90 до 90
+            if ($latitude > self::LATITUDE_MAX) {
+                throw new \InvalidArgumentException(self::LATITUDE_MAX_RANGE_VIOLATION);
+            }
+            if ($latitude < self::LATITUDE_MIN) {
+                throw new \InvalidArgumentException(self::LATITUDE_MIN_RANGE_VIOLATION);
+            }
+
+            $this->_latitude = $latitude;
         }
     }
 
@@ -213,18 +237,25 @@ class GeoPointService implements GeoPointServiceInterface
      */
     protected function validateLongitude($longitude)
     {
-        // Проверить тип данных
-        if (!is_float($longitude)) {
-            throw new \InvalidArgumentException(self::LONGITUDE_TYPE_VIOLATION);
+        if(!is_null($longitude))
+        {
+            $longitude = (float)$longitude;
+            // Проверить тип данных
+            if (!is_float($longitude)) {
+                throw new \InvalidArgumentException(self::LONGITUDE_TYPE_VIOLATION);
+            }
+
+            // Долгота должна быть в пределах от -180 до 180
+            if ($longitude > self::LONGITUDE_MAX) {
+                throw new \InvalidArgumentException(self::LONGITUDE_MAX_RANGE_VIOLATION);
+            }
+            if ($longitude < self::LONGITUDE_MIN) {
+                throw new \InvalidArgumentException(self::LONGITUDE_MIN_RANGE_VIOLATION);
+            }
+
+            $this->_longitude = $longitude;
         }
 
-        // Долгота должна быть в пределах от -180 до 180
-        if ($longitude > self::LONGITUDE_MAX) {
-            throw new \InvalidArgumentException(self::LONGITUDE_MAX_RANGE_VIOLATION);
-        }
-        if ($longitude < self::LONGITUDE_MIN) {
-            throw new \InvalidArgumentException(self::LONGITUDE_MIN_RANGE_VIOLATION);
-        }
     }
 
     /**

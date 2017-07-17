@@ -416,7 +416,7 @@ JS;
 
         $this->setFilterQuery([
             $this->_queryFilterFactory->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $rpUserId]),
-            $this->_queryFilterFactory->getTermsFilter(PostSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+            //$this->_queryFilterFactory->getTermsFilter(PostSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
         ]);
 
         if (!empty($categoryId)) {

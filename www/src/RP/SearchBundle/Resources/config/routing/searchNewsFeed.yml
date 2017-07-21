@@ -63,3 +63,16 @@ RPSearchBundle_search_newsFeed_userevents_list:
         _format: (json|xml|html|plist)
         _version: '1' # устанавливаем обязательную версию
 
+# Routing который формирует запрос для вывода событий пользовательских
+# пример запроса /api/v1/json/newsfeed/userevents
+RPSearchBundle_search_newsFeed_notifications:
+    path: /v{_version}/{_format}/newsfeed/notifications/list
+    defaults:
+        _controller: RPSearchBundle:SearchNewsFeed:getNewsFeedNotifications
+        _version: 1
+        _format: json
+        template: "RPSearchBundle:SearchNewsFeed:newsfeedUserEvents.html.twig" # обязательный параметр при передаче в формате HTML (frontend parts API)
+    requirements:
+        _method: (GET)
+        _format: (json|xml|html|plist)
+        _version: '1' # устанавливаем обязательную версию

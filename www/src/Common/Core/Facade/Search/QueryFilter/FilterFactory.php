@@ -32,6 +32,7 @@ class FilterFactory implements FilterFactoryInterface
         return $precision;
     }
 
+
     /**
      * Возвращает фильтр по условию GeoHash
      *
@@ -82,6 +83,7 @@ class FilterFactory implements FilterFactoryInterface
     {
         return new \Elastica\Filter\Term($terms);
     }
+
 
     /**
      * Возвращает фильтр c условием по term

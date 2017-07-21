@@ -6,13 +6,16 @@
 
 namespace RP\SearchBundle\Services;
 
+use Common\Core\Constants\NewsFeedSections;
 use Common\Core\Constants\RequestConstant;
+use Common\Core\Constants\SettingsNotifications;
 use Common\Core\Constants\SortingOrder;
 use Common\Core\Constants\UserEventGroup;
 use Common\Core\Constants\UserEventType;
 use Common\Core\Facade\Search\QueryFactory\QueryFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Common\Core\Facade\Service\Geo\GeoPointServiceInterface;
+use Elastica\Exception\ElasticsearchException;
 use Elastica\Query\FunctionScore;
 use Elastica\Query\MultiMatch;
 use RP\SearchBundle\Services\Mapping\AbstractSearchMapping;
@@ -481,5 +484,245 @@ JS;
         return $this->searchDocuments($queryMatch, PostSearchMapping::CONTEXT, [
             'excludes' => ['friendList', 'relations', '*.friendList']
         ]);
+    }
+
+    public function __getNewsFeedNotifications(
+        $userId,
+        array $eventTypes,
+        $friendsId = [],
+        $skip = 0,
+        $count = RequestConstant::DEFAULT_SEARCH_LIMIT
+    ) {
+        $userProfile = $this->getUserById($userId);
+
+        /*$userSettings = $userProfile->getUserSettings(NewsFeedSections::FEED_NOTIFICATIONS);
+
+        $settingNotifications = [];
+        if (!empty($userSettings)) {
+            foreach ($eventTypes as $keyType => $type) {
+                // проверяем включена ли опция для каждой из позиций
+                $settingNotifications[$keyType] = $this->filterByAccess($userSettings, $type,
+                    SettingsNotifications::SHOW);
+            }
+        } else {
+            $settingNotifications = $eventTypes;
+        }*/
+
+        try {
+            $filter = $this->_queryFilterFactory;
+            $condition = $this->_queryConditionFactory;
+
+            $queryTypes = array_map(function ($type) use ($condition) {
+                return $condition->getMatchQuery(UserEventSearchMapping::TYPE_FIELD, $type);
+            }, $eventTypes[UserEventGroup::OTHERS]);
+
+
+            $this->setFilterQuery([
+                $filter->getExistsFilter(UserEventSearchMapping::RECEIVER_USER_FIELD),
+
+            ]);
+
+            $queryMatch = $this->createQuery($skip, $count);
+            $this->setIndices([
+                UserEventSearchMapping::DEFAULT_INDEX
+            ]);
+
+            return $this->searchDocuments($queryMatch);
+        } catch (ElasticsearchException $e) {
+            throw new ElasticsearchException($e);
+        }
+    }
+
+    /**
+     * Получить список уведомелний для ползователя
+     * по заданным критериями в параметре types
+     *
+     * @param string $userId Пользователь который запрашивает данные
+     * @param array $eventTypes Типы возвращаемых уведомлений
+     * @param array $friendsId Список ID друзей пользвателя
+     * @param int $skip
+     * @param int $count
+     * @return array
+     */
+    public function getNewsFeedNotifications(
+        $userId,
+        array $eventTypes,
+        $skip = 0,
+        $count = RequestConstant::DEFAULT_SEARCH_LIMIT
+    ) {
+        $userProfile = $this->getUserById($userId);
+        $userSettings = $userProfile->getUserSettings(NewsFeedSections::FEED_NOTIFICATIONS);
+
+        $settingNotifications = [];
+        if (!empty($userSettings)) {
+            foreach ($eventTypes as $keyType => $type) {
+                // проверяем включена ли опция для каждой из позиций
+                $settingNotifications[$keyType] = $this->filterByAccess($userSettings, $type,
+                    SettingsNotifications::SHOW);
+            }
+        } else {
+            $settingNotifications = $eventTypes;
+        }
+
+
+        $filter = $this->_queryFilterFactory;
+        $condition = $this->_queryConditionFactory;
+
+        $personalTypes = $friendTypes = $otherTypes = $authorTypes = [];
+
+        // определяем есть ли возможность смотреть Personal типы событий
+        if (!empty($settingNotifications[UserEventGroup::PERSONAL])) {
+            $queryTypes = array_map(function ($type) use ($condition) {
+                return $condition->getMatchQuery(UserEventSearchMapping::TYPE_FIELD, $type);
+            }, $settingNotifications[UserEventGroup::PERSONAL]);
+
+            $personalTypes = [
+                // Personal - события направленные непосредственно пользователю
+                $filter->getBoolAndFilter([
+                    // получаекм свои посты
+                    $filter->getQueryFilter(
+                        $condition->getDisMaxQuery(
+                            $queryTypes
+                        )
+                    ),
+                    // Только события, направленные пользователю
+                    $filter->getTermFilter([UserEventSearchMapping::RECEIVER_USER_FIELD => $userId]),
+                    // Автором события не является сам пользователь
+                    $filter->getNotFilter(
+                        $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                    )
+                ])
+            ];
+        }
+
+        // определяем есть ли возможность смотреть Friends типы событий
+        if (!empty($settingNotifications[UserEventGroup::FRIENDS])) {
+            $queryTypes = array_map(function ($type) use ($condition) {
+                return $condition->getMatchQuery(UserEventSearchMapping::TYPE_FIELD, $type);
+            }, $settingNotifications[UserEventGroup::FRIENDS]);
+
+            $friendTypes = [
+                // Friends - события от друзей
+                $filter->getBoolAndFilter([
+                    // События от друзей
+                    $filter->getQueryFilter(
+                        $condition->getDisMaxQuery(
+                            $queryTypes
+                        )
+                    ),
+                    // Событие свежее для пользователя
+                    $filter->getGtFilter(UserEventSearchMapping::CREATED_AT_FIELD,
+                        $userProfile->getRegistrationDate()->format('Y-m-d')),
+                    // Список друзей и преследуемых
+                    $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
+                ])
+            ];
+        }
+
+        // определяем есть ли возможность смотреть Other типы событий
+        if (!empty($settingNotifications[UserEventGroup::OTHERS])) {
+            $queryTypes = array_map(function ($type) use ($condition) {
+                return $condition->getMatchQuery(UserEventSearchMapping::TYPE_FIELD, $type);
+            }, $settingNotifications[UserEventGroup::OTHERS]);
+
+            $otherTypes = [
+                // Others - события сгенеренные пользователями, не входящих в список друзей пользователя
+                $filter->getBoolAndFilter([
+                    // События от других пользователей которые можно смотреть
+                    $filter->getQueryFilter(
+                        $condition->getDisMaxQuery(
+                            $queryTypes
+                        )
+                    ),
+                    // Событие свежее для пользователя
+                    $filter->getGtFilter(UserEventSearchMapping::CREATED_AT_FIELD,
+                        $userProfile->getRegistrationDate()->format('Y-m-d')),
+                    // Только события, направленные пользователю
+                    $filter->getTermFilter([UserEventSearchMapping::RECEIVER_USER_FIELD => $userId]),
+                    // Исключаем события друзей и преследуемых
+                    $filter->getNotFilter(
+                        $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                    ),
+                    // Автором события не является сам пользователь
+                    $filter->getNotFilter(
+                        $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                    )
+                ])
+            ];
+        }
+
+        $authorQueryTypes = array_map(function ($type) use ($condition) {
+            return $condition->getMatchQuery(UserEventSearchMapping::TYPE_FIELD, $type);
+        }, $settingNotifications[UserEventGroup::AUTHOR]);
+
+        // Типы событий AUTHOR, их мы должны видеть всегда
+        $authorTypes = [
+            // Author - события, автором которых является сам пользователь, но оно должно быть в его уведомлениях
+            $filter->getBoolAndFilter([
+                // Событие из группы author
+                $filter->getQueryFilter(
+                    $condition->getDisMaxQuery(
+                        $authorQueryTypes
+                    )
+                ),
+                // Автором события является сам пользователь
+                $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+            ])
+        ];
+
+        // Или-или
+        $this->setFilterQuery([
+            $filter->getBoolOrFilter(array_merge(
+                $personalTypes,
+                $friendTypes,
+                $otherTypes,
+                $authorTypes
+            ))
+        ]);
+
+        $this->setIndices([
+            UserEventSearchMapping::DEFAULT_INDEX
+        ]);
+
+        $queryMatch = $this->createQuery($skip, $count);
+
+        return $this->searchDocuments($queryMatch, UserEventSearchMapping::CONTEXT, [
+            'excludes' => ['friendList', 'relations', '*.friendList', 'receiver']
+        ]);
+
+    }
+
+    /**
+     * Фильтрует произвольный массив с типами нотификаций в зависимости от пользовательских настроек
+     *
+     * @param array $userSettings Пользовательские настройки
+     * @param array $notificationTypes
+     * @param string $accessType Тип доступности пункта уведомлений
+     * @return array
+     */
+    public function filterByAccess(array $userSettings, array $notificationTypes, $accessType)
+    {
+        // Если настройки выключены целиком
+        if (SettingsNotifications::getAll() == SettingsNotifications::NONE) {
+            return [];
+        }
+
+        if (!in_array($accessType, SettingsNotifications::$accessTypes)) {
+            return [];
+        }
+
+        $resultSettings = [];
+        $intersectKeyTypes = array_diff_assoc($userSettings,
+            array_diff_key($userSettings, array_flip($notificationTypes)));
+        if (!empty($intersectKeyTypes)) {
+            foreach ($intersectKeyTypes as $keyType => $settingValue) {
+                $showingValues = explode(',', $settingValue);
+                if (in_array($accessType, $showingValues) && SettingsNotifications::checkSettingsValue("_{$keyType}")) {
+                    $resultSettings[] = $keyType;
+                }
+            }
+        }
+
+        return $resultSettings;
     }
 }

@@ -63,6 +63,7 @@ interface FilterFactoryInterface
      */
     public function getTermsFilter($fieldName, array $terms);
 
+
     /**
      * Возвращает фильтр со скриптом поиска
      *

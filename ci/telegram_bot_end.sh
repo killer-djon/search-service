@@ -1,5 +1,5 @@
 #!/bin/bash
-user="gitlab-rp"
+user="gitlab"
 password="k4KiBo8kuLQkp8NX"
 
 # Bot access token
@@ -56,7 +56,7 @@ MESSAGE_ISSUE=$(printf "$MESSAGE_TEMPLATE_ISSUE" "$JIRA_ISSUE_LINK" "$JIRA_ISSUE
 
 
 for chat_id in "${CHATS[@]}"; do
-    curl -D- -XPOST -H "Content-Type: application/json" "${POST_MESSAGE}" --data '{
+    curl -D- -X POST -H "Content-Type: application/json" "${POST_MESSAGE}" --data '{
         "chat_id": "'"${chat_id}"'",
         "text": "'"${MESSAGE_ISSUE}"'",
         "parse_mode": "HTML"

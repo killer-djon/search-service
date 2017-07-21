@@ -65,6 +65,18 @@ class UserProfileService extends ReportingService
     protected $_wallId;
 
     /**
+     * @var array Настройки пользовательские
+     */
+    private $_userSettings;
+
+    /**
+     * Дата регистрации пользователя
+     *
+     * @var \DateTime
+     */
+    private $_registrationDate;
+
+    /**
      * @inheritdoc
      */
     public function __construct(array $data)
@@ -85,6 +97,28 @@ class UserProfileService extends ReportingService
         $this->_fullname = $data['fullname'];
         $this->_friendList = !empty($data['friendList']) ? $data['friendList'] : [];
         $this->_wallId = $data['wallId'];
+        $this->_userSettings = isset($data['settings']) ? $data['settings'] : [];
+        $this->_registrationDate = isset($data['registrationDate']) ? new \DateTime($data['registrationDate']) : null;
+    }
+
+    /**
+     * Получаем дату регистрации пользоваля
+     * @return \DateTime
+     */
+    public function getRegistrationDate()
+    {
+        return $this->_registrationDate;
+    }
+
+    /**
+     * Получаем пользовательские настройки профиля
+     *
+     * @param string $key Получить конкретный раздел настроек
+     * @return array
+     */
+    public function getUserSettings($key = null)
+    {
+        return !is_null($key) && !empty($this->_userSettings[$key]) ? $this->_userSettings[$key] : $this->_userSettings;
     }
 
     /**
@@ -195,20 +229,20 @@ class UserProfileService extends ReportingService
     public function toArray()
     {
         return [
-            'id' => $this->getId(),
-            'name' => $this->getName(),
-            'surname' => $this->getSurname(),
-            'fullname' => $this->getFullname(),
-            'gender' => $this->getGender(),
-            'isOnline' => $this->getIsOnline(),
+            'id'           => $this->getId(),
+            'name'         => $this->getName(),
+            'surname'      => $this->getSurname(),
+            'fullname'     => $this->getFullname(),
+            'gender'       => $this->getGender(),
+            'isOnline'     => $this->getIsOnline(),
             'lastActivity' => $this->getLastActivity()->format('c'),
-            'location' => [
+            'location'     => [
                 'point' => [
                     'longitude' => $this->getLocation()->getLongitude(),
-                    'latitude' => $this->getLocation()->getLatitude(),
+                    'latitude'  => $this->getLocation()->getLatitude(),
                 ],
             ],
-            'tags' => $this->getTags(),
+            'tags'         => $this->getTags(),
         ];
     }
 }

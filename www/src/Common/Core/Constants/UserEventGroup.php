@@ -20,4 +20,7 @@ abstract class UserEventGroup
     const OTHERS = 'others';
 
     const SPECIAL = 'special';
+
+    // события, автором которого является сам пользователь
+    const AUTHOR = 'author';
 }

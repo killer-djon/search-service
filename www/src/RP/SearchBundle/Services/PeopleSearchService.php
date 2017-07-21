@@ -196,19 +196,23 @@ class PeopleSearchService extends AbstractSearchService
      * @param int $skip Кол-во пропускаемых позиций поискового результата
      * @param int $count Какое кол-во выводим
      * @param array|null $sort Порядок сортировки результатов
+     * @param array|bool $sourceFields Какие поля надо вытащить или игнорить в результате
      * @return array Массив с найденными результатами
      */
     public function searchPeopleFriends(
         $userId,
         $targetUserId,
-        array $filters,
+        array $filters = [],
         GeoPointServiceInterface $point,
         $searchText = null,
         $skip = 0,
         $count = null,
-        $sort = null
+        $sort = null,
+        $sourceFields = true
     ) {
         $queryMatchResults = [];
+
+        $filters = empty($filters) ? ['friends'] : $filters;
 
         /** получаем объект текущего пользователя */
         $currentUser = $this->getUserById($userId);
@@ -389,7 +393,8 @@ class PeopleSearchService extends AbstractSearchService
             }
         }
 
-        return $this->searchMultiTypeDocuments($queryMatchResults);
+
+        return $this->searchMultiTypeDocuments($queryMatchResults, $sourceFields);
     }
 
     private function getGeoDistanceSorting(GeoPointServiceInterface $point, $order = 'asc')

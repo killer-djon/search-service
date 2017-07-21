@@ -265,4 +265,40 @@ class SearchNewsFeedController extends ApiController
             return $this->_handleViewWithError($e);
         }
     }
+
+    /**
+     * Получаем уведомления пользователя по ленте
+     *
+     * @param Request $request Оъект запроса
+     * @return Response
+     */
+    public function getNewsFeedNotificationsAction(Request $request)
+    {
+        try {
+            /** @var string ID текущего пользователя */
+            $userId = $this->getRequestUserId();
+            // какие уведомления нам вообще надо возвращать
+            $eventTypes = $this->getUserEventsGroups(NewsFeedSections::FEED_NOTIFICATIONS);
+            /** @var NewsFeedSearchService Сервис поиска ленты/уведомлений */
+            $userFeedService = $this->getNewsFeedSearchService();
+            $notifications = $userFeedService->getNewsFeedNotifications(
+                $userId,
+                $eventTypes,
+                $this->getSkip(),
+                $this->getCount()
+            );
+
+            return $this->_handleViewWithData(
+                $this->getNewFormatResponse(
+                    $userFeedService,
+                    UserEventSearchMapping::CONTEXT
+                )
+            );
+
+        } catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+    }
 }

@@ -33,6 +33,7 @@ deploy_job:
     - ln -s ${BUILD_DIR}/${BUILD_NAME}-SUCCESS/www ${PROJECT_DIR}
     - /bin/bash ci/telegram_bot_end.sh "$(git log --max-count=1 --pretty=format:%s)" "$(git log --max-count=1 --skip=1 --pretty=format:%s)" "${BUILD_DIR}" "${BUILD_HOME_DIR}" "${BUILD_DIR}/${BUILD_NAME}-SUCCESS/www"
     - rm -rf ${BUILD_HOME_DIR}/CACHE-BUILDS-API
+    - find ${BUILD_DIR}/ -type d -path "${BUILD_NAME}-SUCCESS" -prune -wholename *var/cache -exec rm -rf {} \;
   only:
     - develop
   except:
@@ -52,4 +53,5 @@ failure_deploy_job:
     - /bin/bash ci/telegram_bot_failure.sh "${CI_PROJECT_URL}/builds/${CI_BUILD_ID}#down-build-trace" "${CI_BUILD_ID}"
     - mv ${BUILD_HOME_DIR}/CACHE-BUILDS-API/* ${BUILD_DIR}/
     - rm -rf ${BUILD_HOME_DIR}/CACHE-BUILDS-API
+    - find ${BUILD_DIR}/ -type d -path "${BUILD_NAME}-SUCCESS" -prune -wholename *var/cache -exec rm -rf {} \;
   when: on_failure

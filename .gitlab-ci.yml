@@ -34,7 +34,7 @@ deploy_job:
     - /bin/bash ci/telegram_bot_end.sh "$(git log --max-count=1 --pretty=format:%s)" "$(git log --max-count=1 --skip=1 --pretty=format:%s)" "${BUILD_DIR}" "${BUILD_HOME_DIR}" "${BUILD_DIR}/${BUILD_NAME}-SUCCESS/www"
     - rm -rf ${BUILD_HOME_DIR}/CACHE-BUILDS-API
     - find ${BUILD_DIR}/ -type d -path "${BUILD_NAME}-SUCCESS" -prune -wholename *var/cache -exec rm -rf {} \;
-    - cd ${PROJECT_DIR} && $(which php) app/console cache:clear --no-warmup --env=${BUILD_ENV}
+    - cd ${PROJECT_DIR} && $(which php) app/console cache:clear --no-warmup
   only:
     - develop
   except:
@@ -55,5 +55,5 @@ failure_deploy_job:
     - mv ${BUILD_HOME_DIR}/CACHE-BUILDS-API/* ${BUILD_DIR}/
     - rm -rf ${BUILD_HOME_DIR}/CACHE-BUILDS-API
     - find ${BUILD_DIR}/ -type d -path "${BUILD_NAME}-SUCCESS" -prune -wholename *var/cache -exec rm -rf {} \;
-    - cd ${PROJECT_DIR} && $(which php) app/console cache:clear --no-warmup --env=${BUILD_ENV}
+    - cd ${PROJECT_DIR} && $(which php) app/console cache:clear --no-warmup
   when: on_failure

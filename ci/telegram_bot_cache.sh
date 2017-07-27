@@ -31,7 +31,7 @@ cd $DIR
 
 if [[ -d "vendor" ]]; then
 	/usr/bin/php app/console redis:flushall --env=$BUILD_ENV --no-interaction
-	/usr/bin/php app/console cache:clear --env=$BUILD_ENV
+	/usr/bin/php app/console cache:clear --no-warmup --env=${BUILD_ENV}
 	/usr/bin/php app/console assets:install web --symlink --relative --env=$BUILD_ENV
 
 	MESSAGE_ISSUE=$(printf "$MESSAGE_TEMPLATE_ISSUE" "$BUILD_LINK" "$BUILD_ID" "$BUILD_ID" "$BUILD_ENV")

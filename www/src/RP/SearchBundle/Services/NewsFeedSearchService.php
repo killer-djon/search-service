@@ -204,6 +204,10 @@ JS;
             return $this->_queryConditionFactory->getMatchQuery(UserEventSearchMapping::TYPE_FIELD, $type);
         }, $eventTypes[UserEventGroup::FRIENDS]);
 
+        $otherTypes = array_map(function ($type) {
+            return $this->_queryConditionFactory->getMatchQuery(UserEventSearchMapping::TYPE_FIELD, $type);
+        }, $eventTypes[UserEventGroup::OTHERS]);
+
 
         $rpPostsFilter = [];
         if (in_array(PeopleSearchMapping::RP_USER_ID, $friendIds)) {
@@ -340,6 +344,24 @@ JS;
                             ),
                         ]),
                     ]),
+                    // Others - сейчас события от других приходят только в уведомления
+                    $filter->getBoolAndFilter([
+                        $filter->getTypeFilter(UserEventSearchMapping::CONTEXT),
+                        $filter->getBoolAndFilter([
+                            // события по типу
+                            $filter->getQueryFilter(
+                                $condition->getDisMaxQuery($otherTypes)
+                            ),
+                            // Авторы - не друзья ползователя
+                            $filter->getNotFilter(
+                                $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                            ),
+                            // Не надо нам в ленте показывать событие добавления друга, которого мы сами и добавили
+                            $filter->getNotFilter(
+                                $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                            ),
+                        ])
+                    ])
                 ], $rpPostsFilter)),
             ]);
         }

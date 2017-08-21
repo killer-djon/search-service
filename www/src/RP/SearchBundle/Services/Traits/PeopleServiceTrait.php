@@ -155,6 +155,7 @@ trait PeopleServiceTrait
                         UserEventType::CHECKIN,
                     ],
                     'others'   => [
+                        UserEventType::CHECKIN,
                     ],
                 ];
                 break;

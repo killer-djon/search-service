@@ -170,9 +170,9 @@ trait ControllerTrait
      * @var array
      */
     protected $fieldsMap = [
-        'fullname' => 'fullName',
-        'tagsInPercent' => 'matchingInterestsInPercents',
-        'tagsCount' => 'tagsPct',
+        'fullname'          => 'fullName',
+        'tagsInPercent'     => 'matchingInterestsInPercents',
+        'tagsCount'         => 'tagsPct',
         'distanceInPercent' => 'distancePct',
     ];
 
@@ -184,12 +184,14 @@ trait ControllerTrait
      * @var array
      */
     private $neededKeys = [
-        'surname' => ' ',
-        'text' => ' ',
-        'allCheckinsCount' => ' ',
-        'distance' => 0,
+        'surname'           => ' ',
+        'text'              => ' ',
+        'allCheckinsCount'  => ' ',
+        'distance'          => 0,
         'distanceInPercent' => 0,
         'emailEnabled'      => 'false',
+        'isEnabled'         => 'false',
+        'isRemoved'         => 'false',
         'description'       => ''
         //'isFriendshipRequestReceived' => 'false',
         //'isFriend' => 'false',
@@ -234,24 +236,26 @@ trait ControllerTrait
      * @param array
      */
     private $tagsMatchFields = [
-        'tagsInPercent' => 'intval',
+        'tagsInPercent'               => 'intval',
         'matchingInterestsInPercents' => 'intval',
 
-        'tagsCount'                   => 'intval',
-        'tagsPct'                     => 'intval',
-        'distanceInPercent'           => 'intval',
-        'distancePct'                 => 'intval',
-        'distance'                    => 'floatval',
-        'allCheckinsCount'            => 'intval',
+        'tagsCount'           => 'intval',
+        'tagsPct'             => 'intval',
+        'distanceInPercent'   => 'intval',
+        'distancePct'         => 'intval',
+        'distance'            => 'floatval',
+        'allCheckinsCount'    => 'intval',
         // ugcStat
-        'placesCount'                 => 'intval',
-        'checkinPlacesCount'          => 'intval',
-        'eventsCount'                 => 'intval',
-        'willComeEventsCount'         => 'intval',
-        'interestsCount'              => 'intval',
-        'helpOffersCount'             => 'intval',
-        'friendsCount'                => 'intval',
-        'emailEnabled'                => 'boolval'
+        'placesCount'         => 'intval',
+        'checkinPlacesCount'  => 'intval',
+        'eventsCount'         => 'intval',
+        'willComeEventsCount' => 'intval',
+        'interestsCount'      => 'intval',
+        'helpOffersCount'     => 'intval',
+        'friendsCount'        => 'intval',
+        'emailEnabled'        => 'boolval',
+        'isEnabled'           => 'boolval',
+        'isRemoved'           => 'boolval',
 
         //'isFriendshipRequestReceived' => 'boolval',
         //'isFriend' => 'boolval',

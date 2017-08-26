@@ -152,7 +152,7 @@ trait PeopleServiceTrait
                         // От друзей - в ленту, в уведомления - к нашему событию от незнакомцев
                         UserEventType::WILL_COME,
                         // От друзей - в ленту, в уведомления - в наше место от незнакомцев
-                        UserEventType::CHECKIN,
+                        //UserEventType::CHECKIN,
                     ],
                     'others'   => [
                         UserEventType::CHECKIN,

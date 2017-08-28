@@ -719,6 +719,13 @@ JS;
             ))
         ]);
 
+        $this->setSortingQuery(
+            $this->_sortingFactory->getFieldSort(
+                AbstractSearchMapping::CREATED_AT_FIELD,
+                SortingOrder::SORTING_DESC
+            )
+        );
+
         $this->setIndices([
             UserEventSearchMapping::DEFAULT_INDEX
         ]);

@@ -19,6 +19,11 @@ abstract class AbstractSearchMapping
     const DEFAULT_INDEX = 'russianplace';
 
     /**
+     * @const string поле автора сущности (для nested условий)
+     */
+    const AUTHOR_FIELD = 'author';
+
+    /**
      * @const string поле ID автора сущности
      */
     const AUTHOR_ID_FIELD = 'author.id';

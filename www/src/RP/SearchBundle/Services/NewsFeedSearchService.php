@@ -216,7 +216,10 @@ JS;
                 $filter->getBoolAndFilter([
                     $filter->getTypeFilter(PostSearchMapping::CONTEXT),
                     $filter->getBoolAndFilter([
-                        $filter->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => PeopleSearchMapping::RP_USER_ID]),
+                        $filter->getNestedFilter(
+                            PostSearchMapping::AUTHOR_FIELD,
+                            $filter->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => PeopleSearchMapping::RP_USER_ID])
+                        ),
                         $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
                     ]),
                 ]),
@@ -231,7 +234,10 @@ JS;
                         $filter->getTypeFilter(PostSearchMapping::CONTEXT),
                         // получаекм посты друзей
                         $filter->getBoolAndFilter([
-                            $filter->getTermsFilter(PostSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
+                            $filter->getNestedFilter(
+                                PostSearchMapping::AUTHOR_FIELD,
+                                $filter->getTermsFilter(PostSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                            ),
                             $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
                         ]),
                     ]),
@@ -239,7 +245,10 @@ JS;
                         $filter->getTypeFilter(PostSearchMapping::CONTEXT),
                         // получаекм свои посты
                         $filter->getBoolAndFilter([
-                            $filter->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                            $filter->getNestedFilter(
+                                PostSearchMapping::AUTHOR_FIELD,
+                                $filter->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $userId])
+                            ),
                             $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
                         ]),
                     ]),
@@ -285,7 +294,10 @@ JS;
                         $filter->getTypeFilter(PostSearchMapping::CONTEXT),
                         // получаекм посты друзей
                         $filter->getBoolAndFilter([
-                            $filter->getTermsFilter(PostSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
+                            $filter->getNestedFilter(
+                                PostSearchMapping::AUTHOR_FIELD,
+                                $filter->getTermsFilter(PostSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                            ),
                             $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
                         ]),
                     ]),
@@ -293,7 +305,10 @@ JS;
                         $filter->getTypeFilter(PostSearchMapping::CONTEXT),
                         // получаекм свои посты
                         $filter->getBoolAndFilter([
-                            $filter->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                            $filter->getNestedFilter(
+                                PostSearchMapping::AUTHOR_FIELD,
+                                $filter->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $userId])
+                            ),
                             $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
                         ]),
                     ]),
@@ -307,8 +322,14 @@ JS;
                             ),
                             // Только события от друзей и самого пользователя
                             $filter->getBoolOrFilter([
-                                $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
-                                $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                                $filter->getNestedFilter(
+                                    UserEventSearchMapping::AUTHOR_FIELD,
+                                    $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                                ),
+                                $filter->getNestedFilter(
+                                    UserEventSearchMapping::AUTHOR_FIELD,
+                                    $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                                ),
                             ]),
                             // только события направленные пользователю
                             $filter->getTermFilter([UserEventSearchMapping::RECEIVER_USER_ID_FIELD => $userId]),
@@ -324,8 +345,14 @@ JS;
                             ),
                             // Только события от друзей и самого пользователя
                             $filter->getBoolOrFilter([
-                                $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
-                                $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId]),
+                                $filter->getNestedFilter(
+                                    UserEventSearchMapping::AUTHOR_FIELD,
+                                    $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                                ),
+                                $filter->getNestedFilter(
+                                    UserEventSearchMapping::AUTHOR_FIELD,
+                                    $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                                ),
                             ]),
                         ]),
                     ]),
@@ -337,10 +364,16 @@ JS;
                                 $condition->getMatchQuery(UserEventSearchMapping::TYPE_FIELD, UserEventType::NEW_FRIEND)
                             ),
                             // Авторы - друзья ползователя
-                            $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
+                            $filter->getNestedFilter(
+                                UserEventSearchMapping::AUTHOR_FIELD,
+                                $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                            ),
                             // Не надо нам в ленте показывать событие добавления друга, которого мы сами и добавили
                             $filter->getNotFilter(
-                                $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                                $filter->getNestedFilter(
+                                    UserEventSearchMapping::AUTHOR_FIELD,
+                                    $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                                )
                             ),
                         ]),
                     ]),
@@ -354,11 +387,17 @@ JS;
                             ),
                             // Авторы - не друзья ползователя
                             $filter->getNotFilter(
-                                $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                                $filter->getNestedFilter(
+                                    UserEventSearchMapping::AUTHOR_FIELD,
+                                    $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                                )
                             ),
                             // Не надо нам в ленте показывать событие добавления друга, которого мы сами и добавили
                             $filter->getNotFilter(
-                                $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                                $filter->getNestedFilter(
+                                    UserEventSearchMapping::AUTHOR_FIELD,
+                                    $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                                )
                             ),
                         ])
                     ])
@@ -440,7 +479,11 @@ JS;
         $userProfile = $this->getUserById($userId);
 
         $this->setFilterQuery([
-            $this->_queryFilterFactory->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $rpUserId]),
+            //$this->_queryFilterFactory->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $rpUserId]),
+            $this->_queryFilterFactory->getNestedFilter(
+                'author',
+                $this->_queryFilterFactory->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $rpUserId])
+            ),
             $this->_queryFilterFactory->getTermFilter([PostSearchMapping::POST_IS_DELETED => false])
             //$this->_queryFilterFactory->getTermsFilter(PostSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
         ]);
@@ -464,6 +507,22 @@ JS;
             ]);
         }
 
+        $this->setScriptFields([
+            'distance' => $this->_scriptFactory->getDistanceScript(
+                PostSearchMapping::POST_CITY_POINT_FIELD,
+                $userProfile->getLocation()
+            )
+        ]);
+
+        $this->setSortingQuery([
+            $this->_sortingFactory->getGeoDistanceSort(
+                PostSearchMapping::POST_CITY_POINT_FIELD,
+                $userProfile->getLocation(),
+                SortingOrder::SORTING_ASC
+            ),
+        ]);
+
+
         if (!empty($searchText)) {
             $searchText = mb_strtolower($searchText);
             $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
@@ -484,21 +543,10 @@ JS;
             }
 
             $this->setHighlightQuery(PostSearchMapping::getHighlightConditions());
+
         }
-
-        $this->setScriptFields([
-            'distance' => $this->_scriptFactory->getDistanceScript(
-                PostSearchMapping::POST_CITY_POINT_FIELD,
-                $userProfile->getLocation()
-            )
-        ]);
-
-        $this->setSortingQuery([
-            $this->_sortingFactory->getGeoDistanceSort(
-                PostSearchMapping::POST_CITY_POINT_FIELD,
-                $userProfile->getLocation(),
-                SortingOrder::SORTING_ASC
-            ),
+        $this->setIndices([
+            PostSearchMapping::DEFAULT_INDEX
         ]);
 
         $queryMatch = $this->createQuery($skip, $count);
@@ -508,52 +556,6 @@ JS;
         ]);
     }
 
-    public function __getNewsFeedNotifications(
-        $userId,
-        array $eventTypes,
-        $friendsId = [],
-        $skip = 0,
-        $count = RequestConstant::DEFAULT_SEARCH_LIMIT
-    ) {
-        $userProfile = $this->getUserById($userId);
-
-        /*$userSettings = $userProfile->getUserSettings(NewsFeedSections::FEED_NOTIFICATIONS);
-
-        $settingNotifications = [];
-        if (!empty($userSettings)) {
-            foreach ($eventTypes as $keyType => $type) {
-                // проверяем включена ли опция для каждой из позиций
-                $settingNotifications[$keyType] = $this->filterByAccess($userSettings, $type,
-                    SettingsNotifications::SHOW);
-            }
-        } else {
-            $settingNotifications = $eventTypes;
-        }*/
-
-        try {
-            $filter = $this->_queryFilterFactory;
-            $condition = $this->_queryConditionFactory;
-
-            $queryTypes = array_map(function ($type) use ($condition) {
-                return $condition->getMatchQuery(UserEventSearchMapping::TYPE_FIELD, $type);
-            }, $eventTypes[UserEventGroup::OTHERS]);
-
-
-            $this->setFilterQuery([
-                $filter->getExistsFilter(UserEventSearchMapping::RECEIVER_USER_FIELD),
-
-            ]);
-
-            $queryMatch = $this->createQuery($skip, $count);
-            $this->setIndices([
-                UserEventSearchMapping::DEFAULT_INDEX
-            ]);
-
-            return $this->searchDocuments($queryMatch);
-        } catch (ElasticsearchException $e) {
-            throw new ElasticsearchException($e);
-        }
-    }
 
     /**
      * Получить список уведомелний для ползователя
@@ -611,7 +613,10 @@ JS;
                     $filter->getTermFilter([UserEventSearchMapping::RECEIVER_USER_FIELD => $userId]),
                     // Автором события не является сам пользователь
                     $filter->getNotFilter(
-                        $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                        $filter->getNestedFilter(
+                            UserEventSearchMapping::AUTHOR_FIELD,
+                            $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                        )
                     )
                 ])
             ];
@@ -636,7 +641,10 @@ JS;
                     $filter->getGtFilter(UserEventSearchMapping::CREATED_AT_FIELD,
                         $userProfile->getRegistrationDate()->format('Y-m-d')),
                     // Список друзей и преследуемых
-                    $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
+                    $filter->getNestedFilter(
+                        UserEventSearchMapping::AUTHOR_FIELD,
+                        $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                    )
                 ])
             ];
         }
@@ -663,11 +671,17 @@ JS;
                     $filter->getTermFilter([UserEventSearchMapping::RECEIVER_USER_FIELD => $userId]),
                     // Исключаем события друзей и преследуемых
                     $filter->getNotFilter(
-                        $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                        $filter->getNestedFilter(
+                            UserEventSearchMapping::AUTHOR_FIELD,
+                            $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                        )
                     ),
                     // Автором события не является сам пользователь
                     $filter->getNotFilter(
-                        $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                        $filter->getNestedFilter(
+                            UserEventSearchMapping::AUTHOR_FIELD,
+                            $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                        )
                     )
                 ])
             ];
@@ -688,7 +702,10 @@ JS;
                     )
                 ),
                 // Автором события является сам пользователь
-                $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                $filter->getNestedFilter(
+                    UserEventSearchMapping::AUTHOR_FIELD,
+                    $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                )
             ])
         ];
 

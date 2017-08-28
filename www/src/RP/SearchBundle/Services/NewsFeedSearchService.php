@@ -613,7 +613,10 @@ JS;
                     $filter->getTermFilter([UserEventSearchMapping::RECEIVER_USER_FIELD => $userId]),
                     // Автором события не является сам пользователь
                     $filter->getNotFilter(
-                        $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                        $filter->getNestedFilter(
+                            UserEventSearchMapping::AUTHOR_FIELD,
+                            $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                        )
                     )
                 ])
             ];
@@ -638,7 +641,10 @@ JS;
                     $filter->getGtFilter(UserEventSearchMapping::CREATED_AT_FIELD,
                         $userProfile->getRegistrationDate()->format('Y-m-d')),
                     // Список друзей и преследуемых
-                    $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId]),
+                    $filter->getNestedFilter(
+                        UserEventSearchMapping::AUTHOR_FIELD,
+                        $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                    )
                 ])
             ];
         }
@@ -665,11 +671,17 @@ JS;
                     $filter->getTermFilter([UserEventSearchMapping::RECEIVER_USER_FIELD => $userId]),
                     // Исключаем события друзей и преследуемых
                     $filter->getNotFilter(
-                        $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                        $filter->getNestedFilter(
+                            UserEventSearchMapping::AUTHOR_FIELD,
+                            $filter->getTermsFilter(UserEventSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
+                        )
                     ),
                     // Автором события не является сам пользователь
                     $filter->getNotFilter(
-                        $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                        $filter->getNestedFilter(
+                            UserEventSearchMapping::AUTHOR_FIELD,
+                            $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                        )
                     )
                 ])
             ];
@@ -690,7 +702,10 @@ JS;
                     )
                 ),
                 // Автором события является сам пользователь
-                $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                $filter->getNestedFilter(
+                    UserEventSearchMapping::AUTHOR_FIELD,
+                    $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
+                )
             ])
         ];
 

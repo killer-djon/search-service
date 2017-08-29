@@ -154,9 +154,9 @@ trait PeopleServiceTrait
                         // От друзей - в ленту, в уведомления - в наше место от незнакомцев
                         UserEventType::CHECKIN,
                         // Кто-то (только друзья) лайкнули пост  другого человека, которого нет в друзьях
-                        UserEventType::LIKE,
+                        //UserEventType::LIKE,
                         // Кто-то (только друзья) прокомментировали пост другого человека, которого нет в друзьях
-                        UserEventType::COMMENT
+                        //UserEventType::COMMENT
                     ],
                     'others'   => [
                         UserEventType::CHECKIN,

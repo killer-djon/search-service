@@ -299,11 +299,21 @@ JS;
                                 $filter->getTermsFilter(PostSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
                             ),
                             $filter->getTermFilter([PostSearchMapping::POST_IS_DELETED => false]),
+                            $filter->getNotFilter(
+                                $filter->getNestedFilter(
+                                    PostSearchMapping::AUTHOR_FIELD,
+                                    $filter->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $userId])
+                                )
+                            )
                         ]),
                     ]),
+                    // получаекм свои посты
                     $filter->getBoolAndFilter([
                         $filter->getTypeFilter(PostSearchMapping::CONTEXT),
-                        // получаекм свои посты
+                        // Обязательно проверяем что тип поста возвращается
+                        $filter->getQueryFilter(
+                            $condition->getMatchQuery(UserEventSearchMapping::TYPE_FIELD, UserEventType::POST)
+                        ),
                         $filter->getBoolAndFilter([
                             $filter->getNestedFilter(
                                 PostSearchMapping::AUTHOR_FIELD,

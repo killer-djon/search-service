@@ -332,7 +332,7 @@ JS;
                                 ),
                             ]),
                             // только события направленные пользователю
-                            $filter->getTermFilter([UserEventSearchMapping::RECEIVER_USER_ID_FIELD => $userId]),
+                            $filter->getTermFilter([UserEventSearchMapping::RECEIVER_USER_FIELD => $userId]),
                         ]),
                     ]),
                     // Friends и сам пользователь
@@ -399,6 +399,7 @@ JS;
                                     $filter->getTermFilter([UserEventSearchMapping::AUTHOR_ID_FIELD => $userId])
                                 )
                             ),
+                            $filter->getTermFilter([UserEventSearchMapping::RECEIVER_USER_FIELD => $userId]),
                         ])
                     ])
                 ], $rpPostsFilter)),

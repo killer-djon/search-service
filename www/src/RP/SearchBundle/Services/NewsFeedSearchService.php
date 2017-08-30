@@ -490,13 +490,11 @@ JS;
         $userProfile = $this->getUserById($userId);
 
         $this->setFilterQuery([
-            //$this->_queryFilterFactory->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $rpUserId]),
             $this->_queryFilterFactory->getNestedFilter(
-                'author',
+                PostSearchMapping::AUTHOR_FIELD,
                 $this->_queryFilterFactory->getTermFilter([PostSearchMapping::AUTHOR_ID_FIELD => $rpUserId])
             ),
             $this->_queryFilterFactory->getTermFilter([PostSearchMapping::POST_IS_DELETED => false])
-            //$this->_queryFilterFactory->getTermsFilter(PostSearchMapping::AUTHOR_FRIENDS_FIELD, [$userId])
         ]);
 
         if (!empty($categoryId)) {

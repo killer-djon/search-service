@@ -67,7 +67,7 @@ trait PeopleServiceTrait
                     // события, receiver'ом является текущий пользователь, автор события не важен
                     'personal' => [
                         // Приходит от RP, только в уведомления
-                        UserEventType::PEOPLE_AROUND,
+                        //UserEventType::PEOPLE_AROUND,
                         // Только уведомления
                         UserEventType::INVITE_EVENT_EVENT,
                         // Не понимаю, как эти записи продолжают появлятся в базе? По коду API не нашел

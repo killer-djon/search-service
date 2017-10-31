@@ -256,7 +256,7 @@ class PlacesSearchService extends AbstractSearchService
     {
         $currentUser = $this->getUserById($userId);
 
-        $userPoint = $currentUser->getLocation();
+        //$userPoint = $currentUser->getLocation();
 
         /**
          * Логика должна быть наоборот
@@ -280,7 +280,7 @@ class PlacesSearchService extends AbstractSearchService
         /** @var QueryScriptFactory $scriptFactory */
         $scriptFactory = $this->_scriptFactory;
 
-        $script_fields = [
+        /*$script_fields = [
             'tagsInPercent'     => $scriptFactory->getTagsIntersectInPercentScript(
                 $this->filterTypes[PlaceSearchMapping::CONTEXT]::TAGS_ID_FIELD,
                 $currentUser->getTags()
@@ -297,7 +297,34 @@ class PlacesSearchService extends AbstractSearchService
                 $this->filterTypes[PlaceSearchMapping::CONTEXT]::LOCATION_POINT_FIELD,
                 $userPoint
             ),
-        ];
+        ];*/
+        $script_fields = [];
+
+        if( $userPoint->isValid() && !$userPoint->isEmpty() )
+        {
+            $script_fields['distance'] = $scriptFactory->getDistanceScript(
+                $this->filterTypes[PlaceSearchMapping::CONTEXT]::LOCATION_POINT_FIELD,
+                $userPoint
+            );
+            $script_fields['distanceInPercent'] = $scriptFactory->getDistanceInPercentScript(
+                $this->filterTypes[PlaceSearchMapping::CONTEXT]::LOCATION_POINT_FIELD,
+                $userPoint
+            );
+        }
+
+        if( !empty($currentUser->getTags()) )
+        {
+            $script_fields['tagsInPercent'] = $scriptFactory->getTagsIntersectInPercentScript(
+                $this->filterTypes[PlaceSearchMapping::CONTEXT]::TAGS_ID_FIELD,
+                $currentUser->getTags()
+            );
+
+            $script_fields['tagsCount'] = $scriptFactory->getTagsIntersectScript(
+                $this->filterTypes[PlaceSearchMapping::CONTEXT]::TAGS_ID_FIELD,
+                $currentUser->getTags()
+            );
+        }
+
 
         if (!empty($countryId)) {
             $this->setAggregationQuery([
@@ -340,7 +367,7 @@ class PlacesSearchService extends AbstractSearchService
         /** добавляем к условию поиска рассчет расстояния */
         // зачем это услоие если выше уже указаны скриптовые поля ?
         //$this->setGeoPointConditions($userPoint, PlaceSearchMapping::class);
-        if(!empty($userPoint->getRadius()))
+        if(!empty($userPoint->getRadius()) && !$userPoint->isEmpty())
         {
             $this->setFilterQuery([
                 $this->_queryFilterFactory->getGeoDistanceFilter(

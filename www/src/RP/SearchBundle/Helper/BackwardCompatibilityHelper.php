@@ -129,7 +129,7 @@ class BackwardCompatibilityHelper
             foreach ($parent['places']['hits']['hits'] as $row) {
                 $data = $row['_source'];
 
-                $fields = $row['fields'] ? $row['fields'] : null;
+                $fields = isset($row['fields']) && !empty($row['fields']) ? $row['fields'] : null;
                 if(!is_null($fields))
                 {
                     $data['tagsMatch'] = [

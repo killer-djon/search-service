@@ -127,15 +127,19 @@ class BackwardCompatibilityHelper
             && !empty($parent['places']['hits']['hits'])
         ) {
             foreach ($parent['places']['hits']['hits'] as $row) {
-                $fields = $row['fields'];
-
                 $data = $row['_source'];
-                $data['tagsMatch'] = [
-                    'distance'    => $fields['distance'][0],
-                    'distancePct' => $fields['distanceInPercent'][0],
+
+                $fields = $row['fields'] ? $row['fields'] : null;
+                if(!is_null($fields))
+                {
+                    $data['tagsMatch'] = [
+                        'distance'    => $fields['distance'][0],
+                        'distancePct' => $fields['distanceInPercent'][0],
 //                    'tags'        => $fields['tagsCount'][0],
 //                    'tagsPct'     => $fields['tagsInPercent'][0],
-                ];
+                    ];
+                }
+
 
                 if (!isset($data['location']['country']['shortName']) && isset($data['location']['country']['code'])) {
                     $data['location']['country']['shortName'] = $data['location']['country']['code'];

@@ -256,8 +256,6 @@ class PlacesSearchService extends AbstractSearchService
     {
         $currentUser = $this->getUserById($userId);
 
-        //$userPoint = $currentUser->getLocation();
-
         /**
          * Логика должна быть наоборот
          * если есть приходящие данные в параметрах
@@ -280,7 +278,7 @@ class PlacesSearchService extends AbstractSearchService
         /** @var QueryScriptFactory $scriptFactory */
         $scriptFactory = $this->_scriptFactory;
 
-        /*$script_fields = [
+        $script_fields = [
             'tagsInPercent'     => $scriptFactory->getTagsIntersectInPercentScript(
                 $this->filterTypes[PlaceSearchMapping::CONTEXT]::TAGS_ID_FIELD,
                 $currentUser->getTags()
@@ -297,8 +295,9 @@ class PlacesSearchService extends AbstractSearchService
                 $this->filterTypes[PlaceSearchMapping::CONTEXT]::LOCATION_POINT_FIELD,
                 $userPoint
             ),
-        ];*/
-        $script_fields = [];
+        ];
+
+        /*$script_fields = [];
 
         if( $userPoint->isValid() && !$userPoint->isEmpty() )
         {
@@ -323,7 +322,7 @@ class PlacesSearchService extends AbstractSearchService
                 $this->filterTypes[PlaceSearchMapping::CONTEXT]::TAGS_ID_FIELD,
                 $currentUser->getTags()
             );
-        }
+        }*/
 
 
         if (!empty($countryId)) {

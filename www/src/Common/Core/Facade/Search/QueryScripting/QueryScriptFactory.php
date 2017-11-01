@@ -35,6 +35,11 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
     private function getGeopointParams($geopoint)
     {
         if ($geopoint instanceof GeoPointServiceInterface) {
+            if( $geopoint->isEmpty() )
+            {
+                return null;
+            }
+
             return [
                 'lon'    => $geopoint->getLongitude(),
                 'lat'    => $geopoint->getLatitude(),
@@ -68,13 +73,13 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
             ]);
 
             $script = "
-            var distance;
-            if (!doc[pointField].empty) {
-                distance = doc[pointField].distanceInKm(lat, lon);
-                distance = distance.toFixed(2)
-            }else{
-                distance = -1;
-            }
+                var distance;
+                if ( doc[pointField].value.size > 0 && !doc[pointField].empty) {
+                    distance = doc[pointField].distanceInKm(lat, lon);
+                    distance = distance.toFixed(2)
+                }else{
+                    distance = -1;
+                }
             ";
 
             return new \Elastica\Script(

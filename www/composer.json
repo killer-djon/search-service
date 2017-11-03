@@ -43,7 +43,7 @@
         "willdurand/negotiation": "^v2.0",
         "willdurand/jsonp-callback-validator": "^v1.1",
         "predis/predis": "^v1.1",
-        "friendsofsymfony/elastica-bundle": "*",
+        "friendsofsymfony/elastica-bundle": "^3.2",
         "russianplace/redis-bundle": "1.*",
         "doctrine/orm": "^2.5",
         "symfony/serializer": "^3.3",

@@ -158,7 +158,7 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                     totalCount = 0;
                     list = [];
                     
-                    if(tagsValue.size() > 0 && doc[tagIdField].values.size() > 0){
+                    if(tagsValue.length > 0 && doc[tagIdField].values.size() > 0){
                          for(var i = 0, len = tagsValue.size(); i < len; i++){
                             ++tagsCount;
                             for(var j = 0, lenJ = doc[tagIdField].values.size(); j < lenJ; j++){
@@ -168,8 +168,10 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
                                 }
                             }
                         }
+                        
+                        totalCount = count.toFixed()
                     }
-                    totalCount = count.toFixed()
+                    
                 ";
 
                 return new \Elastica\Script($script, [

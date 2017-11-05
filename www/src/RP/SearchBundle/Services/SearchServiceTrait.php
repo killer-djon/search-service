@@ -70,6 +70,7 @@ trait SearchServiceTrait
      */
     public function setGeoPointConditions(GeoPointServiceInterface $point, $classMapping, $unit = 'm')
     {
+
         if ($point->isValid()) {
 
             $this->setScriptFields([

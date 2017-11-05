@@ -74,7 +74,7 @@ class QueryScriptFactory implements QueryScriptFactoryInterface
 
             $script = "
                 var distance;
-                if ( doc[pointField].value.size > 0 && !doc[pointField].empty) {
+                if ( doc[pointField].values && !doc[pointField].empty) {
                     distance = doc[pointField].distanceInKm(lat, lon);
                     distance = distance.toFixed(2)
                 }else{

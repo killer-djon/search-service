@@ -605,6 +605,7 @@ class AbstractSearchService extends SearchEngine implements SearchServiceInterfa
                 $source
             );
 
+
             if (!is_null($user) && !empty($user)) {
                 return new UserProfileService($user);
             }

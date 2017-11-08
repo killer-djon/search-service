@@ -241,6 +241,8 @@ JS;
         $skip = 0,
         $count = null
     ) {
+        $currentUser = $this->getUserById($userId);
+
         $filter = $this->_queryFilterFactory;
         $script = $this->_scriptFactory;
         $sorting = $this->_sortingFactory;
@@ -268,6 +270,15 @@ JS;
                     ]),
                 ])
             ),
+            $filter->getNotFilter(
+                $filter->getTermsFilter(
+                    AbstractTransformer::createCompleteKey([
+                        ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD,
+                        PeopleSearchMapping::AUTOCOMPLETE_ID_PARAM,
+                    ]),
+                    $currentUser->getBlockedUsers()
+                )
+            )
         ]);
 
         if (!is_null($chatId) && !empty($chatId)) {

@@ -16,7 +16,7 @@ RPSearchBundle_search_newsFeed_posts_wallId:
         wallId: \w+
 
 # Routing который формирует запрос для вывода постов пользователей
-# пример запроса /api/v1/json/newsfeed/posts/{wallId}
+# пример запроса /api/v1/json/newsfeed/posts/list/{rpUserId}/{categoryId}/{cityId}
 RPSearchBundle_search_newsFeed_posts_params:
     path: /v{_version}/{_format}/newsfeed/posts/list/{rpUserId}/{categoryId}/{cityId}
     defaults:
@@ -50,7 +50,7 @@ RPSearchBundle_search_newsFeed_postById:
 
 
 # Routing который формирует запрос для вывода событий пользовательских
-# пример запроса /api/v1/json/newsfeed/userevents
+# пример запроса /api/v1/json/newsfeed/userevents/list
 RPSearchBundle_search_newsFeed_userevents_list:
     path: /v{_version}/{_format}/newsfeed/userevents/list
     defaults:
@@ -64,7 +64,7 @@ RPSearchBundle_search_newsFeed_userevents_list:
         _version: '1' # устанавливаем обязательную версию
 
 # Routing который формирует запрос для вывода событий пользовательских
-# пример запроса /api/v1/json/newsfeed/userevents
+# пример запроса /api/v1/json/newsfeed/notifications/list
 RPSearchBundle_search_newsFeed_notifications:
     path: /v{_version}/{_format}/newsfeed/notifications/list
     defaults:

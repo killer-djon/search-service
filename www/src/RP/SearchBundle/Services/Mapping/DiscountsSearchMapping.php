@@ -72,6 +72,12 @@ abstract class DiscountsSearchMapping extends PlaceSearchMapping
 
         $result[] = AbstractSearchMapping::getVisibleCondition($filterFactory, $userId);
         $result[] = AbstractSearchMapping::getModerateCondition($filterFactory, $userId);
+        $result[] = $filterFactory->getNotFilter(
+            $filterFactory->getTermsFilter(
+                self::AUTHOR_ID_FIELD,
+                self::$userProfile->getBlockedUsers()
+            )
+        );
 
         return $result;
     }

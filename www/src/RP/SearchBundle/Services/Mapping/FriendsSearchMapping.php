@@ -25,6 +25,12 @@ class FriendsSearchMapping extends PeopleSearchMapping
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
         return [
+            $filterFactory->getNotFilter(
+                $filterFactory->getTermsFilter(
+                    self::IDENTIFIER_FIELD,
+                    self::$userProfile->getBlockedUsers()
+                )
+            ),
             $filterFactory->getTermsFilter(self::FRIEND_LIST_FIELD, [$userId]),
             $filterFactory->getTermFilter([self::USER_REMOVED_FIELD => false]),
             $filterFactory->getBoolOrFilter([

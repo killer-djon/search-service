@@ -188,6 +188,8 @@ class CommonSearchService extends AbstractSearchService
              */
             foreach ($this->filterSearchTypes as $keyType => $type) {
                 $this->clearQueryFactory();
+                $type::setUserProfile($currentUser);
+
                 $this->setScriptTagsConditions($currentUser, $type);
 
                 if (!empty($cityId)) {
@@ -320,6 +322,7 @@ class CommonSearchService extends AbstractSearchService
         $queryMatchResults = [];
         foreach ($filterType as $key => $type) {
             $this->clearQueryFactory();
+            $this->filterSearchTypes[$type]::setUserProfile($currentUser);
 
             if (!empty($cityId)) {
                 if ($type !== PostSearchMapping::CONTEXT) {
@@ -487,6 +490,8 @@ class CommonSearchService extends AbstractSearchService
 
             foreach ($searchTypes as $keyType => $typeFields) {
                 $this->clearQueryFactory();
+
+                $this->filterTypes[$keyType]::setUserProfile($currentUser);
 
                 $this->setFilterQuery($this->filterTypes[$keyType]::getMarkersSearchFilter($this->_queryFilterFactory,
                     $userId));

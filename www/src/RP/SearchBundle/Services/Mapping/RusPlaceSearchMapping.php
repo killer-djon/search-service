@@ -22,6 +22,12 @@ abstract class RusPlaceSearchMapping extends PlaceSearchMapping
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
         return [
+            $filterFactory->getNotFilter(
+                $filterFactory->getTermsFilter(
+                    self::AUTHOR_ID_FIELD,
+                    self::$userProfile->getBlockedUsers()
+                )
+            ),
             $filterFactory->getTermFilter([parent::IS_RUSSIAN_FIELD => true]),
             $filterFactory->getTermFilter([parent::DISCOUNT_FIELD => 0]),
             $filterFactory->getNotFilter(

@@ -77,6 +77,13 @@ class UserProfileService extends ReportingService
     private $_registrationDate;
 
     /**
+     * Список блокированных пользователей
+     *
+     * @var array
+     */
+    private $_blockedUsers;
+
+    /**
      * @inheritdoc
      */
     public function __construct(array $data)
@@ -99,6 +106,17 @@ class UserProfileService extends ReportingService
         $this->_wallId = $data['wallId'];
         $this->_userSettings = isset($data['settings']) ? $data['settings'] : [];
         $this->_registrationDate = isset($data['registrationDate']) ? new \DateTime($data['registrationDate']) : null;
+        $this->_blockedUsers = !empty($data['blockedUsers']) ? $data['blockedUsers'] : [];
+    }
+
+    /**
+     * Получаем список блокированных пользователей
+     *
+     * @return array
+     */
+    public function getBlockedUsers()
+    {
+        return $this->_blockedUsers;
     }
 
     /**

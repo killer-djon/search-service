@@ -157,6 +157,12 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
     public static function getMarkersSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
         return [
+            $filterFactory->getNotFilter(
+                $filterFactory->getTermsFilter(
+                    self::AUTHOR_ID_FIELD,
+                    self::$userProfile->getBlockedUsers()
+                )
+            ),
             $filterFactory->getTermFilter([self::IS_RUSSIAN_FIELD => false]),
             $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
             $filterFactory->getNotFilter(
@@ -184,6 +190,12 @@ abstract class PlaceSearchMapping extends AbstractSearchMapping
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
         return [
+            $filterFactory->getNotFilter(
+                $filterFactory->getTermsFilter(
+                    self::AUTHOR_ID_FIELD,
+                    self::$userProfile->getBlockedUsers()
+                )
+            ),
             $filterFactory->getTermFilter([self::DISCOUNT_FIELD => 0]),
             $filterFactory->getNotFilter(
                 $filterFactory->getExistsFilter(self::BONUS_FIELD)

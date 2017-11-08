@@ -64,6 +64,12 @@ class EventsSearchMapping extends AbstractSearchMapping
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
         return [
+            $filterFactory->getNotFilter(
+                $filterFactory->getTermsFilter(
+                    self::AUTHOR_ID_FIELD,
+                    self::$userProfile->getBlockedUsers()
+                )
+            ),
             $filterFactory->getTermFilter([self::IS_REMOVED => false]),
             $filterFactory->getTermFilter([self::PLACE_IS_REMOVED => false])
         ];

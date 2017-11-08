@@ -9,6 +9,7 @@ use Common\Core\Constants\ModerationStatus;
 use Common\Core\Constants\Visible;
 use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
+use Common\Core\Facade\Service\User\UserProfileService;
 
 abstract class AbstractSearchMapping
 {
@@ -114,6 +115,22 @@ abstract class AbstractSearchMapping
     /** Статус модерации */
     const MODERATION_STATUS_FIELD = 'moderationStatus';
     const VISIBLE_FIELD = 'visible';
+
+    /**
+     * Сервис профиля пользователя
+     *
+     * @var UserProfileService
+     */
+    protected static $userProfile;
+
+    /**
+     * Устанавливаем указатель на объект сервиса опльзователя
+     * @param UserProfileService $userProfile
+     */
+    public static function setUserProfile(UserProfileService $userProfile)
+    {
+        static::$userProfile = $userProfile;
+    }
 
     /**
      * Получаем поля для поиска

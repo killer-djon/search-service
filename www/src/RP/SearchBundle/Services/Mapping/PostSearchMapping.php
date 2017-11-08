@@ -130,6 +130,12 @@ abstract class PostSearchMapping extends AbstractSearchMapping
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
         $filter = [
+            $filterFactory->getNotFilter(
+                $filterFactory->getTermsFilter(
+                    self::AUTHOR_ID_FIELD,
+                    self::$userProfile->getBlockedUsers()
+                )
+            ),
             $filterFactory->getTermFilter([self::POST_IS_POSTED => true]),
             $filterFactory->getTermFilter([self::AUTHOR_ID_FIELD => PeopleSearchMapping::RP_USER_ID]),
             $filterFactory->getTermFilter([self::POST_IS_DELETED => false]),

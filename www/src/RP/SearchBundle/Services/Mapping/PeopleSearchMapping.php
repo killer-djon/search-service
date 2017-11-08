@@ -289,6 +289,12 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     {
         return [
             $filterFactory->getNotFilter(
+                $filterFactory->getTermsFilter(
+                    self::IDENTIFIER_FIELD,
+                    self::$userProfile->getBlockedUsers()
+                )
+            ),
+            $filterFactory->getNotFilter(
                 $filterFactory->getTermsFilter(self::FRIEND_LIST_FIELD, [$userId])
             ),
             $filterFactory->getNotFilter(
@@ -321,6 +327,12 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     {
         return [
             $filterFactory->getTermFilter([self::USER_REMOVED_FIELD => false]),
+            $filterFactory->getNotFilter(
+                $filterFactory->getTermsFilter(
+                    self::IDENTIFIER_FIELD,
+                    self::$userProfile->getBlockedUsers()
+                )
+            ),
         ];
     }
 

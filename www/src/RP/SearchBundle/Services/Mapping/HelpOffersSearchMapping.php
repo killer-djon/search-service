@@ -136,6 +136,12 @@ class HelpOffersSearchMapping extends PeopleSearchMapping
     public static function getMatchSearchFilter(FilterFactoryInterface $filterFactory, $userId = null)
     {
         return [
+            $filterFactory->getNotFilter(
+                $filterFactory->getTermsFilter(
+                    self::IDENTIFIER_FIELD,
+                    self::$userProfile->getBlockedUsers()
+                )
+            ),
             $filterFactory->getExistsFilter(self::HELP_OFFERS_LIST_FIELD),
             $filterFactory->getScriptFilter("doc['helpOffers.id'].values.size() >= 1")
         ];

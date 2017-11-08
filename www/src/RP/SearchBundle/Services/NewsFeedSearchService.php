@@ -416,6 +416,29 @@ JS;
             ]);
         }
 
+        $this->setFilterQuery([
+            $filter->getBoolAndFilter([
+                $filter->getNotFilter(
+                    $filter->getNestedFilter(
+                        UserEventSearchMapping::AUTHOR_FIELD,
+                        $filter->getTermsFilter(
+                            UserEventSearchMapping::AUTHOR_ID_FIELD,
+                            $userProfile->getBlockedUsers()
+                        )
+                    )
+                ),
+                $filter->getNotFilter(
+                    $filter->getNestedFilter(
+                        PostSearchMapping::AUTHOR_FIELD,
+                        $filter->getTermsFilter(
+                            PostSearchMapping::AUTHOR_ID_FIELD,
+                            $userProfile->getBlockedUsers()
+                        )
+                    )
+                )
+            ])
+        ]);
+
 
         $canBeDeletedEdit = <<<JS
                 var result = false;
@@ -720,6 +743,15 @@ JS;
 
         // Или-или
         $this->setFilterQuery([
+            $filter->getNotFilter(
+                $filter->getNestedFilter(
+                    UserEventSearchMapping::AUTHOR_FIELD,
+                    $filter->getTermsFilter(
+                        UserEventSearchMapping::AUTHOR_ID_FIELD,
+                        $userProfile->getBlockedUsers()
+                    )
+                )
+            ),
             $filter->getBoolOrFilter(array_merge(
                 $personalTypes,
                 $friendTypes,

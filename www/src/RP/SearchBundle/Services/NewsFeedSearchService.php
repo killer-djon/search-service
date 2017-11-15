@@ -752,6 +752,14 @@ JS;
                     )
                 )
             ),
+            /*$filter->getScriptFilter(
+                $this->_scriptFactory->getScript(
+                    "doc[]",
+                    [
+                        "blockedUsers" => $userProfile->getBlockedUsers()
+                    ]
+                )
+            ),*/
             $filter->getBoolOrFilter(array_merge(
                 $personalTypes,
                 $friendTypes,

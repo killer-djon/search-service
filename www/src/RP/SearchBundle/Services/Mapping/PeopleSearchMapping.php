@@ -327,12 +327,12 @@ abstract class PeopleSearchMapping extends AbstractSearchMapping
     {
         return [
             $filterFactory->getTermFilter([self::USER_REMOVED_FIELD => false]),
-            $filterFactory->getNotFilter(
+            /*$filterFactory->getNotFilter(
                 $filterFactory->getTermsFilter(
                     self::IDENTIFIER_FIELD,
                     self::$userProfile->getBlockedUsers()
                 )
-            ),
+            ),*/
         ];
     }
 

@@ -270,7 +270,7 @@ JS;
                     ]),
                 ])
             ),
-            $filter->getNotFilter(
+            /*$filter->getNotFilter(
                 $filter->getTermsFilter(
                     AbstractTransformer::createCompleteKey([
                         ChatMessageMapping::RECIPIENTS_MESSAGE_FIELD,
@@ -278,7 +278,7 @@ JS;
                     ]),
                     $currentUser->getBlockedUsers()
                 )
-            )
+            )*/
         ]);
 
         if (!is_null($chatId) && !empty($chatId)) {

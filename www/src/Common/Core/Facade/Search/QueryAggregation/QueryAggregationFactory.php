@@ -12,7 +12,7 @@ use Elastica\Filter\AbstractFilter;
 class QueryAggregationFactory implements QueryAggregationFactoryInterface
 {
 
-    const KOEFFICIENT_BOUNDING_BOX = 15;
+    const KOEFFICIENT_BOUNDING_BOX = 25;
 
     /**
      * Определение точности кластеризации по геоточкам

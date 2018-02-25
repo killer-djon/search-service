@@ -496,6 +496,11 @@ JS;
     {
         $userProfile = $this->getUserById($userId);
 
+        if(empty($cityId))
+        {
+            $cityId = $userProfile->getCity()['id'];
+        }
+
         if (!empty($cityId)) {
             $this->setFilterQuery([
                 $this->_queryFilterFactory->getTermFilter([

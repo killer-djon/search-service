@@ -83,6 +83,8 @@ class UserProfileService extends ReportingService
      */
     private $_blockedUsers;
 
+    private $_city;
+
     /**
      * @inheritdoc
      */
@@ -98,6 +100,12 @@ class UserProfileService extends ReportingService
             (isset($data['location']['point']['lat']) ? $data['location']['point']['lat'] : null),
             (isset($data['location']['point']['lon']) ? $data['location']['point']['lon'] : null)
         );
+
+        if(!empty($data['location']['city']) && !empty($data['location']['city']['id']))
+        {
+            $this->_city = $data['location']['city'];
+        }
+        //$this->_cityId = $data[]
         $this->_tags = isset($data['tags']) && !empty($data['tags']) ? $data['tags'] : [];
         $this->_name = $data['name'];
         $this->_surname = $data['surname'];
@@ -107,6 +115,11 @@ class UserProfileService extends ReportingService
         $this->_userSettings = isset($data['settings']) ? $data['settings'] : [];
         $this->_registrationDate = isset($data['registrationDate']) ? new \DateTime($data['registrationDate']) : null;
         $this->_blockedUsers = !empty($data['blockedUsers']) ? $data['blockedUsers'] : [];
+    }
+
+    public function getCity()
+    {
+        return $this->_city;
     }
 
     /**

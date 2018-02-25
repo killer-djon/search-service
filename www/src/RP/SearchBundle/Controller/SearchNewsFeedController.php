@@ -198,6 +198,43 @@ class SearchNewsFeedController extends ApiController
 
     }
 
+
+    public function getPostsListAction(Request $request, $cityId = null)
+    {
+        try{
+            $userId = $this->getRequestUserId();
+
+            /** @var Текст запроса */
+            $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM);
+            $searchText = !empty($searchText) ? $searchText : RequestConstant::NULLED_PARAMS;
+
+            $postService = $this->getNewsFeedSearchService();
+            $posts = $postService->getPostLists(
+                $userId,
+                $cityId,
+                $searchText,
+                $this->getSkip(),
+                $this->getCount()
+            );
+
+            if (empty($posts)) {
+                return $this->_handleViewWithData([]);
+            }
+
+            $result = $this->getNewFormatResponse(
+                $postService,
+                PostSearchMapping::CONTEXT
+            );
+
+            return $this->_handleViewWithData($result);
+
+        }catch (SearchServiceException $e) {
+            return $this->_handleViewWithError($e);
+        } catch (\HttpResponseException $e) {
+            return $this->_handleViewWithError($e);
+        }
+    }
+
     /**
      * Получение постов
      * по категории и локации

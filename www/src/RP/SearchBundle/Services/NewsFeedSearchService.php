@@ -486,6 +486,73 @@ JS;
         ], UserEventSearchMapping::CONTEXT);
     }
 
+    public function getPostLists(
+        $userId,
+        $cityId = null,
+        $searchText = null,
+        $skip = 0,
+        $count = null
+    )
+    {
+        $userProfile = $this->getUserById($userId);
+
+        if (!empty($cityId)) {
+            $this->setFilterQuery([
+                $this->_queryFilterFactory->getTermFilter([
+                    PostSearchMapping::LOCATION_CITY_ID_FIELD =>  $cityId
+                ])
+            ]);
+        }
+
+        $this->setScriptFields([
+            'distance' => $this->_scriptFactory->getDistanceScript(
+                PostSearchMapping::POST_CITY_POINT_FIELD,
+                $userProfile->getLocation()
+            )
+        ]);
+
+        $this->setSortingQuery([
+            $this->_sortingFactory->getGeoDistanceSort(
+                PostSearchMapping::POST_CITY_POINT_FIELD,
+                $userProfile->getLocation(),
+                SortingOrder::SORTING_ASC
+            ),
+        ]);
+
+
+        if (!empty($searchText)) {
+            $searchText = mb_strtolower($searchText);
+            $searchText = preg_replace(['/[\s]+([\W\s]+)/um', '/[\W+]/um'], ['$1', ' '], $searchText);
+
+            $slopPhrase = array_filter(explode(" ", $searchText));
+
+            if (count($slopPhrase) > 1) {
+                // поиск по словосочетанию
+                $this->setConditionQueryMust(PostSearchMapping::getSearchConditionQueryMust(
+                    $this->_queryConditionFactory,
+                    $searchText
+                ));
+            } else {
+                $this->setConditionQueryShould(PostSearchMapping::getSearchConditionQueryShould(
+                    $this->_queryConditionFactory,
+                    $searchText
+                ));
+            }
+
+            $this->setHighlightQuery(PostSearchMapping::getHighlightConditions());
+
+        }
+        $this->setIndices([
+            PostSearchMapping::DEFAULT_INDEX
+        ]);
+
+        $queryMatch = $this->createQuery($skip, $count);
+
+        return $this->searchDocuments($queryMatch, PostSearchMapping::CONTEXT, [
+            'excludes' => ['friendList', 'relations', '*.friendList']
+        ]);
+    }
+
     /**
      * Выводим только посты по заданным критериям
      * данный метод необходим для группировки постов

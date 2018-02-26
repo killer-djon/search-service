@@ -394,8 +394,15 @@ class CitySearchService extends AbstractSearchService
 
         $filter = $this->_queryFilterFactory;
 
-        $this->setFilterQuery([
+        /*
+         * убрали фильтр по расстоянию чтобы брать толкьо города а не район
+         * $this->setFilterQuery([
             $filter->getGeoDistanceFilter(CitySearchMapping::CENTER_CITY_POINT_FIELD, $coordinates, $radius, 'km'),
+        ]);*/
+        $this->setFilterQuery([
+            $filter->getTermsFilter(CitySearchMapping::CITY_TYPE_FIELD, [
+                Location::CITY_TYPE,
+            ])
         ]);
 
         $this->setScriptFields([
@@ -406,13 +413,16 @@ class CitySearchService extends AbstractSearchService
         ]);
 
         $this->setSortingQuery([
-            $this->_sortingFactory->getGeoDistanceSort(CitySearchMapping::CENTER_CITY_POINT_FIELD, $point),
+            $this->_sortingFactory->getGeoDistanceSort(CitySearchMapping::CENTER_CITY_POINT_FIELD, $point)
         ]);
 
         $queryMatch = $this->createQuery(0, 1);
         $this->setIndices([
             CitySearchMapping::DEFAULT_INDEX,
         ]);
+
+        $aggs = $this->getAggregations();
+        dump($aggs);
 
         return $this->searchDocuments($queryMatch);
     }

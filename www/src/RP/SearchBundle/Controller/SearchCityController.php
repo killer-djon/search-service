@@ -39,6 +39,8 @@ class SearchCityController extends ApiController
         try {
             $version = $request->get(RequestConstant::VERSION_PARAM, RequestConstant::NEW_DEFAULT_VERSION);
 
+            $userId = $this->getRequestUserId();
+
             /** @var Текст запроса */
             $searchText = $request->get(RequestConstant::SEARCH_TEXT_PARAM, RequestConstant::NULLED_PARAMS);
 
@@ -72,6 +74,7 @@ class SearchCityController extends ApiController
 
             // новый запрос с сортировкой по популярности
             $cities = $citySearchService->searchTopCityByName(
+                $userId,
                 $searchText,
                 $countryName,
                 $types,

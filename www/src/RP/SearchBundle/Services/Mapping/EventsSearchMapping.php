@@ -9,7 +9,7 @@ use Common\Core\Facade\Search\QueryCondition\ConditionFactoryInterface;
 use Common\Core\Facade\Search\QueryFilter\FilterFactoryInterface;
 use Elastica\Query\MultiMatch;
 
-class EventsSearchMapping extends AbstractSearchMapping
+abstract class EventsSearchMapping extends AbstractSearchMapping
 {
     /** Контекст поиска */
     const CONTEXT = 'events';

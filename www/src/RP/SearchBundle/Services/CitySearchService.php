@@ -113,6 +113,7 @@ class CitySearchService extends AbstractSearchService
      * по названию города и сортирует выборку по популярности города
      * (совокупное кол-во )
      *
+     * @param string $userId ID пользователя
      * @param string $searchText Поисковый запрос
      * @param string $countryName
      * @param array $types
@@ -121,9 +122,12 @@ class CitySearchService extends AbstractSearchService
      * @param int $count Какое кол-во выводим
      * @return array Массив с найденными результатами
      */
-    public function searchTopCityByName($searchText, $countryName = null, $types = [], $skip = 0, $count = null)
+    public function searchTopCityByName($userId, $searchText, $countryName = null, $types = [], $skip = 0, $count = null)
     {
+        $currentProfile = $this->getUserById($userId);
         $cities = $this->searchCityByName($searchText, $countryName, $types);
+
+        AbstractSearchMapping::setUserProfile($currentProfile);
 
         $cities = isset($cities[CitySearchMapping::CONTEXT])
             ? ArrayHelper::index($cities[CitySearchMapping::CONTEXT], 'id')

@@ -21,6 +21,13 @@ class CommonSearchService extends AbstractSearchService
 {
 
     /**
+     * Радиус при котором отменяем кластеризацию
+     *
+     * @const int
+     */
+    const UNCLASTER_RESULTS = 2000;
+
+    /**
      * Кол-во выводимых данных
      * по блокам в общем поиске
      *
@@ -521,6 +528,8 @@ class CommonSearchService extends AbstractSearchService
                 }
 
                 $this->setGeoPointConditions($point, $this->filterTypes[$keyType]);
+
+                $isCluster = !empty($point->getRadius()) && $point->getRadius() <= self::UNCLASTER_RESULTS ? false : $isCluster;
 
                 if ($isCluster) {
 
